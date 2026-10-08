@@ -66,6 +66,15 @@
         }
       ],
       "rolls": 1
+    },
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft_mode:golem_core"
+        }
+      ],
+      "rolls": 1
     }
   ]
 }

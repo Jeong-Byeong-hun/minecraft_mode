@@ -42,6 +42,25 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 				this.plastic();
 				this.coins();
 				this.shopBlock();
+				this.classes();
+			}
+
+			private void classes() {
+				this.nineBlockStorageRecipes(
+					RecipeCategory.MISC, ModItems.ESSENCE, RecipeCategory.MISC, ModItems.CONDENSED_ESSENCE,
+					"condensed_essence", null, "essence_from_condensed_essence", null
+				);
+				this.shaped(RecipeCategory.DECORATIONS, ModItems.ENGRAVING_TABLE)
+					.define('E', ModItems.ESSENCE)
+					.define('D', Items.DIAMOND)
+					.define('M', ModItems.MYTHRIL_INGOT)
+					.define('O', Items.OBSIDIAN)
+					.pattern("EEE")
+					.pattern("DMD")
+					.pattern("OOO")
+					.unlockedBy(getHasName(ModItems.ESSENCE), this.has(ModItems.ESSENCE))
+					.save(this.output);
+				this.themedShop(ModItems.GUILD_SHOP, ModItems.ESSENCE);
 			}
 
 			private void metal(

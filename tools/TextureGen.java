@@ -104,6 +104,9 @@ public class TextureGen {
 		write("entity/mythril_golem", mythrilGolemSkin());
 		write("mob_effect/bleeding", bleedingIcon());
 
+		// --- Classes (particles, essence, projectiles, engraving table, guild) ---
+		ClassArt.writeAll();
+
 		if (args.length > 1) {
 			writePreview(Path.of(args[1]));
 		}

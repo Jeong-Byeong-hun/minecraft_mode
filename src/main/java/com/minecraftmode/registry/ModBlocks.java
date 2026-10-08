@@ -3,6 +3,7 @@ package com.minecraftmode.registry;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.block.ShopBlock;
 import com.minecraftmode.economy.ShopType;
+import com.minecraftmode.job.engrave.EngravingTableBlock;
 import java.util.function.Function;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -81,6 +82,20 @@ public final class ModBlocks {
 	public static final Block BLACKSMITH_SHOP = registerShop("blacksmith_shop", ShopType.BLACKSMITH);
 	public static final Block GROCER_SHOP = registerShop("grocer_shop", ShopType.GROCER);
 	public static final Block JEWELER_SHOP = registerShop("jeweler_shop", ShopType.JEWELER);
+	/** Sells class weapons of the visitor's class and tier. */
+	public static final Block GUILD_SHOP = registerShop("guild_shop", ShopType.GUILD);
+
+	// Classes: engraves class weapons with essence
+	public static final Block ENGRAVING_TABLE = register(
+		"engraving_table",
+		EngravingTableBlock::new,
+		BlockBehaviour.Properties.of()
+			.mapColor(MapColor.COLOR_PURPLE)
+			.instrument(NoteBlockInstrument.BASEDRUM)
+			.requiresCorrectToolForDrops()
+			.lightLevel(state -> 7)
+			.strength(5.0F, 1200.0F)
+	);
 
 	/** Same base as the stone ore variants, recolored for deepslate (strength and sound are set per block). */
 	private static BlockBehaviour.Properties deepslateOre() {

@@ -1,6 +1,9 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.job.weapon.WeaponDef;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,6 +15,7 @@ import net.minecraft.world.item.ItemStack;
 
 public final class ModCreativeTabs {
 	public static final ResourceKey<CreativeModeTab> MAIN = ResourceKey.create(Registries.CREATIVE_MODE_TAB, MinecraftMode.id("main"));
+	public static final ResourceKey<CreativeModeTab> CLASSES = ResourceKey.create(Registries.CREATIVE_MODE_TAB, MinecraftMode.id("classes"));
 
 	public static void init() {
 		Registry.register(
@@ -53,8 +57,31 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.BLACKSMITH_SHOP);
 					output.accept(ModItems.GROCER_SHOP);
 					output.accept(ModItems.JEWELER_SHOP);
+					output.accept(ModItems.GUILD_SHOP);
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
+				})
+				.build()
+		);
+		// Classes: essence, tables and every class weapon by class and tier
+		Registry.register(
+			BuiltInRegistries.CREATIVE_MODE_TAB,
+			CLASSES,
+			FabricCreativeModeTab.builder()
+				.title(Component.translatable("itemGroup.minecraft_mode.classes"))
+				.icon(() -> new ItemStack(ModItems.ESSENCE))
+				.displayItems((parameters, output) -> {
+					output.accept(ModItems.ESSENCE);
+					output.accept(ModItems.CONDENSED_ESSENCE);
+					output.accept(ModItems.GOLEM_CORE);
+					output.accept(ModItems.CLASS_RESET_SCROLL);
+					output.accept(ModItems.ENGRAVING_TABLE);
+					output.accept(ModItems.GUILD_SHOP);
+					for (JobClass job : JobClass.PLAYABLE) {
+						for (WeaponDef def : JobWeapons.of(job)) {
+							output.accept(JobWeapons.item(def));
+						}
+					}
 				})
 				.build()
 		);

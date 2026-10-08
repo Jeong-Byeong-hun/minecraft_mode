@@ -78,6 +78,8 @@ public final class ModLanguageProviders {
 			builder.add(ModTags.COINS, "Coins");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "Mythril Tool Materials");
 			builder.add(ModTags.REPAIRS_MYTHRIL_ARMOR, "Repairs Mythril Armor");
+
+			JobLang.add(builder, false);
 		}
 	}
 
@@ -145,6 +147,8 @@ public final class ModLanguageProviders {
 			builder.add(ModTags.COINS, "동전");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "미스릴 도구 재료");
 			builder.add(ModTags.REPAIRS_MYTHRIL_ARMOR, "미스릴 갑옷 수리 재료");
+
+			JobLang.add(builder, true);
 		}
 	}
 

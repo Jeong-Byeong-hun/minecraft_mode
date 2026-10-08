@@ -8,7 +8,9 @@ public enum ShopType {
 	GENERAL("general"),
 	BLACKSMITH("blacksmith"),
 	GROCER("grocer"),
-	JEWELER("jeweler");
+	JEWELER("jeweler"),
+	/** Class guild: offers depend on the visitor's class and tier. */
+	GUILD("guild");
 
 	private final String id;
 

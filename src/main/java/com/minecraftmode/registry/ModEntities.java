@@ -3,6 +3,7 @@ package com.minecraftmode.registry;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.entity.MineRaider;
 import com.minecraftmode.entity.MythrilGolem;
+import com.minecraftmode.job.skill.SkillProjectile;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -40,6 +41,20 @@ public final class ModEntities {
 			.clientTrackingRange(10)
 			.notInPeaceful()
 			.build(MYTHRIL_GOLEM_KEY)
+	);
+
+	public static final ResourceKey<EntityType<?>> SKILL_PROJECTILE_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("skill_projectile"));
+
+	/** Shuriken, bullets, magic orbs... fired by class weapons. Never saved. */
+	public static final EntityType<SkillProjectile> SKILL_PROJECTILE = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		SKILL_PROJECTILE_KEY,
+		EntityType.Builder.<SkillProjectile>of(SkillProjectile::new, MobCategory.MISC)
+			.sized(0.35F, 0.35F)
+			.clientTrackingRange(6)
+			.updateInterval(5)
+			.noSave()
+			.build(SKILL_PROJECTILE_KEY)
 	);
 
 	public static void init() {

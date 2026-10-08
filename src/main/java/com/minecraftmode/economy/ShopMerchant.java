@@ -40,7 +40,7 @@ public class ShopMerchant implements Merchant {
 		this.type = type;
 		this.tradingPlayer = player;
 		this.market = MarketData.get(level.getServer());
-		for (ShopOffers.Trade trade : ShopOffers.trades(type)) {
+		for (ShopOffers.Trade trade : ShopOffers.trades(type, player)) {
 			MerchantOffer offer = trade.toOffer();
 			offer.setSpecialPriceDiff(MarketData.priceIncrease(trade.costCount(), this.market.pressure(this.marketKey(trade), level.getGameTime())));
 			this.offers.add(offer);

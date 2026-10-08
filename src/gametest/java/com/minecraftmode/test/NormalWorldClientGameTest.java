@@ -208,7 +208,7 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 				for (int y = level.getMinY() + 6; y < 40; y++) {
 					pos.set(x, y, z);
 					if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()
-						&& !level.getBlockState(pos.below()).isAir() && level.getBlockState(pos.below()).isSolid()
+						&& !level.getBlockState(pos.below()).isAir() && level.getBlockState(pos.below()).isFaceSturdy(level, pos.below(), net.minecraft.core.Direction.UP)
 						&& level.getBrightness(LightLayer.SKY, pos) == 0 && level.getBrightness(LightLayer.BLOCK, pos) == 0) {
 						found.add(pos.immutable());
 						break;

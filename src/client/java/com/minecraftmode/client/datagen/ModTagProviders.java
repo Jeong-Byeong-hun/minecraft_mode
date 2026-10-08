@@ -33,12 +33,12 @@ public final class ModTagProviders {
 				.add(
 					key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK),
 					key(ModBlocks.ALUMINUM_ORE), key(ModBlocks.DEEPSLATE_ALUMINUM_ORE), key(ModBlocks.ALUMINUM_BLOCK), key(ModBlocks.RAW_ALUMINUM_BLOCK),
-					key(ModBlocks.PLASTIC_BLOCK)
+					key(ModBlocks.PLASTIC_BLOCK), key(ModBlocks.ENGRAVING_TABLE)
 				);
 			this.builder(BlockTags.MINEABLE_WITH_AXE)
-				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP));
+				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP), key(ModBlocks.GUILD_SHOP));
 			this.builder(BlockTags.NEEDS_IRON_TOOL)
-				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK));
+				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK), key(ModBlocks.ENGRAVING_TABLE));
 			this.builder(BlockTags.NEEDS_STONE_TOOL)
 				.add(key(ModBlocks.ALUMINUM_ORE), key(ModBlocks.DEEPSLATE_ALUMINUM_ORE), key(ModBlocks.ALUMINUM_BLOCK), key(ModBlocks.RAW_ALUMINUM_BLOCK));
 			this.builder(BlockTags.BEACON_BASE_BLOCKS).add(key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.ALUMINUM_BLOCK));

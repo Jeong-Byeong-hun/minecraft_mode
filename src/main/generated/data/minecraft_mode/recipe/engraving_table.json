@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "D": "minecraft:diamond",
+    "E": "minecraft_mode:essence",
+    "M": "minecraft_mode:mythril_ingot",
+    "O": "minecraft:obsidian"
+  },
+  "pattern": [
+    "EEE",
+    "DMD",
+    "OOO"
+  ],
+  "result": {
+    "id": "minecraft_mode:engraving_table"
+  }
+}

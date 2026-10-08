@@ -8,6 +8,7 @@
     "minecraft_mode:deepslate_aluminum_ore",
     "minecraft_mode:aluminum_block",
     "minecraft_mode:raw_aluminum_block",
-    "minecraft_mode:plastic_block"
+    "minecraft_mode:plastic_block",
+    "minecraft_mode:engraving_table"
   ]
 }

@@ -3,6 +3,7 @@
     "minecraft_mode:mythril_ore",
     "minecraft_mode:deepslate_mythril_ore",
     "minecraft_mode:mythril_block",
-    "minecraft_mode:raw_mythril_block"
+    "minecraft_mode:raw_mythril_block",
+    "minecraft_mode:engraving_table"
   ]
 }

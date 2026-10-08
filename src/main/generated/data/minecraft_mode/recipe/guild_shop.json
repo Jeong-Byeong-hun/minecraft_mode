@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft_mode:shop_block",
+    "minecraft_mode:essence"
+  ],
+  "result": {
+    "id": "minecraft_mode:guild_shop"
+  }
+}

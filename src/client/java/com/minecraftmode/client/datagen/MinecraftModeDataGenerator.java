@@ -13,6 +13,8 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		FabricDataGenerator.Pack pack = generator.createPack();
 
 		pack.addProvider(ModModelProvider::new);
+		pack.addProvider(WeaponTextureProvider::new);
+		pack.addProvider(ClassDocProvider::new);
 		pack.addProvider(ModRecipeProvider::new);
 		pack.addProvider(ModLootProviders.Blocks::new);
 		pack.addProvider(ModLootProviders.Entities::new);

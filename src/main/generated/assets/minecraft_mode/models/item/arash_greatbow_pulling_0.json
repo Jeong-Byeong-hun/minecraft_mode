@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/bow",
+  "textures": {
+    "layer0": "minecraft_mode:item/arash_greatbow_pulling_0"
+  }
+}

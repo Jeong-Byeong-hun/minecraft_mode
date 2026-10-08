@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/bow",
+  "textures": {
+    "layer0": "minecraft_mode:item/viper_shortbow_pulling_1"
+  }
+}

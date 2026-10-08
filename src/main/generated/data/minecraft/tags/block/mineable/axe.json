@@ -3,6 +3,7 @@
     "minecraft_mode:shop_block",
     "minecraft_mode:blacksmith_shop",
     "minecraft_mode:grocer_shop",
-    "minecraft_mode:jeweler_shop"
+    "minecraft_mode:jeweler_shop",
+    "minecraft_mode:guild_shop"
   ]
 }

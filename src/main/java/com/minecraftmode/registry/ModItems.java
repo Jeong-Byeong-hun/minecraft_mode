@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.ModMaterials;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
@@ -44,6 +45,23 @@ public final class ModItems {
 	public static final Item SILVER_COIN = register("silver_coin", new Item.Properties().rarity(Rarity.UNCOMMON));
 	public static final Item GOLD_COIN = register("gold_coin", new Item.Properties().rarity(Rarity.RARE));
 
+	// Classes: essence (engraving/advancement currency), advancement items
+	public static final Item ESSENCE = register("essence", new Item.Properties().rarity(Rarity.UNCOMMON));
+	public static final Item CONDENSED_ESSENCE = register("condensed_essence", new Item.Properties().rarity(Rarity.RARE));
+	public static final Item GOLEM_CORE = register("golem_core", new Item.Properties().rarity(Rarity.RARE).stacksTo(16));
+	public static final Item CLASS_RESET_SCROLL = register(
+		"class_reset_scroll", ClassResetScrollItem::new, new Item.Properties().rarity(Rarity.EPIC).stacksTo(16)
+	);
+
+	// Display-only items shown by skill projectiles (not in any creative tab)
+	public static final Item PROJECTILE_SHURIKEN = register("projectile_shuriken");
+	public static final Item PROJECTILE_KUNAI = register("projectile_kunai");
+	public static final Item PROJECTILE_KNIFE = register("projectile_knife");
+	public static final Item PROJECTILE_BULLET = register("projectile_bullet");
+	public static final Item PROJECTILE_CANNONBALL = register("projectile_cannonball");
+	public static final Item PROJECTILE_ICICLE = register("projectile_icicle");
+	public static final Item PROJECTILE_HARPOON = register("projectile_harpoon");
+
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(
 		"mine_raider_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(ModEntities.MINE_RAIDER)
@@ -66,6 +84,8 @@ public final class ModItems {
 	public static final Item BLACKSMITH_SHOP = registerBlockItem(ModBlocks.BLACKSMITH_SHOP);
 	public static final Item GROCER_SHOP = registerBlockItem(ModBlocks.GROCER_SHOP);
 	public static final Item JEWELER_SHOP = registerBlockItem(ModBlocks.JEWELER_SHOP);
+	public static final Item GUILD_SHOP = registerBlockItem(ModBlocks.GUILD_SHOP);
+	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
 
 	private static Item register(final String name) {
 		return register(name, Item::new, new Item.Properties());

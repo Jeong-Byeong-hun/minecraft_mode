@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
@@ -31,6 +33,9 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.BLACKSMITH_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.GROCER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.JEWELER_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.GUILD_SHOP, TexturedModel.COLUMN);
+		// engraving_table_top / _side / _bottom
+		generators.createTrivialBlock(ModBlocks.ENGRAVING_TABLE, TexturedModel.CUBE_BOTTOM_TOP);
 	}
 
 	@Override
@@ -41,7 +46,10 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.PLASTIC_SHEET,
 			ModItems.COPPER_COIN, ModItems.SILVER_COIN, ModItems.GOLD_COIN,
 			ModItems.MYTHRIL_HELMET, ModItems.MYTHRIL_CHESTPLATE, ModItems.MYTHRIL_LEGGINGS, ModItems.MYTHRIL_BOOTS,
-			ModItems.MINE_RAIDER_SPAWN_EGG, ModItems.MYTHRIL_GOLEM_SPAWN_EGG
+			ModItems.MINE_RAIDER_SPAWN_EGG, ModItems.MYTHRIL_GOLEM_SPAWN_EGG,
+			ModItems.ESSENCE, ModItems.CONDENSED_ESSENCE, ModItems.GOLEM_CORE, ModItems.CLASS_RESET_SCROLL,
+			ModItems.PROJECTILE_SHURIKEN, ModItems.PROJECTILE_KUNAI, ModItems.PROJECTILE_KNIFE, ModItems.PROJECTILE_BULLET,
+			ModItems.PROJECTILE_CANNONBALL, ModItems.PROJECTILE_ICICLE, ModItems.PROJECTILE_HARPOON
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
 		}
@@ -50,6 +58,19 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.MYTHRIL_SWORD, ModItems.MYTHRIL_PICKAXE, ModItems.MYTHRIL_AXE, ModItems.MYTHRIL_SHOVEL, ModItems.MYTHRIL_HOE
 		}) {
 			generators.generateFlatItem(tool, ModelTemplates.FLAT_HANDHELD_ITEM);
+		}
+
+		// Class weapons: textures come from WeaponTextureProvider; bows get vanilla-style pulling models.
+		for (WeaponDef def : JobWeapons.all()) {
+			Item item = JobWeapons.item(def);
+			switch (def.archetype()) {
+				case SHORTBOW, LONGBOW, GREATBOW -> {
+					generators.createFlatItemModel(item, ModelTemplates.BOW);
+					generators.generateBow(item);
+				}
+				case SHURIKEN, ORB, GRIMOIRE, KNUCKLE -> generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+				default -> generators.generateFlatItem(item, ModelTemplates.FLAT_HANDHELD_ITEM);
+			}
 		}
 	}
 }

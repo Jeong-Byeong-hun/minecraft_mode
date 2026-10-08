@@ -5,6 +5,16 @@ import com.minecraftmode.enchantment.ArmorAuras;
 import com.minecraftmode.enchantment.AutoSmeltLoot;
 import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
+import com.minecraftmode.command.JobCommand;
+import com.minecraftmode.job.JobEvents;
+import com.minecraftmode.job.skill.CombatHooks;
+import com.minecraftmode.job.skill.SkillScheduler;
+import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.network.ModNetworking;
+import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.registry.ModMenus;
+import com.minecraftmode.registry.ModParticles;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
@@ -27,9 +37,14 @@ public class MinecraftMode implements ModInitializer {
 	public void onInitialize() {
 		// Order matters: items reference blocks, the entity type (spawn egg) and effects.
 		ModEffects.init();
+		ModParticles.init();
+		ModDataComponents.init();
+		ModAttachments.init();
 		ModBlocks.init();
 		ModEntities.init();
 		ModItems.init();
+		JobWeapons.init();
+		ModMenus.init();
 		ModCreativeTabs.init();
 		ModOreGeneration.init();
 		ModEconomy.init();
@@ -37,6 +52,11 @@ public class MinecraftMode implements ModInitializer {
 		ToolEnchantmentHandlers.init();
 		CombatEnchantmentHandlers.init();
 		ArmorAuras.init();
+		SkillScheduler.init();
+		CombatHooks.init();
+		JobEvents.init();
+		ModNetworking.init();
+		JobCommand.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

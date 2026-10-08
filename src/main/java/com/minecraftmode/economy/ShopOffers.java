@@ -1,13 +1,22 @@
 package com.minecraftmode.economy;
 
+import com.minecraftmode.job.JobData;
+import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.registry.ModItems;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.ItemLike;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Base price lists. Prices are in copper (C), silver (S = 9C) and gold (G = 9S) coins; the market
@@ -16,20 +25,35 @@ import net.minecraft.world.level.ItemLike;
 public final class ShopOffers {
 	private static final int UNLIMITED = Integer.MAX_VALUE;
 
-	/** One line of a price list: pay {@code costCount} x {@code cost}, receive {@code resultCount} x {@code result}. */
-	public record Trade(ItemLike cost, int costCount, ItemLike result, int resultCount) {
+	/**
+	 * One line of a price list: pay {@code costCount} x {@code cost} (plus {@code extraCount} x
+	 * {@code extra} when set), receive {@code resultCount} x {@code result}. Market pressure only
+	 * raises the coin part.
+	 */
+	public record Trade(ItemLike cost, int costCount, ItemLike result, int resultCount, @Nullable ItemLike extra, int extraCount) {
+		public Trade(final ItemLike cost, final int costCount, final ItemLike result, final int resultCount) {
+			this(cost, costCount, result, resultCount, null, 0);
+		}
+
 		/** Stable id used for market pressure. */
 		public String key() {
 			return BuiltInRegistries.ITEM.getKey(this.cost.asItem()) + "->" + BuiltInRegistries.ITEM.getKey(this.result.asItem());
 		}
 
 		public MerchantOffer toOffer() {
-			return new MerchantOffer(new ItemCost(this.cost, this.costCount), new ItemStack(this.result, this.resultCount), UNLIMITED, 0, 0.0F);
+			Optional<ItemCost> second = this.extra == null ? Optional.empty() : Optional.of(new ItemCost(this.extra, this.extraCount));
+			return new MerchantOffer(new ItemCost(this.cost, this.costCount), second, new ItemStack(this.result, this.resultCount), UNLIMITED, 0, 0.0F);
 		}
+	}
+
+	/** Price list for {@code player}; only the guild depends on who is asking. */
+	public static List<Trade> trades(final ShopType type, final Player player) {
+		return type == ShopType.GUILD ? guild(player) : trades(type);
 	}
 
 	public static List<Trade> trades(final ShopType type) {
 		return switch (type) {
+			case GUILD -> guild(null);
 			case GENERAL -> List.of(
 				sell(Items.COBBLESTONE, 32, ModItems.COPPER_COIN, 1),
 				sell(Items.ROTTEN_FLESH, 16, ModItems.COPPER_COIN, 1),
@@ -95,6 +119,36 @@ public final class ShopOffers {
 				buy(ModItems.GOLD_COIN, 1, Items.TOTEM_OF_UNDYING, 1),
 				buy(ModItems.GOLD_COIN, 2, Items.NETHERITE_SCRAP, 1)
 			);
+		};
+	}
+
+	/**
+	 * Class weapons of the visitor's class up to their tier (all tier 1 weapons for players without a
+	 * class), priced in coins plus essence, and the class reset scroll.
+	 */
+	private static List<Trade> guild(final @Nullable Player player) {
+		JobData data = player == null ? JobData.DEFAULT : JobProgression.get(player);
+		List<Trade> list = new ArrayList<>();
+		for (WeaponDef def : JobWeapons.all()) {
+			boolean visible = data.hasClass() ? def.job() == data.job() && def.tier() <= data.tier() : def.tier() == 1;
+			if (visible) {
+				list.add(weaponTrade(def));
+			}
+		}
+		list.add(sell(ModItems.ESSENCE, 6, ModItems.COPPER_COIN, 2));
+		list.add(buy(ModItems.GOLD_COIN, 4, ModItems.CLASS_RESET_SCROLL, 1));
+		return list;
+	}
+
+	/** T1: silver + essence, T2: gold + essence, T3/T4: gold + condensed essence; pricier with the level requirement. */
+	private static Trade weaponTrade(final WeaponDef def) {
+		Item weapon = JobWeapons.item(def);
+		int above = def.level() - JobProgression.levelForTier(def.tier());
+		return switch (def.tier()) {
+			case 1 -> new Trade(ModItems.SILVER_COIN, 2 + above / 4, weapon, 1, ModItems.ESSENCE, 8);
+			case 2 -> new Trade(ModItems.GOLD_COIN, 1 + above / 8, weapon, 1, ModItems.ESSENCE, 16);
+			case 3 -> new Trade(ModItems.GOLD_COIN, 3 + above / 8, weapon, 1, ModItems.CONDENSED_ESSENCE, 4);
+			default -> new Trade(ModItems.GOLD_COIN, 8 + above / 10, weapon, 1, ModItems.CONDENSED_ESSENCE, 10);
 		};
 	}
 

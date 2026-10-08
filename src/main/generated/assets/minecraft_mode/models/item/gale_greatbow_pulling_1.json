@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/bow",
+  "textures": {
+    "layer0": "minecraft_mode:item/gale_greatbow_pulling_1"
+  }
+}

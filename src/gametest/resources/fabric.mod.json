@@ -8,7 +8,8 @@
 		"fabric-client-gametest": [
 			"com.minecraftmode.test.MinecraftModeClientGameTest",
 			"com.minecraftmode.test.EnchantmentClientGameTest",
-			"com.minecraftmode.test.NormalWorldClientGameTest"
+			"com.minecraftmode.test.NormalWorldClientGameTest",
+			"com.minecraftmode.test.JobClientGameTest"
 		]
 	},
 	"depends": {

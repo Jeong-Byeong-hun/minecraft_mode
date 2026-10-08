@@ -1,0 +1,192 @@
+package com.minecraftmode.job;
+
+import com.minecraftmode.enchantment.EnchantLevels;
+import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.job.skill.Actions;
+import com.minecraftmode.job.skill.CombatHooks;
+import com.minecraftmode.job.skill.CombatState;
+import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.registry.ModBlocks;
+import com.minecraftmode.registry.ModItems;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockItemTags;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+
+/**
+ * Wires classes into the game: job experience and essence from kills and ores, MP regeneration,
+ * stat refresh, death penalty, Avalon, and cleanup of summons.
+ */
+public final class JobEvents {
+	/** Bosses (this much max health or more) drop condensed essence and give double experience. */
+	private static final float BOSS_HEALTH = 100.0F;
+
+	public static void init() {
+		ServerTickEvents.END_SERVER_TICK.register(JobEvents::tick);
+		ServerLivingEntityEvents.AFTER_DEATH.register(JobEvents::afterDeath);
+		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> !(entity instanceof ServerPlayer player) || allowDeath(player, source, amount));
+		PlayerBlockBreakEvents.AFTER.register(JobEvents::afterBlockBreak);
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			JobStats.refresh(newPlayer);
+			JobProgression.set(newPlayer, JobProgression.get(newPlayer).withMana(JobStats.maxMana(newPlayer)));
+		});
+		ServerPlayerEvents.JOIN.register(JobStats::refresh);
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> CombatState.forget(handler.player));
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CombatState.clear());
+		// Summons are temporary; drop any that were saved with a chunk.
+		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+			if (entity.entityTags().contains(Actions.SUMMON_TAG)) {
+				entity.discard();
+			}
+		});
+	}
+
+	private static void tick(final MinecraftServer server) {
+		int tick = server.getTickCount();
+		if (tick % 10 != 0) {
+			return;
+		}
+		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+			JobStats.tick(player, tick);
+		}
+	}
+
+	// ------------------------------------------------------------------ kills
+
+	private static void afterDeath(final LivingEntity entity, final DamageSource source) {
+		if (entity instanceof ServerPlayer player) {
+			JobProgression.applyDeathPenalty(player);
+			return;
+		}
+		if (!(source.getEntity() instanceof ServerPlayer killer) || !(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy)) {
+			return;
+		}
+		float maxHealth = entity.getMaxHealth();
+		boolean boss = maxHealth >= BOSS_HEALTH;
+		JobProgression.addExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))));
+
+		// Essence: monsters drop it at random, bosses always drop condensed essence
+		if (boss) {
+			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + (int)(maxHealth / 150.0F)));
+		} else if (killer.getRandom().nextFloat() < Math.min(0.6F, 0.06F + maxHealth * 0.0025F)) {
+			drop(level, entity, new ItemStack(ModItems.ESSENCE));
+		}
+
+		// Coins: pirate passive and the Plunder engraving
+		JobData data = JobProgression.get(killer);
+		float coinChance = (CombatHooks.has(data, JobClass.PIRATE, 1) ? 0.15F : 0.0F) + JobWeapons.activeTotals(killer).fraction(EngraveStat.GOLD_FIND);
+		if (coinChance > 0.0F && killer.getRandom().nextFloat() < coinChance) {
+			int copper = 1 + (int)(maxHealth / 20.0F);
+			drop(level, entity, copper >= 9 ? new ItemStack(ModItems.SILVER_COIN, copper / 9) : new ItemStack(ModItems.COPPER_COIN, copper));
+			level.sendParticles(ParticleTypes.WAX_ON, entity.getX(), entity.getY(0.5), entity.getZ(), 8, 0.3, 0.3, 0.3, 0.1);
+		}
+	}
+
+	private static void drop(final ServerLevel level, final LivingEntity entity, final ItemStack stack) {
+		ItemEntity item = entity.spawnAtLocation(level, stack);
+		if (item != null) {
+			item.setGlowingTag(true);
+		}
+	}
+
+	/** Avalon (warrior tier 4): survive a lethal blow once every 3 minutes. */
+	private static boolean allowDeath(final ServerPlayer player, final DamageSource source, final float amount) {
+		JobData data = JobProgression.get(player);
+		if (!CombatHooks.has(data, JobClass.WARRIOR, 4)) {
+			return true;
+		}
+		CombatState state = CombatState.of(player);
+		long now = player.level().getGameTime();
+		if (now < state.avalonReadyAt) {
+			return true;
+		}
+		state.avalonReadyAt = now + 3600;
+		player.setHealth(player.getMaxHealth() * 0.3F);
+		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 60, 3));
+		ServerLevel level = player.level();
+		level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY(1.0), player.getZ(), 40, 0.5, 0.8, 0.5, 0.3);
+		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.3F);
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.job.avalon").withStyle(ChatFormatting.GOLD));
+		return false;
+	}
+
+	// ------------------------------------------------------------------ ores
+
+	private static void afterBlockBreak(final Level level, final Player player, final BlockPos pos, final BlockState state, final Object blockEntity) {
+		if (!(level instanceof ServerLevel serverLevel) || !(player instanceof ServerPlayer serverPlayer) || player.isCreative()) {
+			return;
+		}
+		OreReward reward = oreReward(state);
+		if (reward == null || !player.hasCorrectToolForDrops(state)) {
+			return;
+		}
+		JobProgression.addExp(serverPlayer, reward.exp);
+		ItemStack tool = player.getMainHandItem();
+		if (EnchantLevels.get(level, Enchantments.SILK_TOUCH, tool) > 0) {
+			return;
+		}
+		if (player.getRandom().nextFloat() < reward.essenceChance) {
+			ItemEntity item = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, new ItemStack(ModItems.ESSENCE));
+			item.setDefaultPickUpDelay();
+			item.setGlowingTag(true);
+			serverLevel.addFreshEntity(item);
+		}
+	}
+
+	private record OreReward(int exp, float essenceChance) {
+	}
+
+	/** Iron and better ores give job experience and sometimes essence. */
+	private static OreReward oreReward(final BlockState state) {
+		if (state.is(BlockItemTags.IRON_ORES.block())) {
+			return new OreReward(2, 0.06F);
+		}
+		if (state.is(BlockItemTags.GOLD_ORES.block())) {
+			return new OreReward(3, 0.08F);
+		}
+		if (state.is(BlockItemTags.REDSTONE_ORES.block())) {
+			return new OreReward(2, 0.06F);
+		}
+		if (state.is(BlockItemTags.LAPIS_ORES.block())) {
+			return new OreReward(3, 0.08F);
+		}
+		if (state.is(ModBlocks.MYTHRIL_ORE) || state.is(ModBlocks.DEEPSLATE_MYTHRIL_ORE)) {
+			return new OreReward(6, 0.15F);
+		}
+		if (state.is(BlockItemTags.DIAMOND_ORES.block()) || state.is(BlockItemTags.EMERALD_ORES.block())) {
+			return new OreReward(8, 0.30F);
+		}
+		if (state.is(Blocks.ANCIENT_DEBRIS)) {
+			return new OreReward(15, 0.50F);
+		}
+		return null;
+	}
+
+	private JobEvents() {
+	}
+}

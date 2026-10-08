@@ -41,6 +41,8 @@ public final class ModLootProviders {
 			this.dropSelf(ModBlocks.BLACKSMITH_SHOP);
 			this.dropSelf(ModBlocks.GROCER_SHOP);
 			this.dropSelf(ModBlocks.JEWELER_SHOP);
+			this.dropSelf(ModBlocks.GUILD_SHOP);
+			this.dropSelf(ModBlocks.ENGRAVING_TABLE);
 		}
 	}
 
@@ -108,6 +110,8 @@ public final class ModLootProviders {
 							.add(LootItem.lootTableItem(ModItems.GOLD_COIN))
 							.when(LootItemKilledByPlayerCondition.killedByPlayer())
 					)
+					// the core needed for the third class advancement, always
+					.withPool(LootPool.lootPool().setRolls(ContextIntProviders.exactly(1)).add(LootItem.lootTableItem(ModItems.GOLEM_CORE)))
 			);
 		}
 	}

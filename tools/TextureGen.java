@@ -106,6 +106,8 @@ public class TextureGen {
 
 		// --- Classes (particles, essence, projectiles, engraving table, guild) ---
 		ClassArt.writeAll();
+		// --- Advancement trials (trial tokens, class trainer skins) ---
+		QuestArt.writeAll();
 
 		if (args.length > 1) {
 			writePreview(Path.of(args[1]));

@@ -1,15 +1,21 @@
 package com.minecraftmode.command;
 
+import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.job.quest.QuestData;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.SkillCaster;
+import com.minecraftmode.registry.ModEntities;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -20,9 +26,10 @@ import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntitySpawnReason;
 
 /**
- * Admin/testing command: {@code /job info|set|level|exp|mana|cooldowns|cast}. Needs permission level 2.
+ * Admin/testing command: {@code /job info|set|level|exp|mana|cooldowns|cast|trainer|quest}. Needs permission level 2.
  */
 public final class JobCommand {
 	public static void init() {
@@ -58,7 +65,55 @@ public final class JobCommand {
 							c.getSource().sendSuccess(() -> Component.literal("cast: " + result), false);
 							return result == SkillCaster.Result.OK ? 1 : 0;
 						})))
+				.then(Commands.literal("trainer")
+					.then(Commands.argument("class", StringArgumentType.word())
+						.suggests((c, b) -> SharedSuggestionProvider.suggest(JobClass.PLAYABLE.stream().map(JobClass::id), b))
+						.executes(JobCommand::trainer)))
+				.then(Commands.literal("quest")
+					.then(Commands.argument("targets", EntityArgument.players())
+						.then(Commands.literal("clear").executes(c -> quest(c, false)))
+						.then(Commands.literal("goals").executes(c -> quest(c, true)))))
 		);
+	}
+
+	/** Summons a class trainer where the command runs (for worlds without the capital, or extra posts). */
+	private static int trainer(final CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+		JobClass job = JobClass.byId(StringArgumentType.getString(c, "class"));
+		if (job == JobClass.NONE) {
+			throw new SimpleCommandExceptionType(Component.translatable("commands.minecraft_mode.job.unknown_class")).create();
+		}
+		CommandSourceStack source = c.getSource();
+		ClassTrainer trainer = ModEntities.CLASS_TRAINER.create(source.getLevel(), EntitySpawnReason.COMMAND);
+		if (trainer == null) {
+			return 0;
+		}
+		trainer.setJob(job);
+		trainer.snapTo(source.getPosition().x, source.getPosition().y, source.getPosition().z, source.getRotation().y, 0.0F);
+		source.getLevel().addFreshEntity(trainer);
+		source.sendSuccess(() -> Component.translatable("commands.minecraft_mode.job.trainer", Component.translatable(ClassTrainer.nameKey(job))), true);
+		return 1;
+	}
+
+	/** {@code clear} drops the active trial; {@code goals} completes its kill goals (tokens and materials are still needed). */
+	private static int quest(final CommandContext<CommandSourceStack> c, final boolean goals) throws CommandSyntaxException {
+		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
+		for (ServerPlayer player : players) {
+			QuestDef quest = QuestService.active(player);
+			if (quest == null) {
+				continue;
+			}
+			QuestData data = QuestService.get(player);
+			if (goals) {
+				for (int i = 0; i < quest.kills().size(); i++) {
+					data = data.withProgress(i, quest.kills().get(i).count());
+				}
+				QuestService.set(player, data);
+			} else {
+				QuestService.set(player, data.cleared());
+			}
+		}
+		c.getSource().sendSuccess(() -> Component.translatable(goals ? "commands.minecraft_mode.job.quest_goals" : "commands.minecraft_mode.job.quest_clear", players.size()), true);
+		return players.size();
 	}
 
 	private static int info(final CommandSourceStack source, final ServerPlayer player) {

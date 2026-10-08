@@ -1,32 +1,38 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.city.CityZone;
+import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
-import com.minecraftmode.network.AdvanceJobPayload;
+import com.minecraftmode.job.quest.QuestData;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.job.quest.Quests;
+import com.minecraftmode.network.QuestActionPayload;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.item.ItemStack;
 
 /**
- * Class screen (K): level, experience, MP, the four tiers with their passives, and the advancement
- * button (class choice at the first advancement). Rebuilds itself when the synced data changes.
+ * Class screen (K): level, experience, MP and the four tiers with their passives on the left; the
+ * active trial (or where to get the next one) on the right. Advancing happens at the class
+ * trainers in Stormhold, not here.
  */
 public class JobScreen extends Screen {
 	private static final int W = 340;
 	private static final int H = 214;
 
 	private JobData shown;
+	private QuestData shownQuest;
 	private int left;
 	private int top;
 
@@ -47,50 +53,21 @@ public class JobScreen extends Screen {
 			return;
 		}
 		this.shown = JobProgression.get(player);
-		int x = this.left + 180;
-		int y = this.top + 40;
-		if (this.shown.tier() == 0) {
-			boolean levelOk = this.shown.level() >= JobProgression.levelForTier(1);
-			for (JobClass job : JobClass.PLAYABLE) {
-				MutableComponent label = Component.translatable(job.nameKey()).withColor(levelOk ? job.color() : 0x808080);
-				Button button = Button.builder(label, b -> this.advance(job)).bounds(x, y, 150, 18).tooltip(Tooltip.create(classTooltip(job))).build();
-				button.active = levelOk;
-				this.addRenderableWidget(button);
-				y += 21;
-			}
-		} else if (this.shown.tier() < 4) {
-			Button button = Button.builder(Component.translatable("screen.minecraft_mode.job.advance"), b -> this.advance(this.shown.job()))
-				.bounds(x, this.top + H - 30, 150, 20)
-				.build();
-			button.active = JobProgression.canAdvance(player, this.shown.job()) == JobProgression.AdvanceResult.OK;
-			this.addRenderableWidget(button);
+		this.shownQuest = QuestService.get(player);
+		if (this.shownQuest.hasQuest()) {
+			this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.trainer.abandon"), b -> {
+				if (ClientPlayNetworking.canSend(QuestActionPayload.TYPE)) {
+					ClientPlayNetworking.send(new QuestActionPayload(QuestActionPayload.Action.ABANDON, -1));
+				}
+			}).bounds(this.left + W - 92, this.top + H - 30, 80, 20).build());
 		}
 		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + 12, this.top + H - 30, 80, 20).build());
-	}
-
-	private static Component classTooltip(final JobClass job) {
-		MutableComponent text = Component.empty();
-		for (int tier = 1; tier <= 4; tier++) {
-			if (tier > 1) {
-				text.append(" → ");
-			}
-			text.append(Component.translatable(job.tierKey(tier)));
-		}
-		text.append("\n\n").append(Component.translatable(job.passiveKey(1)).withStyle(ChatFormatting.GOLD))
-			.append(": ").append(Component.translatable(job.passiveDescKey(1)));
-		return text;
-	}
-
-	private void advance(final JobClass choice) {
-		if (ClientPlayNetworking.canSend(AdvanceJobPayload.TYPE)) {
-			ClientPlayNetworking.send(new AdvanceJobPayload(choice));
-		}
 	}
 
 	@Override
 	public void tick() {
 		LocalPlayer player = this.player();
-		if (player != null && !JobProgression.get(player).equals(this.shown)) {
+		if (player != null && (!JobProgression.get(player).equals(this.shown) || !QuestService.get(player).equals(this.shownQuest))) {
 			this.rebuildWidgets();
 		}
 	}
@@ -130,8 +107,7 @@ public class JobScreen extends Screen {
 			for (int tier = 1; tier <= 4; tier++) {
 				boolean unlocked = data.tier() >= tier;
 				int color = unlocked ? 0xFF000000 | data.job().color() : 0xFF777777;
-				String mark = unlocked ? "✔ " : "✕ ";
-				g.text(this.font, Component.literal(mark).append(Component.translatable("screen.minecraft_mode.job.tier_line", tier, Component.translatable(data.job().tierKey(tier)))),
+				g.text(this.font, Component.literal(unlocked ? "✔ " : "✕ ").append(Component.translatable("screen.minecraft_mode.job.tier_line", tier, Component.translatable(data.job().tierKey(tier)))),
 					x + 12, ty, color, false);
 				Component passive = Component.translatable(data.job().passiveKey(tier));
 				g.text(this.font, Component.literal("  ").append(passive), x + 12, ty + 10, unlocked ? 0xFFFFD27F : 0xFF666666, false);
@@ -146,40 +122,63 @@ public class JobScreen extends Screen {
 			}
 		}
 
-		// right: advancement
+		// right: the trial
 		int rx = x + 180;
 		int ry = y + 26;
-		int hintY;
-		if (data.tier() == 0) {
-			g.text(this.font, Component.translatable("screen.minecraft_mode.job.choose", JobProgression.levelForTier(1)), rx, ry, 0xFFFFFFFF, false);
-			hintY = y + 40 + JobClass.PLAYABLE.size() * 21 + 2;
-		} else if (data.tier() < 4) {
-			int next = data.tier() + 1;
-			g.text(this.font, Component.translatable("screen.minecraft_mode.job.next", next, Component.translatable(data.job().tierKey(next))).withColor(data.job().color()),
-				rx, ry, 0xFFFFFFFF, false);
-			int ly = ry + 14;
-			int needLevel = JobProgression.levelForTier(next);
-			boolean levelOk = data.level() >= needLevel;
-			g.text(this.font, Component.translatable("screen.minecraft_mode.job.requires_level", needLevel), rx, ly, levelOk ? 0xFF7CFC7C : 0xFFFF6B6B, false);
-			ly += 12;
-			for (ItemStack cost : JobProgression.costForTier(next)) {
-				int have = JobProgression.count(player.getInventory(), cost.getItem());
-				boolean ok = have >= cost.getCount() || player.isCreative();
-				g.item(cost, rx, ly - 4);
-				g.text(this.font, Component.empty().append(cost.getHoverName()).append(" " + Math.min(have, cost.getCount()) + "/" + cost.getCount()),
-					rx + 20, ly, ok ? 0xFF7CFC7C : 0xFFFF6B6B, false);
-				ly += 18;
+		QuestDef active = QuestService.active(player);
+		if (active != null) {
+			ry = this.activeQuest(g, player, active, rx, ry);
+		} else if (data.tier() == 0) {
+			ry = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.visit_any"), rx, ry, 150, 0xFFFFFFFF) + 4;
+			for (JobClass job : JobClass.PLAYABLE) {
+				BlockPos home = CityZone.trainerHome(job, 0);
+				g.text(this.font, Component.translatable(ClassTrainer.nameKey(job)).withColor(job.color()), rx, ry, 0xFFFFFFFF, false);
+				String where = home.getX() + ", " + home.getZ();
+				g.text(this.font, where, rx + 150 - this.font.width(where), ry, 0xFF8A8A8A, false);
+				ry += 11;
 			}
-			hintY = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.next_passive",
-				Component.translatable(data.job().passiveKey(next)), Component.translatable(data.job().passiveDescKey(next))), rx, ly + 4, 150, 0xFFBBBBBB) + 6;
+		} else if (data.tier() < 4) {
+			QuestDef next = Quests.forTier(data.job(), data.tier() + 1);
+			BlockPos home = CityZone.trainerHome(data.job(), 0);
+			ry = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.next_trial", data.tier() + 1, Component.translatable(next.nameKey()),
+				Component.translatable(ClassTrainer.nameKey(data.job())), home.getX(), home.getZ()).withColor(data.job().color()), rx, ry, 150, 0xFFFFFFFF) + 2;
+			int needLevel = JobProgression.levelForTier(data.tier() + 1);
+			g.text(this.font, Component.translatable("screen.minecraft_mode.job.requires_level", needLevel), rx, ry, data.level() >= needLevel ? 0xFF7CFC7C : 0xFFFF6B6B, false);
+			ry = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.next_passive",
+				Component.translatable(data.job().passiveKey(data.tier() + 1)), Component.translatable(data.job().passiveDescKey(data.tier() + 1))), rx, ry + 12, 150, 0xFFBBBBBB);
 		} else {
-			hintY = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.final"), rx, ry, 150, 0xFFFFD27F) + 6;
+			ry = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.final"), rx, ry, 150, 0xFFFFD27F);
 		}
 		g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.hint",
 			JobKeys.SKILLS[0].getTranslatedKeyMessage(), JobKeys.SKILLS[1].getTranslatedKeyMessage(), JobKeys.SKILLS[2].getTranslatedKeyMessage(),
-			JobKeys.SKILLS[3].getTranslatedKeyMessage()), rx, hintY, 152, 0xFF8A8A8A);
+			JobKeys.SKILLS[3].getTranslatedKeyMessage()), rx, Math.max(ry + 8, y + 132), 152, 0xFF8A8A8A);
 
 		super.extractRenderState(g, mouseX, mouseY, a);
+	}
+
+	private int activeQuest(final GuiGraphicsExtractor g, final LocalPlayer player, final QuestDef quest, final int x, final int y) {
+		int ty = y;
+		g.text(this.font, Component.translatable("screen.minecraft_mode.trainer.trial", quest.tier(), Component.translatable(quest.nameKey())).withColor(quest.job().color()), x, ty, 0xFFFFFFFF, false);
+		ty += 12;
+		QuestData data = QuestService.get(player);
+		for (int i = 0; i < quest.kills().size(); i++) {
+			ty = this.progress(g, x, ty, Component.translatable(quest.goalKey(i)), data.progress(i), quest.kills().get(i).count());
+		}
+		ty = this.progress(g, x, ty, Component.translatable(quest.token().getDescriptionId()), JobProgression.count(player.getInventory(), quest.token()), quest.tokenCount());
+		for (QuestDef.Material material : quest.materials()) {
+			ty = this.progress(g, x, ty, Component.translatable(material.item().getDescriptionId()), JobProgression.count(player.getInventory(), material.item()), material.count());
+		}
+		BlockPos home = CityZone.trainerHome(quest.job(), 0);
+		return g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.return_to", Component.translatable(ClassTrainer.nameKey(quest.job())), home.getX(), home.getZ()),
+			x, ty + 2, 150, 0xFFBBBBBB);
+	}
+
+	private int progress(final GuiGraphicsExtractor g, final int x, final int y, final Component label, final int have, final int need) {
+		boolean done = have >= need;
+		g.text(this.font, Component.literal(done ? "✔ " : "• ").append(label), x, y, done ? 0xFF7CFC7C : 0xFFE0E0E0, false);
+		String count = Math.min(have, need) + "/" + need;
+		g.text(this.font, count, x + 150 - this.font.width(count), y, done ? 0xFF7CFC7C : 0xFFBBBBBB, false);
+		return y + 10;
 	}
 
 	@Override

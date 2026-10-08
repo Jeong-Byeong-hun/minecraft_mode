@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.registry.ModBlocks;
@@ -52,6 +53,9 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.PROJECTILE_CANNONBALL, ModItems.PROJECTILE_ICICLE, ModItems.PROJECTILE_HARPOON
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
+		for (Item token : Quests.tokens()) {
+			generators.generateFlatItem(token, ModelTemplates.FLAT_ITEM);
 		}
 
 		for (Item tool : new Item[] {

@@ -1,9 +1,7 @@
 package com.minecraftmode.job;
 
 import com.minecraftmode.registry.ModAttachments;
-import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModParticles;
-import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.network.chat.Component;
@@ -15,11 +13,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * Levels, experience and class advancement. Experience comes from killing hostile mobs and mining
- * ores (see {@link JobEvents}); advancing needs a level and consumes the listed items.
+ * ores (see {@link JobEvents}); advancing needs a level and a completed trial (see {@code QuestService}).
  */
 public final class JobProgression {
 	public static final int MAX_LEVEL = 100;
@@ -42,24 +39,6 @@ public final class JobProgression {
 
 	public static int levelForTier(final int tier) {
 		return TIER_LEVEL[Math.max(0, Math.min(4, tier))];
-	}
-
-	/** One advancement material. */
-	public record Cost(Item item, int count) {
-	}
-
-	/** Items consumed to reach {@code tier}. Built on demand so item fields are initialized. */
-	public static List<Cost> costsForTier(final int tier) {
-		return switch (tier) {
-			case 2 -> List.of(new Cost(ModItems.ESSENCE, 16));
-			case 3 -> List.of(new Cost(ModItems.GOLEM_CORE, 1), new Cost(ModItems.CONDENSED_ESSENCE, 4));
-			case 4 -> List.of(new Cost(Items.NETHER_STAR, 1), new Cost(ModItems.CONDENSED_ESSENCE, 8));
-			default -> List.of();
-		};
-	}
-
-	public static List<ItemStack> costForTier(final int tier) {
-		return costsForTier(tier).stream().map(c -> new ItemStack(c.item(), c.count())).toList();
 	}
 
 	public static void addExp(final ServerPlayer player, final int amount) {
@@ -114,11 +93,13 @@ public final class JobProgression {
 		OK,
 		MAX_TIER,
 		NEED_CLASS,
-		LEVEL,
-		ITEMS
+		LEVEL
 	}
 
-	/** Checks without changing anything. {@code choice} is only used for the first advancement. */
+	/**
+	 * Level and tier check only; the materials are handled by the advancement trial
+	 * ({@code QuestService}). {@code choice} is only used for the first advancement.
+	 */
 	public static AdvanceResult canAdvance(final Player player, final JobClass choice) {
 		JobData data = get(player);
 		int next = data.tier() + 1;
@@ -131,9 +112,6 @@ public final class JobProgression {
 		if (data.level() < levelForTier(next)) {
 			return AdvanceResult.LEVEL;
 		}
-		if (!player.isCreative() && !hasItems(player.getInventory(), costForTier(next))) {
-			return AdvanceResult.ITEMS;
-		}
 		return AdvanceResult.OK;
 	}
 
@@ -144,11 +122,6 @@ public final class JobProgression {
 		}
 		JobData data = get(player);
 		int next = data.tier() + 1;
-		if (!player.isCreative()) {
-			for (ItemStack cost : costForTier(next)) {
-				removeItems(player.getInventory(), cost.getItem(), cost.getCount());
-			}
-		}
 		JobClass job = data.tier() == 0 ? choice : data.job();
 		set(player, data.withJob(job, next));
 		JobStats.refresh(player);
@@ -169,15 +142,6 @@ public final class JobProgression {
 		JobData data = get(player);
 		set(player, data.withJob(JobClass.NONE, 0).withCooldowns(java.util.Map.of()));
 		JobStats.refresh(player);
-	}
-
-	static boolean hasItems(final Inventory inventory, final List<ItemStack> costs) {
-		for (ItemStack cost : costs) {
-			if (count(inventory, cost.getItem()) < cost.getCount()) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	public static int count(final Inventory inventory, final Item item) {

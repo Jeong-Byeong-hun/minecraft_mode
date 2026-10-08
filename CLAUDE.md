@@ -8,15 +8,17 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - Loom plugin `net.fabricmc.fabric-loom` (non-remapping). 26.x is unobfuscated: **Mojang names, no mappings, `implementation` not `modImplementation`, `jar` not `remapJar`.**
 - Fabric API uses Mojang-style names since 26.1 (`CreativeModeTabEvents`, `FabricBlockLootSubProvider`, `FabricTagsProvider.BlockTagsProvider`, `ModelLayerRegistry`, ...).
 - Verify APIs against decompiled sources (`./gradlew genSources`) instead of guessing; many 1.21 names changed (e.g. `Identifier`, `EntityTypes`, `ContextIntProviders`, `Feature` replaces `ConfiguredFeature`, blocks have no codec).
+- 26.x worldgen: statuses are merged (`TERRAIN` = noise + surface + carvers) and from then on chunks only keep the final heightmaps; `*_WG` heightmaps are stale/unprimed during decoration, and `ChunkAccess.getHeight` already returns the top block's Y (no `- 1`). Worldgen code that needs column heights should scan the column (see `CityGenerator.shapeTerrain`).
+- Client gametests run at render distance 5. For wide shots raise both `options.renderDistance()` and `PlayerList.setViewDistance`; chunk sending is still slow, so prefer fixed waits over `waitForChunksRender` there (`CityChecks` also writes a top-down `city_map.png`).
 - 26.x client: GUI code uses `GuiGraphicsExtractor` (`extract*` methods instead of `render*`), screens open with `minecraft.gui.setScreen`, input is SDL (`InputConstants.KEY_*`, `Type.KEYBOARD`; no GLFW on the classpath).
 
 ## Layout
 
-- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, coin drops), `enchantment/` + `worldgen/` (bootstraps used by datagen), `job/` (class system), `network/`, `command/`, `mixin/`.
+- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, coin drops), `enchantment/` + `worldgen/` (bootstraps used by datagen), `job/` (class system, `job/quest/` advancement trials), `city/` (the capital at 0, 0), `network/`, `command/`, `mixin/`.
 - `src/client` — renderer, model layer, **datagen providers** (`client/datagen`).
 - `src/main/generated` — datagen output, committed. Never hand-edit; change the provider and run `./gradlew runDatagen`.
 - `src/gametest` — client game test (`./gradlew runClientGameTest`); keep it passing after changes.
-- `tools/TextureGen.java` (+ `tools/ClassArt.java`) — draws every texture except class weapons from scratch (no vanilla assets); run it instead of editing PNGs by hand. Class weapon textures are drawn at datagen time by `client/datagen/art` (`WeaponArtist`, `Shapes`, `Bows`) from each weapon's archetype, tier and `WeaponArt` colors; `runDatagen` also writes a review sheet to `build/weapon-preview.png`.
+- `tools/TextureGen.java` (+ `tools/ClassArt.java`, `tools/QuestArt.java` for trial tokens and trainer skins) — draws every texture except class weapons from scratch (no vanilla assets); run it instead of editing PNGs by hand. Class weapon textures are drawn at datagen time by `client/datagen/art` (`WeaponArtist`, `Shapes`, `Bows`) from each weapon's archetype, tier and `WeaponArt` colors; `runDatagen` also writes a review sheet to `build/weapon-preview.png`.
 
 ## Rules
 
@@ -31,7 +33,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 ## Class system (`job/`)
 
-- `JobClass` (5 classes x 4 tiers, titles + passives in en/ko), `JobData` (player attachment `ModAttachments.JOB`: class, tier, level, exp, MP, cooldowns; synced to the owner, kept on death), `JobProgression` (exp curve, tier levels 10/25/45/70, advancement costs), `JobStats` (max MP/regen, attribute modifiers from level, passives and the held weapon's engravings), `JobEvents` (exp/essence from kills and ores, MP tick, Avalon, death penalty).
+- `JobClass` (5 classes x 4 tiers, titles + passives in en/ko), `JobData` (player attachment `ModAttachments.JOB`: class, tier, level, exp, MP, cooldowns; synced to the owner, kept on death), `JobProgression` (exp curve, tier levels 10/25/45/70; `advance` only checks level — items are the trial's job), `JobStats` (max MP/regen, attribute modifiers from level, passives and the held weapon's engravings), `JobEvents` (exp/essence from kills and ores, MP tick, Avalon, death penalty).
 - Content: one file per class in `job/content/` built with the `ClassContent` DSL (`weapon(...)` + `skill(...)` + `Actions.*`). Startup validates tier/level ranges and skill counts (3 per weapon, 4 at tier 4); ids are saved item/cooldown keys — never rename them. Tooltips, lang and docs are generated from these definitions.
 - Skills: `job/skill/Actions` holds every building block with its own tooltip template (`Actions.texts()` -> lang). Add new behavior there, not in content files. Damage from skills/shots goes through `CombatHooks.deal` with a `DamageKind`; `LivingEntityMixin` feeds `CombatHooks.modifyIncoming` (passives, engravings, marks, stances, vulnerability). Delayed steps use `SkillScheduler`; `SkillContext.valid()` must be checked in delayed code.
 - A class weapon is "active" only when class, tier and level all match (`JobWeapons.isActive`); otherwise it is a plain weapon (basic attack/shot only, no skills, no engravings).
@@ -39,3 +41,21 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - Guild shop offers depend on the visitor (`ShopOffers.trades(ShopType, Player)`); trade keys stay stable for market pressure.
 - `docs/CLASSES.md` is written by `ClassDocProvider` during `runDatagen`; do not edit it by hand.
 - `JobClientGameTest` casts every skill of every weapon once; keep it passing when adding or changing skills.
+
+## Trials and trainers (`job/quest/`, `entity/ClassTrainer`)
+
+- Choosing a class and every advancement is a trial from that class's `ClassTrainer` (no advance button). `Quests` defines the 20 trials (`<class>_<tier>`) and their 20 trial tokens; a trial = kill goals + token count + materials (always essence; tier 3 adds a golem core, some tier 4 a boss item). Quest and token ids are saved keys — never rename them.
+- `QuestData` (attachment `ModAttachments.QUEST`, synced to the owner, kept on death): active trial id, kill progress, `visitedCity`. `QuestService` holds the rules (status per trainer, accept/complete/abandon, kill credit on `AFTER_DEATH`); screens read the same synced data. Tokens only drop for a player whose trial needs them and go straight into the inventory; bosses (`Quests.BOSSES`) credit everyone with the trial within 64 blocks.
+- Trainer actions come in as `QuestActionPayload` and need the trainer within 8 blocks; right-clicking a trainer sends `OpenTrainerPayload` (client `TrainerScreen`).
+- Trial lang (trainer names/greetings, trial texts, tokens, guide book) lives in `client/datagen/TrialLang`; `ClassDocProvider` writes the trial table into `docs/CLASSES.md`.
+
+## The capital (`city/`)
+
+- Stormhold is generated at 0, 0 in the overworld of noise worlds only (flat test worlds have none). `ChunkGeneratorMixin` calls `CityGenerator` during decoration: chunks inside `CityZone.CORE` are flattened to `CityZone.baseY` (median natural height, cached per seed) and built; vanilla features/structures there are suppressed except ores; a `BLEND` ring eases terrain back. Every write goes through `Build`, which clips to the chunk being decorated — buildings must be pure functions of coordinates (no randomness that differs per chunk, no reading neighbour chunks).
+- Districts: `CityCore` (roads, plaza + fountain, walls, gates, lamps), `CityNorth` (keep, mage tower, warrior arena), `CityMiddle` (old town + rogue Shadow Hall, cathedral, homes), `CitySouth` (archer park, market + Adventurers' Guild with shops/engraving tables, harbor + pirate ship). Trainer posts are `CityZone.trainerHome`; `CityServices.keepTrainers` (every 100 ticks) spawns missing trainers, removes duplicates and brings wanderers back.
+- Multiplayer-first: world spawn is the plaza (respawn radius 0); first join teleports there and gives the guide book. Inside the walls (`CityZone.inside`) the city is a safe zone: no hostile natural spawns (`NaturalSpawnerMixin`), city guards (`CityServices.driveOffHostiles`, every second) remove hostile mobs that get in anyway (climbing spiders, cave wanderers, eggs; skill summons and NoAI mobs are exempt), no building/breaking for non-op survival players (`PlayerMixin`, `BlockItemMixin`), no PvP (`CombatHooks`), no explosion block damage (`ServerExplosionMixin`).
+- `NormalWorldClientGameTest` runs `CityChecks` (layout, trainers, safe zone, district/trainer screenshots) before moving to natural terrain for the ore/spawn checks.
+
+## Content direction
+
+- New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece and Fate are already used). Keep Korean names faithful to the official Korean translations.

@@ -3,9 +3,14 @@
 	"package": "com.minecraftmode.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"BlockItemMixin",
 		"BowItemMixin",
+		"ChunkGeneratorMixin",
 		"LivingEntityMixin",
-		"MerchantMenuMixin"
+		"MerchantMenuMixin",
+		"NaturalSpawnerMixin",
+		"PlayerMixin",
+		"ServerExplosionMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

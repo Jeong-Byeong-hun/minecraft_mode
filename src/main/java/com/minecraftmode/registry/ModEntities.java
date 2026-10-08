@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.entity.MineRaider;
 import com.minecraftmode.entity.MythrilGolem;
 import com.minecraftmode.job.skill.SkillProjectile;
@@ -57,7 +58,21 @@ public final class ModEntities {
 			.build(SKILL_PROJECTILE_KEY)
 	);
 
+	public static final ResourceKey<EntityType<?>> CLASS_TRAINER_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("class_trainer"));
+
+	/** Class trainer NPC (one per class in the capital). */
+	public static final EntityType<ClassTrainer> CLASS_TRAINER = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		CLASS_TRAINER_KEY,
+		EntityType.Builder.<ClassTrainer>of(ClassTrainer::new, MobCategory.MISC)
+			.sized(0.6F, 1.95F)
+			.eyeHeight(1.74F)
+			.clientTrackingRange(10)
+			.build(CLASS_TRAINER_KEY)
+	);
+
 	public static void init() {
+		FabricDefaultAttributeRegistry.register(CLASS_TRAINER, ClassTrainer.createAttributes());
 		FabricDefaultAttributeRegistry.register(MYTHRIL_GOLEM, MythrilGolem.createAttributes());
 		SpawnPlacements.register(MYTHRIL_GOLEM, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, MythrilGolem::checkMythrilGolemSpawnRules);
 		// Very rare: below Y=0 only and never two within 64 blocks.

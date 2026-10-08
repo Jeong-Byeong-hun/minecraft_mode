@@ -94,16 +94,13 @@ final class JobLang {
 
 		// messages
 		b.add("message.minecraft_mode.job.level_up", ko ? "레벨 업! 이제 %s레벨입니다." : "Level up! You are now level %s.");
-		b.add("message.minecraft_mode.job.can_advance", ko ? "전직할 수 있습니다! K 키로 직업 창을 여세요." : "You can advance your class! Press K to open the class screen.");
+		b.add("message.minecraft_mode.job.can_advance", ko
+			? "다음 전직 시련을 받을 수 있습니다! 스톰홀드의 교관을 찾아가세요."
+			: "Your next advancement trial is open! Visit your trainer in Stormhold.");
 		b.add("message.minecraft_mode.job.advanced", ko ? "%s님이 %s(으)로 전직했습니다!" : "%s has become a %s!");
 		b.add("message.minecraft_mode.job.avalon", ko ? "아발론이 치명상을 막아냈습니다! (3분 후 재사용)" : "Avalon turned aside a lethal blow! (ready again in 3 minutes)");
 		b.add("message.minecraft_mode.job.reset_none", ko ? "초기화할 직업이 없습니다." : "You have no class to reset.");
 		b.add("message.minecraft_mode.job.reset_done", ko ? "직업이 초기화되었습니다. 레벨은 유지됩니다." : "Your class was reset. Your level is kept.");
-		b.add("message.minecraft_mode.job.advance_ok", ko ? "전직 완료" : "Advanced");
-		b.add("message.minecraft_mode.job.advance_max_tier", ko ? "이미 최종 차수입니다." : "You are already at the final tier.");
-		b.add("message.minecraft_mode.job.advance_need_class", ko ? "직업을 선택하세요." : "Choose a class first.");
-		b.add("message.minecraft_mode.job.advance_level", ko ? "레벨이 부족합니다." : "Your level is too low.");
-		b.add("message.minecraft_mode.job.advance_items", ko ? "전직 재료가 부족합니다." : "You are missing advancement items.");
 		b.add("message.minecraft_mode.skill.no_weapon", ko ? "직업 무기를 들고 있어야 합니다." : "Hold a class weapon to use skills.");
 		b.add("message.minecraft_mode.skill.wrong_class", ko ? "%s 전용 무기입니다. 기본 공격만 가능합니다." : "Only a %s can use this weapon's skills. Basic attacks only.");
 		b.add("message.minecraft_mode.skill.low_tier", ko ? "%s차 전직이 필요합니다." : "Requires class tier %s.");
@@ -135,7 +132,6 @@ final class JobLang {
 
 		// class screen
 		b.add("screen.minecraft_mode.job", ko ? "직업" : "Class");
-		b.add("screen.minecraft_mode.job.advance", ko ? "전직하기" : "Advance");
 		b.add("screen.minecraft_mode.job.exp", ko ? "경험치 %s" : "EXP %s");
 		b.add("screen.minecraft_mode.job.mana", ko ? "MP %s/%s (초당 +%s)" : "MP %s/%s (+%s/s)");
 		b.add("screen.minecraft_mode.job.no_class", ko
@@ -143,8 +139,6 @@ final class JobLang {
 			: "Choose a class at level %s. Gain levels by defeating monsters and mining iron or better ores.");
 		b.add("screen.minecraft_mode.job.tier_line", ko ? "%s차 · %s" : "Tier %s · %s");
 		b.add("screen.minecraft_mode.job.requires_level", ko ? "요구 레벨 %s" : "Requires level %s");
-		b.add("screen.minecraft_mode.job.choose", ko ? "직업 선택 (Lv %s)" : "Choose a class (Lv %s)");
-		b.add("screen.minecraft_mode.job.next", ko ? "다음: %s차 %s" : "Next: tier %s %s");
 		b.add("screen.minecraft_mode.job.next_passive", ko ? "해금 패시브 %s: %s" : "Unlocks %s: %s");
 		b.add("screen.minecraft_mode.job.final", ko ? "최종 전직을 달성했습니다!" : "You have reached the final tier!");
 		b.add("screen.minecraft_mode.job.hint", ko
@@ -159,6 +153,8 @@ final class JobLang {
 		b.add("screen.minecraft_mode.engraving.after", ko ? "각인 후: " : "After: ");
 		b.add("screen.minecraft_mode.engraving.cost", ko ? "정수 %s개 (응축된 정수 = 9개)" : "%s essence (condensed essence = 9)");
 		b.add("screen.minecraft_mode.engraving.reroll", ko ? "후보 새로 고침" : "Reroll offers");
+
+		TrialLang.add(b, ko);
 	}
 
 	private JobLang() {

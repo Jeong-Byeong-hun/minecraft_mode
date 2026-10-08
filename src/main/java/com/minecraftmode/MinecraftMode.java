@@ -5,8 +5,11 @@ import com.minecraftmode.enchantment.ArmorAuras;
 import com.minecraftmode.enchantment.AutoSmeltLoot;
 import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.command.JobCommand;
 import com.minecraftmode.job.JobEvents;
+import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -44,6 +47,7 @@ public class MinecraftMode implements ModInitializer {
 		ModEntities.init();
 		ModItems.init();
 		JobWeapons.init();
+		Quests.init();
 		ModMenus.init();
 		ModCreativeTabs.init();
 		ModOreGeneration.init();
@@ -55,6 +59,8 @@ public class MinecraftMode implements ModInitializer {
 		SkillScheduler.init();
 		CombatHooks.init();
 		JobEvents.init();
+		QuestService.init();
+		CityServices.init();
 		ModNetworking.init();
 		JobCommand.init();
 

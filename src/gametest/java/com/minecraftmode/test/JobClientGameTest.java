@@ -5,8 +5,10 @@ import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.client.job.JobScreen;
+import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
+import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -15,6 +17,9 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
@@ -22,7 +27,10 @@ import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.network.OpenTrainerPayload;
+import com.minecraftmode.network.QuestActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -33,12 +41,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -80,7 +91,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			server.runCommand("tp @p 0.5 -60 0.5 180 0");
 			context.waitTicks(5);
 
-			checkProgression(server, connection);
+			checkProgression(context, server, connection);
 			checkSkillKey(context, server, connection);
 			checkGating(server, connection);
 			checkEngravingStacks(context, server, connection);
@@ -111,6 +122,14 @@ public class JobClientGameTest implements FabricClientGameTest {
 			require(engravings >= 10, job.id() + " has only " + engravings + " engravings");
 		}
 		require(skills == JobWeapons.skillCount(), "skill ids are not unique");
+		require(Quests.all().size() == 20 && Quests.tokens().size() == 20, "expected 20 trials and 20 tokens");
+		for (JobClass job : JobClass.PLAYABLE) {
+			for (int tier = 1; tier <= 4; tier++) {
+				QuestDef quest = Quests.forTier(job, tier);
+				require(quest != null && quest.job() == job && quest.tier() == tier, "missing trial for " + job.id() + " tier " + tier);
+				require(quest.materials().stream().anyMatch(m -> m.item() == ModItems.ESSENCE || m.item() == ModItems.CONDENSED_ESSENCE), quest.id() + " should cost essence");
+			}
+		}
 		final int skillTotal = skills;
 
 		context.runOnClient(minecraft -> {
@@ -141,6 +160,25 @@ public class JobClientGameTest implements FabricClientGameTest {
 					keys.add(job.passiveKey(tier));
 					keys.add(job.passiveDescKey(tier));
 				}
+				keys.add(ClassTrainer.nameKey(job));
+				keys.add(ClassTrainer.greetingKey(job));
+				require(resources.getResource(MinecraftMode.id("textures/entity/trainer/" + job.id() + ".png")).isPresent(), "missing trainer skin for " + job.id());
+			}
+			for (QuestDef quest : Quests.all()) {
+				keys.add(quest.nameKey());
+				keys.add(quest.storyKey());
+				for (int i = 0; i < quest.kills().size(); i++) {
+					keys.add(quest.goalKey(i));
+				}
+			}
+			for (net.minecraft.world.item.Item token : Quests.tokens()) {
+				keys.add(token.getDescriptionId());
+				String id = BuiltInRegistries.ITEM.getKey(token).getPath();
+				require(resources.getResource(MinecraftMode.id("textures/item/" + id + ".png")).isPresent(), "missing texture for " + id);
+				require(resources.getResource(MinecraftMode.id("items/" + id + ".json")).isPresent(), "missing item model for " + id);
+			}
+			for (int page = 1; page <= 6; page++) {
+				keys.add("book.minecraft_mode.guide.page" + page);
 			}
 			for (String key : keys) {
 				if (!en.has(key)) {
@@ -169,31 +207,107 @@ public class JobClientGameTest implements FabricClientGameTest {
 
 	// ------------------------------------------------------------------ progression
 
-	private static void checkProgression(final TestServerContext server, final TestServerConnection connection) {
-		server.runOnServer(s -> {
+	/**
+	 * Class choice and advancement through the warrior trainer: the dialog opens over the network,
+	 * the trial is accepted like the button does, kills count, tokens drop into the inventory, and
+	 * completing takes the tokens and materials and promotes the player. Ends at warrior tier 2,
+	 * level 25, with an empty inventory and no active trial.
+	 */
+	private static void checkProgression(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		int trainerId = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			JobData start = JobProgression.get(player);
 			require(start.job() == JobClass.NONE && start.level() == 1, "new players start without a class at level 1");
+			require(QuestService.get(player).visitedCity(), "joining should mark the welcome as done");
+			require(JobProgression.count(player.getInventory(), Items.WRITTEN_BOOK) == 1, "new players should get the guide book");
+			player.getInventory().clearContent();
+			ClassTrainer trainer = ModEntities.CLASS_TRAINER.create(player.level(), EntitySpawnReason.COMMAND);
+			require(trainer != null, "could not create a trainer");
+			trainer.setJob(JobClass.WARRIOR);
+			trainer.snapTo(2.5, -60, -2.5, 135.0F, 0.0F);
+			player.level().addFreshEntity(trainer);
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.LOW_LEVEL, "level 1 players cannot take the first trial yet");
 			int toTen = 0;
 			for (int level = 1; level < 10; level++) {
 				toTen += JobProgression.expToNext(level);
 			}
 			JobProgression.addExp(player, toTen);
 			require(JobProgression.get(player).level() == 10, "level after " + toTen + " exp: " + JobProgression.get(player).level());
-			require(JobProgression.advance(player, JobClass.WARRIOR) == JobProgression.AdvanceResult.OK, "first advancement failed");
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.AVAILABLE, "the first warrior trial should open at level 10");
+			return trainer.getId();
+		});
+
+		// what a right-click does, then the Accept button's packet
+		server.runOnServer(s -> ServerPlayNetworking.send(connection.getServerPlayer(), new OpenTrainerPayload(trainerId, JobClass.WARRIOR)));
+		context.waitForScreen(TrainerScreen.class);
+		context.waitTicks(3);
+		context.takeScreenshot("trainer_dialog");
+		context.runOnClient(minecraft -> ClientPlayNetworking.send(new QuestActionPayload(QuestActionPayload.Action.ACCEPT, trainerId)));
+		context.waitTicks(5);
+		context.takeScreenshot("trainer_dialog_accepted");
+		context.setScreen(() -> null);
+		context.waitTicks(2);
+
+		int[] tokens = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			QuestDef quest = QuestService.active(player);
+			require(quest != null && quest.id().equals("warrior_1"), "accepting should start warrior_1, got " + (quest == null ? null : quest.id()));
+			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.BUSY, "other trainers should see a busy player");
+			require(!QuestService.complete(player, JobClass.WARRIOR), "an unfinished trial cannot be completed");
+			// 15 zombies killed by the player count; one killed by something else does not
+			for (int i = 0; i < 16; i++) {
+				var zombie = EntityTypes.ZOMBIE.create(player.level(), EntitySpawnReason.COMMAND);
+				require(zombie != null, "could not create a zombie");
+				zombie.snapTo(0.5 + i % 4, -60, -6.5 - i / 4, 0.0F, 0.0F);
+				zombie.setNoAi(true);
+				player.level().addFreshEntity(zombie);
+				zombie.hurtServer(player.level(), i == 0 ? player.damageSources().generic() : player.damageSources().playerAttack(player), 1000.0F);
+			}
+			int kills = QuestService.get(player).progress(0);
+			int medals = JobProgression.count(player.getInventory(), Quests.RUSTED_MEDAL);
+			boolean dropped = !player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(16), e -> e.getItem().is(Quests.RUSTED_MEDAL)).isEmpty();
+			require(kills == 15, "15 zombie kills should count, got " + kills);
+			require(medals > 0 && !dropped, "rusted medals should go straight into the inventory (got " + medals + ", dropped " + dropped + ")");
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.IN_PROGRESS, "the trial should still need its essence");
+
+			// top up to exactly the 6 medals and 4 essence it needs, plus one spare essence
+			if (medals < 6) {
+				player.getInventory().add(new ItemStack(Quests.RUSTED_MEDAL, 6 - medals));
+			}
+			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 5));
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.READY, "the trial should be ready to complete");
+			require(QuestService.complete(player, JobClass.WARRIOR), "completing warrior_1 failed");
+			JobData data = JobProgression.get(player);
+			require(data.job() == JobClass.WARRIOR && data.tier() == 1, "completing the first trial should make a tier 1 warrior");
+			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 1, "the trial should take 4 of 5 essence");
+			require(JobProgression.count(player.getInventory(), Quests.RUSTED_MEDAL) == Math.max(0, medals - 6), "the trial should take 6 medals");
+			require(QuestService.active(player) == null, "no trial should be active after completing");
 			JobStats.refresh(player);
 			double maxHealth = player.getAttributeValue(Attributes.MAX_HEALTH);
 			require(maxHealth == 25.0, "warrior tier 1 at level 10 should have 20 + 4 (Iron Body) + 1 (level) health, got " + maxHealth);
-			require(JobProgression.canAdvance(player, JobClass.WARRIOR) == JobProgression.AdvanceResult.LEVEL, "tier 2 should need level 25");
+			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.OTHER_CLASS, "other trainers should turn a warrior away");
+
+			// tier 2: level gate, abandon, then the materials
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.LOW_LEVEL, "tier 2 should need level 25");
 			JobProgression.set(player, JobProgression.get(player).withProgress(25, 0));
-			require(JobProgression.canAdvance(player, JobClass.WARRIOR) == JobProgression.AdvanceResult.ITEMS, "tier 2 should need 16 essence");
-			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 20));
-			require(JobProgression.advance(player, JobClass.WARRIOR) == JobProgression.AdvanceResult.OK, "second advancement failed");
-			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 4, "advancement should take 16 of 20 essence");
+			require(QuestService.accept(player, JobClass.WARRIOR), "accepting warrior_2 failed");
+			QuestService.abandon(player);
+			require(QuestService.active(player) == null, "abandoning should clear the trial");
+			require(QuestService.accept(player, JobClass.WARRIOR), "accepting warrior_2 again failed");
+			QuestService.set(player, QuestService.get(player).withProgress(0, 12));
+			player.getInventory().add(new ItemStack(Quests.CHAMPIONS_LAUREL, 8));
+			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 15));
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.READY, "warrior_2 should be ready");
+			require(QuestService.complete(player, JobClass.WARRIOR), "completing warrior_2 failed");
 			require(JobProgression.get(player).tier() == 2, "tier should be 2");
+			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 0, "warrior_2 should take 16 essence");
 			player.getInventory().clearContent();
+			for (ClassTrainer trainer : player.level().getEntitiesOfClass(ClassTrainer.class, player.getBoundingBox().inflate(16))) {
+				trainer.discard();
+			}
+			return new int[] {medals};
 		});
-		MinecraftMode.LOGGER.info("[job] leveling to 10, warrior advancement (+4 health), level and essence requirements for tier 2 OK");
+		MinecraftMode.LOGGER.info("[job] trainer dialog + network accept, 15 kills, {} medals dropped into the inventory, warrior_1 and warrior_2 completed", tokens[0]);
 	}
 
 	// ------------------------------------------------------------------ skills

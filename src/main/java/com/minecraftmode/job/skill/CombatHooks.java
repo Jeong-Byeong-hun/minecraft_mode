@@ -1,5 +1,6 @@
 package com.minecraftmode.job.skill;
 
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -104,7 +105,7 @@ public final class CombatHooks {
 		if (living instanceof OwnableEntity ownable && ownable.getOwner() == caster) {
 			return false;
 		}
-		if (living.isAlliedTo(caster)) {
+		if (living.isAlliedTo(caster) || CityServices.blocksPvp(living, caster)) {
 			return false;
 		}
 		return !(living instanceof Player player) || caster.canHarmPlayer(player);
@@ -219,6 +220,9 @@ public final class CombatHooks {
 	// ------------------------------------------------------------------ events
 
 	private static boolean allowDamage(final LivingEntity victim, final DamageSource source, final float amount) {
+		if (source.getEntity() != null && CityServices.blocksPvp(victim, source.getEntity())) {
+			return false;
+		}
 		if (!(victim instanceof ServerPlayer player) || source.getEntity() == null || source.getEntity() == player
 			|| source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
 			return true;

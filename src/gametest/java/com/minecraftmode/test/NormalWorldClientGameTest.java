@@ -35,8 +35,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 /**
- * Checks what the superflat test cannot: real terrain ore generation, Mine Raider natural spawning
- * and mythril armor in survival. Uses a normal (default preset) world with a fixed seed.
+ * Checks what the superflat test cannot: the capital at 0, 0 ({@link CityChecks}), then, away from
+ * the city, real terrain ore generation, Mine Raider natural spawning and mythril armor in
+ * survival. Uses a normal (default preset) world with a fixed seed.
  */
 public class NormalWorldClientGameTest implements FabricClientGameTest {
 	private static final String SEED = "minecraft_mode";
@@ -55,6 +56,10 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			TestServerConnection connection = singleplayer.getConnection();
 			TestServerContext server = singleplayer.getServer();
 			connection.waitForChunksRender();
+
+			// the capital at 0, 0 first, then natural terrain away from it
+			CityChecks.run(context, server, connection);
+			CityChecks.leave(context, server, connection);
 
 			BlockPos exposedMythril = checkOreGeneration(server, connection);
 			checkSpawnRules(context, server, connection);

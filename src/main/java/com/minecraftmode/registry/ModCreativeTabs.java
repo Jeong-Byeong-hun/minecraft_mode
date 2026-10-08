@@ -2,6 +2,7 @@ package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -11,6 +12,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public final class ModCreativeTabs {
@@ -76,6 +78,9 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.GOLEM_CORE);
 					output.accept(ModItems.CLASS_RESET_SCROLL);
 					output.accept(ModItems.ENGRAVING_TABLE);
+					for (Item token : Quests.tokens()) {
+						output.accept(token);
+					}
 					output.accept(ModItems.GUILD_SHOP);
 					for (JobClass job : JobClass.PLAYABLE) {
 						for (WeaponDef def : JobWeapons.of(job)) {

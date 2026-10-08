@@ -5,6 +5,11 @@ import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveTotals;
+import com.minecraftmode.job.quest.QuestData;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.QuestService;
+import java.util.ArrayList;
+import java.util.List;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -37,6 +42,7 @@ public final class JobHud {
 		}
 		JobData data = JobProgression.get(player);
 		drawPanel(graphics, minecraft.font, player, data);
+		drawQuest(graphics, minecraft.font, player);
 		drawSkills(graphics, minecraft, player, data);
 	}
 
@@ -60,6 +66,41 @@ public final class JobHud {
 		String mp = data.mana() + "/" + max;
 		bar(g, x + 6, y + 21, w - 16 - font.width(mp), 5, Math.min(1.0F, (float)data.mana() / max), 0xFF4A8CFF);
 		g.text(font, mp, x + w - 4 - font.width(mp), y + 19, 0xFF9CC3FF, true);
+	}
+
+	/** Active trial under the panel: goals and items with counts, green when done. */
+	private static void drawQuest(final GuiGraphicsExtractor g, final Font font, final LocalPlayer player) {
+		QuestDef quest = QuestService.active(player);
+		if (quest == null) {
+			return;
+		}
+		QuestData data = QuestService.get(player);
+		List<Component> labels = new ArrayList<>();
+		List<int[]> counts = new ArrayList<>();
+		for (int i = 0; i < quest.kills().size(); i++) {
+			labels.add(Component.translatable(quest.goalKey(i)));
+			counts.add(new int[] {data.progress(i), quest.kills().get(i).count()});
+		}
+		labels.add(Component.translatable(quest.token().getDescriptionId()));
+		counts.add(new int[] {JobProgression.count(player.getInventory(), quest.token()), quest.tokenCount()});
+		for (QuestDef.Material material : quest.materials()) {
+			labels.add(Component.translatable(material.item().getDescriptionId()));
+			counts.add(new int[] {JobProgression.count(player.getInventory(), material.item()), material.count()});
+		}
+		int x = 4;
+		int y = 38;
+		int w = 150;
+		int h = 13 + labels.size() * 10;
+		g.fill(x, y, x + w, y + h, 0x70000000);
+		g.text(font, Component.translatable(quest.nameKey()).withColor(quest.job().color()), x + 4, y + 3, 0xFFFFFFFF, true);
+		for (int i = 0; i < labels.size(); i++) {
+			int[] c = counts.get(i);
+			boolean done = c[0] >= c[1];
+			int ly = y + 13 + i * 10;
+			g.text(font, labels.get(i), x + 8, ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
+			String count = Math.min(c[0], c[1]) + "/" + c[1];
+			g.text(font, count, x + w - 4 - font.width(count), ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
+		}
 	}
 
 	private static void bar(final GuiGraphicsExtractor g, final int x, final int y, final int w, final int h, final float fraction, final int color) {

@@ -1,10 +1,13 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.weapon.Archetype;
@@ -29,6 +32,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 
 /**
@@ -67,14 +71,30 @@ public class ClassDocProvider implements DataProvider {
 		md.append("- 피해 수치는 무기 위력(차수·레벨로 증가)에 대한 배율입니다. 위력 = 4 + 2.2 × 차수 + 0.06 × 요구 레벨.\n\n");
 
 		md.append("## 레벨과 전직\n\n");
-		md.append("| 차수 | 요구 레벨 | 전직 재료 |\n|---|---|---|\n");
+		md.append("| 차수 | 요구 레벨 |\n|---|---|\n");
 		for (int tier = 1; tier <= 4; tier++) {
-			String cost = JobProgression.costsForTier(tier).stream().map(c -> this.itemName(c.item()) + " ×" + c.count()).collect(Collectors.joining(", "));
-			md.append("| ").append(tier).append("차 | ").append(JobProgression.levelForTier(tier)).append(" | ").append(cost.isEmpty() ? "없음 (직업 선택)" : cost).append(" |\n");
+			md.append("| ").append(tier).append("차 | ").append(JobProgression.levelForTier(tier)).append(" |\n");
 		}
 		md.append("\n- 경험치: 적대적 몹 처치(최대 체력만큼, 보스는 2배), 철 이상 광석 채굴. 최대 레벨 ").append(JobProgression.MAX_LEVEL).append(".\n");
 		md.append("- 레벨 10마다 최대 체력 +1. 최대 MP = 30 + 2 × 레벨. 사망 시 현재 레벨 진행도의 10%를 잃습니다(레벨은 유지).\n");
-		md.append("- 직업 초기화 주문서(직업 길드, 금화 4)로 직업을 다시 고를 수 있습니다. 레벨은 유지됩니다.\n\n");
+		md.append("- 직업 초기화 주문서(모험가 길드, 금화 4)로 직업을 다시 고를 수 있습니다. 레벨은 유지됩니다.\n\n");
+
+		md.append("## 전직 시련\n\n");
+		md.append("- 직업 선택과 모든 전직은 수도 **스톰홀드**(0, 0)의 직업 교관에게서 받는 시련으로 합니다. 시련은 한 번에 하나만 진행할 수 있습니다.\n");
+		md.append("- 목표 몹을 처치하면 진행도가 오르고, 해당 몹이 **시련 증표**를 확률적으로 떨어뜨립니다. 증표는 시련 중인 플레이어의 인벤토리로 바로 들어옵니다.\n");
+		md.append("- 보스(위더 · 엔더 드래곤 · 워든 · 엘더 가디언 · 미스릴 골렘)는 64블록 안에서 같은 시련을 진행 중인 모든 플레이어에게 인정됩니다.\n");
+		md.append("- 목표 처치 + 증표 + 재료를 갖추고 교관에게 돌아가 \"시련 완료\"를 누르면 증표와 재료를 소모하고 전직합니다.\n\n");
+		md.append("| 직업 | 차수 | 교관 | 시련 | 처치 목표 | 증표 (드롭) | 재료 |\n|---|---|---|---|---|---|---|\n");
+		for (QuestDef quest : Quests.all()) {
+			String goals = quest.kills().stream().map(k -> k.ko() + " ×" + k.count()).collect(Collectors.joining("<br>"));
+			String drops = quest.sources().stream().map(s -> (s.types().size() > 8 ? "모든 적대적 몹" : s.types().stream().map(this::entityName).sorted().collect(Collectors.joining("·")))
+				+ " " + Math.round(s.chance() * 100) + "%" + (s.amount() > 1 ? " ×" + s.amount() : "")).collect(Collectors.joining("<br>"));
+			String materials = quest.materials().stream().map(m -> this.itemName(m.item()) + " ×" + m.count()).collect(Collectors.joining(", "));
+			md.append("| ").append(quest.job().ko()).append(" | ").append(quest.tier()).append("차 | ").append(this.ko.get(ClassTrainer.nameKey(quest.job())))
+				.append(" | ").append(quest.ko()).append(" | ").append(goals).append(" | ").append(this.itemName(quest.token())).append(" ×").append(quest.tokenCount())
+				.append("<br><sub>").append(drops).append("</sub> | ").append(materials).append(" |\n");
+		}
+		md.append("\n");
 
 		md.append("## 정수와 각인\n\n");
 		md.append("- 정수: 적대적 몹이 무작위로 떨어뜨리고(체력이 높을수록 확률↑), 철 이상 광석(섬세한 손길 제외)에서 나옵니다. 보스(최대 체력 100 이상)는 응축된 정수를 반드시 떨어뜨립니다.\n");
@@ -138,6 +158,10 @@ public class ClassDocProvider implements DataProvider {
 		return this.ko.getOrDefault(item.getDescriptionId(), BuiltInRegistries.ITEM.getKey(item).getPath());
 	}
 
+	private String entityName(final EntityType<?> type) {
+		return this.ko.getOrDefault(type.getDescriptionId(), BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath());
+	}
+
 	private String statText(final EngraveStat stat, final float value) {
 		return String.format(Locale.ROOT, stat.ko(), num(value)).replace("%%", "%");
 	}
@@ -180,6 +204,18 @@ public class ClassDocProvider implements DataProvider {
 			this.ko.putIfAbsent(holder.value().getDescriptionId(), (String)e[1]);
 		}
 		this.ko.put("item.minecraft.nether_star", "네더의 별");
+		this.ko.put("item.minecraft.heart_of_the_sea", "바다의 심장");
+		String[][] entities = {
+			{"zombie", "좀비"}, {"husk", "허스크"}, {"drowned", "드라운드"}, {"zombie_villager", "좀비 주민"}, {"skeleton", "스켈레톤"}, {"stray", "스트레이"},
+			{"bogged", "보그드"}, {"spider", "거미"}, {"cave_spider", "동굴 거미"}, {"pillager", "약탈자"}, {"vindicator", "변명자"}, {"evoker", "소환사"},
+			{"ravager", "파괴수"}, {"wither_skeleton", "위더 스켈레톤"}, {"piglin_brute", "난폭한 피글린"}, {"enderman", "엔더맨"}, {"creeper", "크리퍼"},
+			{"witch", "마녀"}, {"blaze", "블레이즈"}, {"wither", "위더"}, {"warden", "워든"}, {"shulker", "셜커"}, {"ender_dragon", "엔더 드래곤"},
+			{"phantom", "팬텀"}, {"ghast", "가스트"}, {"hoglin", "호글린"}, {"guardian", "가디언"}, {"elder_guardian", "엘더 가디언"},
+		};
+		for (String[] e : entities) {
+			this.ko.put("entity.minecraft." + e[0], e[1]);
+		}
+		this.ko.putIfAbsent("entity.minecraft_mode.mythril_golem", "미스릴 골렘");
 		String[] roman = {"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"};
 		for (int i = 0; i < roman.length; i++) {
 			this.ko.put("enchantment.level." + (i + 1), roman[i]);

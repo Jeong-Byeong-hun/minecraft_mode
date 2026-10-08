@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_silver_coin": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft_mode:silver_coin"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipes": "minecraft_mode:copper_coins_from_silver_coin"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_silver_coin"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "minecraft_mode:copper_coins_from_silver_coin"
+    ]
+  }
+}

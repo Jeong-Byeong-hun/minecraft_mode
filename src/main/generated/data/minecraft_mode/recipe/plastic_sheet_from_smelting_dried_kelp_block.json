@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "cookingtime": 200,
+  "experience": 0.1,
+  "group": "plastic_sheet",
+  "ingredient": "minecraft:dried_kelp_block",
+  "result": {
+    "id": "minecraft_mode:plastic_sheet"
+  }
+}

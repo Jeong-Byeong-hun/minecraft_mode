@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#minecraft:coals",
+    "#minecraft:coals",
+    "minecraft:slime_ball"
+  ],
+  "result": {
+    "count": 4,
+    "id": "minecraft_mode:plastic_sheet"
+  }
+}

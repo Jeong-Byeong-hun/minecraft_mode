@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft_mode:mythril_ingot"
+  ],
+  "result": {
+    "count": 9,
+    "id": "minecraft_mode:mythril_nugget"
+  }
+}

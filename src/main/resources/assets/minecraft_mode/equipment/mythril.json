@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:mythril"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "minecraft_mode:mythril"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:mythril"
+      }
+    ]
+  }
+}

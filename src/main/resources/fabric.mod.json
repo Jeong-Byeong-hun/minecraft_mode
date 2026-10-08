@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "minecraft_mode",
+	"version": "${version}",
+	"name": "Minecraft Mode",
+	"description": "New items, ores, mobs, enchantments, effects and an economy system for Minecraft 26.3.",
+	"authors": [
+		"Darby"
+	],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/minecraft_mode/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.minecraftmode.MinecraftMode"
+		],
+		"client": [
+			"com.minecraftmode.client.MinecraftModeClient"
+		],
+		"fabric-datagen": [
+			"com.minecraftmode.client.datagen.MinecraftModeDataGenerator"
+		]
+	},
+	"mixins": [
+		"minecraft_mode.mixins.json",
+		{
+			"config": "minecraft_mode.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "minecraft_mode:aluminum_ingot",
+    "C": "minecraft:chest",
+    "E": "minecraft:emerald",
+    "P": "minecraft_mode:plastic_sheet"
+  },
+  "pattern": [
+    "AAA",
+    "PEP",
+    "PCP"
+  ],
+  "result": {
+    "id": "minecraft_mode:shop_block"
+  }
+}

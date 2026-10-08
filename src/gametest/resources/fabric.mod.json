@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "minecraft_mode_test",
+	"version": "1.0.0",
+	"name": "Minecraft Mode Tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"com.minecraftmode.test.MinecraftModeClientGameTest"
+		]
+	},
+	"depends": {
+		"minecraft_mode": "*"
+	}
+}

@@ -1,7 +1,10 @@
 package com.minecraftmode;
 
 import com.minecraftmode.economy.ModEconomy;
+import com.minecraftmode.enchantment.ArmorAuras;
 import com.minecraftmode.enchantment.AutoSmeltLoot;
+import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
+import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
@@ -31,6 +34,9 @@ public class MinecraftMode implements ModInitializer {
 		ModOreGeneration.init();
 		ModEconomy.init();
 		AutoSmeltLoot.init();
+		ToolEnchantmentHandlers.init();
+		CombatEnchantmentHandlers.init();
+		ArmorAuras.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

@@ -26,7 +26,7 @@ public final class ModBlocks {
 	public static final Block DEEPSLATE_MYTHRIL_ORE = register(
 		"deepslate_mythril_ore",
 		p -> new DropExperienceBlock(UniformInt.of(2, 5), p),
-		BlockBehaviour.Properties.ofLegacyCopy(MYTHRIL_ORE).mapColor(MapColor.DEEPSLATE).strength(4.5F, 3.0F).sound(SoundType.DEEPSLATE)
+		deepslateOre().strength(4.5F, 3.0F).sound(SoundType.DEEPSLATE)
 	);
 	public static final Block MYTHRIL_BLOCK = register(
 		"mythril_block",
@@ -53,7 +53,7 @@ public final class ModBlocks {
 	public static final Block DEEPSLATE_ALUMINUM_ORE = register(
 		"deepslate_aluminum_ore",
 		p -> new DropExperienceBlock(ConstantInt.of(0), p),
-		BlockBehaviour.Properties.ofLegacyCopy(ALUMINUM_ORE).mapColor(MapColor.DEEPSLATE).strength(4.5F, 3.0F).sound(SoundType.DEEPSLATE)
+		deepslateOre().strength(4.5F, 3.0F).sound(SoundType.DEEPSLATE)
 	);
 	public static final Block ALUMINUM_BLOCK = register(
 		"aluminum_block",
@@ -81,6 +81,11 @@ public final class ModBlocks {
 	public static final Block BLACKSMITH_SHOP = registerShop("blacksmith_shop", ShopType.BLACKSMITH);
 	public static final Block GROCER_SHOP = registerShop("grocer_shop", ShopType.GROCER);
 	public static final Block JEWELER_SHOP = registerShop("jeweler_shop", ShopType.JEWELER);
+
+	/** Same base as the stone ore variants, recolored for deepslate (strength and sound are set per block). */
+	private static BlockBehaviour.Properties deepslateOre() {
+		return BlockBehaviour.Properties.of().mapColor(MapColor.DEEPSLATE).instrument(NoteBlockInstrument.BASEDRUM).requiresCorrectToolForDrops();
+	}
 
 	private static Block registerShop(final String name, final ShopType type) {
 		return register(

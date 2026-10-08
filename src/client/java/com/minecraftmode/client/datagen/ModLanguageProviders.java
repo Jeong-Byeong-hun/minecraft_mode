@@ -1,6 +1,7 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.economy.ShopType;
+import com.minecraftmode.enchantment.EnchantInfo;
 import com.minecraftmode.enchantment.ModEnchantments;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
@@ -20,7 +21,7 @@ public final class ModLanguageProviders {
 
 		@Override
 		public void generateTranslations(final HolderLookup.Provider registries, final TranslationBuilder builder) {
-			builder.add(ModCreativeTabs.MAIN, "Minecraft Mode");
+			builder.addCreativeModeTab(ModCreativeTabs.MAIN, "Minecraft Mode");
 
 			builder.add(ModItems.MYTHRIL_ORE, "Mythril Ore");
 			builder.add(ModItems.DEEPSLATE_MYTHRIL_ORE, "Deepslate Mythril Ore");
@@ -69,11 +70,10 @@ public final class ModLanguageProviders {
 
 			builder.add(ModEffects.BLEEDING.value(), "Bleeding");
 
-			builder.addEnchantment(ModEnchantments.LIFESTEAL, "Lifesteal");
-			builder.addEnchantment(ModEnchantments.BLEEDING_EDGE, "Bleeding Edge");
-			builder.addEnchantment(ModEnchantments.COIN_FINDER, "Coin Finder");
-			builder.addEnchantment(ModEnchantments.AUTO_SMELT, "Smelting Touch");
-			builder.addEnchantment(ModEnchantments.SWIFT_STEP, "Swift Step");
+			for (EnchantInfo info : ModEnchantments.ALL) {
+				builder.addEnchantment(info.key(), info.en());
+				builder.add(info.descriptionKey(), info.enDesc());
+			}
 
 			builder.add(ModTags.COINS, "Coins");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "Mythril Tool Materials");
@@ -88,7 +88,7 @@ public final class ModLanguageProviders {
 
 		@Override
 		public void generateTranslations(final HolderLookup.Provider registries, final TranslationBuilder builder) {
-			builder.add(ModCreativeTabs.MAIN, "마인크래프트 모드");
+			builder.addCreativeModeTab(ModCreativeTabs.MAIN, "마인크래프트 모드");
 
 			builder.add(ModItems.MYTHRIL_ORE, "미스릴 광석");
 			builder.add(ModItems.DEEPSLATE_MYTHRIL_ORE, "심층암 미스릴 광석");
@@ -137,11 +137,10 @@ public final class ModLanguageProviders {
 
 			builder.add(ModEffects.BLEEDING.value(), "출혈");
 
-			builder.addEnchantment(ModEnchantments.LIFESTEAL, "흡혈");
-			builder.addEnchantment(ModEnchantments.BLEEDING_EDGE, "출혈의 칼날");
-			builder.addEnchantment(ModEnchantments.COIN_FINDER, "동전 탐색");
-			builder.addEnchantment(ModEnchantments.AUTO_SMELT, "자동 제련");
-			builder.addEnchantment(ModEnchantments.SWIFT_STEP, "신속 보행");
+			for (EnchantInfo info : ModEnchantments.ALL) {
+				builder.addEnchantment(info.key(), info.ko());
+				builder.add(info.descriptionKey(), info.koDesc());
+			}
 
 			builder.add(ModTags.COINS, "동전");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "미스릴 도구 재료");

@@ -1,6 +1,8 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.enchantment.EnchantInfo;
 import com.minecraftmode.enchantment.ModEnchantments;
+import com.minecraftmode.enchantment.RangedEnchantments;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModTags;
@@ -87,8 +89,12 @@ public final class ModTagProviders {
 		@Override
 		protected void addTags(final HolderLookup.Provider registries) {
 			// non_treasure feeds the enchanting table, villager trades and random loot.
-			this.builder(EnchantmentTags.NON_TREASURE)
-				.add(ModEnchantments.LIFESTEAL, ModEnchantments.BLEEDING_EDGE, ModEnchantments.COIN_FINDER, ModEnchantments.AUTO_SMELT, ModEnchantments.SWIFT_STEP);
+			var nonTreasure = this.builder(EnchantmentTags.NON_TREASURE);
+			for (EnchantInfo info : ModEnchantments.ALL) {
+				nonTreasure.add(info.key());
+			}
+			// Barrage joins vanilla's crossbow set, so it excludes Multishot and Piercing (and they exclude it).
+			this.builder(EnchantmentTags.CROSSBOW_EXCLUSIVE).add(RangedEnchantments.BARRAGE.key());
 		}
 	}
 

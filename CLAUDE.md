@@ -23,4 +23,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - `ShopMerchant` is not an entity; `MerchantMenuMixin` must stay or shift-click trades crash the server.
 - Shop prices: base lists in `ShopOffers.trades(ShopType)`; market pressure lives in `MarketData` (world SavedData) and is applied through `MerchantOffer.setSpecialPriceDiff`. Keep `ShopType` ids and trade item ids stable — they are the saved market keys.
 - 26.3 reads natural spawns from the `NATURAL_MOB_SPAWNS` environment attribute; `NormalWorldClientGameTest` checks that Fabric `addSpawn` reaches it.
+- Enchantments: each set is a class in `enchantment/` (`WeaponEnchantments`, `RangedEnchantments`, `ToolEnchantments`, `ArmorEnchantments`) with `EnchantInfo` (key + en/ko name + en/ko description) and a bootstrap built on `EnchantmentFactory`. Prefer data-driven effects; marker enchantments are read in code by `ToolEnchantmentHandlers`, `CombatEnchantmentHandlers`, `ArmorAuras`, `BowItemMixin` and the client `LightmapRenderStateExtractorMixin`. Lang/tags iterate `ModEnchantments.ALL`.
+- Auras must never stack: one fixed transient modifier id per aura (`aura/<name>`), level = max over nearby sources. Buffs use the enchantment's own attribute ids, so buff + aura stack by design.
+- `docs/ENCHANTMENTS.md` is generated from `src/main/generated` (en/ko lang + max levels); regenerate it after changing enchantments.
 - After a change: `runDatagen` (if data changed) → `build` → `runClientGameTest`, and look at the screenshots.

@@ -1,0 +1,72 @@
+{
+  "anvil_cost": 1,
+  "description": {
+    "translate": "enchantment.minecraft_mode.flash_bolt"
+  },
+  "effects": {
+    "minecraft:post_attack": [
+      {
+        "affected": "victim",
+        "effect": {
+          "type": "minecraft:all_of",
+          "effects": [
+            {
+              "type": "minecraft:apply_mob_effect",
+              "max_amplifier": 0.0,
+              "max_duration": {
+                "type": "minecraft:linear",
+                "base": 2.0,
+                "per_level_above_first": 1.0
+              },
+              "min_amplifier": 0.0,
+              "min_duration": {
+                "type": "minecraft:linear",
+                "base": 2.0,
+                "per_level_above_first": 1.0
+              },
+              "to_apply": "minecraft:blindness"
+            },
+            {
+              "type": "minecraft:apply_mob_effect",
+              "max_amplifier": 0.0,
+              "max_duration": {
+                "type": "minecraft:linear",
+                "base": 4.0,
+                "per_level_above_first": 2.0
+              },
+              "min_amplifier": 0.0,
+              "min_duration": {
+                "type": "minecraft:linear",
+                "base": 4.0,
+                "per_level_above_first": 2.0
+              },
+              "to_apply": "minecraft:glowing"
+            }
+          ]
+        },
+        "enchanted": "attacker",
+        "requirements": {
+          "type": "minecraft:entity_properties",
+          "entity": "direct_attacker",
+          "predicate": {
+            "minecraft:entity_type": "#minecraft:arrows"
+          }
+        }
+      }
+    ]
+  },
+  "max_cost": {
+    "base": 25,
+    "per_level_above_first": 8
+  },
+  "max_level": 5,
+  "min_cost": {
+    "base": 5,
+    "per_level_above_first": 8
+  },
+  "slots": [
+    "mainhand"
+  ],
+  "supported_items": "#minecraft:enchantable/crossbow",
+  "weight": 5
+}

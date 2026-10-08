@@ -50,7 +50,11 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.SILVER_COIN);
 					output.accept(ModItems.GOLD_COIN);
 					output.accept(ModItems.SHOP_BLOCK);
+					output.accept(ModItems.BLACKSMITH_SHOP);
+					output.accept(ModItems.GROCER_SHOP);
+					output.accept(ModItems.JEWELER_SHOP);
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
+					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 				})
 				.build()
 		);

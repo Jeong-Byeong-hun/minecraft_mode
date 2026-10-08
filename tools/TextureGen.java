@@ -88,12 +88,20 @@ public class TextureGen {
 		write("item/copper_coin", coin(0xC8743A, 0x8E4A22, 0xF0A56A, 0x5A2C12));
 		write("item/silver_coin", coin(0xC9CED6, 0x8A929E, 0xF4F7FB, 0x4E5560));
 		write("item/gold_coin", coin(0xF2C230, 0xB8860B, 0xFFF0A0, 0x6E4F05));
-		write("block/shop_block_side", shopSide());
-		write("block/shop_block_top", shopTop());
+		write("block/shop_block_side", shopSide(0xC0392B, 0xF2F2F2, coinEmblem()));
+		write("block/shop_block_top", shopTop(0xC0392B, 0xF2F2F2));
+		write("block/blacksmith_shop_side", shopSide(0x3B3B3B, 0xE07B26, emblem(ANVIL)));
+		write("block/blacksmith_shop_top", shopTop(0x3B3B3B, 0xE07B26));
+		write("block/grocer_shop_side", shopSide(0x2E8B3A, 0xF2F2F2, emblem(APPLE)));
+		write("block/grocer_shop_top", shopTop(0x2E8B3A, 0xF2F2F2));
+		write("block/jeweler_shop_side", shopSide(0x6A3D9A, 0xF2F2F2, emblem(GEM)));
+		write("block/jeweler_shop_top", shopTop(0x6A3D9A, 0xF2F2F2));
 
 		// --- Mob & effect ---
 		write("item/mine_raider_spawn_egg", spawnEgg(0x6B4423, 0xE3B92C, 0x2E1C0F));
 		write("entity/mine_raider", mineRaiderSkin());
+		write("item/mythril_golem_spawn_egg", spawnEgg(0x4C7BC8, 0x9FF4FF, 0x16233F));
+		write("entity/mythril_golem", mythrilGolemSkin());
 		write("mob_effect/bleeding", bleedingIcon());
 
 		if (args.length > 1) {
@@ -866,6 +874,68 @@ public class TextureGen {
 		return img;
 	}
 
+	// ---------------------------------------------------------------- Mythril Golem (128x128, iron golem model layout)
+
+	static final Palette GOLEM = new Palette(0x121C33, 0x29406E, 0x4568A8, 0x7C9FD8, 0xCFE3FF);
+	static final int GOLEM_EYE = 0x9FF4FF;
+
+	/** Bevelled armor plates with seams every 6 rows, rough dark patches and a few crystal glints. */
+	static FacePainter golemSurface(final int seed) {
+		return (f, x, y, w, h) -> {
+			char base = plate(x, y, w, h);
+			if (base != 'm' && base != 'l') {
+				return base;
+			}
+			int n = ((x * 73856093) ^ (y * 19349663) ^ ((f + seed) * 83492791)) & 0x7FFFFFFF;
+			if (n % 29 == 0) {
+				return 'h';
+			}
+			if (n % 7 == 0) {
+				return 'd';
+			}
+			if (f != TOP && f != BOTTOM && y % 6 == 5) {
+				return 'd';
+			}
+			return base;
+		};
+	}
+
+	static BufferedImage mythrilGolemSkin() {
+		BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
+		paintBox(img, GOLEM, 0, 0, 8, 10, 8, golemSurface(1));    // head
+		paintBox(img, GOLEM, 24, 0, 2, 4, 2, golemSurface(2));    // nose
+		paintBox(img, GOLEM, 0, 40, 18, 12, 11, golemSurface(3)); // body
+		paintBox(img, GOLEM, 0, 70, 9, 5, 6, golemSurface(4));    // waist
+		paintBox(img, GOLEM, 60, 21, 4, 30, 6, golemSurface(5));  // right arm
+		paintBox(img, GOLEM, 60, 58, 4, 30, 6, golemSurface(6));  // left arm
+		paintBox(img, GOLEM, 37, 0, 6, 16, 5, golemSurface(7));   // right leg
+		paintBox(img, GOLEM, 60, 0, 6, 16, 5, golemSurface(8));   // left leg
+
+		// Face (head front is at 8,8 and 8x10): dark brow and two glowing eyes
+		for (int x = 9; x <= 14; x++) {
+			img.setRGB(x, 11, opaque(GOLEM.o()));
+		}
+		for (int x : new int[] {9, 10, 13, 14}) {
+			img.setRGB(x, 12, opaque(GOLEM_EYE));
+		}
+		img.setRGB(9, 13, opaque(shade(GOLEM_EYE, 0.6F)));
+		img.setRGB(14, 13, opaque(shade(GOLEM_EYE, 0.6F)));
+
+		// Crystal core in the middle of the chest (body front is at 11,51 and 18x12)
+		int cx = 11 + 9, cy = 51 + 5;
+		for (int y = -3; y <= 3; y++) {
+			for (int x = -3; x <= 3; x++) {
+				int d = Math.abs(x) + Math.abs(y);
+				if (d == 3) {
+					img.setRGB(cx + x, cy + y, opaque(GOLEM.o()));
+				} else if (d < 3) {
+					img.setRGB(cx + x, cy + y, opaque(x + y < 0 ? GOLEM_EYE : (d == 0 ? 0xFFFFFF : shade(GOLEM_EYE, 0.75F))));
+				}
+			}
+		}
+		return img;
+	}
+
 	// ---------------------------------------------------------------- helpers
 
 	static int opaque(final int rgb) {
@@ -1011,20 +1081,84 @@ public class TextureGen {
 		}
 	}
 
-	static BufferedImage shopSide() {
+	// 6x6 shop sign emblems: A/B/C = dark/mid/light gray, R/r/W = red/dark red/highlight, G = leaf, S = stem, D/M/H = gem tones
+	static final String[] ANVIL = {
+		"......",
+		"CCCCCC",
+		"BBBBBA",
+		".BBA..",
+		".BBA..",
+		"BBBBA.",
+	};
+	static final String[] APPLE = {
+		"..SG..",
+		".RRRR.",
+		"RWRRRr",
+		"RRRRRr",
+		"RRRRrr",
+		".rrrr.",
+	};
+	static final String[] GEM = {
+		"......",
+		".HMMD.",
+		"HMMMMD",
+		".HMMD.",
+		"..MD..",
+		"......",
+	};
+
+	static BufferedImage emblem(final String[] rows) {
+		BufferedImage img = new BufferedImage(6, 6, BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < 6; y++) {
+			for (int x = 0; x < 6; x++) {
+				int rgb = switch (rows[y].charAt(x)) {
+					case 'A' -> 0x2E2E2E;
+					case 'B' -> 0x5A5A5A;
+					case 'C' -> 0x8C8C8C;
+					case 'R' -> 0xC0262D;
+					case 'r' -> 0x7A1418;
+					case 'W' -> 0xF07070;
+					case 'G' -> 0x3E8E2E;
+					case 'S' -> 0x5A3A1E;
+					case 'D' -> 0x1E7F8C;
+					case 'M' -> 0x3CCFE0;
+					case 'H' -> 0xC8F8FF;
+					default -> -1;
+				};
+				if (rgb != -1) {
+					img.setRGB(x, y, opaque(rgb));
+				}
+			}
+		}
+		return img;
+	}
+
+	/** The gold coin scaled down to a 6x6 sign. */
+	static BufferedImage coinEmblem() {
+		BufferedImage coin = coin(0xF2C230, 0xB8860B, 0xFFF0A0, 0x6E4F05);
+		BufferedImage img = new BufferedImage(6, 6, BufferedImage.TYPE_INT_ARGB);
+		for (int y = 0; y < 6; y++) {
+			for (int x = 0; x < 6; x++) {
+				img.setRGB(x, y, coin.getRGB(x * 16 / 6 + 1, y * 16 / 6 + 1));
+			}
+		}
+		return img;
+	}
+
+	static BufferedImage shopSide(final int stripeA, final int stripeB, final BufferedImage emblem) {
 		BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		planks(img, 0, 0, 16, 16, 3);
 		// Striped awning
 		for (int y = 0; y < 6; y++) {
 			for (int x = 0; x < 16; x++) {
-				int color = (x / 2) % 2 == 0 ? 0xC0392B : 0xF2F2F2;
+				int color = (x / 2) % 2 == 0 ? stripeA : stripeB;
 				img.setRGB(x, y, opaque(y == 0 ? shade(color, 0.8F) : color));
 			}
 		}
 		// Scalloped edge
 		for (int x = 0; x < 16; x++) {
 			if (x % 2 == 0) {
-				int color = (x / 2) % 2 == 0 ? 0xC0392B : 0xF2F2F2;
+				int color = (x / 2) % 2 == 0 ? stripeA : stripeB;
 				img.setRGB(x, 6, opaque(shade(color, 0.85F)));
 			}
 		}
@@ -1037,11 +1171,10 @@ public class TextureGen {
 			img.setRGB(x, 8, opaque(0x5C3A1B));
 			img.setRGB(x, 15, opaque(0x4A2E15));
 		}
-		// Gold coin emblem
-		BufferedImage coin = coin(0xF2C230, 0xB8860B, 0xFFF0A0, 0x6E4F05);
+		// Shop sign on the counter
 		for (int y = 0; y < 6; y++) {
 			for (int x = 0; x < 6; x++) {
-				int argb = coin.getRGB(x * 16 / 6 + 1, y * 16 / 6 + 1);
+				int argb = emblem.getRGB(x, y);
 				if ((argb >>> 24) > 0) {
 					img.setRGB(5 + x, 9 + y, argb);
 				}
@@ -1050,11 +1183,11 @@ public class TextureGen {
 		return img;
 	}
 
-	static BufferedImage shopTop() {
+	static BufferedImage shopTop(final int stripeA, final int stripeB) {
 		BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		for (int y = 0; y < 16; y++) {
 			for (int x = 0; x < 16; x++) {
-				int color = (x / 2) % 2 == 0 ? 0xC0392B : 0xF2F2F2;
+				int color = (x / 2) % 2 == 0 ? stripeA : stripeB;
 				if (x == 0 || y == 0 || x == 15 || y == 15) {
 					color = shade(color, 0.75F);
 				}

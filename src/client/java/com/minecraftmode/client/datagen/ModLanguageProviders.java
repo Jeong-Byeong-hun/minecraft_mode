@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.enchantment.ModEnchantments;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
@@ -52,17 +53,27 @@ public final class ModLanguageProviders {
 			builder.add(ModItems.COPPER_COIN, "Copper Coin");
 			builder.add(ModItems.SILVER_COIN, "Silver Coin");
 			builder.add(ModItems.GOLD_COIN, "Gold Coin");
-			builder.add(ModItems.SHOP_BLOCK, "Shop");
-			builder.add("container.minecraft_mode.shop", "Shop");
+			builder.add(ModItems.SHOP_BLOCK, "General Store");
+			builder.add(ModItems.BLACKSMITH_SHOP, "Blacksmith");
+			builder.add(ModItems.GROCER_SHOP, "Grocer");
+			builder.add(ModItems.JEWELER_SHOP, "Jeweler");
+			builder.add(ShopType.GENERAL.titleKey(), "General Store");
+			builder.add(ShopType.BLACKSMITH.titleKey(), "Blacksmith");
+			builder.add(ShopType.GROCER.titleKey(), "Grocer");
+			builder.add(ShopType.JEWELER.titleKey(), "Jeweler");
 
 			builder.add(ModEntities.MINE_RAIDER, "Mine Raider");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "Mine Raider Spawn Egg");
+			builder.add(ModEntities.MYTHRIL_GOLEM, "Mythril Golem");
+			builder.add(ModItems.MYTHRIL_GOLEM_SPAWN_EGG, "Mythril Golem Spawn Egg");
 
 			builder.add(ModEffects.BLEEDING.value(), "Bleeding");
 
 			builder.addEnchantment(ModEnchantments.LIFESTEAL, "Lifesteal");
 			builder.addEnchantment(ModEnchantments.BLEEDING_EDGE, "Bleeding Edge");
 			builder.addEnchantment(ModEnchantments.COIN_FINDER, "Coin Finder");
+			builder.addEnchantment(ModEnchantments.AUTO_SMELT, "Smelting Touch");
+			builder.addEnchantment(ModEnchantments.SWIFT_STEP, "Swift Step");
 
 			builder.add(ModTags.COINS, "Coins");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "Mythril Tool Materials");
@@ -110,17 +121,27 @@ public final class ModLanguageProviders {
 			builder.add(ModItems.COPPER_COIN, "동화");
 			builder.add(ModItems.SILVER_COIN, "은화");
 			builder.add(ModItems.GOLD_COIN, "금화");
-			builder.add(ModItems.SHOP_BLOCK, "상점");
-			builder.add("container.minecraft_mode.shop", "상점");
+			builder.add(ModItems.SHOP_BLOCK, "잡화점");
+			builder.add(ModItems.BLACKSMITH_SHOP, "대장간");
+			builder.add(ModItems.GROCER_SHOP, "식료품점");
+			builder.add(ModItems.JEWELER_SHOP, "보석상");
+			builder.add(ShopType.GENERAL.titleKey(), "잡화점");
+			builder.add(ShopType.BLACKSMITH.titleKey(), "대장간");
+			builder.add(ShopType.GROCER.titleKey(), "식료품점");
+			builder.add(ShopType.JEWELER.titleKey(), "보석상");
 
 			builder.add(ModEntities.MINE_RAIDER, "광산 약탈자");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "광산 약탈자 생성 알");
+			builder.add(ModEntities.MYTHRIL_GOLEM, "미스릴 골렘");
+			builder.add(ModItems.MYTHRIL_GOLEM_SPAWN_EGG, "미스릴 골렘 생성 알");
 
 			builder.add(ModEffects.BLEEDING.value(), "출혈");
 
 			builder.addEnchantment(ModEnchantments.LIFESTEAL, "흡혈");
 			builder.addEnchantment(ModEnchantments.BLEEDING_EDGE, "출혈의 칼날");
 			builder.addEnchantment(ModEnchantments.COIN_FINDER, "동전 탐색");
+			builder.addEnchantment(ModEnchantments.AUTO_SMELT, "자동 제련");
+			builder.addEnchantment(ModEnchantments.SWIFT_STEP, "신속 보행");
 
 			builder.add(ModTags.COINS, "동전");
 			builder.add(ModTags.MYTHRIL_TOOL_MATERIALS, "미스릴 도구 재료");

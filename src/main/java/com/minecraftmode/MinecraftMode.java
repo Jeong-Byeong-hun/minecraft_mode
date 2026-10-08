@@ -1,6 +1,7 @@
 package com.minecraftmode;
 
 import com.minecraftmode.economy.ModEconomy;
+import com.minecraftmode.enchantment.AutoSmeltLoot;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
@@ -29,6 +30,7 @@ public class MinecraftMode implements ModInitializer {
 		ModCreativeTabs.init();
 		ModOreGeneration.init();
 		ModEconomy.init();
+		AutoSmeltLoot.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

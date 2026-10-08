@@ -33,7 +33,8 @@ public final class ModTagProviders {
 					key(ModBlocks.ALUMINUM_ORE), key(ModBlocks.DEEPSLATE_ALUMINUM_ORE), key(ModBlocks.ALUMINUM_BLOCK), key(ModBlocks.RAW_ALUMINUM_BLOCK),
 					key(ModBlocks.PLASTIC_BLOCK)
 				);
-			this.builder(BlockTags.MINEABLE_WITH_AXE).add(key(ModBlocks.SHOP_BLOCK));
+			this.builder(BlockTags.MINEABLE_WITH_AXE)
+				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP));
 			this.builder(BlockTags.NEEDS_IRON_TOOL)
 				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK));
 			this.builder(BlockTags.NEEDS_STONE_TOOL)
@@ -86,7 +87,8 @@ public final class ModTagProviders {
 		@Override
 		protected void addTags(final HolderLookup.Provider registries) {
 			// non_treasure feeds the enchanting table, villager trades and random loot.
-			this.builder(EnchantmentTags.NON_TREASURE).add(ModEnchantments.LIFESTEAL, ModEnchantments.BLEEDING_EDGE, ModEnchantments.COIN_FINDER);
+			this.builder(EnchantmentTags.NON_TREASURE)
+				.add(ModEnchantments.LIFESTEAL, ModEnchantments.BLEEDING_EDGE, ModEnchantments.COIN_FINDER, ModEnchantments.AUTO_SMELT, ModEnchantments.SWIFT_STEP);
 		}
 	}
 

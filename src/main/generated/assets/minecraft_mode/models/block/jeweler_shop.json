@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "minecraft_mode:block/jeweler_shop_top",
+    "side": "minecraft_mode:block/jeweler_shop_side"
+  }
+}

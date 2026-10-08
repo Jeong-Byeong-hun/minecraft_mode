@@ -26,8 +26,11 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialCube(ModBlocks.ALUMINUM_BLOCK);
 		generators.createTrivialCube(ModBlocks.RAW_ALUMINUM_BLOCK);
 		generators.createTrivialCube(ModBlocks.PLASTIC_BLOCK);
-		// shop_block_side.png on all four sides, shop_block_top.png on top and bottom.
+		// <shop>_side.png on all four sides, <shop>_top.png on top and bottom.
 		generators.createTrivialBlock(ModBlocks.SHOP_BLOCK, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.BLACKSMITH_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.GROCER_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.JEWELER_SHOP, TexturedModel.COLUMN);
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.PLASTIC_SHEET,
 			ModItems.COPPER_COIN, ModItems.SILVER_COIN, ModItems.GOLD_COIN,
 			ModItems.MYTHRIL_HELMET, ModItems.MYTHRIL_CHESTPLATE, ModItems.MYTHRIL_LEGGINGS, ModItems.MYTHRIL_BOOTS,
-			ModItems.MINE_RAIDER_SPAWN_EGG
+			ModItems.MINE_RAIDER_SPAWN_EGG, ModItems.MYTHRIL_GOLEM_SPAWN_EGG
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
 		}

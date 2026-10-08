@@ -2,6 +2,7 @@ package com.minecraftmode.client;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.entity.MineRaiderRenderer;
+import com.minecraftmode.client.entity.MythrilGolemRenderer;
 import com.minecraftmode.registry.ModEntities;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -19,5 +20,6 @@ public class MinecraftModeClient implements ClientModInitializer {
 		// Standard 64x64 humanoid (player/zombie) layout.
 		ModelLayerRegistry.registerModelLayer(MINE_RAIDER_LAYER, () -> LayerDefinition.create(HumanoidModel.createMesh(CubeDeformation.NONE, 0.0F), 64, 64));
 		EntityRendererRegistry.register(ModEntities.MINE_RAIDER, MineRaiderRenderer::new);
+		EntityRendererRegistry.register(ModEntities.MYTHRIL_GOLEM, MythrilGolemRenderer::new);
 	}
 }

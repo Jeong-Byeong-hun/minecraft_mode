@@ -2,6 +2,8 @@
   "values": [
     "minecraft_mode:lifesteal",
     "minecraft_mode:bleeding_edge",
-    "minecraft_mode:coin_finder"
+    "minecraft_mode:coin_finder",
+    "minecraft_mode:auto_smelt",
+    "minecraft_mode:swift_step"
   ]
 }

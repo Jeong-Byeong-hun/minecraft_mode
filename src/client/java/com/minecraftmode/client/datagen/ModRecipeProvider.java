@@ -146,6 +146,19 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 					.pattern("PCP")
 					.unlockedBy(getHasName(ModItems.ALUMINUM_INGOT), this.has(ModItems.ALUMINUM_INGOT))
 					.save(this.output);
+
+				// Specialized shops: a general store plus a themed item
+				this.themedShop(ModItems.BLACKSMITH_SHOP, Items.SMITHING_TABLE);
+				this.themedShop(ModItems.GROCER_SHOP, Items.HAY_BLOCK);
+				this.themedShop(ModItems.JEWELER_SHOP, Items.DIAMOND);
+			}
+
+			private void themedShop(final Item shop, final Item theme) {
+				this.shapeless(RecipeCategory.DECORATIONS, shop)
+					.requires(ModItems.SHOP_BLOCK)
+					.requires(theme)
+					.unlockedBy(getHasName(ModItems.SHOP_BLOCK), this.has(ModItems.SHOP_BLOCK))
+					.save(this.output);
 			}
 		};
 	}

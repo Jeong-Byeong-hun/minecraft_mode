@@ -2,6 +2,7 @@ package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.block.ShopBlock;
+import com.minecraftmode.economy.ShopType;
 import java.util.function.Function;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -75,10 +76,19 @@ public final class ModBlocks {
 		"plastic_block", Block::new, BlockBehaviour.Properties.of().mapColor(MapColor.SNOW).strength(1.5F, 3.0F)
 	);
 
-	// Economy: right-click to open the coin shop.
-	public static final Block SHOP_BLOCK = register(
-		"shop_block", ShopBlock::new, BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).instrument(NoteBlockInstrument.BASS).strength(2.5F).sound(SoundType.WOOD)
-	);
+	// Economy: right-click to open a coin shop. shop_block is the general store.
+	public static final Block SHOP_BLOCK = registerShop("shop_block", ShopType.GENERAL);
+	public static final Block BLACKSMITH_SHOP = registerShop("blacksmith_shop", ShopType.BLACKSMITH);
+	public static final Block GROCER_SHOP = registerShop("grocer_shop", ShopType.GROCER);
+	public static final Block JEWELER_SHOP = registerShop("jeweler_shop", ShopType.JEWELER);
+
+	private static Block registerShop(final String name, final ShopType type) {
+		return register(
+			name,
+			p -> new ShopBlock(type, p),
+			BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).instrument(NoteBlockInstrument.BASS).strength(2.5F).sound(SoundType.WOOD)
+		);
+	}
 
 	private static Block register(final String name, final Function<BlockBehaviour.Properties, Block> factory, final BlockBehaviour.Properties properties) {
 		return Blocks.register(ResourceKey.create(Registries.BLOCK, MinecraftMode.id(name)), factory, properties);

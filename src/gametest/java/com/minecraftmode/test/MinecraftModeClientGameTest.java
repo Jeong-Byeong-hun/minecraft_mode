@@ -2,7 +2,12 @@ package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.economy.ShopMerchant;
+import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.enchantment.ModEnchantments;
+import com.minecraftmode.entity.MythrilGolem;
+import com.minecraftmode.registry.ModEffects;
+import net.minecraft.world.effect.MobEffectInstance;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
@@ -33,6 +38,8 @@ import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.Item;
@@ -62,8 +69,10 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 			checkOreFeaturePlaces(context, server);
 			checkBleeding(context, server, connection);
 			checkMineRaiderLoot(context, server, connection);
+			checkNewEnchantments(context, server, connection);
 			inventoryScreenshot(context, server);
 			mineRaiderScreenshot(context, server, connection);
+			checkMythrilGolem(context, server, connection);
 			armorScreenshot(context, server);
 			blocksScreenshot(context, server);
 			checkShopTrade(context, server, connection);
@@ -167,6 +176,41 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[test] mine raider dropped {} copper coins", coins);
 	}
 
+	private static void checkNewEnchantments(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("gamemode survival @p");
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("item replace entity @p weapon.mainhand with minecraft:iron_pickaxe[enchantments={\"minecraft_mode:auto_smelt\":1}]");
+		server.runCommand("item replace entity @p armor.feet with minecraft:iron_boots[enchantments={\"minecraft_mode:swift_step\":3}]");
+		context.waitTicks(2);
+
+		double speed = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			BlockPos base = player.blockPosition().offset(3, 0, 0);
+			level.setBlockAndUpdate(base, Blocks.IRON_ORE.defaultBlockState());
+			level.setBlockAndUpdate(base.above(), ModBlocks.MYTHRIL_ORE.defaultBlockState());
+			level.setBlockAndUpdate(base.above(2), Blocks.SAND.defaultBlockState());
+			player.gameMode.destroyBlock(base.above(2));
+			player.gameMode.destroyBlock(base.above());
+			player.gameMode.destroyBlock(base);
+			return player.getAttributeValue(Attributes.MOVEMENT_SPEED);
+		});
+		context.waitTicks(3);
+		List<String> drops = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			return player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(8)).stream()
+				.map(e -> BuiltInRegistries.ITEM.getKey(e.getItem().getItem()).getPath())
+				.sorted()
+				.toList();
+		});
+		require(drops.contains("iron_ingot") && drops.contains("mythril_ingot") && drops.contains("glass"), "auto smelt drops were " + drops);
+		require(!drops.contains("raw_iron") && !drops.contains("raw_mythril") && !drops.contains("sand"), "auto smelt left raw drops: " + drops);
+		require(Math.abs(speed - 0.13) < 0.001, "swift step III should give movement speed 0.13, got " + speed);
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("clear @p");
+		MinecraftMode.LOGGER.info("[test] auto smelt drops {}; swift step III speed {}", drops, speed);
+	}
+
 	private static void inventoryScreenshot(final ClientGameTestContext context, final TestServerContext server) {
 		server.runCommand("gamemode survival @p");
 		server.runCommand("clear @p");
@@ -201,6 +245,52 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		server.runCommand("kill @e[tag=pose]");
 	}
 
+	private static void checkMythrilGolem(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("gamemode survival @p");
+		server.runCommand("effect give @p minecraft:instant_health 1 10");
+		server.runCommand("tp @p 0.5 -60 0.5 180 0");
+		server.runCommand("summon minecraft_mode:mythril_golem 0.5 -60 -5");
+		server.runCommand("data merge entity @e[type=minecraft_mode:mythril_golem,limit=1] {NoAI:1b,Rotation:[0f,0f],Tags:[\"golem\"]}");
+		connection.waitForClientboundEntityUpdates(ModEntities.MYTHRIL_GOLEM);
+		// Let the death particles from the previous step fade out
+		context.waitTicks(60);
+		context.takeScreenshot("mythril_golem");
+
+		String stats = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			MythrilGolem golem = player.level().getEntitiesOfClass(MythrilGolem.class, player.getBoundingBox().inflate(16)).getFirst();
+			require(golem.getMaxHealth() == 150.0F && golem.getArmorValue() == 10, "golem stats " + golem.getMaxHealth() + " hp / " + golem.getArmorValue() + " armor");
+			require(golem.bossEvent().getPlayers().contains(player), "boss bar is not shown to the nearby player");
+			golem.addEffect(new MobEffectInstance(ModEffects.BLEEDING, 100, 0));
+			require(!golem.hasEffect(ModEffects.BLEEDING), "golem should be immune to bleeding");
+
+			// Ground slam: stand next to it
+			player.teleportTo(golem.getX(), golem.getY(), golem.getZ() + 2.5);
+			float before = player.getHealth();
+			int hit = golem.groundSlam(player.level());
+			require(hit == 1 && player.getHealth() < before && player.hasEffect(ModEffects.BLEEDING), "ground slam should hurt and cut the player");
+			return "slam hit " + hit + " player(s) for " + (before - player.getHealth());
+		});
+
+		server.runCommand("effect give @p minecraft:instant_health 1 10");
+		server.runCommand("damage @e[tag=golem,limit=1] 1000 minecraft:player_attack by @p");
+		context.waitTicks(5);
+		List<String> drops = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			return player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(16)).stream()
+				.map(e -> BuiltInRegistries.ITEM.getKey(e.getItem().getItem()).getPath())
+				.distinct()
+				.sorted()
+				.toList();
+		});
+		require(drops.contains("gold_coin") && drops.contains("raw_mythril_block") && drops.contains("mythril_ingot"), "golem drops were " + drops);
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("effect clear @p");
+		server.runCommand("effect give @p minecraft:instant_health 1 10");
+		MinecraftMode.LOGGER.info("[test] mythril golem: 150 hp / 10 armor, boss bar shown, bleeding immune, {}, drops {}", stats, drops);
+	}
+
 	private static void armorScreenshot(final ClientGameTestContext context, final TestServerContext server) {
 		server.runCommand("item replace entity @p armor.head with minecraft_mode:mythril_helmet");
 		server.runCommand("item replace entity @p armor.chest with minecraft_mode:mythril_chestplate");
@@ -215,21 +305,22 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 
 	private static void blocksScreenshot(final ClientGameTestContext context, final TestServerContext server) {
 		String[][] rows = {
+			{"shop_block", "blacksmith_shop", "plastic_block", "grocer_shop", "jeweler_shop"},
 			{"mythril_ore", "deepslate_mythril_ore", "mythril_block", "raw_mythril_block", "plastic_block"},
-			{"aluminum_ore", "deepslate_aluminum_ore", "aluminum_block", "raw_aluminum_block", "shop_block"},
+			{"aluminum_ore", "deepslate_aluminum_ore", "aluminum_block", "raw_aluminum_block", "plastic_block"},
 		};
 		server.runCommand("item replace entity @p weapon.mainhand with minecraft:air");
 		server.runCommand("kill @e[type=minecraft:item]");
 		server.runCommand("tp @p 0.5 -60 0.5 180 15");
 		for (int row = 0; row < rows.length; row++) {
 			for (int i = 0; i < rows[row].length; i++) {
-				server.runCommand("setblock " + (i - 2) + " " + (-59 - row) + " -4 minecraft_mode:" + rows[row][i]);
+				server.runCommand("setblock " + (i - 2) + " " + (-58 - row) + " -4 minecraft_mode:" + rows[row][i]);
 			}
 		}
 		// Let the death particles from the previous step fade out
 		context.waitTicks(60);
 		context.takeScreenshot("blocks");
-		server.runCommand("fill -2 -60 -4 2 -59 -4 minecraft:air");
+		server.runCommand("fill -2 -60 -4 2 -58 -4 minecraft:air");
 	}
 
 	private static void checkShopTrade(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
@@ -239,7 +330,8 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		context.waitTicks(2);
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3)).openTradingScreen(player, Component.translatable("container.minecraft_mode.shop"), 1);
+			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL)
+				.openTradingScreen(player, Component.translatable(ShopType.GENERAL.titleKey()), 1);
 		});
 		context.waitForScreen(MerchantScreen.class);
 		context.waitTicks(10);
@@ -252,11 +344,39 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 			menu.setSelectionHint(0);
 			menu.tryMoveItems(0);
 			menu.quickMoveStack(player, 2);
+			int newPrice = menu.getOffers().getFirst().getCostA().getCount();
 			player.closeContainer();
-			return new int[] {player.getInventory().countItem(ModItems.COPPER_COIN), player.getInventory().countItem(Items.COBBLESTONE)};
+			return new int[] {player.getInventory().countItem(ModItems.COPPER_COIN), player.getInventory().countItem(Items.COBBLESTONE), newPrice};
 		});
 		require(result[0] == 1 && result[1] == 32, "expected 1 copper coin and 32 cobblestone left, got " + result[0] + " / " + result[1]);
-		MinecraftMode.LOGGER.info("[test] shop shift-click trade OK (1 copper coin for 32 cobblestone)");
+		// Market pressure 1: 32 + floor(32 * 0.1) = 35 cobblestone per coin
+		require(result[2] == 35, "selling should raise the cobblestone price from 32 to 35, got " + result[2]);
+
+		// A fresh shop screen still sees the raised price (shared, persistent market).
+		int reopenedPrice = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			return new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL).getOffers().getFirst().getCostA().getCount();
+		});
+		require(reopenedPrice == 35, "reopened shop should keep the market price 35, got " + reopenedPrice);
+		MinecraftMode.LOGGER.info("[test] shop shift-click trade OK; cobblestone price 32 -> {} after one sale", result[2]);
+
+		for (ShopType type : ShopType.values()) {
+			int offers = server.computeOnServer(s -> {
+				ServerPlayer player = connection.getServerPlayer();
+				return new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), type).getOffers().size();
+			});
+			require(offers == ShopOffers.trades(type).size() && offers > 0, type + " shop has " + offers + " offers");
+		}
+		server.runCommand("setblock 0 -60 -3 minecraft_mode:blacksmith_shop");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.BLACKSMITH)
+				.openTradingScreen(player, Component.translatable(ShopType.BLACKSMITH.titleKey()), 1);
+		});
+		context.waitForScreen(MerchantScreen.class);
+		context.waitTicks(10);
+		context.takeScreenshot("blacksmith_screen");
+		context.setScreen(() -> null);
 	}
 
 	private static void require(final boolean condition, final String message) {

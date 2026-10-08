@@ -48,6 +48,9 @@ public final class ModItems {
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(
 		"mine_raider_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(ModEntities.MINE_RAIDER)
 	);
+	public static final Item MYTHRIL_GOLEM_SPAWN_EGG = register(
+		"mythril_golem_spawn_egg", SpawnEggItem::new, new Item.Properties().spawnEgg(ModEntities.MYTHRIL_GOLEM)
+	);
 
 	// Block items
 	public static final Item MYTHRIL_ORE = registerBlockItem(ModBlocks.MYTHRIL_ORE);
@@ -60,6 +63,9 @@ public final class ModItems {
 	public static final Item RAW_ALUMINUM_BLOCK = registerBlockItem(ModBlocks.RAW_ALUMINUM_BLOCK);
 	public static final Item PLASTIC_BLOCK = registerBlockItem(ModBlocks.PLASTIC_BLOCK);
 	public static final Item SHOP_BLOCK = registerBlockItem(ModBlocks.SHOP_BLOCK);
+	public static final Item BLACKSMITH_SHOP = registerBlockItem(ModBlocks.BLACKSMITH_SHOP);
+	public static final Item GROCER_SHOP = registerBlockItem(ModBlocks.GROCER_SHOP);
+	public static final Item JEWELER_SHOP = registerBlockItem(ModBlocks.JEWELER_SHOP);
 
 	private static Item register(final String name) {
 		return register(name, Item::new, new Item.Properties());

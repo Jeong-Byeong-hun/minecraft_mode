@@ -38,6 +38,9 @@ public final class ModLootProviders {
 			this.dropSelf(ModBlocks.RAW_ALUMINUM_BLOCK);
 			this.dropSelf(ModBlocks.PLASTIC_BLOCK);
 			this.dropSelf(ModBlocks.SHOP_BLOCK);
+			this.dropSelf(ModBlocks.BLACKSMITH_SHOP);
+			this.dropSelf(ModBlocks.GROCER_SHOP);
+			this.dropSelf(ModBlocks.JEWELER_SHOP);
 		}
 	}
 
@@ -74,6 +77,36 @@ public final class ModLootProviders {
 							.add(LootItem.lootTableItem(ModItems.SILVER_COIN))
 							.when(LootItemKilledByPlayerCondition.killedByPlayer())
 							.when(LootItemRandomChanceCondition.randomChance(0.1F))
+					)
+			);
+
+			this.add(
+				ModEntities.MYTHRIL_GOLEM,
+				LootTable.lootTable()
+					// 1 block of raw mythril
+					.withPool(LootPool.lootPool().setRolls(ContextIntProviders.exactly(1)).add(LootItem.lootTableItem(ModItems.RAW_MYTHRIL_BLOCK)))
+					// 2-4 mythril ingots (+0-1 per Looting level)
+					.withPool(
+						LootPool.lootPool()
+							.setRolls(ContextIntProviders.exactly(1))
+							.add(
+								LootItem.lootTableItem(ModItems.MYTHRIL_INGOT)
+									.apply(SetItemCountFunction.setCount(ContextIntProviders.between(2, 4)))
+									.apply(EnchantedCountIncreaseFunction.lootingMultiplier(this.enchantments, ContextFloatProviders.between(0.0F, 1.0F)))
+							)
+					)
+					// 3-6 silver coins
+					.withPool(
+						LootPool.lootPool()
+							.setRolls(ContextIntProviders.exactly(1))
+							.add(LootItem.lootTableItem(ModItems.SILVER_COIN).apply(SetItemCountFunction.setCount(ContextIntProviders.between(3, 6))))
+					)
+					// a gold coin when killed by a player
+					.withPool(
+						LootPool.lootPool()
+							.setRolls(ContextIntProviders.exactly(1))
+							.add(LootItem.lootTableItem(ModItems.GOLD_COIN))
+							.when(LootItemKilledByPlayerCondition.killedByPlayer())
 					)
 			);
 		}

@@ -21,4 +21,6 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 - Content that is data-driven in 26.x (enchantments, ore features/placements, recipes, loot, tags, lang) goes through datagen, not hand-written JSON. Exception: `assets/minecraft_mode/equipment/mythril.json`.
 - `ShopMerchant` is not an entity; `MerchantMenuMixin` must stay or shift-click trades crash the server.
+- Shop prices: base lists in `ShopOffers.trades(ShopType)`; market pressure lives in `MarketData` (world SavedData) and is applied through `MerchantOffer.setSpecialPriceDiff`. Keep `ShopType` ids and trade item ids stable — they are the saved market keys.
+- 26.3 reads natural spawns from the `NATURAL_MOB_SPAWNS` environment attribute; `NormalWorldClientGameTest` checks that Fabric `addSpawn` reaches it.
 - After a change: `runDatagen` (if data changed) → `build` → `runClientGameTest`, and look at the screenshots.

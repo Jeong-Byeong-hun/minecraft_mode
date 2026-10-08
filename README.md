@@ -26,11 +26,18 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 ./gradlew runClient          # 개발용 클라이언트 실행
 ./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트 JSON → src/main/generated
 ./gradlew runClientGameTest  # 자동 테스트 (월드 생성 → 검증 → 스크린샷 build/run/clientGameTest/screenshots)
-java tools/TextureGen.java ~/.gradle/caches/fabric-loom/26.3/minecraft-client-only.jar src/main/resources/assets/minecraft_mode/textures
+java tools/TextureGen.java src/main/resources/assets/minecraft_mode/textures  # 텍스처 재생성
 ```
 
 설치: `build/libs/minecraft_mode-<ver>.jar`를 Fabric Loader + Fabric API가 설치된 26.3 클라이언트/서버의 `mods/` 폴더에 넣는다.
 
-## 텍스처 주의
+## 텍스처
 
-`tools/TextureGen.java`가 만든 **임시 텍스처**다. 금속·광석·도구·갑옷은 바닐라 텍스처의 색조를 바꾼 것이라 공개 배포 전에는 직접 그린 그림으로 교체하는 것이 좋다. 코인·상점·플라스틱 블록·몹·알·효과 아이콘은 직접 그린 것이다.
+모든 텍스처는 `tools/TextureGen.java`가 직접 그린다(바닐라 에셋을 읽지 않음).
+
+- 아이템(주괴·조각·원석·갑옷·플라스틱 판): 16x16 문자 격자 + 5단계 팔레트
+- 도구: 대각선 축 위의 모양 함수(자루 왼쪽 아래, 머리 오른쪽 위)
+- 돌/심층암 바탕·광석 결정·금속 블록·원석 블록: 시드 고정 절차 생성(이어 붙여도 이음새 없음)
+- 갑옷 착용 텍스처: 휴머노이드 모델 박스 UV에 맞춰 면 단위로 칠함(성인 64x32, 아기 64x64)
+
+색이나 모양을 바꾸려면 파일 위쪽의 `Palette`와 격자를 고치고 다시 실행한다.

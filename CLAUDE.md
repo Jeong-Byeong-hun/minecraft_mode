@@ -15,7 +15,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - `src/client` — renderer, model layer, **datagen providers** (`client/datagen`).
 - `src/main/generated` — datagen output, committed. Never hand-edit; change the provider and run `./gradlew runDatagen`.
 - `src/gametest` — client game test (`./gradlew runClientGameTest`); keep it passing after changes.
-- `tools/TextureGen.java` — regenerates placeholder textures.
+- `tools/TextureGen.java` — draws every texture from scratch (no vanilla assets); run it instead of editing PNGs by hand.
 
 ## Rules
 

@@ -65,6 +65,7 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 			inventoryScreenshot(context, server);
 			mineRaiderScreenshot(context, server, connection);
 			armorScreenshot(context, server);
+			blocksScreenshot(context, server);
 			checkShopTrade(context, server, connection);
 		}
 	}
@@ -210,6 +211,25 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		context.waitTicks(20);
 		context.takeScreenshot("mythril_armor");
 		context.runOnClient(client -> client.options.setCameraType(CameraType.FIRST_PERSON));
+	}
+
+	private static void blocksScreenshot(final ClientGameTestContext context, final TestServerContext server) {
+		String[][] rows = {
+			{"mythril_ore", "deepslate_mythril_ore", "mythril_block", "raw_mythril_block", "plastic_block"},
+			{"aluminum_ore", "deepslate_aluminum_ore", "aluminum_block", "raw_aluminum_block", "shop_block"},
+		};
+		server.runCommand("item replace entity @p weapon.mainhand with minecraft:air");
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("tp @p 0.5 -60 0.5 180 15");
+		for (int row = 0; row < rows.length; row++) {
+			for (int i = 0; i < rows[row].length; i++) {
+				server.runCommand("setblock " + (i - 2) + " " + (-59 - row) + " -4 minecraft_mode:" + rows[row][i]);
+			}
+		}
+		// Let the death particles from the previous step fade out
+		context.waitTicks(60);
+		context.takeScreenshot("blocks");
+		server.runCommand("fill -2 -60 -4 2 -59 -4 minecraft:air");
 	}
 
 	private static void checkShopTrade(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

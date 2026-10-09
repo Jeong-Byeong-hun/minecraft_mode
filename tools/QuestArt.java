@@ -53,6 +53,8 @@ final class QuestArt {
 		TextureGen.write("entity/npc/enhancer", brokk());
 		TextureGen.write("entity/npc/dungeon_warden", kael());
 		TextureGen.write("entity/npc/herald", elric());
+		TextureGen.write("entity/npc/guide", nella());
+		TextureGen.write("entity/npc/quartermaster", bram());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1184,6 +1186,78 @@ final class QuestArt {
 		legs(white);
 		fill(0, 28, 16, 4, 0x2A1A14);
 		fill(8, 16, 4, 4, 0x2A1A14);
+		return img;
+	}
+
+	/** Guide Nella: a brown hair bun, round glasses, a sky-blue robe with a white collar and a map case at the belt. */
+	static BufferedImage nella() {
+		BufferedImage img = newSkin(114);
+		int skin = 0xF2D0B4, hair = 0x6A4430, blue = 0x4A8ACF, light = 0x8AC0F0, white = 0xF4F2EC, gold = 0xE8C24A, frame = 0x3A2A1A;
+		head(skin, hair);
+		hair(hair, 2, 4, 7);
+		eyes(12, 0xFFFFFF, 0x4A6A9A);
+		px(9, 11, frame);                    // glasses
+		px(10, 11, frame);
+		px(11, 11, frame);
+		px(12, 11, frame);
+		px(13, 11, frame);
+		px(14, 11, frame);
+		px(11, 14, 0xD88A80);
+		px(12, 14, 0xD88A80);
+		fill(10, 0, 4, 2, hair);             // bun on top
+		fill(42, 0, 4, 3, hair);
+
+		body(blue);
+		fill(20, 20, 8, 2, white);           // collar
+		fill(23, 22, 2, 8, light);           // robe seam
+		fill(16, 29, 24, 1, 0x3A2414);       // belt with a map case
+		fill(26, 28, 2, 4, 0x8A6A3A);
+		px(26, 28, gold);
+
+		arms(blue);
+		fill(40, 28, 16, 1, white);          // cuffs
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(blue);
+		fill(0, 28, 16, 4, 0x4A3020);
+		fill(8, 16, 4, 4, 0x4A3020);
+		return img;
+	}
+
+	/** Quartermaster Bram: a grizzled veteran with a grey beard, a leather cap, a mail vest over a brown tunic and a heavy apron. */
+	static BufferedImage bram() {
+		BufferedImage img = newSkin(115);
+		int skin = 0xD0A080, beard = 0x8A8A8A, leather = 0x6A4A2A, mail = 0x9AA0A8, tunic = 0x7A5A3A, dark = 0x3A2A1A;
+		head(skin, beard);
+		hair(beard, 1, 3, 5);
+		eyes(12, 0xFFFFFF, 0x4A5A3A);
+		fill(8, 13, 8, 3, beard);            // beard
+		fill(0, 13, 8, 3, beard);
+		fill(16, 13, 8, 3, beard);
+		px(11, 13, 0x8A3A2A);
+		px(12, 13, 0x8A3A2A);
+		fill(32, 0, 32, 8, leather);         // leather cap on the hat layer
+		fill(32, 8, 32, 2, leather);
+		fill(40, 8, 8, 1, dark);
+
+		body(tunic);
+		fill(20, 20, 8, 7, mail);            // mail vest
+		fill(28, 20, 4, 7, mail);
+		fill(16, 20, 4, 7, mail);
+		fill(32, 20, 8, 7, mail);
+		fill(21, 27, 6, 5, leather);         // apron
+		fill(16, 29, 24, 1, dark);           // belt with keys
+		px(24, 29, 0xE8C24A);
+
+		arms(tunic);
+		fill(40, 20, 16, 4, mail);           // mail shoulders
+		fill(40, 28, 16, 4, leather);        // gloves
+		fill(48, 16, 4, 4, leather);
+
+		legs(0x4A4A50);
+		fill(0, 26, 16, 6, dark);
+		fill(8, 16, 4, 4, dark);
 		return img;
 	}
 

@@ -1,12 +1,14 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.client.companion.CompanionScreen;
 import com.minecraftmode.client.craft.CraftScreen;
 import com.minecraftmode.client.dungeon.DungeonScreen;
 import com.minecraftmode.client.endgame.CodexScreen;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.endgame.TalentScreen;
+import com.minecraftmode.client.guide.GuideScreen;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
@@ -114,6 +116,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			checkWarden(context, server, connection);
 			checkTitan(context, server, connection);
 			checkStory(context, server, connection);
+			checkPlazaNpcs(context, server, connection);
 			screens(context, server, connection);
 		}
 	}
@@ -474,6 +477,60 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			return "chapter " + expected + " of " + chapters.size() + " (" + chapters.get(expected).id() + ")";
 		});
 		MinecraftMode.LOGGER.info("[content] story: {}", report);
+	}
+
+	// ------------------------------------------------------------------ guide and quartermaster
+
+	/** Right-clicking the quartermaster gives the plain iron kit once; right-clicking the guide opens her topics. */
+	private static void checkPlazaNpcs(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+			CityNpc bram = ModEntities.CITY_NPC.create(level, EntitySpawnReason.COMMAND);
+			bram.setRole(CityNpc.Role.QUARTERMASTER);
+			bram.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
+			level.addFreshEntity(bram);
+			require(!StarterKit.taken(player), "a new player has not taken the kit");
+			Map<Item, Integer> before = new HashMap<>();
+			for (Item item : StarterKit.ITEMS) {
+				before.put(item, JobProgression.count(player.getInventory(), item));
+			}
+			player.interactOn(bram, InteractionHand.MAIN_HAND, bram.position().add(0, 1, 0));
+			for (Item item : StarterKit.ITEMS) {
+				require(JobProgression.count(player.getInventory(), item) == before.get(item) + 1, "the kit should contain one " + item);
+			}
+			for (ItemStack stack : player.getInventory()) {
+				if (StarterKit.ITEMS.contains(stack.getItem())) {
+					require(!stack.isEnchanted(), "kit items come without enchantments: " + stack);
+				}
+			}
+			require(StarterKit.taken(player), "the kit is remembered");
+			player.interactOn(bram, InteractionHand.MAIN_HAND, bram.position().add(0, 1, 0));
+			require(JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.IRON_SWORD) == before.get(net.minecraft.world.item.Items.IRON_SWORD) + 1,
+				"the kit is given only once");
+			bram.discard();
+			CityNpc nella = ModEntities.CITY_NPC.create(level, EntitySpawnReason.COMMAND);
+			nella.setRole(CityNpc.Role.GUIDE);
+			nella.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
+			level.addFreshEntity(nella);
+			player.interactOn(nella, InteractionHand.MAIN_HAND, nella.position().add(0, 1, 0));
+			nella.discard();
+			return StarterKit.ITEMS.size() + " items";
+		});
+		context.waitForScreen(GuideScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_guide");
+		requireFits(context, "guide", 340);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		GuideScreen.showTopic(GuideScreen.Topic.PLACES);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new GuideScreen()));
+		context.waitForScreen(GuideScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_guide_places");
+		GuideScreen.showTopic(GuideScreen.Topic.START);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		MinecraftMode.LOGGER.info("[content] plaza npcs: starter kit {}, guide screen opened", report);
 	}
 
 	// ------------------------------------------------------------------ screens

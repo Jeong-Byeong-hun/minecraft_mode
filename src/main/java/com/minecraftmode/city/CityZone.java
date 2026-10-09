@@ -94,7 +94,7 @@ public final class CityZone {
 	/**
 	 * Where the city service NPCs stand: the blacksmith and the enhancer at the forge, the raid marshal by the raid gate, the
 	 * guild clerk between the guild shops, the broker in the market stall with the lectern, the dungeon warden by the dungeon gate
-	 * and the royal herald on the plaza.
+	 * and the royal herald, the guide and the quartermaster on the plaza by the spawn.
 	 */
 	public static BlockPos npcHome(final CityNpc.Role role, final int base) {
 		return switch (role) {
@@ -105,6 +105,8 @@ public final class CityZone {
 			case ENHANCER -> new BlockPos(-18, base, 84);
 			case DUNGEON_WARDEN -> new BlockPos(-10, base, -55);
 			case HERALD -> new BlockPos(5, base, 11);
+			case GUIDE -> new BlockPos(-5, base, 11);
+			case QUARTERMASTER -> new BlockPos(-5, base, 15);
 		};
 	}
 

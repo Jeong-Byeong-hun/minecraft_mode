@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -463,6 +464,10 @@ public class GearDocProvider implements DataProvider {
 		md.append("# 성장 이후 콘텐츠 (초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·메인 스토리)\n\n");
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
 
+		md.append("## 광장의 안내원과 보급관\n\n");
+		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 직업, 키와 명령어, 길 안내(모든 NPC·교관 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
+		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없는 ").append(StarterKit.ITEMS.size())
+			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼.\n\n");
 		md.append("## 칭호 이름표\n\n");
 		md.append("- 착용한 칭호는 스코어보드 팀을 쓰지 않고 모드가 직접 이름 앞에 붙입니다(머리 위 이름·채팅·탭 목록). 다른 플러그인·데이터팩의 팀 설정과 충돌하지 않습니다.\n\n");
 

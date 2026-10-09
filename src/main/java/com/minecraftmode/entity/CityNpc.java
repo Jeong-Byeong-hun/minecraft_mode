@@ -1,11 +1,13 @@
 package com.minecraftmode.entity;
 
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.OpenBountyPayload;
 import com.minecraftmode.network.OpenDungeonPayload;
+import com.minecraftmode.network.OpenGuidePayload;
 import com.minecraftmode.network.OpenRaidPayload;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.RaidAffix;
@@ -65,7 +67,13 @@ public class CityNpc extends PathfinderMob {
 			"둘에서 넷이면 충분하네. 용감하다면 쐐기돌을 가져오게. 시간 안에 돌파하면 쐐기돌이 더 강해지지."),
 		HERALD("herald", 0xD84050, "Royal Herald Elric", "왕실 전령 엘릭",
 			"Hear ye! The realm has need of heroes. Come, I have news of the war against the dark.",
-			"들으시오! 왕국에 영웅이 필요하오. 이리 오시오, 어둠과의 전쟁 소식을 전하겠소.");
+			"들으시오! 왕국에 영웅이 필요하오. 이리 오시오, 어둠과의 전쟁 소식을 전하겠소."),
+		GUIDE("guide", 0x4AA8E8, "Guide Nella", "안내원 넬라",
+			"New to Stormhold? Ask me anything: pick a topic and I will explain.",
+			"스톰홀드는 처음이세요? 궁금한 게 있으면 뭐든 물어보세요. 주제를 고르면 알려 드릴게요."),
+		QUARTERMASTER("quartermaster", 0xA88A5A, "Quartermaster Bram", "보급관 브람",
+			"Every adventurer gets one set of iron gear from me. Do not lose it out there!",
+			"모험가라면 누구나 철 장비 한 벌은 내게서 받아 가지. 밖에서 잃어버리지 말게!");
 
 		private final String id;
 		private final int color;
@@ -151,6 +159,8 @@ public class CityNpc extends PathfinderMob {
 			case ENHANCER -> Items.MACE;
 			case DUNGEON_WARDEN -> Items.TRIAL_KEY;
 			case HERALD -> Items.GOAT_HORN;
+			case GUIDE -> Items.BOOK;
+			case QUARTERMASTER -> Items.IRON_SWORD;
 		}));
 	}
 
@@ -196,6 +206,12 @@ public class CityNpc extends PathfinderMob {
 					}
 				}
 				case HERALD -> Story.talk(serverPlayer, this);
+				case GUIDE -> {
+					if (ServerPlayNetworking.canSend(serverPlayer, OpenGuidePayload.TYPE)) {
+						ServerPlayNetworking.send(serverPlayer, new OpenGuidePayload(this.getId()));
+					}
+				}
+				case QUARTERMASTER -> StarterKit.give(serverPlayer);
 			}
 		}
 		return InteractionResult.SUCCESS;

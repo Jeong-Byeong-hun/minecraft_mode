@@ -99,6 +99,14 @@ public final class ModAttachments {
 			.syncWith(Companions.Data.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 	);
 
+	/** Whether Quartermaster Bram's starter kit was taken. Kept through death; synced to the owner. */
+	public static final AttachmentType<Boolean> STARTER_KIT = AttachmentRegistry.create(
+		MinecraftMode.id("starter_kit"),
+		builder -> builder.persistent(Codec.BOOL)
+			.copyOnDeath()
+			.syncWith(ByteBufCodecs.BOOL, AttachmentSyncPredicate.targetOnly())
+	);
+
 	/** Dungeon clears and best timed keystones. Kept through death; synced to the owner. */
 	public static final AttachmentType<DungeonData> DUNGEON = AttachmentRegistry.create(
 		MinecraftMode.id("dungeon"),

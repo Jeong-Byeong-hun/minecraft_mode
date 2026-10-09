@@ -503,7 +503,7 @@ final class CityChecks {
 		}
 
 		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
-			CityNpc.Role.HERALD}) {
+			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER}) {
 			BlockPos home = CityZone.npcHome(role, base);
 			BlockPos camera = server.computeOnServer(s -> {
 				ServerLevel level = s.overworld();

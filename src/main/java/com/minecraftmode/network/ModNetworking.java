@@ -34,6 +34,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(RaidEnterPayload.TYPE, RaidEnterPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(DungeonEnterPayload.TYPE, DungeonEnterPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenDungeonPayload.TYPE, OpenDungeonPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenGuidePayload.TYPE, OpenGuidePayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LootActionPayload.TYPE, LootActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(BountyActionPayload.TYPE, BountyActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(AuctionActionPayload.TYPE, AuctionActionPayload.CODEC);

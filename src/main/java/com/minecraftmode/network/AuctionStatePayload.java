@@ -9,11 +9,12 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Server -> client: the market as seen at broker {@code entityId} (opens the screen if needed): every listing (the client
- * filters, sorts and pages), the mailbox of the viewer and how many listings they have up.
+ * Server -> client: one page of the market as the viewer asked for it at broker {@code entityId} (opens the screen if needed):
+ * the listings on the page, how many matched and the page count, the viewer's mailbox, how many listings they have up, and
+ * the going price per piece of the stack in {@code suggestSlot} (-1 when none was asked for or nothing like it is listed).
  */
-public record AuctionStatePayload(int entityId, List<Entry> listings, int mailCoins, List<ItemStack> mailItems, int myListings)
-	implements CustomPacketPayload {
+public record AuctionStatePayload(int entityId, List<Entry> entries, int total, int page, int pages, Mail mail, int myListings, int suggestSlot,
+	int suggestEach) implements CustomPacketPayload {
 	public record Entry(int id, ItemStack item, int price, String seller, boolean mine, long ticksLeft) {
 		public static final StreamCodec<RegistryFriendlyByteBuf, Entry> CODEC = StreamCodec.composite(
 			ByteBufCodecs.VAR_INT, Entry::id,
@@ -26,13 +27,31 @@ public record AuctionStatePayload(int entityId, List<Entry> listings, int mailCo
 		);
 	}
 
+	/** The mailbox: proceeds, the first items waiting (all of them are collected) and how many items there are. */
+	public record Mail(int coins, List<ItemStack> items, int count) {
+		public static final StreamCodec<RegistryFriendlyByteBuf, Mail> CODEC = StreamCodec.composite(
+			ByteBufCodecs.VAR_INT, Mail::coins,
+			ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list()), Mail::items,
+			ByteBufCodecs.VAR_INT, Mail::count,
+			Mail::new
+		);
+
+		public boolean isEmpty() {
+			return this.coins == 0 && this.count == 0;
+		}
+	}
+
 	public static final Type<AuctionStatePayload> TYPE = new Type<>(MinecraftMode.id("auction_state"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, AuctionStatePayload> CODEC = StreamCodec.composite(
 		ByteBufCodecs.VAR_INT, AuctionStatePayload::entityId,
-		Entry.CODEC.apply(ByteBufCodecs.list()), AuctionStatePayload::listings,
-		ByteBufCodecs.VAR_INT, AuctionStatePayload::mailCoins,
-		ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list()), AuctionStatePayload::mailItems,
+		Entry.CODEC.apply(ByteBufCodecs.list()), AuctionStatePayload::entries,
+		ByteBufCodecs.VAR_INT, AuctionStatePayload::total,
+		ByteBufCodecs.VAR_INT, AuctionStatePayload::page,
+		ByteBufCodecs.VAR_INT, AuctionStatePayload::pages,
+		Mail.CODEC, AuctionStatePayload::mail,
 		ByteBufCodecs.VAR_INT, AuctionStatePayload::myListings,
+		ByteBufCodecs.VAR_INT, AuctionStatePayload::suggestSlot,
+		ByteBufCodecs.VAR_INT, AuctionStatePayload::suggestEach,
 		AuctionStatePayload::new
 	);
 

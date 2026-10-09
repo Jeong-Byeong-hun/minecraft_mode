@@ -6,10 +6,13 @@ import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.raid.BossDef;
+import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairDef;
+import java.util.ArrayList;
+import java.util.List;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -33,6 +36,9 @@ import net.minecraft.world.entity.player.Player;
  * enhancement). New achievements are announced and pay their merit.
  */
 public final class Progress {
+	/** Party members this close to a kill share it (codex, achievements and bounties). */
+	public static final double SHARE_RANGE = 48.0;
+
 	public static void init() {
 		ServerLivingEntityEvents.AFTER_DEATH.register(Progress::afterDeath);
 		ServerPlayerEvents.JOIN.register(Titles::apply);
@@ -60,15 +66,32 @@ public final class Progress {
 		if (!(source.getEntity() instanceof ServerPlayer killer)) {
 			return;
 		}
-		if (entity instanceof NamedMob named) {
-			set(killer, get(killer).withNamedKill(named.def().id()));
-			Bounties.progress(killer, BountyKind.KILL_NAMED, named.def().id(), 1);
+		for (ServerPlayer player : sharers(killer, entity, Parties.onlineMembers(killer))) {
+			if (entity instanceof NamedMob named) {
+				set(player, get(player).withNamedKill(named.def().id()));
+				Bounties.progress(player, BountyKind.KILL_NAMED, named.def().id(), 1);
+			}
+			if (entity instanceof Enemy) {
+				Bounties.progress(player, BountyKind.KILL_ANY, "", 1);
+				Bounties.progress(player, BountyKind.KILL_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(), 1);
+			}
+			check(player);
 		}
-		if (entity instanceof Enemy) {
-			Bounties.progress(killer, BountyKind.KILL_ANY, "", 1);
-			Bounties.progress(killer, BountyKind.KILL_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(), 1);
+	}
+
+	/**
+	 * Who a kill counts for: the killer, and every other member of their party in the same world within {@link #SHARE_RANGE} of
+	 * the kill, so a party hunting together fills its codex and bounties together.
+	 */
+	public static List<ServerPlayer> sharers(final ServerPlayer killer, final LivingEntity dead, final List<ServerPlayer> party) {
+		List<ServerPlayer> out = new ArrayList<>();
+		out.add(killer);
+		for (ServerPlayer member : party) {
+			if (member != killer && !member.isSpectator() && member.level() == dead.level() && member.distanceToSqr(dead) <= SHARE_RANGE * SHARE_RANGE) {
+				out.add(member);
+			}
 		}
-		check(killer);
+		return out;
 	}
 
 	public static void lairCleared(final ServerPlayer player, final LairDef lair) {

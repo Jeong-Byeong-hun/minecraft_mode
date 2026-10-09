@@ -106,15 +106,21 @@ public final class ModNetworking {
 		if (npc(player, payload.entityId(), CityNpc.Role.BROKER) == null) {
 			return;
 		}
+		int suggestSlot = -1;
+		int suggestEach = -1;
 		switch (payload.action()) {
 			case AuctionActionPayload.LIST -> AuctionService.list(player, payload.slot(), payload.price());
 			case AuctionActionPayload.BUY -> AuctionService.buy(player, payload.id());
 			case AuctionActionPayload.CANCEL -> AuctionService.cancel(player, payload.id());
 			case AuctionActionPayload.CLAIM -> AuctionService.claim(player);
+			case AuctionActionPayload.PRICE -> {
+				suggestSlot = payload.slot();
+				suggestEach = AuctionService.cheapestEach(player, payload.slot());
+			}
 			default -> {
 			}
 		}
-		AuctionService.send(player, payload.entityId());
+		AuctionService.send(player, payload.entityId(), payload.query(), suggestSlot, suggestEach);
 	}
 
 	private static void handleProgress(final ServerPlayer player, final ProgressActionPayload payload) {

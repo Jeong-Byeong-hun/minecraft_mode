@@ -73,11 +73,11 @@ public class LairChestBlock extends BaseEntityBlock {
 		Level level = player.level();
 		LairDef def = chest.def();
 		long cycle = ResetCycle.cycle(level);
-		// reaching the chest before the lord woke (a pearl, a fast run) wakes it now
-		if (!chest.isCache() && chest.lordCycle() != cycle && level instanceof ServerLevel server && !player.isSpectator()) {
-			chest.wakeLord(server, cycle);
-		}
-		if (chest.sealed()) {
+		if (!chest.victor(player, cycle)) {
+			// only those who beat the lord may open it; reaching the chest first (a pearl, a fast run) wakes one now
+			if (chest.lord() == null && level instanceof ServerLevel server && !player.isSpectator()) {
+				chest.wakeLord(server, cycle);
+			}
 			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.lair.sealed",
 				def == null ? Component.empty() : Component.translatable(def.named().nameKey())).withStyle(ChatFormatting.RED));
 			level.playSound(null, chest.getBlockPos(), SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 1.0F, 1.0F);

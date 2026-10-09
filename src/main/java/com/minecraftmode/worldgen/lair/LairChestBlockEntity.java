@@ -8,8 +8,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -21,6 +23,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Player;
@@ -35,13 +38,15 @@ import org.jspecify.annotations.Nullable;
 /**
  * A lair's treasure (or supply cache) with personal contents: every player gets their own roll once
  * per {@link ResetCycle cycle} and can come back for what they left until the cycle ends. The goal
- * chest also wakes the lair's lord once per cycle when a player comes near, and stays sealed while
- * that lord lives.
+ * chest opens only for this cycle's victors: the players who were near (within
+ * {@link #CREDIT_RANGE}) when its lord fell. Anyone else who comes near wakes a lord of their own.
  */
 public class LairChestBlockEntity extends BlockEntity {
 	public static final int SIZE = 27;
 	/** A player this close to the goal chest wakes the lord. */
 	public static final double WAKE_RANGE = 20.0;
+	/** Players this close to the lord when it falls may open the treasure this cycle. */
+	public static final double CREDIT_RANGE = 32.0;
 
 	private record Personal(long cycle, List<ItemStack> items) {
 		static final Codec<Personal> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -57,6 +62,8 @@ public class LairChestBlockEntity extends BlockEntity {
 	private boolean cache;
 	private long lordCycle = -1L;
 	private @Nullable UUID lord;
+	private long victorCycle = -1L;
+	private final Set<String> victors = new HashSet<>();
 	private final Map<String, Personal> personal = new HashMap<>();
 
 	public LairChestBlockEntity(final BlockPos pos, final BlockState state) {
@@ -93,8 +100,45 @@ public class LairChestBlockEntity extends BlockEntity {
 		return e instanceof NamedMob mob && mob.isAlive() ? mob : null;
 	}
 
+	/** True while a lord of this chest is alive (and loaded). */
 	public boolean sealed() {
 		return !this.cache && this.lord() != null;
+	}
+
+	/** True when {@code entity} is this chest's current lord (an older lord that finds it is not removes itself). */
+	public boolean isLord(final Entity entity) {
+		return this.lord != null && this.lord.equals(entity.getUUID());
+	}
+
+	/** True when {@code player} helped defeat a lord of this chest in {@code cycle}, so the treasure opens for them. */
+	public boolean victor(final Player player, final long cycle) {
+		return this.cache || this.victorCycle == cycle && this.victors.contains(player.getStringUUID());
+	}
+
+	private void newCycle(final long cycle) {
+		if (this.victorCycle != cycle) {
+			this.victorCycle = cycle;
+			this.victors.clear();
+			this.setChanged();
+		}
+	}
+
+	/** The lord fell: every player near it (and whoever dealt the blow) may open the treasure this cycle. */
+	public void lordDefeated(final ServerLevel level, final NamedMob mob, final DamageSource source) {
+		this.newCycle(ResetCycle.cycle(level));
+		List<ServerPlayer> credited = new ArrayList<>(level.getPlayers(p -> !p.isSpectator() && p.distanceToSqr(mob) <= CREDIT_RANGE * CREDIT_RANGE));
+		if (source.getEntity() instanceof ServerPlayer killer && !credited.contains(killer)) {
+			credited.add(killer);
+		}
+		for (ServerPlayer p : credited) {
+			this.victors.add(p.getStringUUID());
+			p.sendSystemMessage(Component.translatable("message.minecraft_mode.lair.lord_defeated", Component.translatable(mob.def().nameKey()))
+				.withStyle(ChatFormatting.GOLD));
+		}
+		if (this.isLord(mob)) {
+			this.lord = null;
+		}
+		this.setChanged();
 	}
 
 	public long lordCycle() {
@@ -106,16 +150,18 @@ public class LairChestBlockEntity extends BlockEntity {
 			return;
 		}
 		long cycle = ResetCycle.cycle(server);
-		if (chest.lordCycle == cycle) {
+		chest.newCycle(cycle);
+		if (chest.lord() != null) {
 			return;
 		}
-		Player near = server.getNearestPlayer(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, WAKE_RANGE, p -> !p.isSpectator());
+		// someone who has not beaten this cycle's lord comes near: a lord rises for them
+		Player near = server.getNearestPlayer(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, WAKE_RANGE, p -> !p.isSpectator() && p instanceof Player pl && !chest.victor(pl, cycle));
 		if (near != null) {
 			chest.wakeLord(server, cycle);
 		}
 	}
 
-	/** Spawns this cycle's lord next to the chest (also used by tests). */
+	/** Spawns a lord next to the chest for {@code cycle} (also used by tests). */
 	public @Nullable NamedMob wakeLord(final ServerLevel level, final long cycle) {
 		LairDef def = this.def();
 		if (def == null || this.cache) {
@@ -163,6 +209,8 @@ public class LairChestBlockEntity extends BlockEntity {
 		String key = player.getStringUUID();
 		Personal p = this.personal.get(key);
 		if (p == null || p.cycle() != cycle) {
+			// what was left in earlier cycles is gone anyway; keep only this cycle's rolls
+			this.personal.values().removeIf(old -> old.cycle() < cycle);
 			p = new Personal(cycle, this.roll(player.getUUID(), cycle));
 			this.personal.put(key, p);
 			this.setChanged();
@@ -226,6 +274,8 @@ public class LairChestBlockEntity extends BlockEntity {
 			output.putString("Lord", this.lord.toString());
 		}
 		output.store("Personal", PERSONAL_CODEC, this.personal);
+		output.putLong("VictorCycle", this.victorCycle);
+		output.store("Victors", Codec.STRING.listOf(), new ArrayList<>(this.victors));
 	}
 
 	@Override
@@ -238,5 +288,8 @@ public class LairChestBlockEntity extends BlockEntity {
 		this.lord = input.getString("Lord").map(UUID::fromString).orElse(null);
 		this.personal.clear();
 		this.personal.putAll(input.read("Personal", PERSONAL_CODEC).orElse(Map.of()));
+		this.victorCycle = input.getLongOr("VictorCycle", -1L);
+		this.victors.clear();
+		this.victors.addAll(input.read("Victors", Codec.STRING.listOf()).orElse(List.of()));
 	}
 }

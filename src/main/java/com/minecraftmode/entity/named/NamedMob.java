@@ -15,6 +15,7 @@ import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
@@ -312,6 +313,12 @@ public class NamedMob extends CreatureMob {
 		if (this.lordBar != null) {
 			this.lordBar.setProgress(this.getHealth() / this.getMaxHealth());
 		}
+		// a lord its chest no longer knows (replaced while its chunk was unloaded, or the chest is gone) leaves
+		if (this.tickCount % 100 == 0 && this.lordHome != null && level.isLoaded(this.lordHome)
+			&& !(level.getBlockEntity(this.lordHome) instanceof LairChestBlockEntity chest && chest.isLord(this))) {
+			this.discard();
+			return;
+		}
 		if (this.tickCount % WRATH_INTERVAL != WRATH_INTERVAL / 2 || this.getTarget() == null) {
 			return;
 		}
@@ -381,6 +388,15 @@ public class NamedMob extends CreatureMob {
 			this.setPersistenceRequired();
 		}
 		return super.hurtServer(level, source, damage);
+	}
+
+	@Override
+	public void die(final DamageSource source) {
+		super.die(source);
+		if (this.lord && this.lordHome != null && this.level() instanceof ServerLevel level && level.isLoaded(this.lordHome)
+			&& level.getBlockEntity(this.lordHome) instanceof LairChestBlockEntity chest) {
+			chest.lordDefeated(level, this, source);
+		}
 	}
 
 	@Override

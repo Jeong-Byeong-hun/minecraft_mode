@@ -36,7 +36,8 @@ final class EndgameLang {
 		b.add("item.minecraft_mode.lair_map.filled", ko ? "소굴 지도 (%s, %s)" : "Lair Map (%s, %s)");
 		b.add("item.minecraft_mode.lair_map.tooltip", ko ? "사용하면 가장 가까운 네임드 소굴을 표시한 지도가 됩니다." : "Use it to mark the nearest named lair on a map.");
 		b.add("entity.minecraft_mode.lair_lord", ko ? "소굴의 군주 %s" : "Lair Lord %s");
-		b.add("message.minecraft_mode.lair.sealed", ko ? "보물이 봉인되어 있다. 소굴의 군주 %s을(를) 먼저 쓰러뜨려라!" : "The treasure is sealed. Defeat the lair lord %s first!");
+		b.add("message.minecraft_mode.lair.sealed", ko ? "보물이 봉인되어 있다. 소굴의 군주 %s을(를) 쓰러뜨린 사람만 열 수 있다!" : "The treasure is sealed: only those who defeat the lair lord %s may open it!");
+		b.add("message.minecraft_mode.lair.lord_defeated", ko ? "소굴의 군주 %s이(가) 쓰러졌다! 이번 주기 동안 보물 상자가 당신에게 열립니다." : "The lair lord %s falls! The treasure opens for you this cycle.");
 		b.add("message.minecraft_mode.lair.personal", ko ? "이 보물은 당신만의 몫입니다. %s 뒤에 다시 채워집니다." : "This treasure is yours alone. It refills for you in %s.");
 		b.add("message.minecraft_mode.lair.lord_awakens", ko ? "%2$s의 군주 %1$s이(가) 깨어났다!" : "%s, lord of %s, awakens!");
 		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는 소굴이 근처에 없습니다." : "There is no lair within reach of this map.");
@@ -167,6 +168,8 @@ final class EndgameLang {
 
 	private static void market(final TranslationBuilder b, final boolean ko) {
 		b.add("message.minecraft_mode.market.not_sellable", ko ? "코인은 팔 수 없습니다." : "Coins cannot be sold.");
+		b.add("message.minecraft_mode.market.has_contents", ko ? "안에 물건이 든 상자나 꾸러미는 비우고 파세요." : "Empty boxes and bundles before selling them.");
+		b.add("message.minecraft_mode.market.too_large", ko ? "데이터가 너무 큰 물건(긴 책 등)은 거래소에 올릴 수 없습니다." : "This item carries too much data (a long book?) to be listed.");
 		b.add("message.minecraft_mode.market.bad_price", ko ? "가격은 1C에서 1000G 사이로 정하세요." : "Set a price between 1C and 1000G.");
 		b.add("message.minecraft_mode.market.too_many", ko ? "이미 %s개를 등록했습니다." : "You already have %s listings up.");
 		b.add("message.minecraft_mode.market.no_coins", ko ? "%s이(가) 필요합니다." : "You need %s.");
@@ -202,6 +205,7 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.market.seller", ko ? "판매자: %s" : "Seller: %s");
 		b.add("screen.minecraft_mode.market.mine", ko ? "등록: %s/%s" : "Listings: %s/%s");
 		b.add("screen.minecraft_mode.market.loading", ko ? "불러오는 중..." : "Loading...");
+		b.add("screen.minecraft_mode.market.results", ko ? "%s건" : "%s found");
 		b.add("screen.minecraft_mode.market.pick", ko ? "팔 물건을 왼쪽 인벤토리에서 고르세요." : "Click an item in your inventory to sell it.");
 		b.add("screen.minecraft_mode.market.price", ko ? "판매 가격" : "Price");
 		b.add("screen.minecraft_mode.market.total", ko ? "합계: %s" : "Total: %s");
@@ -209,8 +213,8 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.market.net", ko ? "팔리면 수령(-%s%%): %s" : "You get (-%s%%): %s");
 		b.add("screen.minecraft_mode.market.duration", ko ? "등록 기간: %s" : "Listed for %s");
 		b.add("screen.minecraft_mode.market.list", ko ? "판매 등록" : "List for sale");
-		b.add("screen.minecraft_mode.market.sell_help", ko ? "물건을 고르면 지금 최저가가 자동으로 들어갑니다. 코인은 팔 수 없습니다."
-			: "Picking an item fills in the cheapest current price. Coins cannot be sold.");
+		b.add("screen.minecraft_mode.market.sell_help", ko ? "물건을 고르면 지금 최저가가 자동으로 들어갑니다. 코인과 물건이 든 상자는 팔 수 없습니다."
+			: "Picking an item fills in the cheapest current price. Coins and filled boxes cannot be sold.");
 		b.add("screen.minecraft_mode.market.mail_coins", ko ? "판매 대금: %s" : "Proceeds: %s");
 		b.add("screen.minecraft_mode.market.mail_items", ko ? "물품: %s개" : "Items: %s");
 		b.add("screen.minecraft_mode.market.mail_help", ko ? "팔린 물건의 대금(수수료 5%% 제외)과 기간이 끝나거나 취소한 물건이 여기로 옵니다."

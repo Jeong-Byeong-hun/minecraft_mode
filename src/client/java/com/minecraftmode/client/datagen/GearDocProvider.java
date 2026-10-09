@@ -31,6 +31,7 @@ import com.minecraftmode.loot.GearUpgrades;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Achievements;
 import com.minecraftmode.progress.CollectionBonuses;
+import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
@@ -339,7 +340,8 @@ public class GearDocProvider implements DataProvider {
 			.append("블록 안에 오면(또는 상자를 열면) **소굴의 군주**(그 네임드의 최고 레벨 강화판)가 깨어납니다: 체력 ×").append(ClassDocProvider.num(NamedMob.LORD_HEALTH))
 			.append(", 공격 ×").append(ClassDocProvider.num(NamedMob.LORD_DAMAGE)).append(", 크기 ×").append(ClassDocProvider.num(NamedMob.LORD_SCALE)).append(", 보스 바, ").append(NamedMob.WRATH_INTERVAL / 20)
 			.append("초마다 바닥 경고 뒤 **소굴의 분노**(반경 5블록, 최대 체력의 40%).\n");
-		md.append("- 군주가 살아 있는 동안 보물 상자는 **봉인**되어 열리지 않습니다. 군주는 강화석 1–2개, 10% 확률로 보호 주문서를 떨어뜨립니다.\n");
+		md.append("- 보물 상자는 그 주기에 군주를 쓰러뜨릴 때 ").append((int)LairChestBlockEntity.CREDIT_RANGE)
+			.append("블록 안에 있던 사람(그리고 마지막 일격을 넣은 사람)에게만 열립니다. 아직 못 잡은 사람이 오면 그 사람을 위한 군주가 다시 깨어납니다. 군주는 강화석 1–2개, 10% 확률로 보호 주문서를 떨어뜨립니다.\n");
 		md.append("- 보물 상자를 그 주기에 처음 열면 소굴 정복으로 기록됩니다(도감·업적·의뢰). 보물 상자에 강화석 1–2개, 보급품에 25% 확률로 강화석.\n");
 		md.append("- **소굴 지도**: 사용하면 가장 가까운 네임드 소굴을 표시한 지도가 됩니다(잡화점 5S, 공적 상점).\n\n");
 
@@ -396,13 +398,16 @@ public class GearDocProvider implements DataProvider {
 			.append(AuctionService.DURATION / ResetCycle.DAY_TICKS).append("일.\n");
 		md.append("- 등록 수수료 ").append(AuctionService.LIST_FEE_PERCENT).append("%(등록할 때), 판매 수수료 ").append(AuctionService.SALE_FEE_PERCENT)
 			.append("%(대금에서). 판매 대금과 기간이 끝났거나 취소한 물건은 **우편함**으로 가고 중개인에게서 받습니다. 코인은 팔 수 없습니다.\n");
-		md.append("- 구매 탭: 검색, 분류(장비·소모품·재료), 정렬(가격·마감), 쪽 넘기기. 판매 탭에서 물건을 고르면 지금 최저가가 자동으로 들어갑니다.\n\n");
+		md.append("- 구매 탭: 검색, 분류(장비·소모품·재료), 정렬(가격·마감), 쪽 넘기기 — 서버가 찾아서 한 쪽(").append(AuctionService.PAGE_SIZE)
+			.append("건)씩만 보냅니다. 판매 탭에서 물건을 고르면 지금 최저가가 자동으로 들어갑니다.\n");
+		md.append("- 물건이 든 셜커 상자·꾸러미, 데이터가 ").append(AuctionService.MAX_ITEM_BYTES / 1024).append("KB를 넘는 물건(긴 책 등)은 등록할 수 없습니다.\n\n");
 
 		md.append("## 업적 (").append(Achievements.all().size()).append("개)\n\n| 업적 | 조건 | 공적 | 칭호 |\n|---|---|---|---|\n");
 		for (Achievements.Achievement a : Achievements.all()) {
 			md.append("| ").append(a.ko()).append(" | ").append(a.descKo()).append(" | ").append(a.merit()).append(" | ").append(a.hasTitle() ? a.titleKo() : "").append(" |\n");
 		}
 		md.append("\n- 칭호는 도감(J)의 칭호 탭에서 착용하며 이름 앞에 붙습니다(머리 위·채팅·탭 목록).\n");
+		md.append("- 처치 기록(도감·업적·처치 의뢰)은 마지막 일격을 넣은 사람과 ").append((int)Progress.SHARE_RANGE).append("블록 안의 같은 파티원 모두에게 올라갑니다.\n");
 		md.append("- **수집 보너스**(영구): 네임드 종마다 ").append(CollectionBonuses.KILLS).append("마리 처치하면 보스 피해 +0.5%, 정복한 소굴 종류마다 아이템 발견 +0.5%, 업적 ")
 			.append(CollectionBonuses.ACHIEVEMENT_STEP).append("개마다 경험치 +1%.\n\n");
 

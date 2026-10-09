@@ -31,6 +31,8 @@ import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearUpgrades;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.market.AuctionService;
+import com.minecraftmode.network.AuctionActionPayload;
+import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.progress.Achievements;
 import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.PlayerRecords;
@@ -66,6 +68,9 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -73,8 +78,11 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.scores.PlayerTeam;
 
 /**
@@ -113,6 +121,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			checkBounties(server, connection);
 			checkEnhancement(server, connection);
 			checkMarket(server, connection);
+			checkKillSharing(server, connection);
 			checkTalents(server, connection);
 			checkProgress(server, connection);
 			screens(context, server, connection);
@@ -122,6 +131,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 
 	// ------------------------------------------------------------------ lairs
 
+	private static final GameProfile ALICE = new GameProfile(UUID.fromString("00000000-0000-0000-0000-00000000a11c"), "Alice");
 	private static final BlockPos GOAL = new BlockPos(40, -60, 40);
 	private static final BlockPos CACHE = new BlockPos(44, -60, 40);
 
@@ -148,7 +158,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			cache.setup("dune_scorpion", 99L, true);
 			long cycle = ResetCycle.cycle(level);
 			// every player rolls their own contents once per cycle
-			FakePlayer alice = FakePlayer.get(level, new GameProfile(UUID.fromString("00000000-0000-0000-0000-00000000a11c"), "Alice"));
+			FakePlayer alice = FakePlayer.get(level, ALICE);
 			FakePlayer bob = FakePlayer.get(level, new GameProfile(UUID.fromString("00000000-0000-0000-0000-000000000b0b"), "Bob"));
 			Container a = goal.container(alice, cycle);
 			Container b = goal.container(bob, cycle);
@@ -168,6 +178,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			require(goal.container(alice, cycle).getItem(taken).isEmpty(), "a taken item should stay taken this cycle");
 			require(!goal.fresh(alice, cycle) && goal.fresh(alice, cycle + 1), "the chest should be fresh again next cycle");
 			require(!contents(goal.container(alice, cycle + 1)).isEmpty(), "next cycle rolls again");
+			require(goal.fresh(bob, cycle), "a roll in a later cycle forgets the earlier cycle's leftovers");
 			require(!goal.sealed() && !cache.sealed(), "nothing is sealed before the lord wakes");
 			require(goal.lordCycle() != cycle, "no lord before anyone came");
 			// the lord wakes when a player comes close
@@ -182,16 +193,20 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(GOAL);
 			LairChestBlockEntity cache = (LairChestBlockEntity)level.getBlockEntity(CACHE);
 			long cycle = ResetCycle.cycle(level);
-			require(goal.lordCycle() == cycle, "a player near the goal chest should wake the lord");
+			require(goal.lordCycle() == cycle && goal.lord() != null, "a player near the goal chest should wake the lord");
 			NamedMob lord = goal.lord();
-			require(lord != null && lord.isLord() && goal.sealed(), "the lord should wake and seal the goal chest");
+			require(lord.isLord() && goal.sealed() && !goal.victor(player, cycle), "the lord should wake and seal the goal chest");
 			require(NamedMobs.def(lord.getType()).id().equals("dune_scorpion"), "the lord should be the lair's named monster");
 			require(!cache.sealed(), "caches are never sealed");
 			require(lord.getMaxHealth() > NamedMobs.def(lord.getType()).health() * 2.0, "a lord should be much tougher than its kind, has " + lord.getMaxHealth());
 			require(!LairChestBlock.open(player, goal), "a sealed chest must not open");
+			// the lord falls next to the player: everyone near it may open the treasure this cycle, nobody else
 			lord.setNoAi(true);
-			lord.discard();
-			require(!goal.sealed(), "the chest opens once the lord is gone");
+			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0E7F);
+			require(!lord.isAlive(), "the lord should fall");
+			require(goal.victor(player, cycle) && !goal.sealed(), "the player who fought should be a victor");
+			FakePlayer alice = FakePlayer.get(level, ALICE);
+			require(!goal.victor(alice, cycle), "a player far from the fight is not a victor");
 			int before = Progress.get(player).lairClears("dune_scorpion");
 			require(LairChestBlock.open(player, goal), "the chest should open after the lord falls");
 			player.closeContainer();
@@ -200,6 +215,13 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			player.closeContainer();
 			require(Progress.get(player).lairClears("dune_scorpion") == before + 1, "only the first open of a cycle counts");
 			require(Progress.get(player).has("first_lair"), "the first lair clear unlocks an achievement");
+			// someone who missed the fight finds it sealed, and a lord rises for them; victors still open it
+			require(!LairChestBlock.open(alice, goal), "the treasure stays sealed for someone who did not fight");
+			NamedMob second = goal.lord();
+			require(second != null && second != lord && second.isLord(), "a new lord should rise for the latecomer");
+			require(LairChestBlock.open(player, goal), "a victor still opens it while another lord is up");
+			player.closeContainer();
+			second.discard();
 			player.teleportTo(level, 0.5, -60, 0.5, java.util.Set.of(), 180.0F, 0.0F, true);
 			return "lord hp " + lord.getMaxHealth();
 		});
@@ -460,13 +482,78 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			for (int i = 0; i < wares.length; i++) {
 				house.add(UUID.nameUUIDFromBytes(names[i % 3].getBytes()), names[i % 3], wares[i], (i + 1) * 47, now + AuctionService.DURATION - i * 5000L);
 			}
+			// filled boxes and data-heavy items stay off the market
+			ItemStack box = new ItemStack(Items.SHULKER_BOX);
+			box.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(List.of(new ItemStack(Items.DIAMOND, 64))));
+			player.getInventory().setItem(5, box);
+			require(!AuctionService.list(player, 5, 100) && !player.getInventory().getItem(5).isEmpty(), "a filled shulker box cannot be listed");
+			require(AuctionService.sellable(new ItemStack(Items.SHULKER_BOX)), "an empty shulker box can be sold");
+			ItemStack heavy = new ItemStack(Items.PAPER);
+			CompoundTag tag = new CompoundTag();
+			tag.putString("text", "x".repeat(AuctionService.MAX_ITEM_BYTES * 2));
+			heavy.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+			player.getInventory().setItem(6, heavy);
+			require(AuctionService.tooLarge(heavy, s.registryAccess()) && !AuctionService.list(player, 6, 100), "an item with too much data cannot be listed");
+			player.getInventory().setItem(5, ItemStack.EMPTY);
+			player.getInventory().setItem(6, ItemStack.EMPTY);
+			// more wares than one page: the server pages, sorts, filters and searches
+			UUID mason = UUID.nameUUIDFromBytes("Mason".getBytes());
+			for (int i = 0; i < 10; i++) {
+				house.add(mason, "Mason", new ItemStack(Items.COBBLESTONE, 64), 64 * (2 + i), now + AuctionService.DURATION);
+			}
+			int active = (int)house.listings().stream().filter(l -> l.expires() > now).count();
+			AuctionStatePayload first = AuctionService.state(player, -1, AuctionActionPayload.Query.DEFAULT, -1, -1);
+			require(first.total() == active && first.entries().size() == AuctionService.PAGE_SIZE && first.pages() == (active + AuctionService.PAGE_SIZE - 1) / AuctionService.PAGE_SIZE,
+				"one page of " + AuctionService.PAGE_SIZE + " out of " + active + ", got " + first.entries().size() + " of " + first.total() + " in " + first.pages() + " pages");
+			for (int i = 1; i < first.entries().size(); i++) {
+				AuctionStatePayload.Entry a = first.entries().get(i - 1);
+				AuctionStatePayload.Entry b = first.entries().get(i);
+				require(a.price() / a.item().getCount() <= b.price() / b.item().getCount(), "cheapest per piece first");
+			}
+			AuctionStatePayload last = AuctionService.state(player, -1, new AuctionActionPayload.Query(false, "", List.of(), false, 0, 0, 99), -1, -1);
+			require(last.page() == last.pages() - 1 && !last.entries().isEmpty(), "a page past the end shows the last page");
+			AuctionStatePayload cobble = AuctionService.state(player, -1, new AuctionActionPayload.Query(false, "cobble", List.of(), false, 0, 0, 0), -1, -1);
+			require(cobble.total() == 10 && cobble.entries().stream().allMatch(e -> e.item().is(Items.COBBLESTONE)), "a search by name finds the cobblestone");
+			// a search in the viewer's own language arrives as the matching items
+			AuctionStatePayload sword = AuctionService.state(player, -1, new AuctionActionPayload.Query(false, "검", List.of(BuiltInRegistries.ITEM.getId(Items.DIAMOND_SWORD)),
+				true, 0, 0, 0), -1, -1);
+			require(sword.total() == 1 && sword.entries().getFirst().item().is(Items.DIAMOND_SWORD), "the client's item matches should find the sword, got " + sword.total());
+			AuctionStatePayload gear = AuctionService.state(player, -1, new AuctionActionPayload.Query(false, "", List.of(), false,
+				AuctionService.Category.GEAR.ordinal(), 0, 0), -1, -1);
+			require(gear.total() >= 2 && gear.entries().stream().allMatch(e -> AuctionService.Category.GEAR.test(e.item())), "the gear filter shows only gear");
+			AuctionStatePayload dear = AuctionService.state(player, -1, new AuctionActionPayload.Query(false, "cobble", List.of(), false, 0,
+				AuctionService.Sort.DEAR.ordinal(), 0), -1, -1);
+			require(dear.entries().getFirst().price() == 64 * 11, "priciest first, got " + dear.entries().getFirst().price());
+			// the going price for what the player holds
+			player.getInventory().setItem(7, new ItemStack(Items.COBBLESTONE, 10));
+			require(AuctionService.cheapestEach(player, 7) == 2, "the going price of cobblestone is 2C a piece, got " + AuctionService.cheapestEach(player, 7));
+			require(AuctionService.cheapestEach(player, 8) == -1, "nothing to price in an empty slot");
+			player.getInventory().setItem(7, ItemStack.EMPTY);
 			house.sendCoins(player.getUUID(), 333, true);
-			return house.listings().size() + " listings";
+			return house.listings().size() + " listings, " + first.pages() + " pages";
 		});
 		MinecraftMode.LOGGER.info("[endgame] market: {}", report);
 	}
 
 	// ------------------------------------------------------------------ talents
+
+	private static void checkKillSharing(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			ServerPlayer player = connection.getServerPlayer();
+			net.minecraft.world.entity.monster.zombie.Zombie dead = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			dead.snapTo(player.getX() + 4, player.getY(), player.getZ(), 0.0F, 0.0F);
+			FakePlayer near = FakePlayer.get(level, new GameProfile(UUID.nameUUIDFromBytes("Carol".getBytes()), "Carol"));
+			near.snapTo(player.getX() + 20, player.getY(), player.getZ(), 0.0F, 0.0F);
+			FakePlayer far = FakePlayer.get(level, new GameProfile(UUID.nameUUIDFromBytes("Dave".getBytes()), "Dave"));
+			far.snapTo(player.getX() + 200, player.getY(), player.getZ(), 0.0F, 0.0F);
+			List<ServerPlayer> shared = Progress.sharers(player, dead, List.of(player, near, far));
+			require(shared.size() == 2 && shared.contains(player) && shared.contains(near), "the killer and a party member nearby share the kill, got " + shared);
+			require(Progress.sharers(player, dead, List.of(player)).equals(List.of(player)), "alone, only the killer");
+			return shared.size() + " credited";
+		});
+		MinecraftMode.LOGGER.info("[endgame] kill sharing: {}", report);
+	}
 
 	private static void checkTalents(final TestServerContext server, final TestServerConnection connection) {
 		String report = server.computeOnServer(s -> {
@@ -656,7 +743,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			require(data.day() > before[2] && data.daily().stream().noneMatch(BountyData.Bounty::claimed), "daily bounties renew");
 			require(data.cycle() == cycle, "the cycle bounty renews");
 			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(GOAL);
-			require(goal.fresh(player, cycle) && goal.lordCycle() != cycle, "the lair chest refills and its lord returns next cycle");
+			require(goal.fresh(player, cycle) && !goal.victor(player, cycle), "the lair chest refills and has to be won again next cycle");
 			require(RaidAffix.forCycle(cycle).size() == RaidAffix.PER_CYCLE, "every cycle has its modifiers");
 			return "cycle " + before[1] + " -> " + cycle + ", modifiers " + RaidAffix.forCycle(before[1]) + " -> " + RaidAffix.forCycle(cycle);
 		});

@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:glass_bottle",
+    "minecraft:glistering_melon_slice"
+  ],
+  "result": {
+    "id": "minecraft_mode:healing_draught"
+  }
+}

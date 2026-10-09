@@ -1,5 +1,14 @@
 package com.minecraftmode.entity.boss;
 
+import net.minecraft.world.entity.monster.skeleton.WitherSkeleton;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import java.util.UUID;
+import java.util.Set;
+import java.util.Map;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.ArrayList;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.MobProjectile;
@@ -47,6 +56,15 @@ public class Malachar extends RaidBoss {
 			pattern("curse", 2, 320, 0, 16, this::curse),
 			pattern("death_nova", 3, 280, 0, 44, this::deathNova),
 			pattern("requiem", 3, 320, 0, 60, this::requiem)
+		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(
+			mechanic("malachar_stillness", 0.85F, 120, 150, this::stillness),
+			mechanic("malachar_phylactery", 0.6F, 160, 420, this::phylactery),
+			mechanic("malachar_doom", 0.35F, 140, 220, this::doom)
 		);
 	}
 
@@ -152,5 +170,107 @@ public class Malachar extends RaidBoss {
 				}
 			});
 		}
+	}
+
+	/** Requiem of Stillness: after the warning, anyone who moves during the requiem dies. */
+	private void stillness(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.WARDEN_HEARTBEAT, 4.0F, 0.6F);
+		this.during(80, 20, () -> {
+			for (ServerPlayer p : this.fighters(level)) {
+				level.sendParticles(ParticleTypes.SOUL, p.getX(), p.getY() + 2.2, p.getZ(), 4, 0.2, 0.1, 0.2, 0.01);
+			}
+		});
+		this.after(80, () -> {
+			Map<UUID, Vec3> start = new HashMap<>();
+			for (ServerPlayer p : this.fighters(level)) {
+				start.put(p.getUUID(), p.position());
+			}
+			this.title(level, Component.translatable("raid.minecraft_mode.mechanic.malachar_stillness.now").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.BOLD),
+				Component.empty());
+			this.sound(level, SoundEvents.WARDEN_SONIC_CHARGE, 4.0F, 0.4F);
+			Set<UUID> struck = new HashSet<>();
+			this.during(60, 4, () -> {
+				for (ServerPlayer p : this.fighters(level)) {
+					Vec3 from = start.get(p.getUUID());
+					if (from == null || struck.contains(p.getUUID())) {
+						continue;
+					}
+					if (p.position().subtract(from).horizontalDistance() > 0.35 || p.getY() - from.y > 0.5) {
+						struck.add(p.getUUID());
+						this.lethal(level, p);
+					}
+				}
+			});
+		});
+	}
+
+	/** Phylactery: Malachar cannot be hurt while his guardians stand; destroy them all in 20 seconds or die in a Death Nova. */
+	private void phylactery(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.SUMMON);
+		this.sound(level, SoundEvents.WITHER_SPAWN, 2.0F, 0.6F);
+		this.setInvulnerableFor(400);
+		int n = 2 + this.fighters(level).size() / 2;
+		List<WitherSkeleton> guards = this.targets(level, EntityTypes.WITHER_SKELETON, this.spots(n, 8, Arenas.RADIUS - 3, 6), 60.0F,
+			"raid.minecraft_mode.phylactery_guard");
+		boolean[] done = {false};
+		this.during(400, 10, () -> {
+			long alive = guards.stream().filter(WitherSkeleton::isAlive).count();
+			this.tally(level, "malachar_phylactery", (int)(guards.size() - alive), guards.size());
+			for (WitherSkeleton g : guards) {
+				if (g.isAlive()) {
+					new Fx(Fx.Kind.ORB, SOUL).line(level, g.position().add(0, 1.2, 0), this.position().add(0, this.getBbHeight() * 0.6, 0), 1.0);
+				}
+			}
+			if (alive == 0 && !done[0]) {
+				done[0] = true;
+				this.clearInvulnerable();
+				this.cleared(level, "malachar_phylactery");
+				this.endMechanic();
+			}
+		});
+		this.after(400, () -> {
+			this.clearInvulnerable();
+			if (guards.stream().anyMatch(WitherSkeleton::isAlive)) {
+				guards.forEach(g -> g.discard());
+				this.wipe(level, "malachar_phylactery");
+			}
+		});
+	}
+
+	/** Doom: a third of the party is marked; each must reach the soul font within 10 seconds to be cleansed. */
+	private void doom(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.ELDER_GUARDIAN_CURSE, 4.0F, 0.4F);
+		List<ServerPlayer> fighters = new ArrayList<>(this.fighters(level));
+		java.util.Collections.shuffle(fighters, new java.util.Random(this.random.nextLong()));
+		List<ServerPlayer> marked = new ArrayList<>(fighters.subList(0, Math.min(fighters.size(), Math.max(1, (int)Math.ceil(fighters.size() / 3.0)))));
+		Vec3 font = this.spots(1, 5, Arenas.RADIUS - 5, 6).getFirst();
+		this.mechanicSpots.add(font);
+		for (ServerPlayer m : marked) {
+			m.sendSystemMessage(Component.translatable("raid.minecraft_mode.mechanic.malachar_doom.marked").withStyle(ChatFormatting.DARK_RED, ChatFormatting.BOLD));
+		}
+		Set<UUID> cleansed = new HashSet<>();
+		this.during(200, 5, () -> {
+			Telegraph.ring(level, font, 2.2, 0x60FF60, 1.4F);
+			new Fx(Fx.Kind.ORB, SOUL).column(level, font, 3.0);
+			for (ServerPlayer m : marked) {
+				if (cleansed.contains(m.getUUID()) || !m.isAlive()) {
+					continue;
+				}
+				level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, m.getX(), m.getY() + 2.3, m.getZ(), 3, 0.2, 0.1, 0.2, 0.0);
+				if (m.position().subtract(font).horizontalDistance() <= 2.2) {
+					cleansed.add(m.getUUID());
+					m.sendSystemMessage(Component.translatable("raid.minecraft_mode.mechanic.malachar_doom.cleansed").withStyle(ChatFormatting.GREEN));
+				}
+			}
+		});
+		this.after(200, () -> {
+			for (ServerPlayer m : marked) {
+				if (!cleansed.contains(m.getUUID()) && m.isAlive() && m.level() == level) {
+					this.lethal(level, m);
+				}
+			}
+		});
 	}
 }

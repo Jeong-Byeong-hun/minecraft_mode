@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:bowl",
+    "minecraft:wheat",
+    "minecraft:wheat",
+    "minecraft:beetroot"
+  ],
+  "result": {
+    "id": "minecraft_mode:tteokbokki"
+  }
+}

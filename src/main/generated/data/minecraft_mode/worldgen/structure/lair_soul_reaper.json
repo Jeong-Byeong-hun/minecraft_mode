@@ -1,0 +1,54 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": "minecraft:soul_sand_valley",
+  "lair": "soul_reaper",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:blaze",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 30
+        },
+        {
+          "type": "minecraft:enderman",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 20
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 110
+        },
+        {
+          "type": "minecraft:wither_skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 50
+        },
+        {
+          "type": "minecraft_mode:soul_reaper",
+          "count": 1,
+          "weight": 23
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

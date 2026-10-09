@@ -4,6 +4,7 @@ import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.loot.Coins;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -41,8 +42,12 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		return this.minecraft.player == null ? 0 : EngravingMenu.essence(this.minecraft.player.getInventory());
 	}
 
-	private boolean canPay(final int cost) {
-		return this.minecraft.player != null && (this.minecraft.player.isCreative() || this.essence() >= cost);
+	private boolean canPay(final int cost, final int coins) {
+		return this.minecraft.player != null && (this.minecraft.player.isCreative() || this.essence() >= cost && Coins.total(this.minecraft.player) >= coins);
+	}
+
+	private int wallet() {
+		return this.minecraft.player == null ? 0 : Coins.total(this.minecraft.player);
 	}
 
 	@Override
@@ -94,22 +99,22 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		for (int i = 0; i < 3 && def != null; i++) {
 			int ry = y + OFFERS_Y + i * OFFER_STEP;
 			Engraving offer = this.menu.offer(i);
-			boolean enabled = offer != null && this.canPay(this.menu.engraveCost());
+			boolean enabled = offer != null && this.canPay(this.menu.engraveCost(), this.menu.engraveCoins());
 			boolean hover = offer != null && this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, 14);
 			g.fill(x + ROW_X, ry, x + ROW_X + ROW_W, ry + 14, !enabled ? 0xFF6B6B6B : hover ? 0xFF5E3A9E : 0xFF432A73);
 			if (offer != null) {
 				g.text(this.font, Component.translatable(offer.nameKey()), x + ROW_X + 3, ry + 3, enabled ? 0xFFFFFFFF : 0xFFBDBDBD, false);
-				String cost = "◆" + this.menu.engraveCost();
-				g.text(this.font, cost, x + ROW_X + ROW_W - 3 - this.font.width(cost), ry + 3, this.canPay(this.menu.engraveCost()) ? 0xFF7FFFD4 : 0xFFFF8080, false);
+				String cost = "◆" + this.menu.engraveCost() + " ◎" + Coins.format(this.menu.engraveCoins());
+				g.text(this.font, cost, x + ROW_X + ROW_W - 3 - this.font.width(cost), ry + 3, enabled ? 0xFF7FFFD4 : 0xFFFF8080, false);
 			}
 		}
 
 		// reroll + essence
-		boolean rerollOk = def != null && this.canPay(this.menu.rerollCost());
+		boolean rerollOk = def != null && this.canPay(this.menu.rerollCost(), this.menu.rerollCoins());
 		boolean rerollHover = this.inside(mouseX, mouseY, x + REROLL_X, y + REROLL_Y, 30, 14);
 		g.fill(x + REROLL_X, y + REROLL_Y, x + REROLL_X + 30, y + REROLL_Y + 14, !rerollOk ? 0xFF6B6B6B : rerollHover ? 0xFF3E7A6E : 0xFF2C5A51);
 		g.centeredText(this.font, "⟳", x + REROLL_X + 15, y + REROLL_Y + 3, 0xFFFFFFFF);
-		String have = "◆" + this.essence();
+		String have = "◆" + this.essence() + "  ◎" + Coins.format(this.wallet());
 		g.text(this.font, have, x + 8, y + REROLL_Y + 20, 0xFF1F7A68, false);
 		if (def == null) {
 			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.engraving.insert"), x + ROW_X, y + OFFERS_Y + 2, ROW_W, 0xFF404040);
@@ -136,6 +141,7 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 					tip.add(JobTooltips.engravingLine(e, 1));
 				}
 				tip.add(Component.translatable("screen.minecraft_mode.engraving.remove", this.menu.removeCost()).withStyle(ChatFormatting.RED));
+				tip.add(Component.translatable("screen.minecraft_mode.engraving.coins", Coins.format(this.menu.removeCoins())).withStyle(ChatFormatting.GOLD));
 				g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 			}
 		}
@@ -150,13 +156,15 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 					tip.add(Component.translatable("screen.minecraft_mode.engraving.after").withStyle(ChatFormatting.GOLD).append(JobTooltips.engravingLine(offer, already + 1)));
 				}
 				tip.add(Component.translatable("screen.minecraft_mode.engraving.cost", this.menu.engraveCost()).withStyle(ChatFormatting.AQUA));
+				tip.add(Component.translatable("screen.minecraft_mode.engraving.coins", Coins.format(this.menu.engraveCoins())).withStyle(ChatFormatting.GOLD));
 				g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 			}
 		}
 		if (this.inside(mouseX, mouseY, x + REROLL_X, y + REROLL_Y, 30, 14)) {
 			g.setComponentTooltipForNextFrame(this.font, List.of(
 				Component.translatable("screen.minecraft_mode.engraving.reroll"),
-				Component.translatable("screen.minecraft_mode.engraving.cost", this.menu.rerollCost()).withStyle(ChatFormatting.AQUA)
+				Component.translatable("screen.minecraft_mode.engraving.cost", this.menu.rerollCost()).withStyle(ChatFormatting.AQUA),
+				Component.translatable("screen.minecraft_mode.engraving.coins", Coins.format(this.menu.rerollCoins())).withStyle(ChatFormatting.GOLD)
 			), mouseX, mouseY);
 		}
 	}

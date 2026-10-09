@@ -1,0 +1,54 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": "minecraft:desert",
+  "lair": "dune_scorpion",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft:husk",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 110
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 80
+        },
+        {
+          "type": "minecraft:spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft_mode:dune_scorpion",
+          "count": 1,
+          "weight": 70
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

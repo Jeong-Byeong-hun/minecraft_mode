@@ -1,0 +1,54 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": "minecraft:deep_dark",
+  "lair": "echo_stalker",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:cave_spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 40
+        },
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 50
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft:zombie",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 80
+        },
+        {
+          "type": "minecraft_mode:echo_stalker",
+          "count": 1,
+          "weight": 17
+        }
+      ]
+    }
+  },
+  "step": "underground_structures"
+}

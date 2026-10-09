@@ -58,10 +58,12 @@ public final class ModLanguageProviders {
 			builder.add(ModItems.BLACKSMITH_SHOP, "Blacksmith");
 			builder.add(ModItems.GROCER_SHOP, "Grocer");
 			builder.add(ModItems.JEWELER_SHOP, "Jeweler");
+			builder.add(ModItems.ALCHEMIST_SHOP, "Alchemist");
 			builder.add(ShopType.GENERAL.titleKey(), "General Store");
 			builder.add(ShopType.BLACKSMITH.titleKey(), "Blacksmith");
 			builder.add(ShopType.GROCER.titleKey(), "Grocer");
 			builder.add(ShopType.JEWELER.titleKey(), "Jeweler");
+			builder.add(ShopType.ALCHEMIST.titleKey(), "Alchemist");
 
 			builder.add(ModEntities.MINE_RAIDER, "Mine Raider");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "Mine Raider Spawn Egg");
@@ -127,10 +129,12 @@ public final class ModLanguageProviders {
 			builder.add(ModItems.BLACKSMITH_SHOP, "대장간");
 			builder.add(ModItems.GROCER_SHOP, "식료품점");
 			builder.add(ModItems.JEWELER_SHOP, "보석상");
+			builder.add(ModItems.ALCHEMIST_SHOP, "연금술사");
 			builder.add(ShopType.GENERAL.titleKey(), "잡화점");
 			builder.add(ShopType.BLACKSMITH.titleKey(), "대장간");
 			builder.add(ShopType.GROCER.titleKey(), "식료품점");
 			builder.add(ShopType.JEWELER.titleKey(), "보석상");
+			builder.add(ShopType.ALCHEMIST.titleKey(), "연금술사");
 
 			builder.add(ModEntities.MINE_RAIDER, "광산 약탈자");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "광산 약탈자 생성 알");

@@ -10,6 +10,7 @@ import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.Raids;
 import java.util.ArrayList;
@@ -253,6 +254,8 @@ public abstract class RaidBoss extends CreatureMob {
 		this.minions.removeIf(m -> !m.isAlive());
 		this.bossEvent.setProgress(this.getHealth() / this.getMaxHealth());
 		this.checkPhase(level);
+		this.fightTicks++;
+		this.tickMechanics(level);
 		this.leash();
 		if (this.flies() && this.busyTicks <= 0) {
 			this.hover();
@@ -360,6 +363,10 @@ public abstract class RaidBoss extends CreatureMob {
 
 	protected void setInvulnerableFor(final int ticks) {
 		this.invulnerableTicks = Math.max(this.invulnerableTicks, ticks);
+	}
+
+	protected void clearInvulnerable() {
+		this.invulnerableTicks = 0;
 	}
 
 	@Override
@@ -500,6 +507,235 @@ public abstract class RaidBoss extends CreatureMob {
 			}
 		}
 		return false;
+	}
+
+	// ------------------------------------------------------------------ mechanics
+
+	/** Least time between two mechanics (and from the start of the fight to the first one). */
+	public static final int MECHANIC_GAP = 45 * 20;
+	private static final int MECHANIC_GRACE = 30 * 20;
+
+	/**
+	 * A lethal raid mechanic: it first runs when health falls to {@code firstAt} (1.0 = from the
+	 * start), then every {@code interval} ticks (0 = once). Regular patterns pause for {@code duration}
+	 * ticks while it plays out; no two mechanics run within {@link #MECHANIC_GAP} ticks.
+	 */
+	protected record Mechanic(String id, float firstAt, int interval, int duration, Action action) {
+	}
+
+	protected static Mechanic mechanic(final String id, final float firstAt, final int intervalSeconds, final int duration, final Action action) {
+		return new Mechanic(id, firstAt, intervalSeconds * 20, duration, action);
+	}
+
+	/** The mechanics of this boss (easy bosses one, hard ones up to three). */
+	protected List<Mechanic> mechanics() {
+		return List.of();
+	}
+
+	private @Nullable List<Mechanic> mechanicCache;
+	private final Map<String, Long> mechanicDue = new HashMap<>();
+	private long fightTicks;
+	private long lastMechanic = MECHANIC_GRACE - MECHANIC_GAP;
+	private int mechanicTicks;
+	/** Positions that matter in the running mechanic (safe zones, anchors, seals), for tests and hints. */
+	protected final List<Vec3> mechanicSpots = new ArrayList<>();
+
+	private List<Mechanic> mechanicList() {
+		if (this.mechanicCache == null) {
+			this.mechanicCache = List.copyOf(this.mechanics());
+		}
+		return this.mechanicCache;
+	}
+
+	private void tickMechanics(final ServerLevel level) {
+		if (this.mechanicTicks > 0) {
+			this.mechanicTicks--;
+			if (this.mechanicTicks == 0) {
+				this.mechanicSpots.clear();
+			}
+			return;
+		}
+		if (this.fightTicks - this.lastMechanic < MECHANIC_GAP) {
+			return;
+		}
+		LivingEntity target = this.getTarget();
+		if (target == null || this.fighters(level).isEmpty()) {
+			return;
+		}
+		float fraction = this.getHealth() / this.getMaxHealth();
+		for (Mechanic m : this.mechanicList()) {
+			Long due = this.mechanicDue.get(m.id());
+			if (due == null) {
+				if (fraction > m.firstAt()) {
+					continue;
+				}
+				due = this.fightTicks;
+				this.mechanicDue.put(m.id(), due);
+			}
+			if (this.fightTicks >= due) {
+				this.startMechanic(level, m, target);
+				return;
+			}
+		}
+	}
+
+	private void startMechanic(final ServerLevel level, final Mechanic m, final LivingEntity target) {
+		this.mechanicDue.put(m.id(), m.interval() > 0 ? this.fightTicks + m.interval() : Long.MAX_VALUE);
+		this.lastMechanic = this.fightTicks;
+		this.mechanicTicks = m.duration();
+		this.mechanicSpots.clear();
+		this.setBusy(m.duration());
+		this.title(level, Component.translatable("raid.minecraft_mode.mechanic." + m.id()).withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+			Component.translatable("raid.minecraft_mode.mechanic." + m.id() + ".hint").withStyle(ChatFormatting.YELLOW));
+		for (ServerPlayer p : this.fighters(level)) {
+			p.sendSystemMessage(Component.literal("⚠ ").append(Component.translatable("raid.minecraft_mode.mechanic." + m.id())).append(": ")
+				.append(Component.translatable("raid.minecraft_mode.mechanic." + m.id() + ".hint")).withStyle(ChatFormatting.GOLD));
+		}
+		m.action().run(level, target);
+	}
+
+	/** True while a mechanic plays out (patterns wait). */
+	public boolean inMechanic() {
+		return this.mechanicTicks > 0;
+	}
+
+	public List<String> mechanicIds() {
+		return this.mechanicList().stream().map(Mechanic::id).toList();
+	}
+
+	/** Starts mechanic {@code id} now, ignoring its triggers and the gap (tests and debugging). */
+	public boolean runMechanic(final String id, final LivingEntity target) {
+		if (!(this.level() instanceof ServerLevel level)) {
+			return false;
+		}
+		for (Mechanic m : this.mechanicList()) {
+			if (m.id().equals(id)) {
+				this.startMechanic(level, m, target);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Ends the running mechanic early (a team cleared it): patterns resume shortly. */
+	protected void endMechanic() {
+		this.mechanicTicks = Math.min(this.mechanicTicks, 10);
+		this.busyTicks = Math.min(this.busyTicks, 10);
+	}
+
+	/**
+	 * Spawns stationary mechanic targets ({@code type} with {@code health}) at {@code at}, named
+	 * {@code nameKey}; they are minions (cleaned up with the boss) and do not move or attack.
+	 */
+	protected <T extends Mob> List<T> targets(final ServerLevel level, final EntityType<T> type, final List<Vec3> at, final float health, final String nameKey) {
+		List<T> out = new ArrayList<>();
+		for (Vec3 p : at) {
+			T mob = type.create(level, net.minecraft.world.entity.EntitySpawnReason.MOB_SUMMONED);
+			if (mob == null) {
+				continue;
+			}
+			mob.snapTo(p.x, p.y, p.z, this.random.nextFloat() * 360.0F, 0.0F);
+			mob.setNoAi(true);
+			mob.setPersistenceRequired();
+			mob.addTag(Attacks.MINION_TAG);
+			var maxHealth = mob.getAttribute(Attributes.MAX_HEALTH);
+			if (maxHealth != null) {
+				maxHealth.setBaseValue(health);
+			}
+			mob.setHealth(health);
+			mob.setCustomName(Component.translatable(nameKey).withStyle(ChatFormatting.RED));
+			mob.setCustomNameVisible(true);
+			level.addFreshEntity(mob);
+			level.sendParticles(ParticleTypes.LARGE_SMOKE, p.x, p.y + 0.5, p.z, 20, 0.5, 0.5, 0.5, 0.02);
+			this.minions.add(mob);
+			out.add(mob);
+		}
+		return out;
+	}
+
+	public List<Vec3> mechanicSpots() {
+		return List.copyOf(this.mechanicSpots);
+	}
+
+	/** Kills {@code p} unless a totem, a Phoenix Feather or Avalon saves them. */
+	protected void lethal(final ServerLevel level, final LivingEntity p) {
+		level.sendParticles(ParticleTypes.SOUL, p.getX(), p.getY(0.6), p.getZ(), 30, 0.4, 0.6, 0.4, 0.05);
+		RaidDamage.lethal(level, p, this);
+	}
+
+	/** Every fighter dies (a failed team mechanic). */
+	protected void wipe(final ServerLevel level, final String id) {
+		for (ServerPlayer p : this.fighters(level)) {
+			p.sendSystemMessage(Component.translatable("raid.minecraft_mode.mechanic.failed", Component.translatable("raid.minecraft_mode.mechanic." + id))
+				.withStyle(ChatFormatting.DARK_RED));
+			this.lethal(level, p);
+		}
+	}
+
+	protected void cleared(final ServerLevel level, final String id) {
+		for (ServerPlayer p : this.fighters(level)) {
+			p.sendOverlayMessage(Component.translatable("raid.minecraft_mode.mechanic.cleared", Component.translatable("raid.minecraft_mode.mechanic." + id))
+				.withStyle(ChatFormatting.GREEN));
+		}
+	}
+
+	/** Runs {@code each} every {@code step} ticks for {@code ticks} ticks while the boss lives. */
+	protected void during(final int ticks, final int step, final Runnable each) {
+		for (int t = 0; t < ticks; t += step) {
+			SkillScheduler.schedule(t + 1, () -> {
+				if (this.alive()) {
+					each.run();
+				}
+			});
+		}
+	}
+
+	/** Runs {@code then} after {@code ticks} ticks if the boss still lives. */
+	protected void after(final int ticks, final Runnable then) {
+		SkillScheduler.schedule(ticks, () -> {
+			if (this.alive()) {
+				then.run();
+			}
+		});
+	}
+
+	/** {@code count} spots on the arena floor, spread around, at least {@code minFromBoss} from the boss. */
+	protected List<Vec3> spots(final int count, final double minRadius, final double maxRadius, final double minFromBoss) {
+		Vec3 c = this.arenaCenter();
+		List<Vec3> out = new ArrayList<>();
+		double base = this.random.nextDouble() * Math.PI * 2;
+		for (int i = 0; i < count; i++) {
+			Vec3 best = null;
+			for (int tries = 0; tries < 12 && best == null; tries++) {
+				double a = base + Math.PI * 2 * i / count + (this.random.nextDouble() - 0.5) * 0.6;
+				double r = minRadius + this.random.nextDouble() * (maxRadius - minRadius);
+				Vec3 p = c.add(Math.cos(a) * r, 0, Math.sin(a) * r);
+				if (p.subtract(this.position()).horizontalDistance() >= minFromBoss) {
+					best = p;
+				}
+			}
+			out.add(best != null ? best : c.add(Math.cos(base + i) * maxRadius, 0, Math.sin(base + i) * maxRadius));
+		}
+		return out;
+	}
+
+	/** Players standing within {@code radius} (horizontally) of {@code at}. */
+	protected List<ServerPlayer> near(final ServerLevel level, final Vec3 at, final double radius) {
+		List<ServerPlayer> out = new ArrayList<>();
+		for (ServerPlayer p : this.fighters(level)) {
+			if (p.position().subtract(at).horizontalDistance() <= radius && Math.abs(p.getY() - at.y) < 4.0) {
+				out.add(p);
+			}
+		}
+		return out;
+	}
+
+	/** Shows "name: have/need" above the hotbar of every fighter. */
+	protected void tally(final ServerLevel level, final String id, final int have, final int need) {
+		for (ServerPlayer p : this.fighters(level)) {
+			p.sendOverlayMessage(Component.translatable("raid.minecraft_mode.mechanic.count", Component.translatable("raid.minecraft_mode.mechanic." + id), have, need)
+				.withStyle(have >= need ? ChatFormatting.GREEN : ChatFormatting.RED));
+		}
 	}
 
 	/** Ticks between patterns: shorter in later phases. */

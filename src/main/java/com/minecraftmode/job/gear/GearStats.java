@@ -1,5 +1,6 @@
 package com.minecraftmode.job.gear;
 
+import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveTotals;
@@ -17,7 +18,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Everything a player's gear and level add up to: engravings of the active class weapon, the
- * options and engravings of class armor they may wear, set bonuses, and level rewards. Combat,
+ * options and engravings of class armor they may wear, set bonuses, level rewards, stat passives and buffs. Combat,
  * stats and skills all read this one total. Cached per player for the current game tick.
  */
 public final class GearStats {
@@ -44,7 +45,7 @@ public final class GearStats {
 	}
 
 	private static int gearHash(final Player player) {
-		int hash = ItemStack.hashItemAndComponents(player.getMainHandItem());
+		int hash = ItemStack.hashItemAndComponents(player.getMainHandItem()) * 31 + BuffEffects.fingerprint(player);
 		for (GearSlot slot : GearSlot.ARMOR) {
 			hash = hash * 31 + ItemStack.hashItemAndComponents(player.getItemBySlot(slot.equipmentSlot()));
 		}
@@ -85,6 +86,12 @@ public final class GearStats {
 			}
 		}
 		for (StatLine line : LevelRewards.of(data)) {
+			add(builder, line);
+		}
+		for (StatLine line : ClassPassives.of(data)) {
+			add(builder, line);
+		}
+		for (StatLine line : BuffEffects.active(player)) {
 			add(builder, line);
 		}
 		return builder.build();

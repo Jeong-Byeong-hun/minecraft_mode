@@ -5,9 +5,11 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.content.ArcherContent;
+import com.minecraftmode.job.content.HunterContent;
 import com.minecraftmode.job.content.MageContent;
 import com.minecraftmode.job.content.PirateContent;
 import com.minecraftmode.job.content.RogueContent;
+import com.minecraftmode.job.content.ShinigamiContent;
 import com.minecraftmode.job.content.WarriorContent;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engravings;
@@ -55,6 +57,8 @@ public final class JobWeapons {
 		new MageContent().define();
 		new ArcherContent().define();
 		new PirateContent().define();
+		new ShinigamiContent().define();
+		new HunterContent().define();
 		for (WeaponDef def : DEFS.values()) {
 			ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, MinecraftMode.id(def.id()));
 			Item item = new JobWeaponItem(JobWeaponItem.properties(def).setId(key), def);

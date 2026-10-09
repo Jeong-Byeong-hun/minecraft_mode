@@ -159,6 +159,8 @@ final class JobLang {
 		LootLang.add(b, ko);
 		MonsterLang.add(b, ko);
 		RaidLang.add(b, ko);
+		EconomyLang.add(b, ko);
+		ConsumableLang.add(b, ko);
 	}
 
 	private JobLang() {

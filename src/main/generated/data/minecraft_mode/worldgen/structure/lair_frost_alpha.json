@@ -1,0 +1,60 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:snowy_plains",
+    "minecraft:snowy_taiga",
+    "minecraft:grove",
+    "minecraft:snowy_slopes",
+    "minecraft:ice_spikes"
+  ],
+  "lair": "frost_alpha",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft:spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft:stray",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft:zombie",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 90
+        },
+        {
+          "type": "minecraft_mode:frost_alpha",
+          "count": 1,
+          "weight": 78
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

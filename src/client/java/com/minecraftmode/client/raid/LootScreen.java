@@ -85,7 +85,7 @@ public class LootScreen extends Screen {
 
 	private int coins() {
 		LocalPlayer player = this.minecraft == null ? null : this.minecraft.player;
-		return player == null ? 0 : Coins.total(player.getInventory());
+		return player == null ? 0 : Coins.total(player);
 	}
 
 	private boolean isHighest(final LootStatePayload state, final LootStatePayload.Lot lot) {

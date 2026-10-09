@@ -10,7 +10,9 @@ public enum ShopType {
 	GROCER("grocer"),
 	JEWELER("jeweler"),
 	/** Class guild: offers depend on the visitor's class and tier. */
-	GUILD("guild");
+	GUILD("guild"),
+	/** Potions and the better consumables (see {@code Consumables}). */
+	ALCHEMIST("alchemist");
 
 	private final String id;
 

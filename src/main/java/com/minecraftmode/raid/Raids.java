@@ -1,10 +1,12 @@
 package com.minecraftmode.raid;
 
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.raid.loot.LootSessions;
@@ -30,9 +32,9 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -50,11 +52,11 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Raid instances. The raid marshal (or {@code /raid start}) sends a party into a fresh arena slot of
+ * Raid instances. The raid marshal (or {@code /raid start}) sends a party (each paying the entry fee) into a fresh arena slot of
  * the raid dimension: 10 second countdown, then the boss. Dying in a raid never kills: the player is
  * healed and sent back where they entered (items kept) and cannot rejoin that fight; when nobody is
  * left fighting the raid fails. When the boss falls every participant gets Evolution Ether, condensed
- * essence and job experience, the gear drops go to a {@link LootSessions loot session} (auction or
+ * essence, consumables and job experience, the gear drops go to a {@link LootSessions loot session} (auction or
  * dice), and everyone is sent home after a minute (or earlier with {@code /raid leave}).
  */
 public final class Raids {
@@ -153,6 +155,8 @@ public final class Raids {
 				problems.add(problem(p, "level", def.minLevel()));
 			} else if (!p.isAlive()) {
 				problems.add(problem(p, "dead"));
+			} else if (Coins.total(p) < def.fee()) {
+				problems.add(problem(p, "fee", Coins.component(def.fee())));
 			} else {
 				going.add(p);
 			}
@@ -163,6 +167,10 @@ public final class Raids {
 				leader.sendSystemMessage(c);
 			}
 			return false;
+		}
+		for (ServerPlayer p : going) {
+			Coins.take(p, def.fee());
+			p.sendSystemMessage(msg("fee_paid", Coins.component(def.fee())).withStyle(ChatFormatting.GRAY));
 		}
 		return start(leader.level().getServer(), going, def, leader.getUUID()) != null;
 	}
@@ -485,6 +493,9 @@ public final class Raids {
 		int grade = def.lo() + random.nextInt(def.hi() - def.lo() + 1);
 		give(player, EvolutionEtherItem.of(grade, 5 + random.nextInt(4)));
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
+		for (ItemStack supply : Consumables.raidRewards(RaidBosses.index(def), def == RaidBosses.AETHRYX, random)) {
+			give(player, supply);
+		}
 		JobData data = JobProgression.get(player);
 		JobProgression.addExp(player, Math.max(50, JobProgression.expToNext(data.level()) / 3));
 		ping(player, BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE), 1.0F);

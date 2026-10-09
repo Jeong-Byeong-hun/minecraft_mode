@@ -1,0 +1,57 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:nether_wastes",
+    "minecraft:basalt_deltas"
+  ],
+  "lair": "magma_behemoth",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:blaze",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 50
+        },
+        {
+          "type": "minecraft:magma_cube",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft:wither_skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 40
+        },
+        {
+          "type": "minecraft:zombified_piglin",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 80
+        },
+        {
+          "type": "minecraft_mode:magma_behemoth",
+          "count": 1,
+          "weight": 27
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

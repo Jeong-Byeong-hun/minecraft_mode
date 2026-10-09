@@ -2,6 +2,7 @@ package com.minecraftmode.client.job;
 
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.weapon.JobWeaponItem;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearUpgrades;
@@ -41,7 +42,20 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 	}
 
 	private boolean canPay(final ClassGear target) {
-		return this.minecraft.player != null && (this.minecraft.player.isCreative() || this.have(target) >= GearUpgrades.ETHER_COST);
+		return this.minecraft.player != null && (this.minecraft.player.isCreative()
+			|| this.have(target) >= GearUpgrades.ETHER_COST && Coins.total(this.minecraft.player) >= GearUpgrades.coinCost(target));
+	}
+
+	private static final int REROLL_X = 6;
+	private static final int REROLL_Y = 70;
+
+	private int rerollCost() {
+		ClassGear gear = ClassGear.of(this.menu.input());
+		return gear == null ? 0 : GearUpgrades.rerollCost(gear);
+	}
+
+	private boolean canReroll() {
+		return this.menu.canReroll() && this.minecraft.player != null && (this.minecraft.player.isCreative() || Coins.total(this.minecraft.player) >= this.rerollCost());
 	}
 
 	@Override
@@ -65,6 +79,14 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 		}
 		g.outline(x + UpgradeMenu.SLOT_X - 2, y + UpgradeMenu.SLOT_Y - 2, 20, 20, 0xFFE07B26);
 		g.centeredText(this.font, "➜", x + UpgradeMenu.SLOT_X + 8, y + UpgradeMenu.SLOT_Y + 22, 0xFF8A5A2A);
+		if (this.menu.canReroll()) {
+			boolean hover = this.inside(mouseX, mouseY, x + REROLL_X, y + REROLL_Y, 30, 14);
+			g.fill(x + REROLL_X, y + REROLL_Y, x + REROLL_X + 30, y + REROLL_Y + 14, !this.canReroll() ? 0xFF6B6B6B : hover ? 0xFF3E7A6E : 0xFF2C5A51);
+			g.centeredText(this.font, "⟳", x + REROLL_X + 15, y + REROLL_Y + 3, 0xFFFFFFFF);
+		}
+		if (this.minecraft.player != null) {
+			g.text(this.font, "◎" + Coins.format(Coins.total(this.minecraft.player)), x + 4, y + REROLL_Y + 20, 0xFF8A5A2A, false);
+		}
 
 		List<ClassGear> targets = this.menu.targets();
 		if (this.menu.input().isEmpty()) {
@@ -84,6 +106,8 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			g.fakeItem(GearIndex.stack(target), x + ROW_X + 2, ry + 2);
 			Component name = Component.translatable(GearIndex.item(target).getDescriptionId()).withColor(JobWeaponItem.tierColor(target.tier()));
 			g.text(this.font, name, x + ROW_X + 21, ry + 2, 0xFFFFFFFF, false);
+			String coins = "◎" + Coins.format(GearUpgrades.coinCost(target));
+			g.text(this.font, coins, x + ROW_X + ROW_W - 3 - this.font.width(coins), ry + 2, ok ? 0xFFFFD27F : 0xFFFF8080, false);
 			String cost = this.have(target) + "/" + GearUpgrades.ETHER_COST;
 			g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.cost", target.level(), GearUpgrades.grade(target)), x + ROW_X + 21, ry + 11, 0xFFE0C090, false);
 			g.text(this.font, cost, x + ROW_X + ROW_W - 3 - this.font.width(cost), ry + 11, ok ? 0xFF7FFFD4 : 0xFFFF8080, false);
@@ -93,6 +117,10 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 	@Override
 	protected void extractTooltip(final GuiGraphicsExtractor g, final int mouseX, final int mouseY) {
 		super.extractTooltip(g, mouseX, mouseY);
+		if (this.menu.canReroll() && this.inside(mouseX, mouseY, this.leftPos + REROLL_X, this.topPos + REROLL_Y, 30, 14)) {
+			g.setComponentTooltipForNextFrame(this.font, List.of(Component.translatable("screen.minecraft_mode.upgrade.reroll"),
+				Component.translatable("screen.minecraft_mode.engraving.coins", Coins.format(this.rerollCost())).withStyle(ChatFormatting.GOLD)), mouseX, mouseY);
+		}
 		List<ClassGear> targets = this.menu.targets();
 		for (int i = 0; i < targets.size(); i++) {
 			int ry = this.topPos + ROWS_Y + i * ROW_H;
@@ -107,6 +135,12 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 
 	@Override
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
+		if (this.menu.canReroll() && this.inside(event.x(), event.y(), this.leftPos + REROLL_X, this.topPos + REROLL_Y, 30, 14) && this.minecraft.player != null
+			&& this.menu.clickMenuButton(this.minecraft.player, UpgradeMenu.BUTTON_REROLL)) {
+			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+			this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, UpgradeMenu.BUTTON_REROLL);
+			return true;
+		}
 		List<ClassGear> targets = this.menu.targets();
 		for (int i = 0; i < targets.size(); i++) {
 			int ry = this.topPos + ROWS_Y + i * ROW_H;

@@ -73,6 +73,14 @@ public final class NamedMobs {
 		return BY_TYPE.get(type);
 	}
 
+	public static NamedDef byId(final String id) {
+		NamedDef def = DEFS.get(id);
+		if (def == null) {
+			throw new IllegalArgumentException("Unknown named monster " + id);
+		}
+		return def;
+	}
+
 	public static EntityType<NamedMob> type(final NamedDef def) {
 		return TYPES.get(def.id());
 	}

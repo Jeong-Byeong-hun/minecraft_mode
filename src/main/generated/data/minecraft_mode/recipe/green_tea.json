@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:glass_bottle",
+    "minecraft:oak_leaves",
+    "minecraft:oak_leaves",
+    "minecraft:sugar"
+  ],
+  "result": {
+    "id": "minecraft_mode:green_tea"
+  }
+}

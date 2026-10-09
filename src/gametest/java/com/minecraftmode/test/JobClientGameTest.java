@@ -8,15 +8,19 @@ import com.minecraftmode.client.job.JobScreen;
 import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
+import com.minecraftmode.job.gear.ClassAbilities;
+import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
@@ -42,22 +46,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
@@ -69,6 +74,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Class system: content counts and assets, leveling and advancement, skill keys, requirement
@@ -95,6 +101,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkProgression(context, server, connection);
 			checkSkillKey(context, server, connection);
 			checkGating(server, connection);
+			checkNewClasses(server, connection);
 			checkEngravingStacks(context, server, connection);
 			checkEngravingTable(context, server, connection);
 			checkBasicShot(context, server, connection);
@@ -107,7 +114,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ content and assets
 
 	private static void checkContent(final ClientGameTestContext context) {
-		require(JobWeapons.all().size() == 115, "expected 115 class weapons, got " + JobWeapons.all().size());
+		require(JobWeapons.all().size() == 161, "expected 161 class weapons, got " + JobWeapons.all().size());
 		int skills = 0;
 		for (JobClass job : JobClass.PLAYABLE) {
 			int[] perTier = new int[5];
@@ -123,7 +130,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			require(engravings >= 10, job.id() + " has only " + engravings + " engravings");
 		}
 		require(skills == JobWeapons.skillCount(), "skill ids are not unique");
-		require(Quests.all().size() == 20 && Quests.tokens().size() == 20, "expected 20 trials and 20 tokens");
+		require(Quests.all().size() == 28 && Quests.tokens().size() == 28, "expected 28 trials and 28 tokens");
 		for (JobClass job : JobClass.PLAYABLE) {
 			for (int tier = 1; tier <= 4; tier++) {
 				QuestDef quest = Quests.forTier(job, tier);
@@ -178,7 +185,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 				require(resources.getResource(MinecraftMode.id("textures/item/" + id + ".png")).isPresent(), "missing texture for " + id);
 				require(resources.getResource(MinecraftMode.id("items/" + id + ".json")).isPresent(), "missing item model for " + id);
 			}
-			for (int page = 1; page <= 6; page++) {
+			for (int page = 1; page <= com.minecraftmode.city.CityServices.GUIDE_PAGES; page++) {
 				keys.add("book.minecraft_mode.guide.page" + page);
 			}
 			for (String key : keys) {
@@ -194,7 +201,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 				require(resources.getResource(MinecraftMode.id("textures/particle/" + particle + ".png")).isPresent(), "missing particle " + particle);
 			}
 		});
-		MinecraftMode.LOGGER.info("[job] 115 weapons (3/6/6/8 per class), {} skills, textures/models/lang (en+ko) for all", skillTotal);
+		MinecraftMode.LOGGER.info("[job] 161 weapons (3/6/6/8 per class), {} skills, textures/models/lang (en+ko) for all", skillTotal);
 	}
 
 	private static JsonObject lang(final Minecraft minecraft, final String code) {
@@ -399,12 +406,17 @@ public class JobClientGameTest implements FabricClientGameTest {
 			player.getInventory().clearContent();
 			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 10));
 			player.getInventory().add(new ItemStack(ModItems.CONDENSED_ESSENCE, 1));
+			Wallet.add(player, 500);
+			int wallet = Wallet.balance(player);
 			EngravingMenu menu = new EngravingMenu(0, player.getInventory(), ContainerLevelAccess.NULL);
 			ItemStack weapon = new ItemStack(JobWeapons.item(JobWeapons.def("gladiator_longsword")));
 			menu.getSlot(0).set(weapon);
 			require(menu.offer(0) != null && menu.offer(0).job() == JobClass.WARRIOR, "the table should offer warrior engravings");
 			int cost = menu.engraveCost();
+			int coins = menu.engraveCoins();
+			require(coins > 0, "engraving should also cost coins");
 			require(menu.clickMenuButton(player, 0), "engraving offer 0 failed");
+			require(Wallet.balance(player) == wallet - coins, "engraving should take " + coins + " copper from the wallet");
 			int lines = JobWeapons.engravings(menu.weapon()).lines().size();
 			int left = EngravingMenu.essence(player.getInventory());
 			require(menu.clickMenuButton(player, EngravingMenu.BUTTON_REMOVE), "removing a line failed");
@@ -482,7 +494,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 		for (JobClass job : JobClass.PLAYABLE) {
 			starterItems += GearIndex.shopItems(job, 10).size();
 		}
-		require(warriorItems == 6 && starterItems == 10, "expected 2 shop items per class and bracket, got " + warriorItems + " / " + starterItems);
+		require(warriorItems == 6 && starterItems == 2 * JobClass.PLAYABLE.size(), "expected 2 shop items per class and bracket, got " + warriorItems + " / " + starterItems);
 		require(offers[0] == warriorItems + 2, "a Lv 25 warrior should see " + warriorItems + " gear offers + 2 extras, got " + offers[0]);
 		require(offers[1] == starterItems + 2, "players without a class should see " + starterItems + " starter offers + 2 extras, got " + offers[1]);
 
@@ -590,10 +602,61 @@ public class JobClientGameTest implements FabricClientGameTest {
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		server.runCommand("time set noon");
 		require(casts == JobWeapons.skillCount(), "cast " + casts + " of " + JobWeapons.skillCount() + " skills");
-		MinecraftMode.LOGGER.info("[job] cast all {} skills of all 115 weapons without errors", casts);
+		MinecraftMode.LOGGER.info("[job] cast all {} skills of all 161 weapons without errors", casts);
 	}
 
 	// ------------------------------------------------------------------ helpers
+
+	/** Soul Reaper and Hunter: their tier passives are stat lines that add up, and Flash Step and En work. */
+	private static void checkNewClasses(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobData saved = JobProgression.get(player);
+			ItemStack held = player.getMainHandItem().copy();
+			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+
+			JobProgression.set(player, saved.withJob(JobClass.SHINIGAMI, 4).withProgress(80, 0));
+			fill(player);
+			JobStats.refresh(player);
+			GearStats.invalidate(player);
+			EngraveTotals reaper = GearStats.of(player);
+			require(reaper.get(EngraveStat.BOSS_DAMAGE) >= 15 && reaper.get(EngraveStat.SKILL_DAMAGE) >= 12 && reaper.get(EngraveStat.DODGE) >= 5,
+				"Soul Reaper tier passives should add boss damage, skill damage and dodge");
+			require(reaper.get(EngraveStat.COOLDOWN) >= 15 + 12, "Mugetsu (15%) plus the Lv 80 bonus (12%) should cut cooldowns, got " + reaper.get(EngraveStat.COOLDOWN));
+			player.teleportTo(20.5, -60, 20.5);
+			player.snapTo(20.5, -60, 20.5, 0.0F, 0.0F);
+			Vec3 before = player.position();
+			ClassAbilities.use(player);
+			double moved = player.position().distanceTo(before);
+			require(moved >= 5.0, "Flash Step should move the player forward, moved " + moved);
+			require(player.hasEffect(MobEffects.SPEED), "Flash Step should give Swiftness");
+
+			JobProgression.set(player, saved.withJob(JobClass.HUNTER, 3).withProgress(50, 0));
+			fill(player);
+			JobStats.refresh(player);
+			GearStats.invalidate(player);
+			EngraveTotals hunter = GearStats.of(player);
+			require(hunter.get(EngraveStat.DOUBLE_STRIKE) >= 15 && hunter.get(EngraveStat.CRIT_CHANCE) >= 10 && hunter.get(EngraveStat.DAMAGE_REDUCTION) >= 5,
+				"Hunter tier passives should add double strike, crit chance and damage reduction");
+			require(hunter.get(EngraveStat.SKILL_DAMAGE) < 20, "Limitation and Vow belongs to tier 4 only");
+			require(hunter.get(EngraveStat.CRIT_DAMAGE) >= 20, "the Lv 50 hunter bonus should add 20% crit damage, got " + hunter.get(EngraveStat.CRIT_DAMAGE));
+			LivingEntity hidden = spawnTarget(player.level(), player.getX() + 12, player.getY(), player.getZ());
+			ClassAbilities.use(player);
+			boolean glowing = hidden.hasEffect(MobEffects.GLOWING);
+			hidden.discard();
+			require(glowing, "En should reveal enemies within 32 blocks");
+
+			player.removeAllEffects();
+			JobProgression.set(player, saved);
+			JobStats.refresh(player);
+			GearStats.invalidate(player);
+			player.setItemInHand(InteractionHand.MAIN_HAND, held);
+			player.teleportTo(0.5, -60, 0.5);
+			return String.format(java.util.Locale.ROOT, "flash step moved %.1f blocks, reaper cooldown -%.0f%%, hunter double strike %.0f%%",
+				moved, reaper.get(EngraveStat.COOLDOWN), hunter.get(EngraveStat.DOUBLE_STRIKE));
+		});
+		MinecraftMode.LOGGER.info("[job] soul reaper and hunter: {}", report);
+	}
 
 	private static void fill(final ServerPlayer player) {
 		JobData data = JobProgression.get(player);

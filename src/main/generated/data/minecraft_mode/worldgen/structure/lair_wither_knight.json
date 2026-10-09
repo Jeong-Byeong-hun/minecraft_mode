@@ -1,0 +1,57 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:crimson_forest",
+    "minecraft:nether_wastes"
+  ],
+  "lair": "wither_knight",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:hoglin",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft:magma_cube",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 30
+        },
+        {
+          "type": "minecraft:wither_skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 80
+        },
+        {
+          "type": "minecraft:zombified_piglin",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft_mode:wither_knight",
+          "count": 1,
+          "weight": 21
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

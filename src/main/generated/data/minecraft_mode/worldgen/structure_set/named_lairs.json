@@ -1,0 +1,102 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "exclusion_zone": {
+      "chunk_count": 6,
+      "other_set": "minecraft:villages"
+    },
+    "salt": 74123091,
+    "separation": 11,
+    "spacing": 28
+  },
+  "structures": [
+    {
+      "structure": "minecraft_mode:lair_golden_enderman",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_goblin_warchief",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_bandit_captain",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_bog_hag",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_frost_alpha",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_dune_scorpion",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_cave_troll",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_myconid_shaman",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_jungle_stalker",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_mad_pig",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_drowned_corsair",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_badlands_gunslinger",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_wendigo",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_amethyst_sentinel",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_ancient_treant",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_magma_behemoth",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_soul_reaper",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_wither_knight",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_void_watcher",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_echo_stalker",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_chorus_wraith",
+      "weight": 1
+    },
+    {
+      "structure": "minecraft_mode:lair_astral_knight",
+      "weight": 1
+    }
+  ]
+}

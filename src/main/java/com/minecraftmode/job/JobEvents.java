@@ -35,6 +35,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -58,6 +59,8 @@ public final class JobEvents {
 		ServerPlayerEvents.JOIN.register(JobStats::refresh);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> CombatState.forget(handler.player));
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CombatState.clear());
+		// players never drop their items on death (the job exp penalty still applies outside raids)
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> server.overworld().getGameRules().set(GameRules.KEEP_INVENTORY, true, server));
 		// Summons are temporary; drop any that were saved with a chunk.
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
 			if (entity.entityTags().contains(Actions.SUMMON_TAG)) {

@@ -1,5 +1,6 @@
 package com.minecraftmode.entity.boss;
 
+import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.MobProjectile;
@@ -49,6 +50,11 @@ public class Arachne extends RaidBoss {
 			pattern("acid_pools", 2, 220, 0, 16, this::acidPools),
 			pattern("silk_storm", 3, 320, 0, 50, this::silkStorm)
 		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(mechanic("arachne_venom_deluge", 0.75F, 120, 190, this::venomDeluge));
 	}
 
 	@Override
@@ -141,6 +147,36 @@ public class Arachne extends RaidBoss {
 			this.playAnim(CreatureAnim.SLAM);
 			this.boom(level, me, 7.5);
 			this.webs(level, BlockPos.containing(me), 2);
+		});
+	}
+
+	/** Venom Deluge: the whole floor floods with venom; only the three silk cocoons are safe. */
+	private void venomDeluge(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.ROAR);
+		this.sound(level, SoundEvents.SPIDER_AMBIENT, 4.0F, 0.3F);
+		Vec3 c = this.arenaCenter();
+		List<Vec3> safe = this.spots(3, 8, Arenas.RADIUS - 5, 5);
+		this.mechanicSpots.addAll(safe);
+		this.during(170, 5, () -> {
+			for (Vec3 s : safe) {
+				Telegraph.ring(level, s, 2.5, 0x60FF60, 1.4F);
+				level.sendParticles(ParticleTypes.WHITE_ASH, s.x, s.y + 1.0, s.z, 8, 0.8, 0.8, 0.8, 0.0);
+			}
+			for (int k = 0; k < 10; k++) {
+				double a = this.random.nextDouble() * Math.PI * 2;
+				double r = this.random.nextDouble() * (Arenas.RADIUS - 1);
+				level.sendParticles(ParticleTypes.ITEM_SLIME, c.x + Math.cos(a) * r, c.y + 0.2, c.z + Math.sin(a) * r, 2, 0.3, 0.1, 0.3, 0.0);
+			}
+		});
+		this.during(170, 20, () -> Telegraph.ring(level, c, Arenas.RADIUS - 1, Telegraph.RED, 1.2F));
+		this.after(170, () -> {
+			for (ServerPlayer p : this.fighters(level)) {
+				if (safe.stream().noneMatch(s -> p.position().subtract(s).horizontalDistance() <= 2.8)) {
+					this.lethal(level, p);
+				}
+			}
+			level.sendParticles(ParticleTypes.ITEM_SLIME, c.x, c.y + 0.3, c.z, 400, Arenas.RADIUS * 0.6, 0.3, Arenas.RADIUS * 0.6, 0.1);
+			this.sound(level, c, SoundEvents.BREWING_STAND_BREW, 4.0F, 0.4F);
 		});
 	}
 }

@@ -1,10 +1,13 @@
 package com.minecraftmode.economy;
 
+import com.minecraftmode.consumable.ConsumableDef;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.ItemLevels;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.registry.ModItems;
@@ -54,7 +57,39 @@ public final class ShopOffers {
 	}
 
 	public static List<Trade> trades(final ShopType type) {
+		List<Trade> list = new ArrayList<>(base(type));
+		ConsumableDef.Shop shop = switch (type) {
+			case GENERAL -> ConsumableDef.Shop.GENERAL;
+			case GROCER -> ConsumableDef.Shop.GROCER;
+			case ALCHEMIST -> ConsumableDef.Shop.ALCHEMIST;
+			default -> ConsumableDef.Shop.NONE;
+		};
+		if (shop != ConsumableDef.Shop.NONE) {
+			for (ConsumableDef def : Consumables.soldAt(shop)) {
+				list.add(priced(def.price(), Consumables.item(def)));
+			}
+		}
+		if (type == ShopType.GENERAL) {
+			list.add(priced(3 * 9, ModItems.RETURN_SCROLL));
+		}
+		return list;
+	}
+
+	/** One {@code goods} for {@code copper}, charged in the largest coin that keeps the price close. */
+	public static Trade priced(final int copper, final ItemLike goods) {
+		if (copper >= Coins.GOLD) {
+			return buy(ModItems.GOLD_COIN, Math.min(64, Math.max(1, Math.round(copper / (float)Coins.GOLD))), goods, 1);
+		}
+		if (copper >= Coins.SILVER) {
+			return buy(ModItems.SILVER_COIN, Math.max(1, Math.round(copper / (float)Coins.SILVER)), goods, 1);
+		}
+		return buy(ModItems.COPPER_COIN, Math.max(1, copper), goods, 1);
+	}
+
+	private static List<Trade> base(final ShopType type) {
 		return switch (type) {
+			case ALCHEMIST -> List.of(sell(Items.NETHER_WART, 8, ModItems.COPPER_COIN, 3), sell(Items.BLAZE_POWDER, 2, ModItems.COPPER_COIN, 4),
+				sell(Items.GHAST_TEAR, 1, ModItems.SILVER_COIN, 1), sell(Items.PHANTOM_MEMBRANE, 2, ModItems.COPPER_COIN, 5));
 			case GUILD -> guild(null);
 			case GENERAL -> List.of(
 				sell(Items.COBBLESTONE, 32, ModItems.COPPER_COIN, 1),

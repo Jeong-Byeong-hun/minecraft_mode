@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:bowl",
+    "minecraft:cooked_chicken",
+    "minecraft:carrot",
+    "minecraft:potato"
+  ],
+  "result": {
+    "id": "minecraft_mode:samgyetang"
+  }
+}

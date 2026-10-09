@@ -81,6 +81,31 @@ public enum Engraving {
 	QUICK_RELOAD("quick_reload", JobClass.PIRATE, EngraveStat.DRAW_SPEED, 10, "Quick Reload", "빠른 장전",
 		Archetype.PISTOL, Archetype.MUSKET, Archetype.HAND_CANNON, Archetype.HARPOON),
 	IRON_FIST("iron_fist", JobClass.PIRATE, EngraveStat.ATTACK_SPEED, 6, "Iron Fist", "철권", Archetype.KNUCKLE, Archetype.CUTLASS, Archetype.RAPIER),
+	// Soul Reaper
+	REIATSU("reiatsu", JobClass.SHINIGAMI, EngraveStat.SKILL_DAMAGE, 10, "Spiritual Pressure", "영압"),
+	KIDO_MASTERY("kido_mastery", JobClass.SHINIGAMI, EngraveStat.COOLDOWN, 6, "Kido Mastery", "귀도 숙련"),
+	ZANJUTSU("zanjutsu", JobClass.SHINIGAMI, EngraveStat.BASIC_DAMAGE, 8, "Zanjutsu", "참술"),
+	HOHO("hoho", JobClass.SHINIGAMI, EngraveStat.MOVE_SPEED, 5, "Hoho", "보법"),
+	SOUL_BURIAL("soul_burial", JobClass.SHINIGAMI, EngraveStat.EXECUTE, 15, "Soul Burial", "혼장"),
+	RELEASE_COMMAND("release_command", JobClass.SHINIGAMI, EngraveStat.MANA_COST, 8, "Release Command", "해방어"),
+	HOLLOWFICATION("hollowfication", JobClass.SHINIGAMI, EngraveStat.LIFESTEAL, 3, "Hollowfication", "호로화"),
+	BANKAI_TRAINING("bankai_training", JobClass.SHINIGAMI, EngraveStat.BOSS_DAMAGE, 10, "Bankai Training", "만해 수행"),
+	FROZEN_EDGE("frozen_edge", JobClass.SHINIGAMI, EngraveStat.SLOW, 2, "Frozen Edge", "얼어붙는 칼날",
+		Archetype.KATANA, Archetype.NINJATO, Archetype.TWIN_BLADES, Archetype.CLAW),
+	EXTENDING_BLADE("extending_blade", JobClass.SHINIGAMI, EngraveStat.REACH, 0.5F, "Extending Blade", "늘어나는 칼날",
+		Archetype.SPEAR, Archetype.KUSARIGAMA, Archetype.GREATSWORD, Archetype.LONGSWORD),
+	// Hunter
+	REN("ren", JobClass.HUNTER, EngraveStat.SKILL_DAMAGE, 8, "Ren", "련"),
+	RYU("ryu", JobClass.HUNTER, EngraveStat.CRIT_DAMAGE, 15, "Ryu", "류"),
+	ZETSU("zetsu", JobClass.HUNTER, EngraveStat.BACKSTAB, 20, "Zetsu", "절"),
+	SHU("shu", JobClass.HUNTER, EngraveStat.BASIC_DAMAGE, 8, "Shu", "주"),
+	IN("in", JobClass.HUNTER, EngraveStat.FIRST_STRIKE, 20, "In", "은"),
+	ENHANCER("enhancer", JobClass.HUNTER, EngraveStat.DOUBLE_STRIKE, 5, "Enhancer", "강화계"),
+	EMITTER("emitter", JobClass.HUNTER, EngraveStat.SHOT_DAMAGE, 10, "Emitter", "방출계",
+		Archetype.SHURIKEN, Archetype.KUNAI, Archetype.PISTOL, Archetype.STAFF, Archetype.ORB, Archetype.GRIMOIRE, Archetype.SCEPTER),
+	CONJURER("conjurer", JobClass.HUNTER, EngraveStat.MANA_COST, 8, "Conjurer", "구현화계"),
+	TRANSMUTER("transmuter", JobClass.HUNTER, EngraveStat.BLEED, 2, "Transmuter", "변화계"),
+	SPECIALIST("specialist", JobClass.HUNTER, EngraveStat.ECHO, 5, "Specialist", "특질계"),
 
 	// ---------------------------------------------------------------- armor (4 lines per piece)
 	// Warrior
@@ -118,7 +143,23 @@ public enum Engraving {
 	GOLD_TOOTH("gold_tooth", JobClass.PIRATE, EngraveStat.GOLD_FIND, 2, "Gold Tooth", "금니", GearSlot.HEAD),
 	BRAWLERS_BELT("brawlers_belt", JobClass.PIRATE, EngraveStat.BASIC_DAMAGE, 4, "Brawler's Belt", "싸움꾼의 허리띠", GearSlot.LEGS),
 	DECK_LEGS("deck_legs", JobClass.PIRATE, EngraveStat.DODGE, 2, "Deck Legs", "갑판 다리", GearSlot.FEET),
-	GROG("grog", JobClass.PIRATE, EngraveStat.KILL_HEAL, 1, "Grog", "그로그주", GearSlot.CHEST);
+	GROG("grog", JobClass.PIRATE, EngraveStat.KILL_HEAL, 1, "Grog", "그로그주", GearSlot.CHEST),
+	// Soul Reaper
+	SHIHAKUSHO_WEAVE("shihakusho_weave", JobClass.SHINIGAMI, EngraveStat.DAMAGE_REDUCTION, 3, "Shihakusho Weave", "사패장 직조", GearSlot.CHEST, GearSlot.LEGS),
+	HAORI_CREST("haori_crest", JobClass.SHINIGAMI, EngraveStat.SKILL_DAMAGE, 4, "Haori Crest", "하오리 문장", GearSlot.CHEST),
+	SAKKETSU("sakketsu", JobClass.SHINIGAMI, EngraveStat.MAX_MANA, 10, "Sakketsu", "쇄결", GearSlot.HEAD, GearSlot.CHEST),
+	HAKUSUI("hakusui", JobClass.SHINIGAMI, EngraveStat.MANA_REGEN, 1, "Hakusui", "백추", GearSlot.HEAD, GearSlot.LEGS),
+	VISORED_MASK("visored_mask", JobClass.SHINIGAMI, EngraveStat.CRIT_DAMAGE, 8, "Visored Mask", "가면", GearSlot.HEAD),
+	WARAJI("waraji", JobClass.SHINIGAMI, EngraveStat.MOVE_SPEED, 3, "Waraji", "짚신", GearSlot.FEET),
+	SHUNPO_STEP("shunpo_step", JobClass.SHINIGAMI, EngraveStat.DODGE, 2, "Flash Step", "순보", GearSlot.LEGS, GearSlot.FEET),
+	// Hunter
+	HUNTER_LICENSE("hunter_license", JobClass.HUNTER, EngraveStat.ITEM_FIND, 3, "Hunter License", "헌터 라이선스", GearSlot.HEAD),
+	TEN_AURA("ten_aura", JobClass.HUNTER, EngraveStat.DAMAGE_REDUCTION, 3, "Ten", "전", GearSlot.CHEST, GearSlot.LEGS),
+	KEN_GUARD("ken_guard", JobClass.HUNTER, EngraveStat.MAX_HEALTH, 3, "Ken", "견", GearSlot.HEAD, GearSlot.CHEST),
+	GYO_SIGHT("gyo_sight", JobClass.HUNTER, EngraveStat.CRIT_CHANCE, 3, "Gyo", "응", GearSlot.HEAD),
+	ZOLDYCK_TRAINING("zoldyck_training", JobClass.HUNTER, EngraveStat.KNOCKBACK_RES, 10, "Zoldyck Training", "조르딕가의 수련", GearSlot.LEGS, GearSlot.FEET),
+	SWIFT_HUNTER("swift_hunter", JobClass.HUNTER, EngraveStat.MOVE_SPEED, 3, "Swift Hunter", "날쌘 사냥꾼", GearSlot.FEET),
+	MEDITATION("meditation", JobClass.HUNTER, EngraveStat.MANA_REGEN, 1, "Meditation", "명상", GearSlot.CHEST, GearSlot.LEGS);
 
 	private final String id;
 	private final JobClass job;

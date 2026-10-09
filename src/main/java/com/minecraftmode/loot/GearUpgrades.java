@@ -17,6 +17,16 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class GearUpgrades {
 	public static final int ETHER_COST = 50;
+
+	/** Coins for evolving into {@code target}: half its bracket's guild price. */
+	public static int coinCost(final ClassGear target) {
+		return Math.max(1, GearShop.bracketPrice(target.bracket()) / 2);
+	}
+
+	/** Coins to roll an armor piece's extra options again: half its bracket's guild price. */
+	public static int rerollCost(final ClassGear gear) {
+		return Math.max(1, GearShop.bracketPrice(gear.bracket()) / 2);
+	}
 	/** Targets may be up to this many levels above the first piece above the current one. */
 	private static final int WINDOW = 12;
 	private static final int MAX_TARGETS = 4;

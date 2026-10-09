@@ -46,7 +46,7 @@ public final class JobTooltips {
 		});
 	}
 
-	static String num(final double v) {
+	public static String num(final double v) {
 		double r = Math.round(v * 10.0) / 10.0;
 		return r == Math.rint(r) ? Long.toString((long)r) : String.format(Locale.ROOT, "%.1f", r);
 	}

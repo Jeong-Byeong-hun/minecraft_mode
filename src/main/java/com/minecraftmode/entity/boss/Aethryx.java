@@ -1,5 +1,7 @@
 package com.minecraftmode.entity.boss;
 
+import java.util.ArrayList;
+import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.MobProjectile;
@@ -55,6 +57,15 @@ public class Aethryx extends RaidBoss {
 			}),
 			pattern("starfall", 4, 210, 0, 20, this::starfall),
 			pattern("collapse", 4, 380, 0, 50, this::collapse)
+		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(
+			mechanic("aethryx_event_horizon", 0.9F, 120, 180, this::eventHorizon),
+			mechanic("aethryx_seals", 0.6F, 150, 210, this::seals),
+			mechanic("aethryx_judgment", 0.3F, 130, 180, this::judgment)
 		);
 	}
 
@@ -152,5 +163,97 @@ public class Aethryx extends RaidBoss {
 		this.donut(level, c, 6.0, Arenas.RADIUS + 2, 50, Telegraph.PURPLE, 3.0F, e -> Attacks.push(e, new Vec3(0, 0.8, 0)));
 		this.title(level, net.minecraft.network.chat.Component.empty(),
 			net.minecraft.network.chat.Component.translatable("entity.minecraft_mode.aethryx.collapse").withStyle(net.minecraft.ChatFormatting.LIGHT_PURPLE));
+	}
+
+	/** Event Horizon: a black hole drags everyone in and implodes; be more than 11 blocks from the middle. */
+	private void eventHorizon(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.ROAR);
+		this.sound(level, SoundEvents.END_PORTAL_SPAWN, 3.0F, 0.5F);
+		Vec3 c = this.arenaCenter();
+		this.during(160, 4, () -> {
+			for (ServerPlayer p : this.fighters(level)) {
+				Vec3 in = c.subtract(p.position()).multiply(1, 0, 1);
+				if (in.lengthSqr() > 0.25) {
+					Attacks.push(p, p.getDeltaMovement().add(in.normalize().scale(0.12)));
+				}
+			}
+			Telegraph.ring(level, c, 11.0, Telegraph.PURPLE, 1.3F);
+			Telegraph.ring(level, c, 13.0, 0x60FF60, 1.0F);
+			level.sendParticles(ParticleTypes.REVERSE_PORTAL, c.x, c.y + 1.5, c.z, 60, 2.5, 1.0, 2.5, 0.2);
+		});
+		this.after(160, () -> {
+			for (ServerPlayer p : this.fighters(level)) {
+				if (p.position().subtract(c).horizontalDistance() <= 11.0) {
+					this.lethal(level, p);
+				}
+			}
+			level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, c.x, c.y + 1, c.z, 3, 2, 0.5, 2, 0.0);
+			this.sound(level, c, SoundEvents.GENERIC_EXPLODE.value(), 4.0F, 0.5F);
+		});
+	}
+
+	/** Starfall Seals: every seal (one per player, up to 4) needs someone standing on it when the stars fall. */
+	private void seals(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.BEACON_ACTIVATE, 4.0F, 0.6F);
+		int n = Math.min(4, Math.max(1, this.fighters(level).size()));
+		List<Vec3> seals = this.spots(n, 6, Arenas.RADIUS - 3, 5);
+		this.mechanicSpots.addAll(seals);
+		Fx star = new Fx(Fx.Kind.SPARK, STAR);
+		this.during(200, 5, () -> {
+			int manned = 0;
+			for (Vec3 s : seals) {
+				Telegraph.ring(level, s, 2.5, 0xFFD24A, 1.4F);
+				star.column(level, s, 5.0);
+				if (!this.near(level, s, 2.5).isEmpty()) {
+					manned++;
+				}
+			}
+			this.tally(level, "aethryx_seals", manned, seals.size());
+		});
+		this.after(200, () -> {
+			long manned = seals.stream().filter(s -> !this.near(level, s, 2.5).isEmpty()).count();
+			if (manned < seals.size()) {
+				this.wipe(level, "aethryx_seals");
+			} else {
+				this.cleared(level, "aethryx_seals");
+			}
+			for (Vec3 s : seals) {
+				this.fallFromSky(level, s, new ItemStack(Items.NETHER_STAR), Fx.Kind.SPARK, STAR, 8);
+			}
+		});
+	}
+
+	/** Void Judgment: the marked player must not stand alone; 60% of the party (at least one) gathers on them to split the blow. */
+	private void judgment(final ServerLevel level, final LivingEntity target) {
+		List<ServerPlayer> fighters = this.fighters(level);
+		if (fighters.isEmpty()) {
+			return;
+		}
+		ServerPlayer marked = fighters.get(this.random.nextInt(fighters.size()));
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.WITHER_AMBIENT, 4.0F, 0.5F);
+		this.during(170, 5, () -> {
+			if (marked.isAlive() && marked.level() == level) {
+				Telegraph.ring(level, marked.position(), 4.0, Telegraph.PURPLE, 1.4F);
+				level.sendParticles(ParticleTypes.REVERSE_PORTAL, marked.getX(), marked.getY() + 2.4, marked.getZ(), 6, 0.3, 0.2, 0.3, 0.02);
+				this.tally(level, "aethryx_judgment", this.near(level, marked.position(), 4.0).size(), Gorvath.need(this.fighters(level).size()));
+			}
+		});
+		this.after(170, () -> {
+			if (!marked.isAlive() || marked.level() != level) {
+				return;
+			}
+			List<ServerPlayer> together = this.near(level, marked.position(), 4.0);
+			if (together.size() < Gorvath.need(this.fighters(level).size())) {
+				this.wipe(level, "aethryx_judgment");
+			} else {
+				for (ServerPlayer p : together) {
+					RaidDamage.portion(level, p, this, 0.3F);
+				}
+				this.cleared(level, "aethryx_judgment");
+			}
+			this.boom(level, marked.position(), 4.0);
+		});
 	}
 }

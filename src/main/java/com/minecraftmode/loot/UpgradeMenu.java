@@ -1,5 +1,10 @@
 package com.minecraftmode.loot;
 
+import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.job.gear.ArmorPieceDef;
+import com.minecraftmode.job.gear.ArmorOptions;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
@@ -21,7 +26,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * The blacksmith's evolution bench: put a class weapon or armor piece in the slot, pick one of the
  * offered next pieces ({@link GearUpgrades#targets}) and pay {@link GearUpgrades#ETHER_COST}
- * Evolution Ether of that piece's bracket. Button id = index of the target.
+ * Evolution Ether of that piece's bracket plus coins. Armor can also have its extra options rolled
+ * again for coins. Button id = index of the target, or {@link #BUTTON_REROLL}.
  */
 public class UpgradeMenu extends AbstractContainerMenu {
 	public static final int WIDTH = 200;
@@ -30,6 +36,7 @@ public class UpgradeMenu extends AbstractContainerMenu {
 	public static final int SLOT_Y = 30;
 	public static final int INVENTORY_X = 20;
 	public static final int INVENTORY_Y = 114;
+	public static final int BUTTON_REROLL = 10;
 
 	private final @Nullable Entity npc;
 	private final Container container = new SimpleContainer(1) {
@@ -93,21 +100,33 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		}
 	}
 
+	/** True when the slot holds class armor whose options can be rolled again. */
+	public boolean canReroll() {
+		return ClassArmor.def(this.input()) != null;
+	}
+
 	@Override
 	public boolean clickMenuButton(final Player player, final int buttonId) {
+		if (buttonId == BUTTON_REROLL) {
+			return this.reroll(player);
+		}
 		List<ClassGear> targets = this.targets();
 		if (buttonId < 0 || buttonId >= targets.size()) {
 			return false;
 		}
 		ClassGear target = targets.get(buttonId);
 		int grade = GearUpgrades.grade(target);
-		if (!player.isCreative() && ether(player.getInventory(), grade) < GearUpgrades.ETHER_COST) {
+		int coins = GearUpgrades.coinCost(target);
+		if (!player.isCreative() && (ether(player.getInventory(), grade) < GearUpgrades.ETHER_COST || Coins.total(player) < coins)) {
 			return false;
 		}
 		if (player.level().isClientSide()) {
 			return true;
 		}
 		if (!player.isCreative()) {
+			if (!Wallet.take(player, coins)) {
+				return false;
+			}
 			takeEther(player.getInventory(), grade, GearUpgrades.ETHER_COST);
 		}
 		ItemStack evolved = GearUpgrades.evolve(this.input(), target, player.getRandom());
@@ -116,6 +135,33 @@ public class UpgradeMenu extends AbstractContainerMenu {
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.8F, 1.1F);
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.6F);
 			level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY(1.0), player.getZ(), 30, 0.5, 0.6, 0.5, 0.2);
+		}
+		this.broadcastChanges();
+		return true;
+	}
+
+	private boolean reroll(final Player player) {
+		ItemStack stack = this.input();
+		ArmorPieceDef piece = ClassArmor.def(stack);
+		ClassGear gear = ClassGear.of(stack);
+		if (piece == null || gear == null) {
+			return false;
+		}
+		int coins = GearUpgrades.rerollCost(gear);
+		if (!player.isCreative() && Coins.total(player) < coins) {
+			return false;
+		}
+		if (player.level().isClientSide()) {
+			return true;
+		}
+		if (!player.isCreative() && !Wallet.take(player, coins)) {
+			return false;
+		}
+		stack.set(ModDataComponents.GEAR_ROLLS, ArmorOptions.roll(piece, player.getRandom()));
+		this.container.setChanged();
+		if (player.level() instanceof ServerLevel level) {
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.8F, 1.0F);
+			level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY(1.0), player.getZ(), 20, 0.5, 0.5, 0.5, 0.4);
 		}
 		this.broadcastChanges();
 		return true;

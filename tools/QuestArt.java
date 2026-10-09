@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.util.Random;
 
 /**
- * Advancement-trial art for TextureGen: the 20 trial token items and the five class trainer skins
+ * Advancement-trial art for TextureGen: the 28 trial token items and the seven class trainer skins
  * (64x64, legacy humanoid layout like the Mine Raider; the hat layer at 32,0 is used for hats).
  */
 final class QuestArt {
@@ -28,6 +28,14 @@ final class QuestArt {
 		TextureGen.write("item/bounty_poster", bountyPoster());
 		TextureGen.write("item/haki_crystal", hakiCrystal());
 		TextureGen.write("item/sea_kings_treasure", treasureChest());
+		TextureGen.write("item/hollow_mask_shard", grid(HOLLOW_MASK, "o2A2A2A wF4F2EA sC8C4B8 b101010 rC0262D"));
+		TextureGen.write("item/hell_butterfly", grid(BUTTERFLY, "o0A0A0C k1E1E24 p6A2A8A rC0262D b3A3A44 a5A5A66"));
+		TextureGen.write("item/tenshintai", grid(TENSHINTAI, "o3A3A3A wF0F0F0 sC8C8C8 b101010 rC0262D yE8D8A0"));
+		TextureGen.write("item/hogyoku_fragment", grid(HOGYOKU, "o1A1A24 lD8C0FF wFFFFFF c8A5AFF d3A1A6A m8A8A9A"));
+		TextureGen.write("item/exam_badge", grid(EXAM_BADGE, "o3A2A1A wF4F4F0 fF5862B b101010 sC8C8C0"));
+		TextureGen.write("item/divination_glass", grid(DIVINATION_GLASS, "o7A8A98 gD8ECF4 w5AA0E8 d3A70C0 l5AB04A L2A7A2A"));
+		TextureGen.write("item/chimera_carapace", grid(CARAPACE, "o1A2010 a6A8A3A b4A6A2A hA8C870 d2A3A1A"));
+		TextureGen.write("item/dark_continent_relic", grid(RELIC, "o0A0A0C s2A2A30 S3A3A44 rF5862B RFFD080 gD9B44A"));
 
 		TextureGen.write("item/evolution_ether", evolutionEther());
 
@@ -36,6 +44,8 @@ final class QuestArt {
 		TextureGen.write("entity/trainer/mage", merlin());
 		TextureGen.write("entity/trainer/archer", chiron());
 		TextureGen.write("entity/trainer/pirate", drake());
+		TextureGen.write("entity/trainer/shinigami", urahara());
+		TextureGen.write("entity/trainer/hunter", biscuit());
 		TextureGen.write("entity/npc/blacksmith", volund());
 		TextureGen.write("entity/npc/raid_marshal", aldric());
 	}
@@ -980,6 +990,252 @@ final class QuestArt {
 		fill(8, 16, 4, 4, 0x2E3038);
 		return img;
 	}
+
+	/** Shopkeeper Urahara: messy blond hair, a green-and-white striped bucket hat, a dark green haori over black robes, geta. */
+	static BufferedImage urahara() {
+		BufferedImage img = newSkin(108);
+		int skin = 0xE8C3A0, hair = 0xE8D27A, black = 0x1A1A1E, haori = 0x2E5A3A, white = 0xF0F0EA, stripe = 0x3A7A4A, wood = 0x8A6A3A;
+		head(skin, hair);
+		hair(hair, 2, 5, 7);
+		px(9, 10, hair);                     // bangs over the eyes
+		px(11, 10, hair);
+		px(14, 10, hair);
+		eyes(11, 0xFFFFFF, 0x6A8A5A);
+		px(11, 14, 0xB8907A);
+		px(12, 14, 0xB8907A);
+		px(10, 13, 0xD8B090);                // stubble
+		px(13, 13, 0xD8B090);
+
+		// striped bucket hat on the hat layer
+		fill(40, 0, 8, 8, stripe);
+		fill(32, 8, 32, 3, stripe);
+		for (int x = 32; x < 64; x += 2) {
+			fill(x, 8, 1, 2, white);
+		}
+		for (int x = 40; x < 48; x += 2) {
+			fill(x, 0, 1, 8, white);
+		}
+		fill(32, 10, 32, 1, 0x24482E);       // brim
+
+		body(haori);
+		fill(22, 20, 4, 12, black);          // black robes under the open haori
+		px(23, 20, skin);
+		px(24, 20, skin);
+		for (int x = 32; x < 40; x += 2) {   // diamond hem on the back
+			px(x, 30, white);
+			px(x + 1, 31, white);
+		}
+		fill(16, 27, 24, 1, 0x101012);       // sash
+
+		arms(haori);
+		fill(40, 27, 16, 2, black);          // inner sleeves
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(black);
+		fill(0, 30, 16, 2, wood);            // geta
+		fill(8, 16, 4, 4, wood);
+		return img;
+	}
+
+	/** Biscuit Krueger: blond twin tails with red ribbons, blue eyes, a pink frilled dress with a white collar. */
+	static BufferedImage biscuit() {
+		BufferedImage img = newSkin(109);
+		int skin = 0xF4D8C4, hair = 0xF0D060, hairShade = 0xD0A840, pink = 0xF09AB8, darkPink = 0xC8507A, white = 0xFAF4F0, red = 0xD02A3A;
+		head(skin, hair);
+		hair(hair, 2, 6, 8);
+		px(8, 10, hair);
+		px(15, 10, hair);
+		px(11, 10, hair);
+		px(12, 10, hair);
+		eyes(12, 0xFFFFFF, 0x3A7AE0);
+		px(11, 14, 0xE07A8A);
+		px(12, 14, 0xE07A8A);
+		fill(0, 14, 8, 2, hairShade);
+		fill(16, 14, 8, 2, hairShade);
+
+		// twin tails and ribbons on the hat layer
+		fill(32, 9, 2, 7, hair);
+		fill(54, 9, 2, 7, hair);
+		fill(32, 9, 2, 1, red);
+		fill(54, 9, 2, 1, red);
+		fill(56, 8, 8, 2, hair);
+
+		body(pink);
+		fill(20, 20, 8, 3, white);           // collar
+		fill(23, 22, 2, 2, red);             // bow
+		fill(16, 29, 24, 3, darkPink);       // frilled hem
+		for (int x = 16; x < 40; x += 2) {
+			px(x, 31, white);
+		}
+
+		arms(pink);
+		fill(40, 20, 16, 3, white);          // puffed sleeves
+		fill(40, 28, 16, 1, white);
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(skin);
+		fill(0, 20, 16, 3, darkPink);        // skirt
+		fill(0, 25, 16, 5, white);           // stockings
+		fill(0, 30, 16, 2, 0x6A2A3A);        // shoes
+		fill(8, 16, 4, 4, 0x6A2A3A);
+		return img;
+	}
+
+	// ---------------------------------------------------------------- soul reaper and hunter tokens
+
+	static final String[] HOLLOW_MASK = {
+		"................",
+		"....oooooooo....",
+		"...owwwwwwwwo...",
+		"..owwwwwwwwsso..",
+		"..owwbbwwbbwso..",
+		"..owbbbwwbbbso..",
+		"..owwbbwwbbwso..",
+		".owwwwwwwwwwsso.",
+		".owrwwwwwwwwrso.",
+		".owrrwwwwwwrrso.",
+		"..owwbwbwbwbso..",
+		"..owwbbbbbbbo...",
+		"...owwwwwwso....",
+		"....owwsso......",
+		".....ooo........",
+		"................",
+	};
+
+	static final String[] BUTTERFLY = {
+		"......o..o......",
+		"..ooo..oo..ooo..",
+		".okkko.ab.okkko.",
+		".okrkkoabokkrko.",
+		"okkrrkkabkkrrkko",
+		"okprrkkabkkrrpko",
+		".okkkkoabokkkko.",
+		"..ooookabkoooo..",
+		"...okkkabkkko...",
+		"..okpkkabkkpko..",
+		"..okrkoabokrko..",
+		"...okko..okko...",
+		"....oo....oo....",
+		"................",
+		"................",
+		"................",
+	};
+
+	static final String[] TENSHINTAI = {
+		"......oooo......",
+		".....owwwwo.....",
+		".....owbbwo.....",
+		".....owwwwo.....",
+		"......owwo......",
+		"...oooowwoooo...",
+		"..owwwwwwwwwwo..",
+		"..owoowyywoowo..",
+		"..oo.owyywo.oo..",
+		".....owrrwo.....",
+		".....owwwso.....",
+		".....owwwso.....",
+		".....owoowo.....",
+		"....owo..owo....",
+		"....owo..owo....",
+		"....ooo..ooo....",
+	};
+
+	static final String[] HOGYOKU = {
+		"................",
+		"................",
+		".....oooooo.....",
+		"....olwlccco....",
+		"...olwllcccdo...",
+		"...ollccccddo...",
+		"...occcccdddo...",
+		"...occccddddo...",
+		"....occdddddo...",
+		"....oodddddoo...",
+		"...mmoooooommm..",
+		"..mmmmmmmmmmmm..",
+		"...mm......mm...",
+		"................",
+		"................",
+		"................",
+	};
+
+	static final String[] EXAM_BADGE = {
+		"................",
+		".....oooooo.....",
+		"...oowwwwwwoo...",
+		"..owwwwwwwwwwo..",
+		"..offffffffffo..",
+		".owwwwwwwwwwwwso",
+		".owbwbwbbbwbbbso",
+		".owbwbwbwbwbwwso",
+		".owbbbwbwbwbbbso",
+		".owwwbwbwbwwwbso",
+		".owwwbwbbbwbbbso",
+		".owwwwwwwwwwwwso",
+		"..owwwwwwwwwwo..",
+		"...oossssssoo...",
+		".....oooooo.....",
+		"................",
+	};
+
+	static final String[] DIVINATION_GLASS = {
+		"................",
+		"......llll......",
+		".....lLllLl.....",
+		"...ooooLLoooo...",
+		"...owwwwwwwwo...",
+		"...ogwwwwwwwo...",
+		"...owwwwwwwdo...",
+		"...owwwwwwddo...",
+		"....owwwwwdo....",
+		"....owwwwddo....",
+		"....owwwdddo....",
+		".....owwddo.....",
+		".....oooooo.....",
+		"......oggo......",
+		".....oggggo.....",
+		"....oooooooo....",
+	};
+
+	static final String[] CARAPACE = {
+		"................",
+		"......oooo......",
+		"....oohhaaoo....",
+		"...ohhaaaabbo...",
+		"..ohaaaaaabbbo..",
+		"..oddddddddddo..",
+		".ohaaaaaaaabbbo.",
+		".ohaaaaaaaabbbo.",
+		".oddddddddddddo.",
+		".ohaaaaaaaabbbo.",
+		"..ohaaaaaabbbo..",
+		"..oddddddddddo..",
+		"...ohaaaabbbo...",
+		"....ooaaaboo....",
+		"......oooo......",
+		"................",
+	};
+
+	static final String[] RELIC = {
+		"................",
+		"...oooooooooo...",
+		"...oggggggggo...",
+		"...ogsssssSgo...",
+		"...ogsrssrSgo...",
+		"...ogsRrrRSgo...",
+		"...ogssrssSgo...",
+		"...ogsrrrsSgo...",
+		"...ogssssrSgo...",
+		"...ogsrssrSgo...",
+		"...ogssRrsSgo...",
+		"...ogsssssSgo...",
+		"...ogSSSSSSgo...",
+		"...oggggggggo...",
+		"...oooooooooo...",
+		"................",
+	};
 
 	static int shade(final int rgb, final float factor) {
 		return TextureGen.shade(rgb, factor);

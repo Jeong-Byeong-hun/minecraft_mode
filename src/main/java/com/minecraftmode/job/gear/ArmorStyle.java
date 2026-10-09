@@ -40,7 +40,8 @@ public enum ArmorStyle {
 			case WARRIOR -> PLATE;
 			case ROGUE -> LEATHER;
 			case MAGE -> ROBE;
-			case ARCHER -> RANGER;
+			case ARCHER, HUNTER -> RANGER;
+			case SHINIGAMI -> LEATHER;
 			default -> COAT;
 		};
 	}

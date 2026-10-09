@@ -2,6 +2,7 @@ package com.minecraftmode.client.raid;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.PartySyncPayload;
 import com.minecraftmode.network.RaidEnterPayload;
 import com.minecraftmode.raid.BossDef;
@@ -78,6 +79,9 @@ public class RaidScreen extends Screen {
 			return false;
 		}
 		BossDef def = this.boss();
+		if (Coins.total(player) < def.fee()) {
+			return false;
+		}
 		List<PartySyncPayload.Member> party = RaidClient.party();
 		if (party.isEmpty()) {
 			return JobProgression.get(player).level() >= def.minLevel();
@@ -138,6 +142,9 @@ public class RaidScreen extends Screen {
 		ty += 11;
 		g.text(this.font, Component.translatable("screen.minecraft_mode.raid.arena", Component.translatable("screen.minecraft_mode.raid.arena." + def.arena().name().toLowerCase())),
 			rx, ty, 0xFFBBBBBB, false);
+		ty += 11;
+		boolean afford = Coins.total(player) >= def.fee();
+		g.text(this.font, Component.translatable("screen.minecraft_mode.raid.fee", Coins.format(def.fee())), rx, ty, afford ? 0xFFFFD27F : 0xFFFF6B6B, false);
 		ty += 14;
 		ty = g.textWithWordWrap(this.font, Component.translatable(def.descKey()).withStyle(ChatFormatting.ITALIC), rx, ty, rw, 0xFFD0D0D0) + 6;
 		g.fill(rx, ty, rx + rw, ty + 1, 0x40FFFFFF);

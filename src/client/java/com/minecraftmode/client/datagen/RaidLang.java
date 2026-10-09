@@ -31,8 +31,30 @@ final class RaidLang {
 			"Starfall! The island collapses!", "별이 떨어진다! 섬이 무너진다!"}
 	);
 
+	/** Mechanic id -> {en name, ko name, en hint, ko hint}. */
+	static final String[][] MECHANICS = {
+		{"arachne_venom_deluge", "Venom Deluge", "독의 홍수", "The floor floods with venom! Get inside a silk cocoon (green circle).", "바닥이 독으로 잠긴다! 거미줄 고치(초록 원) 안으로!"},
+		{"gorvath_rockslide", "Rockslide", "산사태", "The peak comes down on everyone Gorvath can see. Hide behind a pillar!", "고르바스의 눈에 보이는 자에게 산이 무너진다. 기둥 뒤로 숨어라!"},
+		{"gorvath_shoulder", "Shoulder the Mountain", "산을 떠받쳐라", "A peak is falling: 60% of the party must stand in the green circle together.",
+			"봉우리가 떨어진다: 파티의 60% 이상이 초록 원 안에 함께 서야 한다."},
+		{"kraken_ink_marks", "Ink Marks", "먹물 낙인", "Every mark bursts and kills anyone else within 6 blocks. Spread out!", "낙인이 터지면 6블록 안의 다른 사람이 죽는다. 흩어져라!"},
+		{"kraken_anchors", "Anchor Chains", "닻을 지켜라", "Someone must hold every anchor (green circles) or the ship goes down.", "모든 닻(초록 원)에 한 명씩 서야 배가 버틴다."},
+		{"ignis_solar_flare", "Solar Flare", "태양 섬광", "Turn your back on Ignis before the flash!", "섬광이 터지기 전에 이그니스에게 등을 돌려라!"},
+		{"ignis_phoenix_eggs", "Phoenix Eggs", "불사조의 알", "Destroy every ember warden within 15 seconds or the eggs hatch in a supernova.",
+			"15초 안에 불씨 수호 정령을 모두 쓰러뜨려라. 아니면 알이 깨어나 초신성이 된다."},
+		{"malachar_stillness", "Requiem of Stillness", "정적의 진혼곡", "When the requiem begins, do not move a step.", "진혼곡이 시작되면 한 발짝도 움직이지 마라."},
+		{"malachar_phylactery", "Phylactery", "성물함", "Malachar cannot be hurt while his guardians stand. Destroy them all in 20 seconds!",
+			"수호자가 남아 있는 동안 말라카르는 무적이다. 20초 안에 모두 파괴하라!"},
+		{"malachar_doom", "Doom", "파멸의 낙인", "The marked must reach the soul font (green circle) within 10 seconds.", "낙인이 찍힌 자는 10초 안에 영혼의 샘(초록 원)으로 가야 한다."},
+		{"aethryx_event_horizon", "Event Horizon", "사건의 지평선", "A black hole pulls you in. Be more than 11 blocks from the center when it collapses!",
+			"블랙홀이 끌어당긴다. 붕괴할 때 중심에서 11블록 밖에 있어라!"},
+		{"aethryx_seals", "Starfall Seals", "별의 봉인", "Every seal needs someone standing on it when the stars fall.", "별이 떨어질 때 모든 봉인 위에 누군가 서 있어야 한다."},
+		{"aethryx_judgment", "Void Judgment", "공허의 심판", "Gather on the marked player: 60% of the party must share the blow.", "표식이 찍힌 사람에게 모여라: 파티의 60% 이상이 함께 받아내야 한다."},
+	};
+
 	static void add(final TranslationBuilder b, final boolean ko) {
 		bosses(b, ko);
+		mechanics(b, ko);
 		raid(b, ko);
 		party(b, ko);
 		loot(b, ko);
@@ -52,6 +74,23 @@ final class RaidLang {
 		b.add("entity.minecraft_mode.aethryx.collapse", ko ? "섬이 무너진다 - 중심으로!" : "The island collapses - get to the center!");
 	}
 
+	private static void mechanics(final TranslationBuilder b, final boolean ko) {
+		for (String[] m : MECHANICS) {
+			b.add("raid.minecraft_mode.mechanic." + m[0], ko ? m[2] : m[1]);
+			b.add("raid.minecraft_mode.mechanic." + m[0] + ".hint", ko ? m[4] : m[3]);
+		}
+		b.add("raid.minecraft_mode.mechanic.malachar_stillness.now", ko ? "지금! 움직이지 마라!" : "Now! Do not move!");
+		b.add("raid.minecraft_mode.mechanic.malachar_doom.marked", ko ? "파멸의 낙인이 새겨졌다! 영혼의 샘으로!" : "You bear the mark of Doom! Get to the soul font!");
+		b.add("raid.minecraft_mode.mechanic.malachar_doom.cleansed", ko ? "낙인이 정화되었다." : "The mark is cleansed.");
+		b.add("raid.minecraft_mode.mechanic.count", "%s: %s / %s");
+		b.add("raid.minecraft_mode.mechanic.failed", ko ? "%s 실패!" : "%s failed!");
+		b.add("raid.minecraft_mode.mechanic.cleared", ko ? "%s 성공!" : "%s cleared!");
+		b.add("raid.minecraft_mode.ember_warden", ko ? "불씨 수호 정령" : "Ember Warden");
+		b.add("raid.minecraft_mode.phylactery_guard", ko ? "성물 수호자" : "Phylactery Guardian");
+		b.add("death.attack.minecraft_mode.raid_mechanic", ko ? "%1$s은(는) 레이드 기믹에 휘말렸다" : "%1$s was caught by a raid mechanic");
+		b.add("death.attack.minecraft_mode.raid_mechanic.player", ko ? "%1$s은(는) %2$s의 기믹에 휘말렸다" : "%1$s was caught by %2$s's mechanic");
+	}
+
 	private static void raid(final TranslationBuilder b, final boolean ko) {
 		b.add("raid.minecraft_mode.phase", ko ? "%s 페이즈" : "Phase %s");
 		b.add("raid.minecraft_mode.victory", ko ? "토벌 성공!" : "VICTORY!");
@@ -61,6 +100,7 @@ final class RaidLang {
 		b.add("screen.minecraft_mode.raid.title", ko ? "레이드 토벌 게시판" : "Raid Board");
 		b.add("screen.minecraft_mode.raid.levels", ko ? "드롭 Lv %s–%s" : "Drops Lv %s–%s");
 		b.add("screen.minecraft_mode.raid.phases", ko ? "페이즈 %s" : "%s phases");
+		b.add("screen.minecraft_mode.raid.fee", ko ? "입장료 %s (1인)" : "Entry fee %s each");
 		b.add("screen.minecraft_mode.raid.arena", ko ? "무대: %s" : "Arena: %s");
 		b.add("screen.minecraft_mode.raid.party", ko ? "파티 (%s/%s)" : "Party (%s/%s)");
 		b.add("screen.minecraft_mode.raid.enter", ko ? "입장" : "Enter");
@@ -86,6 +126,8 @@ final class RaidLang {
 		b.add(p + "problem.too_far", ko ? "너무 멀리 있음" : "too far away");
 		b.add(p + "problem.level", ko ? "레벨 %s 필요" : "needs level %s");
 		b.add(p + "problem.dead", ko ? "사망 상태" : "dead");
+		b.add(p + "problem.fee", ko ? "입장료 %s 부족" : "cannot pay the %s fee");
+		b.add(p + "fee_paid", ko ? "입장료 %s을(를) 냈습니다." : "Paid the %s entry fee.");
 		b.add(p + "busy", ko ? "모든 경기장이 사용 중입니다. 잠시 후 다시 시도하세요." : "All arenas are in use. Try again shortly.");
 		b.add(p + "entered", ko ? "%s 토벌 시작! %s초 뒤 보스가 나타납니다. 죽어도 아이템은 잃지 않습니다." : "Raid on %s! The boss appears in %s seconds. Dying here never costs items.");
 		b.add(p + "not_in_raid", ko ? "레이드 중이 아닙니다." : "You are not in a raid.");

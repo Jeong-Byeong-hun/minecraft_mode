@@ -72,6 +72,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		JobHud.init();
 		JobTooltips.init();
 		RaidClient.init();
+		WalletDisplay.init();
+		ConsumableTooltips.init();
 	}
 
 	private static <T extends CreatureMob> void creature(final EntityType<T> type, final String id) {

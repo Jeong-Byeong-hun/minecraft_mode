@@ -1,0 +1,58 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:badlands",
+    "minecraft:eroded_badlands",
+    "minecraft:wooded_badlands"
+  ],
+  "lair": "badlands_gunslinger",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft:husk",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 110
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 80
+        },
+        {
+          "type": "minecraft:spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft_mode:badlands_gunslinger",
+          "count": 1,
+          "weight": 52
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

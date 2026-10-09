@@ -10,7 +10,9 @@
 			"com.minecraftmode.test.EnchantmentClientGameTest",
 			"com.minecraftmode.test.NormalWorldClientGameTest",
 			"com.minecraftmode.test.JobClientGameTest",
-			"com.minecraftmode.test.GearRaidClientGameTest"
+			"com.minecraftmode.test.GearRaidClientGameTest",
+			"com.minecraftmode.test.EconomyClientGameTest",
+			"com.minecraftmode.test.LairClientGameTest"
 		]
 	},
 	"depends": {

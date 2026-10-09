@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModTags;
 import java.util.List;
@@ -19,6 +20,10 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 
 public class ModRecipeProvider extends FabricRecipeProvider {
+	/** Consumables that can be cooked or brewed at a crafting table (the docs list them as craftable). */
+	public static final java.util.List<String> COOKED = java.util.List.of("gimbap", "tteokbokki", "roasted_sweet_potato", "bungeoppang", "samgyetang",
+		"meat_on_the_bone", "onigiri", "green_tea", "scholars_coffee", "healing_draught", "mana_draught", "antidote");
+
 	public ModRecipeProvider(final FabricPackOutput output, final CompletableFuture<HolderLookup.Provider> registries) {
 		super(output, registries);
 	}
@@ -40,6 +45,7 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 				);
 				this.mythrilGear();
 				this.plastic();
+				this.consumables();
 				this.coins();
 				this.shopBlock();
 				this.classes();
@@ -128,6 +134,33 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 					.save(this.output);
 			}
 
+			/** Home cooking and simple potions (tier 1-2); the better consumables are bought or found. */
+			private void consumables() {
+				this.cook("gimbap", 2, Items.DRIED_KELP, Items.DRIED_KELP, Items.CARROT, Items.WHEAT);
+				this.cook("tteokbokki", 1, Items.BOWL, Items.WHEAT, Items.WHEAT, Items.BEETROOT);
+				this.cook("roasted_sweet_potato", 1, Items.BAKED_POTATO, Items.SUGAR);
+				this.cook("bungeoppang", 2, Items.WHEAT, Items.WHEAT, Items.SUGAR, Items.COCOA_BEANS);
+				this.cook("samgyetang", 1, Items.BOWL, Items.COOKED_CHICKEN, Items.CARROT, Items.POTATO);
+				this.cook("meat_on_the_bone", 1, Items.COOKED_BEEF, Items.COOKED_BEEF, Items.BONE);
+				this.cook("onigiri", 2, Items.WHEAT, Items.WHEAT, Items.DRIED_KELP);
+				this.cook("green_tea", 1, Items.GLASS_BOTTLE, Items.OAK_LEAVES, Items.OAK_LEAVES, Items.SUGAR);
+				this.cook("scholars_coffee", 1, Items.GLASS_BOTTLE, Items.COCOA_BEANS, Items.COCOA_BEANS, Items.SUGAR);
+				this.cook("healing_draught", 1, Items.GLASS_BOTTLE, Items.GLISTERING_MELON_SLICE);
+				this.cook("mana_draught", 1, Items.GLASS_BOTTLE, Items.LAPIS_LAZULI, Items.LAPIS_LAZULI);
+				this.cook("antidote", 1, Items.GLASS_BOTTLE, Items.BROWN_MUSHROOM, Items.SUGAR);
+			}
+
+			private void cook(final String id, final int count, final Item... ingredients) {
+				if (!COOKED.contains(id)) {
+					throw new IllegalStateException(id + " is missing from ModRecipeProvider.COOKED");
+				}
+				var recipe = this.shapeless(RecipeCategory.FOOD, Consumables.item(id), count);
+				for (Item ingredient : ingredients) {
+					recipe.requires(ingredient);
+				}
+				recipe.unlockedBy(getHasName(ingredients[ingredients.length - 1]), this.has(ingredients[ingredients.length - 1])).save(this.output);
+			}
+
 			private void plastic() {
 				// 2 coal/charcoal + 1 slime ball -> 4 plastic sheets
 				this.shapeless(RecipeCategory.MISC, ModItems.PLASTIC_SHEET, 4)
@@ -170,6 +203,7 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 				this.themedShop(ModItems.BLACKSMITH_SHOP, Items.SMITHING_TABLE);
 				this.themedShop(ModItems.GROCER_SHOP, Items.HAY_BLOCK);
 				this.themedShop(ModItems.JEWELER_SHOP, Items.DIAMOND);
+				this.themedShop(ModItems.ALCHEMIST_SHOP, Items.BREWING_STAND);
 			}
 
 			private void themedShop(final Item shop, final Item theme) {

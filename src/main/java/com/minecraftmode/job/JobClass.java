@@ -9,7 +9,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.StringRepresentable;
 
 /**
- * The five classes (plus NONE for players who have not advanced yet). Each class advances through
+ * The seven classes (plus NONE for players who have not advanced yet). Each class advances through
  * four tiers with its own title and passive; the texts live here so datagen and the job screen
  * read the same table. Ids are saved in player data, so never rename them.
  */
@@ -47,6 +47,20 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Captain", "선장", "Sea Legs", "바다 사나이", "In water: Dolphin's Grace and Water Breathing.", "물속에서 돌고래의 우아함과 수중 호흡."),
 		new Tier("Emperor of the Sea", "사황", "Conqueror's Haki", "패왕색 패기", "10% chance on hit to stun the enemy for 1.5s.", "공격 시 10% 확률로 1.5초 기절."),
 		new Tier("Pirate King", "해적왕", "The One Piece", "원피스", "Shop prices -20% and Luck +2.", "상점 가격 -20%, 행운 +2.")
+	}),
+	SHINIGAMI("shinigami", 0x9FD8E8, "Soul Reaper", "사신", new Tier[] {
+		new Tier("Soul Reaper", "사신", "Flash Step", "순보", "Movement speed +8% and 5% dodge chance.", "이동 속도 +8%, 회피 확률 5%."),
+		new Tier("Lieutenant", "부대장", "Shikai", "시해", "Skill damage +12%.", "스킬 피해 +12%."),
+		new Tier("Captain", "대장", "Bankai", "만해", "Basic attack damage +15% and attack speed +10%.", "기본 공격 피해 +15%, 공격 속도 +10%."),
+		new Tier("Captain-Commander", "총대장", "Mugetsu", "무월",
+			"Skill cooldowns -15% and +15% damage to bosses and named monsters.", "스킬 재사용 대기시간 -15%, 보스·네임드에게 주는 피해 +15%.")
+	}),
+	HUNTER("hunter", 0xF5862B, "Hunter", "헌터", new Tier[] {
+		new Tier("Hunter", "헌터", "Ten", "전", "Damage taken -5% and max health +2.", "받는 피해 -5%, 최대 체력 +2."),
+		new Tier("Nen User", "념능력자", "Gyo", "응", "Critical chance +10%.", "치명타 확률 +10%."),
+		new Tier("Pro Hunter", "프로 헌터", "Ko", "경", "15% chance for basic attacks to hit twice.", "15% 확률로 기본 공격이 두 번 적중합니다."),
+		new Tier("Triple-Star Hunter", "트리플 헌터", "Limitation and Vow", "제약과 서약",
+			"Skill damage +20% and +2 MP per second.", "스킬 피해 +20%, 초당 MP 회복 +2.")
 	});
 
 	public static final Codec<JobClass> CODEC = StringRepresentable.fromEnum(JobClass::values);

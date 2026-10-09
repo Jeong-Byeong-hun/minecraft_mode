@@ -1,38 +1,40 @@
 package com.minecraftmode;
 
+import com.minecraftmode.city.CityServices;
+import com.minecraftmode.command.JobCommand;
+import com.minecraftmode.command.RaidCommands;
+import com.minecraftmode.command.WalletCommand;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.economy.ModEconomy;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enchantment.ArmorAuras;
 import com.minecraftmode.enchantment.AutoSmeltLoot;
 import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
-import com.minecraftmode.city.CityServices;
-import com.minecraftmode.command.JobCommand;
-import com.minecraftmode.command.RaidCommands;
-import com.minecraftmode.raid.Parties;
-import com.minecraftmode.raid.Raids;
-import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.job.JobEvents;
+import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.network.ModNetworking;
+import com.minecraftmode.raid.Parties;
+import com.minecraftmode.raid.Raids;
+import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.registry.ModAttachments;
-import com.minecraftmode.registry.ModDataComponents;
-import com.minecraftmode.registry.ModMenus;
-import com.minecraftmode.registry.ModParticles;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModCreativeTabs;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModEntities;
-import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.registry.ModMenus;
+import com.minecraftmode.registry.ModParticles;
 import com.minecraftmode.worldgen.ModOreGeneration;
+import com.minecraftmode.worldgen.lair.NamedLairs;
 import net.fabricmc.api.ModInitializer;
-
 import net.minecraft.resources.Identifier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,13 +53,16 @@ public class MinecraftMode implements ModInitializer {
 		ModBlocks.init();
 		ModEntities.init();
 		ModItems.init();
+		Consumables.init();
 		JobWeapons.init();
 		ClassArmor.init();
 		Quests.init();
 		ModMenus.init();
 		ModCreativeTabs.init();
 		ModOreGeneration.init();
+		NamedLairs.init();
 		ModEconomy.init();
+		Wallet.init();
 		AutoSmeltLoot.init();
 		ToolEnchantmentHandlers.init();
 		CombatEnchantmentHandlers.init();
@@ -67,12 +72,14 @@ public class MinecraftMode implements ModInitializer {
 		JobEvents.init();
 		QuestService.init();
 		CityServices.init();
+		Consumables.initEvents();
 		Parties.init();
 		Raids.init();
 		LootSessions.init();
 		ModNetworking.init();
 		JobCommand.init();
 		RaidCommands.init();
+		WalletCommand.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

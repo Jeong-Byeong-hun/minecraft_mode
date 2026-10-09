@@ -1,64 +1,59 @@
 package com.minecraftmode.loot;
 
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.registry.ModItems;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Coin amounts in copper units (1 silver = 9 copper, 1 gold = 9 silver = 81 copper): counting what
- * a player carries, paying with change, paying out, and formatting ("3G 2S 1C").
+ * Coin amounts in copper units (1 silver = 9 copper, 1 gold = 9 silver = 81 copper): what a player
+ * can spend, paying and paying out (all through the {@link Wallet}), and formatting ("3G 2S 1C").
  */
 public final class Coins {
 	public static final int SILVER = 9;
 	public static final int GOLD = 81;
 
-	public static int total(final Inventory inventory) {
-		return JobProgression.count(inventory, ModItems.COPPER_COIN)
+	/** What {@code player} can spend: the wallet plus any coins not yet deposited. */
+	public static int total(final Player player) {
+		Inventory inventory = player.getInventory();
+		return Wallet.balance(player) + JobProgression.count(inventory, ModItems.COPPER_COIN)
 			+ SILVER * JobProgression.count(inventory, ModItems.SILVER_COIN)
 			+ GOLD * JobProgression.count(inventory, ModItems.GOLD_COIN);
 	}
 
-	/** Takes {@code amount} copper worth of coins, giving change; false (and nothing taken) when the player cannot pay. */
+	/** Pays {@code amount} copper from the wallet; false (and nothing taken) when the player cannot pay. */
 	public static boolean take(final ServerPlayer player, final int amount) {
-		if (amount <= 0) {
-			return true;
-		}
-		Inventory inventory = player.getInventory();
-		int have = total(inventory);
-		if (have < amount) {
-			return false;
-		}
-		// simplest exact way: remove every coin, give back the rest in the fewest coins
-		JobProgression.removeItems(inventory, ModItems.COPPER_COIN, Integer.MAX_VALUE);
-		JobProgression.removeItems(inventory, ModItems.SILVER_COIN, Integer.MAX_VALUE);
-		JobProgression.removeItems(inventory, ModItems.GOLD_COIN, Integer.MAX_VALUE);
-		give(player, have - amount);
-		return true;
+		return Wallet.take(player, amount);
 	}
 
-	/** Gives {@code amount} copper worth of coins (gold first). */
+	/** Puts {@code amount} copper into the wallet. */
 	public static void give(final ServerPlayer player, final int amount) {
-		int left = Math.max(0, amount);
-		giveStack(player, ModItems.GOLD_COIN, left / GOLD);
-		left %= GOLD;
-		giveStack(player, ModItems.SILVER_COIN, left / SILVER);
-		giveStack(player, ModItems.COPPER_COIN, left % SILVER);
+		Wallet.add(player, amount);
 	}
 
-	private static void giveStack(final ServerPlayer player, final Item coin, int count) {
-		while (count > 0) {
-			int n = Math.min(count, coin.getDefaultMaxStackSize());
-			ItemStack stack = new ItemStack(coin, n);
-			player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
-			count -= n;
+	/** {@code amount} copper as coin items, gold first (for drops). */
+	public static List<ItemStack> asItems(final int amount) {
+		List<ItemStack> out = new ArrayList<>();
+		int left = Math.max(0, amount);
+		if (left / GOLD > 0) {
+			out.add(new ItemStack(ModItems.GOLD_COIN, Math.min(64, left / GOLD)));
 		}
+		left %= GOLD;
+		if (left / SILVER > 0) {
+			out.add(new ItemStack(ModItems.SILVER_COIN, left / SILVER));
+		}
+		if (left % SILVER > 0) {
+			out.add(new ItemStack(ModItems.COPPER_COIN, left % SILVER));
+		}
+		return out;
 	}
 
 	/** "3G 2S 1C" (only the non-zero parts; "0C" for nothing). */

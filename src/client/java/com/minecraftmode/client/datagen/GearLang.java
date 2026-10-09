@@ -44,6 +44,7 @@ final class GearLang {
 		b.add("message.minecraft_mode.ability.no_class", ko ? "직업이 있어야 고유 기술을 쓸 수 있습니다." : "You need a class to use an innate ability.");
 		b.add("message.minecraft_mode.ability.locked", ko ? "레벨 %s에 직업 고유 기술이 열립니다." : "Your innate ability unlocks at level %s.");
 		b.add("message.minecraft_mode.ability.no_anchor", ko ? "갈고리를 걸 곳이 없습니다." : "Nothing to hook onto.");
+		b.add("message.minecraft_mode.ability.en", ko ? "원: 적 %s명의 기척을 느꼈습니다" : "En: you sense %s enemies");
 
 		b.add("screen.minecraft_mode.job.level_bonus", ko ? "레벨 보너스" : "Level bonus");
 		b.add("screen.minecraft_mode.job.innate", ko ? "고유 기술 [%s] %s" : "Innate [%s] %s");

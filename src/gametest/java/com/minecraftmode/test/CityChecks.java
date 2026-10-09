@@ -29,6 +29,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
@@ -42,7 +43,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The capital in a normal world: spawn on the plaza, landmark blocks, the five trainers at their
+ * The capital in a normal world: spawn on the plaza, landmark blocks, every trainer at their
  * posts, the safe-zone rules (no building for non-ops, no PvP, no explosion damage, no hostile
  * spawns), and screenshots of the districts and trainers.
  */
@@ -100,6 +101,8 @@ final class CityChecks {
 			require(level.getBlockState(new BlockPos(-99, base + 5, 30)).is(Blocks.STONE_BRICKS), "west wall missing");
 			require(level.getBlockState(new BlockPos(99, base + 3, 0)).isAir(), "east gate should be open");
 			require(level.getBlockState(new BlockPos(0, base + 3, 99)).isAir(), "south gate should be open");
+			require(level.getBlockState(new BlockPos(-90, base + 2, 50)).is(Blocks.SPRUCE_LOG), "the Urahara Shop is missing");
+			require(level.getBlockState(new BlockPos(85, base + 10, -58)).is(Blocks.CONCRETE.pick(DyeColor.ORANGE)), "the Hunter Association is missing");
 			// the walk from the spawn to the fountain (between the planters) is clear: nothing natural poking through
 			int blocked = 0;
 			for (int x = -8; x <= 8; x++) {
@@ -414,6 +417,8 @@ final class CityChecks {
 		view(context, server, "city_market_guild", new BlockPos(17, base + 7, 28), new BlockPos(17, base + 3, 60));
 		view(context, server, "city_harbor", new BlockPos(38, base + 16, 38), new BlockPos(80, base + 2, 76));
 		view(context, server, "city_archer_park", new BlockPos(-38, base + 12, 58), new BlockPos(-64, base + 2, 86));
+		view(context, server, "city_urahara_shop", new BlockPos(-80, base + 6, 36), new BlockPos(-83, base + 2, 55));
+		view(context, server, "city_hunter_association", new BlockPos(82, base + 7, -34), new BlockPos(85, base + 4, -53));
 
 		for (JobClass job : JobClass.PLAYABLE) {
 			BlockPos home = CityZone.trainerHome(job, base);

@@ -1,5 +1,10 @@
 package com.minecraftmode.entity.boss;
 
+import net.minecraft.core.BlockPos;
+import com.minecraftmode.raid.RaidDamage;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.server.level.ServerPlayer;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.Telegraph;
@@ -41,6 +46,14 @@ public class Gorvath extends RaidBoss {
 			pattern("rockfall", 2, 220, 0, 20, this::rockfall),
 			pattern("shockwave", 2, 280, 0, 40, this::shockwave),
 			pattern("avalanche", 3, 260, 0, 40, this::avalanche)
+		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(
+			mechanic("gorvath_rockslide", 0.8F, 150, 170, this::rockslide),
+			mechanic("gorvath_shoulder", 0.5F, 150, 180, this::shoulder)
 		);
 	}
 
@@ -148,5 +161,71 @@ public class Gorvath extends RaidBoss {
 				}
 			});
 		});
+	}
+
+	/** Rockslide: the peak comes down on everyone Gorvath can see. Hide behind a pillar. */
+	private void rockslide(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.RAVAGER_ROAR, 4.0F, 0.4F);
+		Vec3 c = this.arenaCenter();
+		this.during(150, 5, () -> {
+			if (this.home() != null) {
+				for (BlockPos pillar : Arenas.pillars(this.home())) {
+					Vec3 away = Vec3.atBottomCenterOf(pillar).subtract(this.position()).multiply(1, 0, 1).normalize().scale(2.5);
+					Vec3 behind = Vec3.atBottomCenterOf(pillar).add(away);
+					level.sendParticles(ParticleTypes.HAPPY_VILLAGER, behind.x, behind.y + 0.5, behind.z, 2, 0.4, 0.3, 0.4, 0.0);
+				}
+			}
+			for (int k = 0; k < 6; k++) {
+				double a = this.random.nextDouble() * Math.PI * 2;
+				double r = this.random.nextDouble() * Arenas.RADIUS;
+				level.sendParticles(new BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.STONE.defaultBlockState()), c.x + Math.cos(a) * r, c.y + 14, c.z + Math.sin(a) * r,
+					2, 0.5, 0.2, 0.5, 0.0);
+			}
+		});
+		this.after(150, () -> {
+			Vec3 eye = this.getEyePosition();
+			for (ServerPlayer p : this.fighters(level)) {
+				HitResult hit = level.clip(new ClipContext(eye, p.getEyePosition(), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+				if (hit.getType() == HitResult.Type.MISS) {
+					this.lethal(level, p);
+				}
+			}
+			for (int i = 0; i < 12; i++) {
+				Vec3 drop = c.add((this.random.nextDouble() - 0.5) * Arenas.RADIUS * 1.6, 0, (this.random.nextDouble() - 0.5) * Arenas.RADIUS * 1.6);
+				this.fallFromSky(level, drop, new ItemStack(Items.COBBLESTONE), Fx.Kind.SMOKE, STONE, 12);
+			}
+			this.boom(level, c, 8.0);
+		});
+	}
+
+	/** Shoulder the Mountain: a falling peak that 60% of the party (at least one) must hold up together. */
+	private void shoulder(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.SLAM);
+		this.sound(level, SoundEvents.IRON_GOLEM_ATTACK, 4.0F, 0.3F);
+		Vec3 spot = this.spots(1, 6, Arenas.RADIUS - 6, 8).getFirst();
+		this.mechanicSpots.add(spot);
+		this.during(170, 5, () -> {
+			Telegraph.ring(level, spot, 4.0, 0x60FF60, 1.4F);
+			level.sendParticles(new BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.STONE.defaultBlockState()), spot.x, spot.y + 12, spot.z, 6, 2.0, 0.3, 2.0, 0.0);
+			this.tally(level, "gorvath_shoulder", this.near(level, spot, 4.0).size(), need(this.fighters(level).size()));
+		});
+		this.after(170, () -> {
+			List<ServerPlayer> inside = this.near(level, spot, 4.0);
+			if (inside.size() < need(this.fighters(level).size())) {
+				this.wipe(level, "gorvath_shoulder");
+			} else {
+				for (ServerPlayer p : inside) {
+					RaidDamage.portion(level, p, this, 0.25F);
+				}
+				this.cleared(level, "gorvath_shoulder");
+			}
+			this.boom(level, spot, 4.0);
+		});
+	}
+
+	/** Players a team mechanic needs: 60% of the party, at least one (solo is easy on purpose). */
+	static int need(final int fighters) {
+		return Math.max(1, (int)Math.ceil(fighters * 0.6));
 	}
 }

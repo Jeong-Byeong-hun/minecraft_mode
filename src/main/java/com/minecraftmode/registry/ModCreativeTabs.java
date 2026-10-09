@@ -1,14 +1,16 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.consumable.ConsumableDef;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.quest.Quests;
-import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -63,9 +65,14 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.BLACKSMITH_SHOP);
 					output.accept(ModItems.GROCER_SHOP);
 					output.accept(ModItems.JEWELER_SHOP);
+					output.accept(ModItems.ALCHEMIST_SHOP);
 					output.accept(ModItems.GUILD_SHOP);
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
+					output.accept(ModItems.RETURN_SCROLL);
+					for (ConsumableDef def : Consumables.all()) {
+						output.accept(Consumables.item(def));
+					}
 				})
 				.build()
 		);

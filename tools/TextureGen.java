@@ -96,6 +96,8 @@ public class TextureGen {
 		write("block/grocer_shop_top", shopTop(0x2E8B3A, 0xF2F2F2));
 		write("block/jeweler_shop_side", shopSide(0x6A3D9A, 0xF2F2F2, emblem(GEM)));
 		write("block/jeweler_shop_top", shopTop(0x6A3D9A, 0xF2F2F2));
+		write("block/alchemist_shop_side", shopSide(0x1E6E6A, 0xF2F2F2, emblem(POTION)));
+		write("block/alchemist_shop_top", shopTop(0x1E6E6A, 0xF2F2F2));
 
 		// --- Mob & effect ---
 		write("item/mine_raider_spawn_egg", spawnEgg(0x6B4423, 0xE3B92C, 0x2E1C0F));
@@ -1110,6 +1112,15 @@ public class TextureGen {
 		".HMMD.",
 		"..MD..",
 		"......",
+	};
+
+	static final String[] POTION = {
+		"..CC..",
+		"..CC..",
+		".CRRC.",
+		"CRWRRC",
+		"CRRRrC",
+		".CCCC.",
 	};
 
 	static BufferedImage emblem(final String[] rows) {

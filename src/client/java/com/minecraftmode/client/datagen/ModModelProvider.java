@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.consumable.ConsumableDef;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.gear.ArmorPieceDef;
@@ -38,6 +40,7 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.BLACKSMITH_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.GROCER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.JEWELER_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.ALCHEMIST_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.GUILD_SHOP, TexturedModel.COLUMN);
 		// engraving_table_top / _side / _bottom
 		generators.createTrivialBlock(ModBlocks.ENGRAVING_TABLE, TexturedModel.CUBE_BOTTOM_TOP);
@@ -67,6 +70,10 @@ public class ModModelProvider extends FabricModelProvider {
 		for (Item token : Quests.tokens()) {
 			generators.generateFlatItem(token, ModelTemplates.FLAT_ITEM);
 		}
+		for (ConsumableDef def : Consumables.all()) {
+			generators.generateFlatItem(Consumables.item(def), ModelTemplates.FLAT_ITEM);
+		}
+		generators.generateFlatItem(ModItems.RETURN_SCROLL, ModelTemplates.FLAT_ITEM);
 
 		for (Item tool : new Item[] {
 			ModItems.MYTHRIL_SWORD, ModItems.MYTHRIL_PICKAXE, ModItems.MYTHRIL_AXE, ModItems.MYTHRIL_SHOVEL, ModItems.MYTHRIL_HOE

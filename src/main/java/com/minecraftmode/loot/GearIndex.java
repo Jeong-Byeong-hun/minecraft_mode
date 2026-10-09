@@ -20,7 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Every piece of class gear (115 weapons, 200 armor pieces) with its level, and the split between
+ * Every piece of class gear (161 weapons, 280 armor pieces) with its level, and the split between
  * the shop and drops: for each class and 10-level bracket the guild sells the lowest-level weapon
  * of the bracket and one armor piece (head, chest, legs, feet in turn); everything else only drops.
  */

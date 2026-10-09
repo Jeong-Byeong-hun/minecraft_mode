@@ -10,7 +10,10 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
-/** South row: the Archer park and range (west), the market and Adventurers' Guild (center), the harbor with a pirate ship (east). */
+/**
+ * South row: the Archer park and range with the Urahara Shop (west), the market and Adventurers' Guild (center), the harbor with a
+ * pirate ship (east).
+ */
 final class CitySouth {
 	static void build(final Build b) {
 		archerPark(b);
@@ -33,7 +36,8 @@ final class CitySouth {
 				int z = gz + (h / 3) % 3 - 1;
 				boolean lodge = x >= -63 && x <= -41 && z >= 45 && z <= 63;
 				boolean range = x >= -96 && x <= -62 && z >= 74 && z <= 96;
-				if (!lodge && !range) {
+				boolean shop = x >= -94 && x <= -72 && z >= 45 && z <= 64;
+				if (!lodge && !range && !shop) {
 					boolean birch = h % 4 == 0;
 					b.tree(x, z, 5 + h % 3, birch ? Blocks.BIRCH_LOG : Blocks.OAK_LOG, birch ? Blocks.BIRCH_LEAVES : Blocks.OAK_LEAVES);
 				}
@@ -74,6 +78,46 @@ final class CitySouth {
 			b.fill(-94, 0, 78, -94, 3, 94, Blocks.HAY_BLOCK);
 			b.fill(-68, -1, 78, -68, -1, 94, Blocks.SPRUCE_PLANKS);
 		}
+		uraharaShop(b);
+	}
+
+	/** The Soul Reaper trainer's post: a little candy shop with a striped green-and-white awning (Bleach). */
+	private static void uraharaShop(final Build b) {
+		int x0 = -90;
+		int x1 = -76;
+		int z0 = 50;
+		int z1 = 60;
+		if (!b.touches(x0 - 2, z0 - 3, x1 + 2, z1 + 2)) {
+			return;
+		}
+		b.fill(x0, -1, z0, x1, -1, z1, Blocks.SPRUCE_PLANKS);
+		b.walls(x0, 0, z0, x1, 4, z1, Blocks.DARK_OAK_PLANKS);
+		b.air(x0 + 1, 0, z0 + 1, x1 - 1, 4, z1 - 1);
+		for (int x = x0; x <= x1; x += 7) {
+			b.fill(x, 0, z0, x, 4, z0, Build.log(Blocks.SPRUCE_LOG, Direction.Axis.Y));
+			b.fill(x, 0, z1, x, 4, z1, Build.log(Blocks.SPRUCE_LOG, Direction.Axis.Y));
+		}
+		// shop front: paper screens either side of the door, a striped awning and the sign board
+		for (int x = x0 + 1; x <= x1 - 1; x++) {
+			if (Math.abs(x + 83) > 1) {
+				b.fill(x, 1, z0, x, 2, z0, Blocks.STAINED_GLASS_PANE.pick(DyeColor.WHITE));
+			}
+			b.set(x, 3, z0 - 1, Build.wool((x & 1) == 0 ? DyeColor.GREEN : DyeColor.WHITE));
+		}
+		b.fill(x0 + 3, 4, z0 - 1, x1 - 3, 4, z0 - 1, Blocks.DARK_OAK_PLANKS);
+		b.gableRoof(x0, z0, x1, z1, 5, Blocks.DEEPSLATE_TILE_STAIRS, Blocks.DARK_OAK_PLANKS, true);
+		b.door(-83, 0, z0, Blocks.SPRUCE_DOOR, Direction.NORTH);
+		// candy shelves, a tea table and the trapdoor to the training ground below
+		for (int x = x0 + 1; x <= x1 - 1; x += 2) {
+			b.set(x, 0, z1 - 1, Blocks.BARREL);
+			b.set(x, 1, z1 - 1, (x / 2 & 1) == 0 ? Blocks.CAKE : Blocks.DECORATED_POT);
+		}
+		b.set(x0 + 2, 0, z0 + 2, Blocks.SPRUCE_TRAPDOOR);
+		b.set(x1 - 3, 0, z0 + 4, Blocks.SPRUCE_SLAB);
+		b.set(x1 - 2, 0, z0 + 4, Blocks.POTTED_BAMBOO);
+		b.lantern(-83, 4, 55, true, false);
+		b.lantern(x0 + 2, 2, z0 - 1, true, false);
+		b.lantern(x1 - 2, 2, z0 - 1, true, false);
 	}
 
 	// ------------------------------------------------------------------ market and guild
@@ -91,7 +135,7 @@ final class CitySouth {
 		stall(b, -24, 58, Build.wool(DyeColor.ORANGE), ModBlocks.BLACKSMITH_SHOP);
 		stall(b, -24, 68, Build.wool(DyeColor.GREEN), ModBlocks.GROCER_SHOP);
 		stall(b, -14, 48, Build.wool(DyeColor.PURPLE), ModBlocks.JEWELER_SHOP);
-		stall(b, -14, 58, Build.wool(DyeColor.YELLOW), Blocks.HAY_BLOCK);
+		stall(b, -14, 58, Build.wool(DyeColor.CYAN), ModBlocks.ALCHEMIST_SHOP);
 		stall(b, -14, 68, Build.wool(DyeColor.LIGHT_BLUE), Blocks.MELON);
 		// Adventurers' Guild: guild shop and engraving tables
 		Houses.house(b, 8, 48, 26, 70, Style.CAPITAL, Direction.WEST, 2);

@@ -9,6 +9,7 @@ import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModEffects;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +119,7 @@ public final class CombatHooks {
 	// ------------------------------------------------------------------ damage adjustment
 
 	public static float modifyIncoming(final LivingEntity victim, final DamageSource source, final float amount) {
-		if (!(victim.level() instanceof ServerLevel level)) {
+		if (!(victim.level() instanceof ServerLevel level) || RaidDamage.is(source)) {
 			return amount;
 		}
 		long now = level.getGameTime();
@@ -273,7 +274,7 @@ public final class CombatHooks {
 			return false;
 		}
 		if (!(victim instanceof ServerPlayer player) || source.getEntity() == null || source.getEntity() == player
-			|| source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
+			|| source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || RaidDamage.is(source)) {
 			return true;
 		}
 		JobData data = JobProgression.get(player);

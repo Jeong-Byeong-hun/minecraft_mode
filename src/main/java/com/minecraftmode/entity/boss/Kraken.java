@@ -1,5 +1,7 @@
 package com.minecraftmode.entity.boss;
 
+import java.util.ArrayList;
+import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.Telegraph;
@@ -51,6 +53,14 @@ public class Kraken extends RaidBoss {
 			}),
 			pattern("whirlpool", 2, 260, 0, 50, this::whirlpool),
 			pattern("crushing_tide", 3, 230, 0, 44, this::crushingTide)
+		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(
+			mechanic("kraken_ink_marks", 0.8F, 135, 160, this::inkMarks),
+			mechanic("kraken_anchors", 0.45F, 150, 200, this::anchors)
 		);
 	}
 
@@ -142,5 +152,65 @@ public class Kraken extends RaidBoss {
 				}
 			});
 		}
+	}
+
+	/** Ink Marks: every player is marked; each mark kills everyone else within 6 blocks. Spread out (solo is safe). */
+	private void inkMarks(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.ROAR);
+		this.sound(level, SoundEvents.SQUID_SQUIRT, 4.0F, 0.4F);
+		List<ServerPlayer> marked = new ArrayList<>(this.fighters(level));
+		this.during(150, 5, () -> {
+			for (ServerPlayer m : marked) {
+				if (m.isAlive() && m.level() == level) {
+					Telegraph.ring(level, m.position(), 6.0, Telegraph.PURPLE, 1.0F);
+					level.sendParticles(ParticleTypes.SQUID_INK, m.getX(), m.getY() + 2.4, m.getZ(), 3, 0.2, 0.1, 0.2, 0.0);
+				}
+			}
+		});
+		this.after(150, () -> {
+			for (ServerPlayer m : marked) {
+				if (!m.isAlive() || m.level() != level) {
+					continue;
+				}
+				for (ServerPlayer other : this.fighters(level)) {
+					if (other != m && other.position().subtract(m.position()).horizontalDistance() <= 6.0) {
+						this.lethal(level, other);
+					}
+				}
+				RaidDamage.portion(level, m, this, 0.2F);
+				level.sendParticles(ParticleTypes.SQUID_INK, m.getX(), m.getY() + 1, m.getZ(), 80, 2.5, 1.0, 2.5, 0.1);
+			}
+			this.sound(level, SoundEvents.GENERIC_SPLASH, 4.0F, 0.5F);
+		});
+	}
+
+	/** Anchor Chains: one player must hold each anchor (as many anchors as players, up to 3) or the ship goes down. */
+	private void anchors(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.SUMMON);
+		this.sound(level, SoundEvents.CHAIN_PLACE, 4.0F, 0.5F);
+		int n = Math.min(3, Math.max(1, this.fighters(level).size()));
+		List<Vec3> anchors = this.spots(n, Arenas.POOL_RADIUS + 5, Arenas.RADIUS - 3, 4);
+		this.mechanicSpots.addAll(anchors);
+		Fx chain = new Fx(Fx.Kind.RING, 0xB0B8C0);
+		this.during(190, 5, () -> {
+			int manned = 0;
+			for (Vec3 a : anchors) {
+				Telegraph.ring(level, a, 2.5, 0x60FF60, 1.4F);
+				chain.column(level, a, 4.0);
+				if (!this.near(level, a, 2.5).isEmpty()) {
+					manned++;
+				}
+			}
+			this.tally(level, "kraken_anchors", manned, anchors.size());
+		});
+		this.after(190, () -> {
+			long manned = anchors.stream().filter(a -> !this.near(level, a, 2.5).isEmpty()).count();
+			if (manned < anchors.size()) {
+				this.wipe(level, "kraken_anchors");
+			} else {
+				this.cleared(level, "kraken_anchors");
+			}
+			this.sound(level, SoundEvents.ELDER_GUARDIAN_CURSE, 4.0F, 0.5F);
+		});
 	}
 }

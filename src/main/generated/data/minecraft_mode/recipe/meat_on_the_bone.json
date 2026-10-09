@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft:cooked_beef",
+    "minecraft:cooked_beef",
+    "minecraft:bone"
+  ],
+  "result": {
+    "id": "minecraft_mode:meat_on_the_bone"
+  }
+}

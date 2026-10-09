@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:heavens_arena"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:heavens_arena"
+      }
+    ]
+  }
+}

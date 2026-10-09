@@ -14,10 +14,10 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 ## Layout
 
-- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, coin drops), `enchantment/` + `worldgen/` (bootstraps used by datagen), `job/` (class system, `job/quest/` advancement trials, `job/gear/` class armor and stat totals), `loot/` (shop split, drops, ether, evolution), `entity/named/` + `entity/boss/` (named monsters, raid bosses), `raid/` (raid dimension, arenas, parties, instances, loot sessions), `city/` (the capital at 0, 0), `network/`, `command/`, `mixin/`.
+- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, wallet), `consumable/` (the 40 consumables and their buffs), `enchantment/` + `worldgen/` (bootstraps used by datagen; `worldgen/lair/` named lairs), `job/` (class system, `job/quest/` advancement trials, `job/gear/` class armor and stat totals), `loot/` (shop split, drops, ether, evolution), `entity/named/` + `entity/boss/` (named monsters, raid bosses), `raid/` (raid dimension, arenas, parties, instances, loot sessions), `city/` (the capital at 0, 0), `network/`, `command/`, `mixin/`.
 - `src/client` — renderer, model layer, **datagen providers** (`client/datagen`).
 - `src/main/generated` — datagen output, committed. Never hand-edit; change the provider and run `./gradlew runDatagen`.
-- `src/gametest` — client game test (`./gradlew runClientGameTest`); keep it passing after changes.
+- `src/gametest` — client game tests (`./gradlew runClientGameTest` runs every entrypoint of `src/gametest/resources/fabric.mod.json` in order, about 20 minutes); keep them passing after changes. Put a test you are iterating on first in that list, then restore the order.
 - `tools/TextureGen.java` (+ `tools/ClassArt.java`, `tools/QuestArt.java` for trial tokens and trainer skins) — draws every texture except class weapons from scratch (no vanilla assets); run it instead of editing PNGs by hand. Class weapon textures are drawn at datagen time by `client/datagen/art` (`WeaponArtist`, `Shapes`, `Bows`) from each weapon's archetype, tier and `WeaponArt` colors; `runDatagen` also writes a review sheet to `build/weapon-preview.png`.
 
 ## Rules
@@ -33,7 +33,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 ## Class system (`job/`)
 
-- `JobClass` (5 classes x 4 tiers, titles + passives in en/ko), `JobData` (player attachment `ModAttachments.JOB`: class, tier, level, exp, MP, cooldowns; synced to the owner, kept on death), `JobProgression` (exp curve, tier levels 10/25/45/70; `advance` only checks level — items are the trial's job), `JobStats` (max MP/regen, attribute modifiers from level, passives and the held weapon's engravings), `JobEvents` (exp/essence from kills and ores, MP tick, Avalon, death penalty).
+- `JobClass` (7 classes x 4 tiers, titles + passives in en/ko; append new classes at the end — the network codec uses the ordinal), `JobData` (player attachment `ModAttachments.JOB`: class, tier, level, exp, MP, cooldowns; synced to the owner, kept on death), `JobProgression` (exp curve, tier levels 10/25/45/70; `advance` only checks level — items are the trial's job), `JobStats` (max MP/regen, attribute modifiers from level, passives and the held weapon's engravings), `JobEvents` (exp/essence from kills and ores, MP tick, Avalon, death penalty).
 - Content: one file per class in `job/content/` built with the `ClassContent` DSL (`weapon(...)` + `skill(...)` + `Actions.*`). Startup validates tier/level ranges and skill counts (3 per weapon, 4 at tier 4); ids are saved item/cooldown keys — never rename them. Tooltips, lang and docs are generated from these definitions.
 - Skills: `job/skill/Actions` holds every building block with its own tooltip template (`Actions.texts()` -> lang). Add new behavior there, not in content files. Damage from skills/shots goes through `CombatHooks.deal` with a `DamageKind`; `LivingEntityMixin` feeds `CombatHooks.modifyIncoming` (passives, engravings, marks, stances, vulnerability). Delayed steps use `SkillScheduler`; `SkillContext.valid()` must be checked in delayed code.
 - A class weapon is "active" only when class, tier and level all match (`JobWeapons.isActive`); otherwise it is a plain weapon (basic attack/shot only, no skills, no engravings).
@@ -44,7 +44,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 ## Trials and trainers (`job/quest/`, `entity/ClassTrainer`)
 
-- Choosing a class and every advancement is a trial from that class's `ClassTrainer` (no advance button). `Quests` defines the 20 trials (`<class>_<tier>`) and their 20 trial tokens; a trial = kill goals + token count + materials (always essence; tier 3 adds a golem core, some tier 4 a boss item). Quest and token ids are saved keys — never rename them.
+- Choosing a class and every advancement is a trial from that class's `ClassTrainer` (no advance button). `Quests` defines the 28 trials (`<class>_<tier>`) and their 28 trial tokens; a trial = kill goals + token count + materials (always essence; tier 3 adds a golem core, some tier 4 a boss item). Quest and token ids are saved keys — never rename them.
 - `QuestData` (attachment `ModAttachments.QUEST`, synced to the owner, kept on death): active trial id, kill progress, `visitedCity`. `QuestService` holds the rules (status per trainer, accept/complete/abandon, kill credit on `AFTER_DEATH`); screens read the same synced data. Tokens only drop for a player whose trial needs them and go straight into the inventory; bosses (`Quests.BOSSES`) credit everyone with the trial within 64 blocks.
 - Trainer actions come in as `QuestActionPayload` and need the trainer within 8 blocks; right-clicking a trainer sends `OpenTrainerPayload` (client `TrainerScreen`).
 - Trial lang (trainer names/greetings, trial texts, tokens, guide book) lives in `client/datagen/TrialLang`; `ClassDocProvider` writes the trial table into `docs/CLASSES.md`.
@@ -52,13 +52,27 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 ## The capital (`city/`)
 
 - Stormhold is generated at 0, 0 in the overworld of noise worlds only (flat test worlds have none). `ChunkGeneratorMixin` calls `CityGenerator` during decoration: chunks inside `CityZone.CORE` are flattened to `CityZone.baseY` (median natural height, cached per seed) and built; vanilla features/structures there are suppressed except ores; a `BLEND` ring eases terrain back. Every write goes through `Build`, which clips to the chunk being decorated — buildings must be pure functions of coordinates (no randomness that differs per chunk, no reading neighbour chunks).
-- Districts: `CityCore` (roads, plaza + fountain, walls, gates, lamps), `CityNorth` (keep + raid gate, mage tower, Enchanter's Hall, warrior arena), `CityMiddle` (old town + rogue Shadow Hall, cathedral, homes), `CitySouth` (archer park, market + Adventurers' Guild with shops/engraving tables, forge, harbor + pirate ship). Trainer posts are `CityZone.trainerHome`; `CityServices.keepTrainers` (every 100 ticks) spawns missing trainers, removes duplicates and brings wanderers back. The hall's four enchanting tables (15 bookshelves each, level 30) and the city anvils are listed in `CityZone.enchantingTables/anvils`; `CityServices.keepAnvils` replaces worn anvils because nobody can place blocks in the city.
+- Districts: `CityCore` (roads, plaza + fountain, walls, gates, lamps), `CityNorth` (keep + raid gate, mage tower, Enchanter's Hall, warrior arena, Hunter Association), `CityMiddle` (old town + rogue Shadow Hall, cathedral, homes), `CitySouth` (archer park + Urahara Shop, market + alchemist + Adventurers' Guild with shops/engraving tables, forge, harbor + pirate ship). Trainer posts are `CityZone.trainerHome`; `CityServices.keepTrainers` (every 100 ticks) spawns missing trainers, removes duplicates and brings wanderers back. The hall's four enchanting tables (15 bookshelves each, level 30) and the city anvils are listed in `CityZone.enchantingTables/anvils`; `CityServices.keepAnvils` replaces worn anvils because nobody can place blocks in the city.
 - Multiplayer-first: world spawn is the plaza (respawn radius 0); first join teleports there and gives the guide book. Inside the walls (`CityZone.inside`) the city is a safe zone: no hostile natural spawns (`NaturalSpawnerMixin`), city guards (`CityServices.driveOffHostiles`, every second) remove hostile mobs that get in anyway (climbing spiders, cave wanderers, eggs; skill summons and NoAI mobs are exempt), no building/breaking for non-op survival players (`PlayerMixin`, `BlockItemMixin`), no PvP (`CombatHooks`), no explosion block damage (`ServerExplosionMixin`).
 - `NormalWorldClientGameTest` runs `CityChecks` (layout, trainers, safe zone, district/trainer screenshots) before moving to natural terrain for the ore/spawn checks.
 
+## Economy, consumables and raids
+
+- Coins never sit in the inventory: `Wallet` (attachment `ModAttachments.WALLET`, copper) deposits them every 10 ticks; `Coins.total/take/give` see wallet + inventory. Shops pay from the wallet through `MerchantMenuMixin` (fills the payment slots). `KEEP_INVENTORY` is forced on at server start.
+- Coin sinks scale with `GearShop.bracketPrice` (raid fee, engraving/reroll/removal, evolution, armor reroll), so they grow with level. Keep new sinks on that curve.
+- `consumable/Consumables` defines the 40 consumables (`ConsumableDef`, tiers 1-5; lasting effects are 10 minutes = `Consumables.LONG`); buffs are marker effects whose stats `BuffEffects` feeds into `GearStats`. Icons are drawn by `client/datagen/art/ConsumableArtist`. Item ids are saved keys. `docs/CONSUMABLES.md` is generated.
+- Raid bosses declare their mechanics in `RaidBoss.mechanics()` (first at an HP fraction, then on an interval, never closer than `MECHANIC_GAP` = 45 s). Mechanic damage uses `RaidDamage` (bypasses armor and resistance, not totems/feather/Avalon). Team mechanics must scale their requirement with party size so solo players can clear them.
+- Soul Reaper and Hunter passives are stat lines in `job/gear/ClassPassives` (added up by `GearStats`); the first five classes keep theirs as rules in `CombatHooks`/`JobStats`.
+
+## Named lairs (`worldgen/lair/`)
+
+- `NamedLairs` defines one lair per named monster (`LairDef`: setting, landmark shape, palette, biomes, `LairMobs` spawn list, decor). All 22 share one structure set (`minecraft_mode:named_lairs`, one lair per cell, excluded near villages, the capital and the End's main island). Structures and the set are datagen (`bootstrapStructures/bootstrapSets`).
+- `LairPiece` builds everything in `postProcess` clipped to the chunk; the maze (`Maze`) and goal are pure functions of the piece's seed. The piece box includes `GROUNDS` blocks of land around the lair; the structure's MONSTER spawn override applies there, and `NamedMob.checkSpawnRules` relaxes height band and spacing inside its own lair (`NamedLairs.at`).
+- Loot is `LairLoot` (coins always + at least one reward, gear share `GEAR_SHARE`). `/place structure` does not register structure references, so `NamedLairs.at` only sees naturally generated lairs (`NormalWorldClientGameTest` locates one); `LairClientGameTest` builds every shape with `/place`.
+
 ## Content direction
 
-- New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece and Fate are already used). Keep Korean names faithful to the official Korean translations.
+- New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece, Fate, Bleach — Soul Reaper — and Hunter x Hunter — Hunter — are already used; Naruto is next). Keep Korean names faithful to the official Korean translations.
 
 ## Gear, named monsters, raids
 

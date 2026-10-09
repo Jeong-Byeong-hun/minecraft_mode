@@ -1,5 +1,6 @@
 package com.minecraftmode.entity.named;
 
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.combat.Attacks;
@@ -9,7 +10,11 @@ import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.job.weapon.JobWeaponItem;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -71,6 +76,8 @@ public class NamedMob extends CreatureMob {
 	private static final int GLOBAL_COOLDOWN = 30;
 	/** Only one named monster within this many blocks. */
 	private static final double SPAWN_SPACING = 96.0;
+	/** Spacing between named monsters inside their own lair. */
+	private static final double LAIR_SPACING = 20.0;
 
 	private int namedLevel;
 	private int @Nullable [] cooldowns;
@@ -123,10 +130,13 @@ public class NamedMob extends CreatureMob {
 			return false;
 		}
 		if (reason == EntitySpawnReason.NATURAL || reason == EntitySpawnReason.CHUNK_GENERATION) {
-			if (!def.habitat().allows(pos.getY())) {
+			// in its own lair a named monster ignores its usual height band and keeps much less distance
+			LairDef lair = NamedLairs.at(level.getLevel(), pos);
+			boolean home = lair != null && lair.id().equals(def.id());
+			if (!home && !def.habitat().allows(pos.getY())) {
 				return false;
 			}
-			if (!level.getEntitiesOfClass(NamedMob.class, new AABB(pos).inflate(SPAWN_SPACING)).isEmpty()) {
+			if (!level.getEntitiesOfClass(NamedMob.class, new AABB(pos).inflate(home ? LAIR_SPACING : SPAWN_SPACING)).isEmpty()) {
 				return false;
 			}
 		}
@@ -276,6 +286,15 @@ public class NamedMob extends CreatureMob {
 		}
 		NamedDef def = this.def();
 		this.dropGlowing(level, GearDrops.ether(def.lo(), def.hi(), this.getRandom()));
+		// coins grow with the level: about 4 copper at Lv 20, about a gold coin at Lv 90
+		int copper = Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, this.namedLevel)) * 0.15F * (0.6F + this.getRandom().nextFloat() * 0.8F)));
+		for (ItemStack coins : Coins.asItems(copper)) {
+			this.spawnAtLocation(level, coins);
+		}
+		ItemStack supply = Consumables.namedDrop(Math.max(def.lo(), this.namedLevel), this.getRandom());
+		if (!supply.isEmpty()) {
+			this.dropGlowing(level, supply);
+		}
 		ItemStack gear = GearDrops.namedDrop(killer, def.lo(), def.hi(), this.getRandom());
 		if (!gear.isEmpty()) {
 			this.dropGlowing(level, gear);

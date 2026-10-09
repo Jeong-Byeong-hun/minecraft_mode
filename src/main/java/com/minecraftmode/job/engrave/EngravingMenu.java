@@ -1,7 +1,10 @@
 package com.minecraftmode.job.engrave;
 
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
@@ -52,8 +55,8 @@ public class EngravingMenu extends AbstractContainerMenu {
 			EngravingMenu.this.slotsChanged(this);
 		}
 	};
-	/** offer 0..2 (engraving ordinal, -1 = none), engrave cost, reroll cost, remove cost */
-	private final ContainerData data = new SimpleContainerData(6);
+	/** offer 0..2 (engraving ordinal, -1 = none), engrave / reroll / remove essence, then the same three in coins (copper) */
+	private final ContainerData data = new SimpleContainerData(9);
 
 	public EngravingMenu(final int containerId, final Inventory inventory) {
 		this(containerId, inventory, ContainerLevelAccess.NULL);
@@ -102,6 +105,18 @@ public class EngravingMenu extends AbstractContainerMenu {
 		return this.data.get(5);
 	}
 
+	public int engraveCoins() {
+		return this.data.get(6);
+	}
+
+	public int rerollCoins() {
+		return this.data.get(7);
+	}
+
+	public int removeCoins() {
+		return this.data.get(8);
+	}
+
 	@Override
 	public void slotsChanged(final Container container) {
 		super.slotsChanged(container);
@@ -112,7 +127,7 @@ public class EngravingMenu extends AbstractContainerMenu {
 		ItemStack stack = this.weapon();
 		ClassGear gear = ClassGear.of(stack);
 		if (gear == null) {
-			for (int i = 0; i < 6; i++) {
+			for (int i = 0; i < 9; i++) {
 				this.data.set(i, i < 3 ? -1 : 0);
 			}
 			return;
@@ -125,6 +140,11 @@ public class EngravingMenu extends AbstractContainerMenu {
 		this.data.set(3, (gear.isWeapon() ? 4 : 3) * gear.tier() * (engravings.lines().size() + 1));
 		this.data.set(4, 2 * gear.tier());
 		this.data.set(5, 2 * gear.tier());
+		// coins: a quarter of the bracket's guild price per line already on the item (plus one)
+		int price = GearShop.bracketPrice(gear.bracket());
+		this.data.set(6, Math.max(1, price * (engravings.lines().size() + 1) / 4));
+		this.data.set(7, Math.max(1, price / 6));
+		this.data.set(8, Math.max(1, price / 4));
 	}
 
 	public static Engravings engravings(final ItemStack stack) {
@@ -152,14 +172,18 @@ public class EngravingMenu extends AbstractContainerMenu {
 			return false;
 		}
 		int cost = engrave ? this.engraveCost() : buttonId == BUTTON_REROLL ? this.rerollCost() : this.removeCost();
+		int coins = engrave ? this.engraveCoins() : buttonId == BUTTON_REROLL ? this.rerollCoins() : this.removeCoins();
 		if (engrave && (this.offer(buttonId) == null || engravings.lines().size() >= gear.maxLines())) {
 			return false;
 		}
-		if (!player.isCreative() && essence(player.getInventory()) < cost) {
+		if (!player.isCreative() && (essence(player.getInventory()) < cost || Coins.total(player) < coins)) {
 			return false;
 		}
 		if (player.level().isClientSide()) {
 			return true;
+		}
+		if (!player.isCreative() && !Wallet.take(player, coins)) {
+			return false;
 		}
 		pay(player, cost);
 		int seed = player.getRandom().nextInt();

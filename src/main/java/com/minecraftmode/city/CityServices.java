@@ -95,11 +95,14 @@ public final class CityServices {
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.city.welcome").withStyle(ChatFormatting.GOLD));
 	}
 
-	/** Adventurer's handbook: city map, classes, trials, essence. Pages are translated on the client. */
+	/** Number of handbook pages ({@code book.minecraft_mode.guide.page1..N}). */
+	public static final int GUIDE_PAGES = 9;
+
+	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet. Pages are translated on the client. */
 	public static ItemStack guideBook() {
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 		List<Filterable<Component>> pages = new ArrayList<>();
-		for (int i = 1; i <= 6; i++) {
+		for (int i = 1; i <= GUIDE_PAGES; i++) {
 			pages.add(Filterable.passThrough(Component.translatable("book.minecraft_mode.guide.page" + i)));
 		}
 		book.set(DataComponents.WRITTEN_BOOK_CONTENT, new WrittenBookContent(Filterable.passThrough("Stormhold"), "Stormhold", 0, pages, true));

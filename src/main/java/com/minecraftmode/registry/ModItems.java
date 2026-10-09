@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.consumable.ReturnScrollItem;
 import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.ModMaterials;
 import java.util.function.Function;
@@ -64,6 +65,8 @@ public final class ModItems {
 	public static final Item PROJECTILE_HARPOON = register("projectile_harpoon");
 
 	public static final Item EVOLUTION_ETHER = register("evolution_ether", EvolutionEtherItem::new, new Item.Properties().rarity(Rarity.EPIC));
+	/** Five seconds of reading, then back to the capital (general store). */
+	public static final Item RETURN_SCROLL = register("return_scroll", ReturnScrollItem::new, new Item.Properties().stacksTo(16));
 
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(
@@ -87,6 +90,7 @@ public final class ModItems {
 	public static final Item BLACKSMITH_SHOP = registerBlockItem(ModBlocks.BLACKSMITH_SHOP);
 	public static final Item GROCER_SHOP = registerBlockItem(ModBlocks.GROCER_SHOP);
 	public static final Item JEWELER_SHOP = registerBlockItem(ModBlocks.JEWELER_SHOP);
+	public static final Item ALCHEMIST_SHOP = registerBlockItem(ModBlocks.ALCHEMIST_SHOP);
 	public static final Item GUILD_SHOP = registerBlockItem(ModBlocks.GUILD_SHOP);
 	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
 

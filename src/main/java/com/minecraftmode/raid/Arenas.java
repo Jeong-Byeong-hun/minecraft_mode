@@ -37,6 +37,16 @@ public final class Arenas {
 		return theme == ArenaTheme.SUNKEN_SHIP ? Vec3.atBottomCenterOf(center).add(0, -1.5, 0) : Vec3.atBottomCenterOf(center).add(0, 0, -5);
 	}
 
+	/** Centers of the eight 3x3 pillars (cover from line-of-sight attacks). */
+	public static java.util.List<BlockPos> pillars(final BlockPos center) {
+		java.util.List<BlockPos> out = new java.util.ArrayList<>();
+		for (int k = 0; k < 8; k++) {
+			double a = Math.PI / 4 * k + Math.PI / 8;
+			out.add(center.offset((int)Math.round(Math.cos(a) * (RADIUS - 4)), 0, (int)Math.round(Math.sin(a) * (RADIUS - 4))));
+		}
+		return out;
+	}
+
 	public static boolean inside(final BlockPos center, final Vec3 pos, final double margin) {
 		double dx = pos.x - center.getX() - 0.5;
 		double dz = pos.z - center.getZ() - 0.5;

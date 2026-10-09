@@ -4,6 +4,9 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.LairPiece;
+import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +20,10 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -33,6 +39,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 /**
  * Checks what the superflat test cannot: the capital at 0, 0 ({@link CityChecks}), then, away from
@@ -65,6 +73,8 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			checkSpawnRules(context, server, connection);
 			checkArmor(context, server, connection);
 			List<BlockPos> raiders = soakNaturalSpawns(context, server, connection);
+			checkNaturalLair(context, server, connection);
+			checkUndergroundLair(context, server);
 			screenshots(context, server, exposedMythril, raiders);
 		}
 	}
@@ -292,6 +302,116 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			MinecraftMode.LOGGER.warn("[normal] no mine raider spawned during the soak; spawn rules were still verified above");
 		}
 		return raiders;
+	}
+
+	// ------------------------------------------------------------ named lairs
+
+	/** The world places lairs by itself: the locator finds one, and standing in it counts as its grounds. */
+	private static void checkNaturalLair(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		BlockPos found = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			var registry = level.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+			List<Holder<Structure>> lairs = NamedLairs.all().stream().<Holder<Structure>>map(d -> registry.getOrThrow(d.key())).toList();
+			var nearest = level.getChunkSource().getGenerator().findNearestMapStructure(level, HolderSet.direct(lairs), new BlockPos(600, 80, 300), 64, false);
+			return nearest == null ? null : nearest.getFirst();
+		});
+		require(found != null, "no named lair within 64 chunks of 600, 300");
+		BlockPos center = found.offset(8, 0, 8);
+		server.runCommand("gamemode spectator @p");
+		server.runCommand("tp @p " + center.getX() + " 220 " + (center.getZ() + 70));
+		context.waitTicks(20);
+		connection.waitForChunksRender();
+		String lair = null;
+		for (int i = 0; i < 30 && lair == null; i++) {
+			lair = server.computeOnServer(s -> {
+				ServerLevel level = s.overworld();
+				if (!level.hasChunk(center.getX() >> 4, center.getZ() >> 4)) {
+					return null;
+				}
+				int y = level.getHeight(Heightmap.Types.WORLD_SURFACE, center.getX(), center.getZ());
+				LairDef def = NamedLairs.at(level, new BlockPos(center.getX(), y, center.getZ()));
+				return def == null ? null : def.id() + "@" + y;
+			});
+			if (lair == null) {
+				context.waitTicks(20);
+			}
+		}
+		require(lair != null, "the lair grounds at " + center + " were not recognised");
+		int ground = Integer.parseInt(lair.substring(lair.indexOf('@') + 1));
+		server.runCommand("time set noon");
+		context.runOnClient(minecraft -> minecraft.options.renderDistance().set(10));
+		server.runOnServer(s -> s.getPlayerList().setViewDistance(10));
+		server.runCommand("tp @p " + (center.getX() + 55) + " " + (ground + 40) + " " + (center.getZ() + 75));
+		context.waitTicks(200);
+		server.runCommand("tp @p " + (center.getX() + 56) + " " + (ground + 40) + " " + (center.getZ() + 75));
+		context.waitTicks(10);
+		context.getInput().lookAt(new BlockPos(center.getX(), ground + 8, center.getZ()));
+		context.waitTicks(60);
+		context.takeScreenshot("lair_natural");
+		context.runOnClient(minecraft -> minecraft.options.renderDistance().set(5));
+		server.runOnServer(s -> s.getPlayerList().setViewDistance(5));
+		server.runCommand("gamemode creative @p");
+		MinecraftMode.LOGGER.info("[normal] natural lair {} near {}", lair, center);
+	}
+
+	/** An underground lair: the maze is sealed far below, a shaft with a spiral stair leads up into a beacon tower. */
+	private static void checkUndergroundLair(final ClientGameTestContext context, final TestServerContext server) {
+		LairDef def = NamedLairs.def("cave_troll");
+		// lairs are centered on the middle of their start chunk
+		int x = (-700 >> 4) * 16 + 8;
+		int z = (600 >> 4) * 16 + 8;
+		int reach = def.size() / 2 + LairPiece.APRON + LairPiece.GROUNDS + 8;
+		server.runCommand("forceload add " + (x - reach) + " " + (z - reach) + " " + (x + reach) + " " + (z + reach));
+		for (int i = 0; i < 120; i++) {
+			boolean loaded = server.computeOnServer(s -> {
+				for (int cx = (x - reach) >> 4; cx <= (x + reach) >> 4; cx++) {
+					for (int cz = (z - reach) >> 4; cz <= (z + reach) >> 4; cz++) {
+						if (!s.overworld().hasChunk(cx, cz)) {
+							return false;
+						}
+					}
+				}
+				return true;
+			});
+			if (loaded) {
+				break;
+			}
+			context.waitTicks(10);
+		}
+		server.runCommand("place structure minecraft_mode:" + def.structureId() + " " + x + " 0 " + z);
+		context.waitTicks(5);
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			int half = def.size() / 2;
+			int floor = def.depth();
+			int chests = 0;
+			for (int bx = x - half; bx <= x + half; bx++) {
+				for (int bz = z - half; bz <= z + half; bz++) {
+					if (level.getBlockState(new BlockPos(bx, floor + 1, bz)).is(Blocks.CHEST)) {
+						chests++;
+					}
+				}
+			}
+			require(chests == 1, "the underground lair should have one goal chest at Y " + (floor + 1) + ", found " + chests);
+			int sz = LairPiece.shaftZ(def, z);
+			int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, sz) - 1;
+			require(level.getBlockState(new BlockPos(x, top, sz)).is(def.palette().light()), "the tower should end in a beacon light, got "
+				+ level.getBlockState(new BlockPos(x, top, sz)));
+			int stairs = 0;
+			for (int by = floor + 1; by < top - 24; by++) {
+				for (int dx = -1; dx <= 1; dx++) {
+					for (int dz = -1; dz <= 1; dz++) {
+						if (level.getBlockState(new BlockPos(x + dx, by, sz + dz)).getBlock() == def.palette().stairs()) {
+							stairs++;
+						}
+					}
+				}
+			}
+			require(stairs >= (top - 24 - floor) * 3 / 4, "the shaft should have a stair on almost every level, got " + stairs);
+			return "floor " + floor + ", tower top " + top + ", " + stairs + " stairs";
+		});
+		server.runCommand("forceload remove all");
+		MinecraftMode.LOGGER.info("[normal] underground lair: {}", report);
 	}
 
 	// ------------------------------------------------------------ screenshots

@@ -1,0 +1,60 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:savanna",
+    "minecraft:savanna_plateau",
+    "minecraft:windswept_savanna",
+    "minecraft:taiga",
+    "minecraft:windswept_hills"
+  ],
+  "lair": "bandit_captain",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft:spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft:zombie",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft_mode:bandit_captain",
+          "count": 1,
+          "weight": 93
+        }
+      ]
+    }
+  },
+  "step": "top_layer_modification"
+}

@@ -25,7 +25,7 @@ import net.minecraft.world.item.Rarity;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The 20 advancement trials (5 classes x 4 tiers) and their trial tokens. Tokens only drop for a
+ * The 28 advancement trials (7 classes x 4 tiers) and their trial tokens. Tokens only drop for a
  * player whose trial needs them and go straight into that player's inventory, so other players
  * cannot pick them up. Bosses credit every player with the trial within 64 blocks.
  */
@@ -69,6 +69,14 @@ public final class Quests {
 	public static final Item BOUNTY_POSTER = token("bounty_poster", Rarity.UNCOMMON);
 	public static final Item HAKI_CRYSTAL = token("haki_crystal", Rarity.RARE);
 	public static final Item SEA_KINGS_TREASURE = token("sea_kings_treasure", Rarity.EPIC);
+	public static final Item HOLLOW_MASK_SHARD = token("hollow_mask_shard", Rarity.UNCOMMON);
+	public static final Item HELL_BUTTERFLY = token("hell_butterfly", Rarity.UNCOMMON);
+	public static final Item TENSHINTAI = token("tenshintai", Rarity.RARE);
+	public static final Item HOGYOKU_FRAGMENT = token("hogyoku_fragment", Rarity.EPIC);
+	public static final Item EXAM_BADGE = token("exam_badge", Rarity.UNCOMMON);
+	public static final Item DIVINATION_GLASS = token("divination_glass", Rarity.UNCOMMON);
+	public static final Item CHIMERA_CARAPACE = token("chimera_carapace", Rarity.RARE);
+	public static final Item DARK_CONTINENT_RELIC = token("dark_continent_relic", Rarity.EPIC);
 
 	private static Item token(final String name, final Rarity rarity) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, MinecraftMode.id(name));
@@ -210,6 +218,58 @@ public final class Quests {
 			List.of(kill("Elder Guardian", "엘더 가디언", Set.of(EntityTypes.ELDER_GUARDIAN), 1), kill("Drowned", "드라운드", Set.of(EntityTypes.DROWNED), 30)),
 			SEA_KINGS_TREASURE, 5, List.of(source(Set.of(EntityTypes.ELDER_GUARDIAN), 1.0F, 3), source(Set.of(EntityTypes.DROWNED), 0.1F, 1)),
 			List.of(mat(Items.HEART_OF_THE_SEA, 1), mat(ModItems.CONDENSED_ESSENCE, 8)));
+
+		// ---------------------------------------------------------------- Soul Reaper
+		add("shinigami_1", JobClass.SHINIGAMI, 1, "Konso", "혼장",
+			"The dead who linger turn into Hollows. Send them on and bring back the shards of their masks.",
+			"떠도는 망자는 호로가 된다. 그들을 보내 주고 가면 조각을 가져와라.",
+			List.of(kill("Zombies", "좀비", ZOMBIES, 10), kill("Skeletons", "스켈레톤", SKELETONS, 10)),
+			HOLLOW_MASK_SHARD, 6, List.of(source(ZOMBIES, 0.35F, 1), source(SKELETONS, 0.35F, 1)),
+			List.of(mat(ModItems.ESSENCE, 4)));
+		add("shinigami_2", JobClass.SHINIGAMI, 2, "The Name of Your Blade", "참백도의 이름",
+			"Your zanpakuto will only tell you its name in the dark between worlds. Hunt the endermen and follow the hell butterflies.",
+			"참백도는 세계 사이의 어둠 속에서만 이름을 알려 준다. 엔더맨을 사냥하고 지옥나비를 따라가라.",
+			List.of(kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 8), kill("Creepers", "크리퍼", Set.of(EntityTypes.CREEPER), 8)),
+			HELL_BUTTERFLY, 8, List.of(source(Set.of(EntityTypes.ENDERMAN), 0.6F, 1), source(Set.of(EntityTypes.CREEPER), 0.2F, 1)),
+			List.of(mat(ModItems.ESSENCE, 16)));
+		add("shinigami_3", JobClass.SHINIGAMI, 3, "Bankai Training", "만해 수행",
+			"Bankai takes ten years - or three days with a Tenshintai. Break a golem and the frozen dead to earn one.",
+			"만해는 십 년이 걸린다. 전신체가 있다면 사흘이다. 골렘과 얼어붙은 망자를 쓰러뜨려 하나를 얻어라.",
+			List.of(kill("Mythril Golem", "미스릴 골렘", Set.of(ModEntities.MYTHRIL_GOLEM), 1), kill("Strays", "스트레이", Set.of(EntityTypes.STRAY), 15)),
+			TENSHINTAI, 5, List.of(source(Set.of(EntityTypes.STRAY), 0.4F, 1), source(Set.of(ModEntities.MYTHRIL_GOLEM), 1.0F, 2)),
+			List.of(mat(ModItems.GOLEM_CORE, 1), mat(ModItems.CONDENSED_ESSENCE, 4)));
+		add("shinigami_4", JobClass.SHINIGAMI, 4, "Hueco Mundo", "후에코 문도",
+			"Beyond the white desert, a traitor waits with the Hogyoku. Destroy the Wither and the husks of the sands.",
+			"하얀 사막 너머에서 배신자가 붕옥과 함께 기다린다. 위더와 모래의 허스크를 쓰러뜨려라.",
+			List.of(kill("The Wither", "위더", Set.of(EntityTypes.WITHER), 1), kill("Husks", "허스크", Set.of(EntityTypes.HUSK), 25)),
+			HOGYOKU_FRAGMENT, 5, List.of(source(Set.of(EntityTypes.WITHER), 1.0F, 3), source(Set.of(EntityTypes.HUSK), 0.1F, 1)),
+			List.of(mat(Items.NETHER_STAR, 1), mat(ModItems.CONDENSED_ESSENCE, 8)));
+
+		// ---------------------------------------------------------------- Hunter
+		add("hunter_1", JobClass.HUNTER, 1, "The Hunter Exam", "헌터 시험",
+			"Only a few in a thousand pass the Hunter Exam. Survive the swamp and keep your number badge.",
+			"헌터 시험은 천 명 중 몇 명만 통과한다. 습원에서 살아남고 수험 번호표를 지켜라.",
+			List.of(kill("Spiders", "거미", SPIDERS, 10), kill("Zombies", "좀비", ZOMBIES, 10)),
+			EXAM_BADGE, 6, List.of(source(SPIDERS, 0.5F, 1), source(ZOMBIES, 0.2F, 1)),
+			List.of(mat(ModItems.ESSENCE, 4)));
+		add("hunter_2", JobClass.HUNTER, 2, "Water Divination", "수견식",
+			"A glass of water and a leaf will tell what kind of Nen you have. Train hard enough to make it move.",
+			"물이 든 유리잔과 잎 한 장이 네 념의 계통을 알려 줄 거야. 잎이 움직일 만큼 수련해.",
+			List.of(kill("Skeletons", "스켈레톤", SKELETONS, 12), kill("Creepers", "크리퍼", Set.of(EntityTypes.CREEPER), 10)),
+			DIVINATION_GLASS, 8, List.of(source(SKELETONS, 0.4F, 1), source(Set.of(EntityTypes.CREEPER), 0.4F, 1)),
+			List.of(mat(ModItems.ESSENCE, 16)));
+		add("hunter_3", JobClass.HUNTER, 3, "Chimera Ant Extermination", "키메라 앤트 토벌",
+			"The Chimera Ants are spreading. Break their golem guard and wipe out the nests.",
+			"키메라 앤트가 퍼지고 있다. 골렘 수호자를 부수고 둥지를 쓸어버려라.",
+			List.of(kill("Mythril Golem", "미스릴 골렘", Set.of(ModEntities.MYTHRIL_GOLEM), 1), kill("Spiders", "거미", SPIDERS, 20)),
+			CHIMERA_CARAPACE, 6, List.of(source(SPIDERS, 0.3F, 1), source(Set.of(ModEntities.MYTHRIL_GOLEM), 1.0F, 2)),
+			List.of(mat(ModItems.GOLEM_CORE, 1), mat(ModItems.CONDENSED_ESSENCE, 4)));
+		add("hunter_4", JobClass.HUNTER, 4, "The Dark Continent", "암흑대륙",
+			"Only a Triple-Star Hunter may join the expedition. Bring back a relic from the deep dark and its Warden.",
+			"트리플 헌터만이 원정에 참가할 수 있다. 깊은 어둠과 그 워든에게서 유물을 가져와라.",
+			List.of(kill("The Warden", "워든", Set.of(EntityTypes.WARDEN), 1), kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 25)),
+			DARK_CONTINENT_RELIC, 5, List.of(source(Set.of(EntityTypes.WARDEN), 1.0F, 3), source(Set.of(EntityTypes.ENDERMAN), 0.1F, 1)),
+			List.of(mat(Items.ECHO_SHARD, 4), mat(ModItems.CONDENSED_ESSENCE, 8)));
 	}
 
 	private static void add(

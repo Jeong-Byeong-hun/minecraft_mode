@@ -27,6 +27,12 @@ final class TrialLang {
 			{"pirate", "Captain Drake", "선장 드레이크",
 				"Ahoy! Want to sail with me? The sea pays in gold, blood or glory - usually all three!",
 				"어이! 나랑 같이 항해할 텐가? 바다는 금이나 피나 영광으로 값을 치르지. 대개는 셋 다야!"},
+			{"shinigami", "Kisuke Urahara", "우라하라 키스케",
+				"Welcome, welcome! Candy, souls, a little Bankai training... What can this humble shopkeeper do for you?",
+				"어서 오세요, 어서 와요! 사탕에 영혼에 만해 수행까지... 이 미천한 상점 주인이 뭘 해 드릴까요?"},
+			{"hunter", "Biscuit Krueger", "비스킷 크루거",
+				"Don't let the cute face fool you - I've trained Nen users for fifty years. Ready to get stronger?",
+				"귀여운 얼굴에 속지 마. 50년 동안 념 능력자를 길러 왔으니까. 강해질 준비 됐어?"},
 		};
 		for (String[] t : trainers) {
 			JobClass job = JobClass.byId(t[0]);
@@ -45,6 +51,10 @@ final class TrialLang {
 			{"spirit_arrow", "Spirit Arrow", "영령의 화살"}, {"golden_key", "Golden Key", "황금 열쇠"},
 			{"map_scrap", "Treasure Map Scrap", "보물 지도 조각"}, {"bounty_poster", "Bounty Poster", "현상금 전단"},
 			{"haki_crystal", "Haki Crystal", "패기의 결정"}, {"sea_kings_treasure", "Sea King's Treasure", "해왕의 보물"},
+			{"hollow_mask_shard", "Hollow Mask Shard", "호로 가면 조각"}, {"hell_butterfly", "Hell Butterfly", "지옥나비"},
+			{"tenshintai", "Tenshintai", "전신체"}, {"hogyoku_fragment", "Hogyoku Fragment", "붕옥의 파편"},
+			{"exam_badge", "Exam Number Badge", "수험 번호표"}, {"divination_glass", "Water Divination Glass", "수견식 유리잔"},
+			{"chimera_carapace", "Chimera Ant Carapace", "키메라 앤트 갑각"}, {"dark_continent_relic", "Dark Continent Relic", "암흑대륙의 유물"},
 		};
 		for (String[] t : tokens) {
 			b.add("item.minecraft_mode." + t[0], ko ? t[2] : t[1]);
@@ -95,16 +105,22 @@ final class TrialLang {
 		String[][] pages = {
 			{"Welcome to Stormhold, the capital of adventurers!\n\nThe city around 0, 0 is a safe zone: monsters do not spawn, buildings cannot be broken and players cannot fight each other.",
 				"모험가의 수도 스톰홀드에 오신 것을 환영합니다!\n\n0, 0 주변의 도시는 안전 지대입니다. 몬스터가 생기지 않고, 건물을 부술 수 없으며, 플레이어끼리 싸울 수 없습니다."},
-			{"City map\n\nCenter: Plaza (spawn)\nNorth: the Keep\nNorthwest: Mage tower, Enchanter's Hall\nNortheast: Warrior arena\nWest: Old Town, Shadow Hall\nEast: Cathedral, homes\nSouthwest: Archer park\nSouth: Market, Guild\nSoutheast: Harbor",
-				"도시 지도\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성\n북서: 마법사 탑, 마법 부여소\n북동: 전사 투기장\n서쪽: 구시가지, 그림자 회관\n동쪽: 대성당, 주택가\n남서: 궁수 공원\n남쪽: 시장, 길드\n남동: 항구"},
-			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to a trainer:\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate",
-				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 교관과 대화하세요.\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적"},
+			{"City map (north)\n\nCenter: Plaza (spawn)\nNorth: the Keep, raid gate\nNorthwest: Mage tower, Enchanter's Hall\nNortheast: Warrior arena, Hunter Association\nWest: Old Town, Shadow Hall",
+				"도시 지도 (북쪽)\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성, 레이드 관문\n북서: 마법사 탑, 마법 부여소\n북동: 전사 투기장, 헌터 협회\n서쪽: 구시가지, 그림자 회관"},
+			{"City map (south)\n\nEast: Cathedral, homes\nSouthwest: Archer park, Urahara Shop\nSouth: Market, Alchemist, Guild, forge\nSoutheast: Harbor",
+				"도시 지도 (남쪽)\n\n동쪽: 대성당, 주택가\n남서: 궁수 공원, 우라하라 상점\n남쪽: 시장, 연금술사, 길드, 대장간\n남동: 항구"},
+			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want. Every class has its own trainer, trials, weapons and armor.",
+				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하세요. 직업마다 교관, 시련, 무기와 방어구가 따로 있습니다."},
+			{"Trainers\n\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate\nUrahara - Soul Reaper\nBiscuit - Hunter",
+				"교관\n\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적\n우라하라 - 사신\n비스킷 - 헌터"},
 			{"Advancement trials\n\nEvery advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
 				"전직 시련\n\n모든 전직은 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
 			{"Weapons and skills\n\nClass weapons are sold at the Guild in the south market. Use skills with R, G, V and Z; open the class screen with K. Skills only work for the weapon's class, tier and level.",
 				"무기와 스킬\n\n직업 무기는 남쪽 시장의 길드에서 팝니다. 스킬은 R, G, V, Z, 직업 창은 K입니다. 스킬은 무기의 직업·차수·레벨 조건을 만족해야 쓸 수 있습니다."},
 			{"Essence\n\nEssence drops from monsters and iron or better ores. Engrave class gear at the engraving tables in the Guild: up to 3 lines on weapons and 4 on armor, and the same line stacks.",
 				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기는 3줄, 방어구는 4줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
+			{"Wallet and supplies\n\nCoins go straight into your wallet and take no inventory space; shops are paid from it (/wallet). You keep your items when you die.\n\nThe Alchemist sells potions and food that last 10 minutes.",
+				"지갑과 보급품\n\n동전은 곧바로 지갑에 들어가 인벤토리를 차지하지 않고, 상점은 지갑에서 돈을 받습니다 (/wallet). 죽어도 아이템을 잃지 않습니다.\n\n연금술사는 10분간 지속되는 물약과 음식을 팝니다."},
 		};
 		for (int i = 0; i < pages.length; i++) {
 			b.add("book.minecraft_mode.guide.page" + (i + 1), ko ? pages[i][1] : pages[i][0]);

@@ -312,6 +312,55 @@ final class CityNorth {
 		b.set(48, 0, -72, Blocks.BARREL);
 		b.flag(40, -62, 9, Build.wool(DyeColor.RED), Build.wool(DyeColor.WHITE), Direction.EAST);
 		b.flag(62, -62, 9, Build.wool(DyeColor.RED), Build.wool(DyeColor.WHITE), Direction.WEST);
+		hunterAssociation(b);
+	}
+
+	/** The Hunter trainer's post: a white Hunter Association branch office with orange bands and a records hall (Hunter x Hunter). */
+	private static void hunterAssociation(final Build b) {
+		int x0 = 77;
+		int x1 = 93;
+		int z0 = -58;
+		int z1 = -49;
+		if (!b.touches(x0 - 2, z0 - 2, x1 + 2, z1 + 3)) {
+			return;
+		}
+		b.fill(x0, -1, z0, x1, -1, z1, Blocks.POLISHED_ANDESITE);
+		b.walls(x0, 0, z0, x1, 8, z1, Blocks.CONCRETE.pick(DyeColor.WHITE));
+		b.air(x0 + 1, 0, z0 + 1, x1 - 1, 8, z1 - 1);
+		for (int x = x0; x <= x1; x += 4) {
+			b.fill(x, 0, z0, x, 9, z0, Blocks.CONCRETE.pick(DyeColor.LIGHT_GRAY));
+			b.fill(x, 0, z1, x, 9, z1, Blocks.CONCRETE.pick(DyeColor.LIGHT_GRAY));
+			if (x + 2 <= x1) {
+				b.fill(x + 1, 1, z1, x + 3, 2, z1, Blocks.STAINED_GLASS.pick(DyeColor.LIGHT_BLUE));
+				b.fill(x + 1, 5, z1, x + 3, 7, z1, Blocks.STAINED_GLASS.pick(DyeColor.LIGHT_BLUE));
+				b.fill(x + 1, 5, z0, x + 3, 7, z0, Blocks.STAINED_GLASS.pick(DyeColor.LIGHT_BLUE));
+			}
+		}
+		b.fill(x0, 4, z0, x1, 4, z1, Blocks.CONCRETE.pick(DyeColor.ORANGE));
+		b.air(x0 + 1, 4, z0 + 1, x1 - 1, 4, z1 - 1);
+		b.fill(x0, 9, z0, x1, 9, z1, Blocks.SMOOTH_STONE);
+		b.walls(x0, 10, z0, x1, 10, z1, Blocks.CONCRETE.pick(DyeColor.ORANGE));
+		// entrance with the association mark (orange ring) above it
+		b.air(84, 0, z1, 86, 3, z1);
+		b.door(85, 0, z1, Blocks.BIRCH_DOOR, Direction.SOUTH);
+		b.fill(85, 2, z1, 85, 3, z1, Blocks.CONCRETE.pick(DyeColor.WHITE));
+		b.fill(84, 0, z1, 84, 3, z1, Blocks.QUARTZ_PILLAR);
+		b.fill(86, 0, z1, 86, 3, z1, Blocks.QUARTZ_PILLAR);
+		b.fill(83, 5, z1 + 1, 87, 7, z1 + 1, Blocks.CONCRETE.pick(DyeColor.ORANGE));
+		b.set(85, 6, z1 + 1, Blocks.CONCRETE.pick(DyeColor.WHITE));
+		// records hall: shelves, lecterns, a map table and a reception counter
+		b.fill(x0 + 1, 0, z0 + 1, x1 - 1, 3, z0 + 1, Blocks.BOOKSHELF);
+		b.fill(x0 + 1, 0, z0 + 1, x0 + 1, 3, z1 - 1, Blocks.BOOKSHELF);
+		b.fill(x0 + 5, 0, z1 - 4, x0 + 11, 0, z1 - 4, Blocks.STRIPPED_BIRCH_LOG.defaultBlockState()
+			.setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, Direction.Axis.X));
+		b.set(x0 + 4, 0, z0 + 3, Blocks.LECTERN);
+		b.set(x1 - 4, 0, z0 + 3, Blocks.LECTERN);
+		b.set(x1 - 2, 0, z0 + 3, Blocks.CARTOGRAPHY_TABLE);
+		b.set(x1 - 1, 0, z1 - 1, Blocks.BARREL);
+		for (int x = x0 + 3; x <= x1 - 3; x += 4) {
+			b.lantern(x, 8, (z0 + z1) / 2, true, false);
+		}
+		b.flag(x1 + 2, z1 + 1, 11, Build.wool(DyeColor.ORANGE), Build.wool(DyeColor.WHITE), Direction.WEST);
 	}
 
 	private static void arena(final Build b, final int cx, final int cz) {

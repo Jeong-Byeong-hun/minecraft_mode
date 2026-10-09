@@ -85,6 +85,8 @@ public final class CityZone {
 			case MAGE -> new BlockPos(-66, base, -59);
 			case ARCHER -> new BlockPos(-64, base, 86);
 			case PIRATE -> new BlockPos(52, base, 54);
+			case SHINIGAMI -> new BlockPos(-83, base, 47);
+			case HUNTER -> new BlockPos(85, base, -46);
 			default -> spawn(base);
 		};
 	}

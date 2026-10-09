@@ -3,9 +3,11 @@ package com.minecraftmode.job.gear;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.gear.content.ArcherArmor;
+import com.minecraftmode.job.gear.content.HunterArmor;
 import com.minecraftmode.job.gear.content.MageArmor;
 import com.minecraftmode.job.gear.content.PirateArmor;
 import com.minecraftmode.job.gear.content.RogueArmor;
+import com.minecraftmode.job.gear.content.ShinigamiArmor;
 import com.minecraftmode.job.gear.content.WarriorArmor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +43,8 @@ public final class ClassArmor {
 		new MageArmor().define();
 		new ArcherArmor().define();
 		new PirateArmor().define();
+		new ShinigamiArmor().define();
+		new HunterArmor().define();
 		for (ArmorSetDef set : SETS.values()) {
 			ResourceKey<EquipmentAsset> asset = asset(set);
 			for (GearSlot slot : GearSlot.ARMOR) {

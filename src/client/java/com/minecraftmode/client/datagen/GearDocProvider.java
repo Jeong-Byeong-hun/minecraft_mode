@@ -1,6 +1,9 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.consumable.BuffEffects;
+import com.minecraftmode.consumable.ConsumableDef;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.Ability;
 import com.minecraftmode.entity.named.Habitat;
@@ -25,6 +28,11 @@ import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.LairLoot;
+import com.minecraftmode.worldgen.lair.LairPiece;
+import com.minecraftmode.worldgen.lair.LairStructure;
+import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -42,8 +50,8 @@ import net.minecraft.data.DataProvider;
 
 /**
  * Writes docs/GEAR.md (shop per bracket, drop rates, every armor set with its pieces and set
- * bonuses, armor options) and docs/MONSTERS.md (named monsters and raid bosses) in Korean, from the
- * same definitions the game uses.
+ * bonuses, armor options), docs/MONSTERS.md (named monsters, their lairs, raid bosses and their
+ * mechanics) and docs/CONSUMABLES.md in Korean, from the same definitions the game uses.
  */
 public class GearDocProvider implements DataProvider {
 	private static final Map<Habitat, String> HABITATS = Map.ofEntries(
@@ -58,6 +66,28 @@ public class GearDocProvider implements DataProvider {
 		Map.entry(Ability.Type.LEAP, "도약 강타"), Map.entry(Ability.Type.CHARGE, "돌진"), Map.entry(Ability.Type.BOLT, "투사체"), Map.entry(Ability.Type.SUMMON, "소환"),
 		Map.entry(Ability.Type.TELEPORT, "순간이동"), Map.entry(Ability.Type.AURA, "오라"), Map.entry(Ability.Type.ROAR, "포효"), Map.entry(Ability.Type.SPIKES, "가시 분출"),
 		Map.entry(Ability.Type.HEAL, "재생"), Map.entry(Ability.Type.BREATH, "브레스"), Map.entry(Ability.Type.STEALTH, "은신 기습"), Map.entry(Ability.Type.SLAM, "내려찍기"));
+
+	private static final Map<LairDef.Shape, String> SHAPES = Map.of(LairDef.Shape.PYRAMID, "피라미드", LairDef.Shape.ZIGGURAT, "지구라트",
+		LairDef.Shape.FORTRESS, "요새", LairDef.Shape.DOME, "돔", LairDef.Shape.SPIRE, "첨탑", LairDef.Shape.TREE, "거목", LairDef.Shape.NONE, "지하 미궁");
+	private static final Map<ConsumableDef.Shop, String> SHOPS = Map.of(ConsumableDef.Shop.GENERAL, "잡화점", ConsumableDef.Shop.GROCER, "식료품점",
+		ConsumableDef.Shop.ALCHEMIST, "연금술사");
+	private static final Map<String, String> VANILLA_EFFECTS = Map.of("effect.minecraft.absorption", "흡수", "effect.minecraft.fire_resistance", "화염 저항",
+		"effect.minecraft.haste", "성급함", "effect.minecraft.health_boost", "생명력 강화", "effect.minecraft.resistance", "저항", "effect.minecraft.speed", "신속",
+		"effect.minecraft.regeneration", "재생", "effect.minecraft.strength", "힘", "effect.minecraft.night_vision", "야간 투시", "effect.minecraft.water_breathing", "수중 호흡");
+	private static final Map<String, String> BIOMES = Map.ofEntries(
+		Map.entry("plains", "평원"), Map.entry("sunflower_plains", "해바라기 평원"), Map.entry("meadow", "초원"), Map.entry("flower_forest", "꽃 숲"),
+		Map.entry("forest", "숲"), Map.entry("birch_forest", "자작나무 숲"), Map.entry("savanna", "사바나"), Map.entry("savanna_plateau", "사바나 고원"),
+		Map.entry("windswept_savanna", "바람이 부는 사바나"), Map.entry("taiga", "타이가"), Map.entry("windswept_hills", "바람이 부는 언덕"),
+		Map.entry("snowy_plains", "눈 덮인 평원"), Map.entry("snowy_taiga", "눈 덮인 타이가"), Map.entry("grove", "산림"), Map.entry("snowy_slopes", "눈 덮인 비탈"),
+		Map.entry("ice_spikes", "역고드름"), Map.entry("desert", "사막"), Map.entry("swamp", "늪"), Map.entry("mangrove_swamp", "맹그로브 늪"),
+		Map.entry("dark_forest", "어두운 숲"), Map.entry("mushroom_fields", "버섯 들판"), Map.entry("pale_garden", "창백한 정원"), Map.entry("jungle", "정글"),
+		Map.entry("sparse_jungle", "듬성듬성한 정글"), Map.entry("bamboo_jungle", "대나무 정글"), Map.entry("beach", "해변"), Map.entry("stony_shore", "돌 해안"),
+		Map.entry("snowy_beach", "눈 덮인 해변"), Map.entry("badlands", "악지"), Map.entry("eroded_badlands", "침식된 악지"), Map.entry("wooded_badlands", "나무가 우거진 악지"),
+		Map.entry("old_growth_pine_taiga", "원시 소나무 타이가"), Map.entry("old_growth_spruce_taiga", "원시 가문비나무 타이가"),
+		Map.entry("old_growth_birch_forest", "원시 자작나무 숲"), Map.entry("stony_peaks", "돌 봉우리"), Map.entry("dripstone_caves", "점적석 동굴"),
+		Map.entry("lush_caves", "무성한 동굴"), Map.entry("nether_wastes", "네더 황무지"), Map.entry("basalt_deltas", "현무암 삼각주"),
+		Map.entry("soul_sand_valley", "영혼 모래 골짜기"), Map.entry("crimson_forest", "진홍빛 숲"), Map.entry("warped_forest", "뒤틀린 숲"), Map.entry("deep_dark", "딥 다크"),
+		Map.entry("end_highlands", "엔드 고지대"), Map.entry("end_midlands", "엔드 중지대"), Map.entry("end_barrens", "엔드 불모지"));
 
 	private final FabricPackOutput output;
 	private final Map<String, String> ko = new HashMap<>();
@@ -81,6 +111,7 @@ public class GearDocProvider implements DataProvider {
 		}, true);
 		this.write("docs/GEAR.md", this.gear());
 		this.write("docs/MONSTERS.md", this.monsters());
+		this.write("docs/CONSUMABLES.md", this.consumables());
 		return CompletableFuture.completedFuture(null);
 	}
 
@@ -161,24 +192,48 @@ public class GearDocProvider implements DataProvider {
 				.append(" | ").append(ClassDocProvider.num(def.damage())).append(" | ").append(abilities).append(" | ").append(def.descKo()).append(" |\n");
 		}
 
+		md.append("\n## 네임드 소굴 (").append(NamedLairs.all().size()).append("곳)\n\n");
+		md.append("- 네임드마다 그 몬스터를 닮은 거대한 인공 구조물이 서식지 바이옴에 생깁니다(사막의 피라미드처럼). 한 칸(약 ")
+			.append(NamedLairs.SPACING * 16).append("블록)마다 많아야 하나, 마을과 수도 근처에는 생기지 않습니다. 찾기: `/locate structure minecraft_mode:lair_<네임드 id>`\n");
+		md.append("- 안은 3칸 폭 통로의 **미로**이고 남쪽 벽 가운데에 입구가 있습니다. **보물 상자 위치는 소굴마다 다릅니다**: 입구 바로 옆(20%), 가장 깊은 곳(35%), 먼 막다른 길(45%). 상자 옆에는 그 네임드가 지키고 있고, 다른 막다른 길에 작은 보급 통이 최대 3개 있습니다.\n");
+		md.append("- 보물 상자: 동전(소굴 최고 레벨 구간 무기값의 50–100%) **항상** + 보상 1개 **항상**(60% 확률로 1개 더, 그중 25%로 또 1개). 보상은 소모품 ")
+			.append(Math.round((1 - LairLoot.GEAR_SHARE) * 100)).append("% / 그 네임드 레벨 범위의 장비 ").append(Math.round(LairLoot.GEAR_SHARE * 100))
+			.append("%. 진화의 에테르와 정수도 들어 있습니다.\n");
+		md.append("- 소굴 구역(구조물 둘레 ").append(LairPiece.GROUNDS).append("블록 포함)에서는 일반 몬스터와 함께 그 네임드가 평소의 2배 비율(스폰의 6–20%)로 나타나고, 네임드끼리 거리 제한도 96 → 20블록으로 줄어듭니다. 들어서면 소굴 이름이 화면에 뜹니다.\n\n");
+		md.append("| 소굴 | 네임드 | 레벨 | 모양 | 미로 | 위치 | 바이옴 |\n|---|---|---|---|---|---|---|\n");
+		for (LairDef lair : NamedLairs.all()) {
+			NamedDef named = lair.named();
+			String where = switch (lair.setting()) {
+				case SURFACE -> "지상";
+				case UNDERGROUND -> "지하 Y " + lair.depth() + " (지상에 등대 탑)";
+				case NETHER -> "네더 Y " + LairStructure.NETHER_FLOOR;
+				case END -> "엔드 섬";
+			};
+			md.append("| **").append(lair.ko()).append("** | ").append(named.ko()).append(" | ").append(named.lo()).append("–").append(named.hi()).append(" | ")
+				.append(SHAPES.get(lair.shape())).append(" | ").append(lair.size()).append("×").append(lair.size()).append(" | ").append(where).append(" | ")
+				.append(lair.biomes().stream().map(b -> BIOMES.getOrDefault(b.identifier().getPath(), b.identifier().getPath())).collect(Collectors.joining(", ")))
+				.append(" |\n");
+		}
+
 		md.append("\n## 레이드 보스 (").append(RaidBosses.all().size()).append("종)\n\n");
 		md.append("- 도시 왕성 앞 \"토벌 사령관 알드릭\"에게서 입장합니다. 파티장이 보스를 고르면 ").append((int)Raids.GATHER_RANGE)
 			.append("블록 안의 파티원(최대 ").append(Parties.MAX_SIZE).append("명)이 전용 차원의 경기장으로 이동하고, ").append(Raids.COUNTDOWN_TICKS / 20)
 			.append("초 뒤 보스가 나타납니다. 모든 파티원이 보스 레벨(드롭 범위의 최저 레벨) 이상이어야 합니다.\n");
 		md.append("- 체력은 1인 기준 × (1 + ").append(ClassDocProvider.num(RaidBoss.PARTY_SCALE)).append(" × (인원 - 1)). 페이즈마다 제목과 함께 패턴이 추가되고, 모든 광역기는 바닥 경고가 먼저 나옵니다.\n");
-		md.append("- 레이드에서 죽으면 아이템을 잃지 않고 입장한 곳으로 돌아갑니다(그 전투에는 복귀 불가). 전원 이탈 시 실패.\n");
+		md.append("- 입장료: 파티원 각자 보스 레벨 구간의 무기값만큼 동전을 냅니다(지갑에서). 레이드에서 죽어도 경험치와 아이템을 잃지 않고 입장한 곳으로 돌아갑니다(그 전투에는 복귀 불가). 전원 이탈 시 실패.\n");
+		md.append("- **즉사 기믹**: 보스마다 1–3개. 정해진 체력 이하가 되면 처음 발동하고 이후 일정 간격으로 반복되며, 기믹과 기믹 사이는 최소 45초입니다. 실패한 사람은 즉사급 피해(방어·저항 무시)를 받고, 일부 협동 기믹은 실패하면 전멸합니다. 협동 기믹의 필요 인원은 파티 규모에 맞춰 줄어들어 혼자서도 깰 수 있습니다.\n");
 		md.append("- 처치 보상: 참가자마다 진화의 에테르 5–8개 · 응축된 정수 2–4개 · 직업 경험치. 장비 3개(+2명마다 1개)는 **경매**(기본) 또는 **주사위**로 나눕니다.\n");
 		md.append("  경매: 시작가 = 구간 상점가 × 1.5, 입찰 단위 ≈ 시작가의 5%, ").append(LootSessions.AUCTION_TICKS / 20).append("초(마지막 ")
 			.append(LootSessions.SNIPE_TICKS / 20).append("초 입찰 시 연장), 낙찰금은 나머지 참가자에게 분배, 입찰이 없으면 주사위. 주사위: ")
 			.append(LootSessions.DICE_TICKS / 20).append("초, 1–100, 동점은 재굴림, 전원 포기 시 파티장.\n\n");
-		md.append("| 보스 | 칭호 | 레벨 | 1인 체력 | 공격력 | 무대 | 페이즈 |\n|---|---|---|---|---|---|---|\n");
+		md.append("| 보스 | 칭호 | 레벨 | 1인 체력 | 공격력 | 입장료 | 무대 | 페이즈 |\n|---|---|---|---|---|---|---|---|\n");
 		for (BossDef def : RaidBosses.all()) {
 			StringBuilder phases = new StringBuilder("1");
 			for (int i = 0; i < def.phases().size(); i++) {
 				phases.append(" → ").append(i + 2).append(" (").append(Math.round(def.phases().get(i) * 100)).append("%)");
 			}
 			md.append("| **").append(def.ko()).append("** | ").append(def.epithetKo()).append(" | ").append(def.lo()).append("–").append(def.hi()).append(" | ")
-				.append(ClassDocProvider.num(def.health())).append(" | ").append(ClassDocProvider.num(def.damage())).append(" | ")
+				.append(ClassDocProvider.num(def.health())).append(" | ").append(ClassDocProvider.num(def.damage())).append(" | ").append(Coins.format(def.fee())).append(" | ")
 				.append(this.ko.getOrDefault("screen.minecraft_mode.raid.arena." + def.arena().name().toLowerCase(Locale.ROOT), def.arena().name())).append(" | ")
 				.append(phases).append(" |\n");
 		}
@@ -188,6 +243,60 @@ public class GearDocProvider implements DataProvider {
 				md.append("- ").append(phase).append(" 페이즈 (체력 ").append(Math.round(def.phases().get(phase - 2) * 100)).append("% 이하): ")
 					.append(this.ko.getOrDefault(def.nameKey() + ".phase" + phase, "")).append("\n");
 			}
+			for (String[] mechanic : RaidLang.MECHANICS) {
+				if (mechanic[0].startsWith(def.id() + "_")) {
+					md.append("- 기믹 **").append(mechanic[2]).append("**: ").append(mechanic[4]).append("\n");
+				}
+			}
+		}
+		return md.toString();
+	}
+
+	// ------------------------------------------------------------------ CONSUMABLES.md
+
+	private String consumables() {
+		StringBuilder md = new StringBuilder();
+		md.append("# 소모품 (").append(Consumables.all().size()).append("종)\n\n");
+		md.append("> `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
+		md.append("- 지속 효과는 모두 **10분**입니다. 효과 수치는 직업 장비 옵션과 같은 방식으로 더해집니다.\n");
+		md.append("- 같은 그룹(회복약·마나약 등)은 재사용 대기시간을 공유합니다.\n");
+		md.append("- 좋은 것일수록 구하기 어렵습니다: 1–2등급은 조합·상점, 3등급은 연금술사(금화)·네임드·소굴, 4등급은 비싼 상점가나 드물게 네임드·소굴·레이드, 5등급은 레이드 보스에게서만 나옵니다.\n\n");
+		md.append("| 이름 | 등급 | 효과 | 재사용 | 구하는 곳 |\n|---|---|---|---|---|\n");
+		for (ConsumableDef def : Consumables.all()) {
+			List<String> effects = new java.util.ArrayList<>();
+			if (def.heal() > 0) {
+				effects.add("체력 " + Math.round(def.heal() * 100) + "% 회복");
+			}
+			if (def.mana() > 0) {
+				effects.add("MP " + Math.round(def.mana() * 100) + "% 회복");
+			}
+			if (def.cleanse()) {
+				effects.add("해로운 효과 제거");
+			}
+			for (ConsumableDef.Buff buff : def.effects()) {
+				String name = this.ko.getOrDefault(buff.effect().value().getDescriptionId(),
+					VANILLA_EFFECTS.getOrDefault(buff.effect().value().getDescriptionId(), buff.effect().value().getDescriptionId()));
+				String stats = BuffEffects.lines(buff.effect(), buff.amplifier()).stream().map(this::stat).collect(Collectors.joining(", "));
+				effects.add(name + " " + (buff.amplifier() + 1) + " (" + buff.ticks() / 1200 + "분" + (stats.isEmpty() ? "" : ": " + stats) + ")");
+			}
+			if (def.special() != ConsumableDef.Special.NONE) {
+				effects.add(this.ko.getOrDefault("consumable.minecraft_mode." + def.special().name().toLowerCase(Locale.ROOT), def.special().name()));
+			}
+			List<String> sources = new java.util.ArrayList<>();
+			if (def.shop() != ConsumableDef.Shop.NONE) {
+				sources.add(SHOPS.get(def.shop()) + " " + Coins.format(def.price()));
+			}
+			if (ModRecipeProvider.COOKED.contains(def.id())) {
+				sources.add("조합");
+			}
+			if (def.tier() <= 4) {
+				sources.add(def.tier() == 4 ? "네임드·소굴(드묾)" : "네임드·소굴");
+			}
+			if (def.tier() >= 3) {
+				sources.add("레이드");
+			}
+			md.append("| **").append(def.ko()).append("** | ").append("★".repeat(def.tier())).append(" | ").append(String.join(" · ", effects)).append(" | ")
+				.append(def.cooldown() > 0 ? def.cooldown() + "초" : "-").append(" | ").append(String.join(", ", sources)).append(" |\n");
 		}
 		return md.toString();
 	}

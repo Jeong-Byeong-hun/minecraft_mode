@@ -1,5 +1,7 @@
 package com.minecraftmode.raid;
 
+import com.minecraftmode.job.gear.ItemLevels;
+import com.minecraftmode.loot.GearShop;
 import java.util.List;
 import net.minecraft.world.BossEvent;
 
@@ -31,6 +33,11 @@ public record BossDef(
 	/** Level shown on the boss and needed to enter. */
 	public int minLevel() {
 		return this.lo;
+	}
+
+	/** Entry fee per player, in copper: the guild price of a weapon of the boss's bracket. */
+	public int fee() {
+		return GearShop.bracketPrice(ItemLevels.bracket(this.lo));
 	}
 
 	/** Number of phases (1 + thresholds). */

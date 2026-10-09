@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:greed_island"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:greed_island"
+      }
+    ]
+  }
+}

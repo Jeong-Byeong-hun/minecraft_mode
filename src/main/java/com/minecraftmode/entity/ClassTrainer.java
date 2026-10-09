@@ -85,6 +85,8 @@ public class ClassTrainer extends PathfinderMob {
 			case MAGE -> "merlin_staff";
 			case ARCHER -> "chiron_greatbow";
 			case PIRATE -> "el_draque";
+			case SHINIGAMI -> "benihime";
+			case HUNTER -> "jajanken";
 			default -> "excalibur";
 		};
 	}

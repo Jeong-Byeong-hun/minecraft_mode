@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
@@ -14,6 +15,7 @@ import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.loot.Coins;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
@@ -31,7 +33,7 @@ import net.minecraft.world.item.ItemStack;
  */
 public final class JobHud {
 	/** Bottom of the top-left panels drawn this frame (other HUD parts stay below it). */
-	private static int leftBottom = 34;
+	private static int leftBottom = 44;
 
 	public static void init() {
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, MinecraftMode.id("job_hud"), JobHud::extract);
@@ -44,7 +46,7 @@ public final class JobHud {
 			return;
 		}
 		JobData data = JobProgression.get(player);
-		leftBottom = 34;
+		leftBottom = 44;
 		drawPanel(graphics, minecraft.font, player, data);
 		drawQuest(graphics, minecraft.font, player);
 		drawSkills(graphics, minecraft, player, data);
@@ -57,8 +59,8 @@ public final class JobHud {
 		String level = "Lv " + data.level();
 		int w = Math.max(124, font.width(title) + font.width(level) + 18);
 		int color = 0xFF000000 | data.job().color();
-		g.fill(x, y, x + w, y + 30, 0x90000000);
-		g.fill(x, y, x + 2, y + 30, color);
+		g.fill(x, y, x + w, y + 40, 0x90000000);
+		g.fill(x, y, x + 2, y + 40, color);
 		g.text(font, title, x + 6, y + 3, 0xFFFFFFFF, true);
 		g.text(font, level, x + w - 4 - font.width(level), y + 3, 0xFFFFE08A, true);
 		// experience
@@ -70,6 +72,8 @@ public final class JobHud {
 		String mp = data.mana() + "/" + max;
 		bar(g, x + 6, y + 21, w - 16 - font.width(mp), 5, Math.min(1.0F, (float)data.mana() / max), 0xFF4A8CFF);
 		g.text(font, mp, x + w - 4 - font.width(mp), y + 19, 0xFF9CC3FF, true);
+		// wallet
+		g.text(font, "◎ " + Coins.format(Wallet.balance(player)), x + 6, y + 30, 0xFFFFD27F, true);
 	}
 
 	/** Active trial under the panel: goals and items with counts, green when done. */
@@ -92,7 +96,7 @@ public final class JobHud {
 			counts.add(new int[] {JobProgression.count(player.getInventory(), material.item()), material.count()});
 		}
 		int x = 4;
-		int y = 38;
+		int y = 48;
 		int w = 150;
 		int h = 13 + labels.size() * 10;
 		leftBottom = y + h;

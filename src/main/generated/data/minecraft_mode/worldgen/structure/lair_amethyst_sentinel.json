@@ -1,0 +1,57 @@
+{
+  "type": "minecraft_mode:named_lair",
+  "biomes": [
+    "minecraft:dripstone_caves",
+    "minecraft:lush_caves"
+  ],
+  "lair": "amethyst_sentinel",
+  "spawn_overrides": {
+    "monster": {
+      "bounding_box": "full",
+      "spawns": [
+        {
+          "type": "minecraft:cave_spider",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 70
+        },
+        {
+          "type": "minecraft:creeper",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 60
+        },
+        {
+          "type": "minecraft:skeleton",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 100
+        },
+        {
+          "type": "minecraft:zombie",
+          "count": {
+            "type": "minecraft:uniform",
+            "max_inclusive": 2,
+            "min_inclusive": 1
+          },
+          "weight": 90
+        },
+        {
+          "type": "minecraft_mode:amethyst_sentinel",
+          "count": 1,
+          "weight": 44
+        }
+      ]
+    }
+  },
+  "step": "underground_structures"
+}

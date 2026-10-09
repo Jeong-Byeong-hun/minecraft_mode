@@ -6,9 +6,9 @@ import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.enchantment.ModEnchantments;
 import com.minecraftmode.entity.MythrilGolem;
-import com.minecraftmode.registry.ModEffects;
-import net.minecraft.world.effect.MobEffectInstance;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.registry.ModBlocks;
+import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.ModOreGeneration;
@@ -36,10 +36,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.EnchantmentTags;
 import net.minecraft.tags.ItemTags;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.Item;
@@ -47,6 +47,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.AABB;
 
@@ -348,15 +349,16 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		// Shift-click the result slot once (one trade): vanilla would cast the trader to Entity here (see MerchantMenuMixin).
 		int[] result = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
+			int before = Coins.total(player);
 			MerchantMenu menu = (MerchantMenu) player.containerMenu;
 			menu.setSelectionHint(0);
 			menu.tryMoveItems(0);
 			menu.quickMoveStack(player, 2);
 			int newPrice = menu.getOffers().getFirst().getCostA().getCount();
 			player.closeContainer();
-			return new int[] {player.getInventory().countItem(ModItems.COPPER_COIN), player.getInventory().countItem(Items.COBBLESTONE), newPrice};
+			return new int[] {Coins.total(player) - before, player.getInventory().countItem(Items.COBBLESTONE), newPrice};
 		});
-		require(result[0] == 1 && result[1] == 32, "expected 1 copper coin and 32 cobblestone left, got " + result[0] + " / " + result[1]);
+		require(result[0] == 1 && result[1] == 32, "expected 1 copper more and 32 cobblestone left, got " + result[0] + " / " + result[1]);
 		// Market pressure 1: 32 + floor(32 * 0.1) = 35 cobblestone per coin
 		require(result[2] == 35, "selling should raise the cobblestone price from 32 to 35, got " + result[2]);
 

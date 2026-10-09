@@ -36,7 +36,7 @@ public final class ModTagProviders {
 					key(ModBlocks.PLASTIC_BLOCK), key(ModBlocks.ENGRAVING_TABLE)
 				);
 			this.builder(BlockTags.MINEABLE_WITH_AXE)
-				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP), key(ModBlocks.GUILD_SHOP));
+				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP), key(ModBlocks.GUILD_SHOP), key(ModBlocks.ALCHEMIST_SHOP));
 			this.builder(BlockTags.NEEDS_IRON_TOOL)
 				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK), key(ModBlocks.ENGRAVING_TABLE));
 			this.builder(BlockTags.NEEDS_STONE_TOOL)
@@ -95,6 +95,22 @@ public final class ModTagProviders {
 			}
 			// Barrage joins vanilla's crossbow set, so it excludes Multishot and Piercing (and they exclude it).
 			this.builder(EnchantmentTags.CROSSBOW_EXCLUSIVE).add(RangedEnchantments.BARRAGE.key());
+		}
+	}
+
+	/** The raid mechanic damage ignores armor, resistance and enchantments (but not invulnerability: totems still save). */
+	public static class DamageTypes extends FabricTagsProvider<net.minecraft.world.damagesource.DamageType> {
+		public DamageTypes(final FabricPackOutput output, final CompletableFuture<HolderLookup.Provider> registries) {
+			super(output, Registries.DAMAGE_TYPE, registries);
+		}
+
+		@Override
+		protected void addTags(final HolderLookup.Provider registries) {
+			for (var tag : java.util.List.of(net.minecraft.tags.DamageTypeTags.BYPASSES_ARMOR, net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD,
+				net.minecraft.tags.DamageTypeTags.BYPASSES_EFFECTS, net.minecraft.tags.DamageTypeTags.BYPASSES_RESISTANCE,
+				net.minecraft.tags.DamageTypeTags.BYPASSES_ENCHANTMENTS, net.minecraft.tags.DamageTypeTags.NO_KNOCKBACK)) {
+				this.builder(tag).add(com.minecraftmode.raid.RaidDamage.MECHANIC);
+			}
 		}
 	}
 

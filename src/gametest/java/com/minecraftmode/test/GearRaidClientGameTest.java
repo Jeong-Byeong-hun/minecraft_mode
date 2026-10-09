@@ -86,7 +86,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			connection.waitForChunksRender();
 			server.runCommand("difficulty normal");
 			server.runCommand("gamerule send_command_feedback false");
-			server.runCommand("gamerule do_mob_spawning false");
+			server.runCommand("gamerule spawn_mobs false");
 			server.runCommand("time set noon");
 			server.runCommand("gamemode survival @p");
 			server.runCommand("tp @p 0.5 -60 0.5 180 0");
@@ -107,8 +107,8 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ content
 
 	private static void checkContent(final ClientGameTestContext context) {
-		require(ClassArmor.sets().size() == 50, "expected 50 armor sets, got " + ClassArmor.sets().size());
-		require(ClassArmor.pieces().size() == 200, "expected 200 armor pieces, got " + ClassArmor.pieces().size());
+		require(ClassArmor.sets().size() == 70, "expected 70 armor sets, got " + ClassArmor.sets().size());
+		require(ClassArmor.pieces().size() == 280, "expected 280 armor pieces, got " + ClassArmor.pieces().size());
 		for (ArmorSetDef set : ClassArmor.sets()) {
 			List<Integer> pieces = set.bonuses().stream().map(ArmorSetDef.SetBonus::pieces).toList();
 			require(pieces.equals(List.of(2, 3, 4)), set.id() + " should have 2/3/4 piece bonuses, got " + pieces);
@@ -484,7 +484,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			RandomSource random = RandomSource.create(7);
 			List<ItemStack> items = List.of(GearDrops.pick(null, 20, 30, random), GearDrops.pick(null, 20, 30, random));
 			LootSession started = LootSessions.start(s, RaidBosses.ARACHNE, who, player.getUUID(), items);
-			return new int[] {started.id(), Coins.total(player.getInventory())};
+			return new int[] {started.id(), Coins.total(player)};
 		});
 		context.waitForScreen(LootScreen.class);
 		server.runCommand("tick rate 100");
@@ -497,7 +497,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			LootSessions.handle(player, new LootActionPayload(session[0], LootActionPayload.Action.BID, 1));
 			return lot(session[0], 0).bid();
 		});
-		int afterBid = server.computeOnServer(s -> Coins.total(connection.getServerPlayer().getInventory()));
+		int afterBid = server.computeOnServer(s -> Coins.total(connection.getServerPlayer()));
 		require(start > 0 && afterBid == session[1] - start, "a bid should hold " + start + " coins in escrow, wallet " + session[1] + " -> " + afterBid);
 		waitFor(context, server, s -> lot(session[0], 0).state() == LootSession.State.DONE, 1200, "the auction should end");
 		String auction = server.computeOnServer(s -> {
@@ -506,7 +506,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			if (!player.getUUID().equals(lot.winner()) || lot.price() != start) {
 				return "the only bidder should win at " + start + ", winner " + lot.winner() + " price " + lot.price();
 			}
-			return Coins.total(player.getInventory()) == session[1] - start ? "" : "the winner pays the bid";
+			return Coins.total(player) == session[1] - start ? "" : "the winner pays the bid";
 		});
 		require(auction.isEmpty(), auction);
 		// second lot: the leader switches to dice and is the only one to roll

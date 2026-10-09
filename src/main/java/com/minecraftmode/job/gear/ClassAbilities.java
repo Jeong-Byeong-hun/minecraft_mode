@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Innate class abilities (key B), unlocked at {@link LevelRewards#INNATE_LEVEL}: War Cry, Smoke
- * Step, Blink, Backstep and Grappling Hook. They do not need a class weapon.
+ * Step, Blink, Backstep, Grappling Hook, Flash Step and En. They do not need a class weapon.
  */
 public final class ClassAbilities {
 	public enum Ability {
@@ -37,7 +37,11 @@ public final class ClassAbilities {
 		BACKSTEP(JobClass.ARCHER, 12, 0, "backstep", "Backstep", "백스텝",
 			"Leap backwards and gain Swiftness for 2s.", "뒤로 크게 도약하고 2초간 신속."),
 		GRAPPLING_HOOK(JobClass.PIRATE, 14, 0, "grappling_hook", "Grappling Hook", "갈고리",
-			"Hook a block up to 24 blocks away and get pulled to it.", "24블록 안의 블록에 갈고리를 걸어 끌려갑니다.");
+			"Hook a block up to 24 blocks away and get pulled to it.", "24블록 안의 블록에 갈고리를 걸어 끌려갑니다."),
+		FLASH_STEP(JobClass.SHINIGAMI, 10, 10, "flash_step", "Flash Step", "순보",
+			"Vanish and reappear up to 11 blocks where you look, then 3s of Swiftness II (10 MP).", "바라보는 방향으로 최대 11블록 순식간에 이동하고 3초간 신속 II (MP 10)."),
+		EN(JobClass.HUNTER, 20, 10, "nen_en", "En", "원",
+			"Spread your aura 32 blocks: every enemy in it glows for 10s and you gain Night Vision (10 MP).", "오라를 32블록까지 펼쳐 범위 안의 모든 적을 10초간 드러내고 야간 투시를 얻습니다 (MP 10).");
 
 		private final JobClass job;
 		private final int cooldownSeconds;
@@ -117,6 +121,8 @@ public final class ClassAbilities {
 			case BLINK -> blink(player);
 			case BACKSTEP -> backstep(player);
 			case GRAPPLING_HOOK -> grapple(player);
+			case FLASH_STEP -> flashStep(player);
+			case EN -> en(player);
 		};
 		if (used) {
 			JobData after = JobProgression.get(player);
@@ -197,6 +203,39 @@ public final class ClassAbilities {
 		player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 30, 0, false, false, true));
 		player.resetFallDistance();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 0.9F, 0.8F);
+		return true;
+	}
+
+	private static boolean flashStep(final ServerPlayer player) {
+		ServerLevel level = player.level();
+		Vec3 look = player.getLookAngle();
+		Vec3 dir = new Vec3(look.x, Math.max(-0.3, Math.min(0.5, look.y)), look.z).normalize();
+		Vec3 start = player.position();
+		Vec3 end = freePath(player, dir, 11.0);
+		if (end.distanceToSqr(start) < 1.0) {
+			return false;
+		}
+		Fx fx = new Fx(Fx.Kind.SLASH, 0x9FD8E8);
+		fx.line(level, start.add(0, 1, 0), end.add(0, 1, 0), 0.8);
+		teleport(player, end);
+		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 60, 1, false, false, true));
+		level.playSound(null, end.x, end.y, end.z, SoundEvents.BREEZE_JUMP, SoundSource.PLAYERS, 0.6F, 1.8F);
+		return true;
+	}
+
+	private static boolean en(final ServerPlayer player) {
+		ServerLevel level = player.level();
+		int found = 0;
+		for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(32.0), e -> CombatHooks.isEnemy(player, e))) {
+			e.addEffect(new MobEffectInstance(MobEffects.GLOWING, 200, 0), player);
+			found++;
+		}
+		player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 400, 0, false, false, true));
+		Fx fx = new Fx(Fx.Kind.RING, 0xF5862B);
+		fx.circle(level, Fx.Kind.RING, player.position().add(0, 0.2, 0), 3.0);
+		fx.circle(level, Fx.Kind.SPARK, player.position().add(0, 0.4, 0), 6.0);
+		player.sendOverlayMessage(Component.translatable("message.minecraft_mode.ability.en", found).withStyle(ChatFormatting.GOLD));
+		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.6F, 1.6F);
 		return true;
 	}
 

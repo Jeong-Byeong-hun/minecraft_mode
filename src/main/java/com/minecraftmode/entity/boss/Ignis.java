@@ -1,5 +1,9 @@
 package com.minecraftmode.entity.boss;
 
+import java.util.ArrayList;
+import net.minecraft.world.entity.monster.Blaze;
+import net.minecraft.world.entity.EntityTypes;
+import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.MobProjectile;
@@ -49,6 +53,14 @@ public class Ignis extends RaidBoss {
 			pattern("meteor_rain", 2, 230, 0, 20, this::meteors),
 			pattern("burning_ground", 2, 210, 0, 10, this::burningGround),
 			pattern("supernova", 3, 520, 0, 50, (level, target) -> this.supernova(level))
+		);
+	}
+
+	@Override
+	protected List<Mechanic> mechanics() {
+		return List.of(
+			mechanic("ignis_solar_flare", 0.85F, 120, 130, this::solarFlare),
+			mechanic("ignis_phoenix_eggs", 0.5F, 150, 320, this::phoenixEggs)
 		);
 	}
 
@@ -186,5 +198,50 @@ public class Ignis extends RaidBoss {
 	protected void readAdditionalSaveData(final ValueInput input) {
 		super.readAdditionalSaveData(input);
 		this.reborn = input.getBooleanOr("Reborn", false);
+	}
+
+	/** Solar Flare: a blinding flash that burns everyone looking at Ignis. Turn your back. */
+	private void solarFlare(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.CAST);
+		this.sound(level, SoundEvents.BEACON_POWER_SELECT, 4.0F, 0.5F);
+		this.during(100, 4, () -> new Fx(Fx.Kind.SPARK, 0xFFF0A0).burst(level, this.position().add(0, this.getBbHeight() * 0.5, 0), 12, 1.5, 0.15));
+		this.after(100, () -> {
+			Vec3 sun = this.position().add(0, this.getBbHeight() * 0.5, 0);
+			for (ServerPlayer p : this.fighters(level)) {
+				Vec3 toward = sun.subtract(p.getEyePosition()).normalize();
+				if (p.getLookAngle().dot(toward) > 0.26) {
+					p.igniteForSeconds(4.0F);
+					this.lethal(level, p);
+				}
+			}
+			level.sendParticles(ParticleTypes.END_ROD, sun.x, sun.y, sun.z, 200, 3.0, 3.0, 3.0, 0.6);
+			this.sound(level, SoundEvents.GENERIC_EXPLODE.value(), 4.0F, 1.6F);
+		});
+	}
+
+	/** Phoenix Eggs: ember wardens (one more than the party) must all fall within 15 seconds, or the eggs hatch in a supernova. */
+	private void phoenixEggs(final ServerLevel level, final LivingEntity target) {
+		this.playAnim(CreatureAnim.SUMMON);
+		this.sound(level, SoundEvents.BLAZE_AMBIENT, 4.0F, 0.5F);
+		int n = this.fighters(level).size() + 1;
+		List<Vec3> at = this.spots(n, 6, Arenas.RADIUS - 4, 4);
+		List<Blaze> wardens = this.targets(level, EntityTypes.BLAZE, at, 45.0F, "raid.minecraft_mode.ember_warden");
+		boolean[] done = {false};
+		this.during(300, 10, () -> {
+			long alive = wardens.stream().filter(Blaze::isAlive).count();
+			this.tally(level, "ignis_phoenix_eggs", (int)(wardens.size() - alive), wardens.size());
+			if (alive == 0 && !done[0]) {
+				done[0] = true;
+				this.cleared(level, "ignis_phoenix_eggs");
+				this.endMechanic();
+			}
+		});
+		this.after(300, () -> {
+			if (wardens.stream().anyMatch(Blaze::isAlive)) {
+				wardens.forEach(w -> w.discard());
+				this.supernova(level);
+				this.wipe(level, "ignis_phoenix_eggs");
+			}
+		});
 	}
 }

@@ -111,7 +111,8 @@ public final class BodyPlan {
 		this.rig = rig;
 		this.scale = scale;
 		this.parts = List.copyOf(parts);
-		this.skins = Map.copyOf(skins);
+		// keep the declaration order: the first skins color the spawn egg
+		this.skins = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(skins));
 	}
 
 	public Skin skin(final Part part) {

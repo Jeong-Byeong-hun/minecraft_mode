@@ -95,16 +95,16 @@ final class TrialLang {
 		String[][] pages = {
 			{"Welcome to Stormhold, the capital of adventurers!\n\nThe city around 0, 0 is a safe zone: monsters do not spawn, buildings cannot be broken and players cannot fight each other.",
 				"모험가의 수도 스톰홀드에 오신 것을 환영합니다!\n\n0, 0 주변의 도시는 안전 지대입니다. 몬스터가 생기지 않고, 건물을 부술 수 없으며, 플레이어끼리 싸울 수 없습니다."},
-			{"City map\n\nCenter: Plaza (spawn)\nNorth: the Keep\nNorthwest: Mage tower\nNortheast: Warrior arena\nWest: Old Town, Shadow Hall\nEast: Cathedral, homes\nSouthwest: Archer park\nSouth: Market, Guild\nSoutheast: Harbor",
-				"도시 지도\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성\n북서: 마법사 탑\n북동: 전사 투기장\n서쪽: 구시가지, 그림자 회관\n동쪽: 대성당, 주택가\n남서: 궁수 공원\n남쪽: 시장, 길드\n남동: 항구"},
+			{"City map\n\nCenter: Plaza (spawn)\nNorth: the Keep\nNorthwest: Mage tower, Enchanter's Hall\nNortheast: Warrior arena\nWest: Old Town, Shadow Hall\nEast: Cathedral, homes\nSouthwest: Archer park\nSouth: Market, Guild\nSoutheast: Harbor",
+				"도시 지도\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성\n북서: 마법사 탑, 마법 부여소\n북동: 전사 투기장\n서쪽: 구시가지, 그림자 회관\n동쪽: 대성당, 주택가\n남서: 궁수 공원\n남쪽: 시장, 길드\n남동: 항구"},
 			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to a trainer:\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate",
 				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 교관과 대화하세요.\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적"},
 			{"Advancement trials\n\nEvery advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
 				"전직 시련\n\n모든 전직은 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
 			{"Weapons and skills\n\nClass weapons are sold at the Guild in the south market. Use skills with R, G, V and Z; open the class screen with K. Skills only work for the weapon's class, tier and level.",
 				"무기와 스킬\n\n직업 무기는 남쪽 시장의 길드에서 팝니다. 스킬은 R, G, V, Z, 직업 창은 K입니다. 스킬은 무기의 직업·차수·레벨 조건을 만족해야 쓸 수 있습니다."},
-			{"Essence\n\nEssence drops from monsters and iron or better ores. Engrave class weapons at the engraving tables in the Guild: up to 3 lines, and the same line stacks.",
-				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기에 최대 3줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
+			{"Essence\n\nEssence drops from monsters and iron or better ores. Engrave class gear at the engraving tables in the Guild: up to 3 lines on weapons and 4 on armor, and the same line stacks.",
+				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기는 3줄, 방어구는 4줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
 		};
 		for (int i = 0; i < pages.length; i++) {
 			b.add("book.minecraft_mode.guide.page" + (i + 1), ko ? pages[i][1] : pages[i][0]);

@@ -22,8 +22,9 @@ public final class ArmorOptions {
 		GearSlot.FEET, Map.of(MOVE_SPEED, 8.0F, DODGE, 5.0F, ITEM_FIND, 12.0F, GOLD_FIND, 6.0F, KILL_HEAL, 3.0F, SPEED_ON_KILL, 3.0F, DRAW_SPEED, 15.0F)
 	);
 
+	/** The slot's pool in {@link EngraveStat} order (stable across runs, unlike {@code Map.of}). */
 	public static Map<EngraveStat, Float> pool(final GearSlot slot) {
-		return POOLS.get(slot);
+		return java.util.Collections.unmodifiableMap(new java.util.EnumMap<>(POOLS.get(slot)));
 	}
 
 	/** Highest value a piece of {@code level} can roll for {@code stat}. */

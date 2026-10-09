@@ -4,15 +4,20 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** North row: the Keep (center), the Mage Quarter tower (west) and the Warrior arena and barracks (east). */
+/**
+ * North row: the Keep (center), the Mage Quarter tower and the Enchanter's Hall (west) and the Warrior
+ * arena and barracks (east).
+ */
 final class CityNorth {
 	static void build(final Build b) {
 		keep(b);
 		mageQuarter(b);
+		enchanterHall(b);
 		warriorQuarter(b);
 	}
 
@@ -190,7 +195,9 @@ final class CityNorth {
 		for (int x = -94; x <= -38; x += 3) {
 			for (int z = -94; z <= -50; z += 3) {
 				int h = Build.hash(x, 3, z);
-				if (h % 5 == 0 && Math.hypot(x - cx, z - cz) > r + 2 && !(x >= -53 && x <= -39 && z >= -95 && z <= -81)) {
+				if (h % 5 == 0 && Math.hypot(x - cx, z - cz) > r + 2 && !(x >= -53 && x <= -39 && z >= -95 && z <= -81)
+					&& !(x >= CityZone.HALL_X0 - 1 && x <= CityZone.HALL_X1 + 1 && z >= CityZone.HALL_Z0 - 1 && z <= CityZone.HALL_Z1 + 1)
+					&& !(x >= -47 && x <= -41 && z >= CityZone.HALL_Z1 && z <= -38)) {
 					b.set(x, -1, z, Blocks.CALCITE);
 					b.set(x, 0, z, Blocks.AMETHYST_CLUSTER);
 				}
@@ -203,6 +210,81 @@ final class CityNorth {
 		b.fill(-85, 0, -54, -81, 5, -54, Build.glass(DyeColor.PURPLE));
 		b.flag(-74, -56, 8, Build.wool(DyeColor.PURPLE), Build.wool(DyeColor.MAGENTA), Direction.WEST);
 		b.flag(-58, -56, 8, Build.wool(DyeColor.PURPLE), Build.wool(DyeColor.MAGENTA), Direction.EAST);
+	}
+
+	/**
+	 * The Enchanter's Hall east of the mage tower: a stone hall with a purpur roof and four enchanting
+	 * stations, each table ringed by bookshelves two blocks out (open toward the aisle) for full level 30
+	 * enchanting, plus anvils and a grindstone for books. A paved path leads south to the road.
+	 */
+	private static void enchanterHall(final Build b) {
+		int x0 = CityZone.HALL_X0;
+		int x1 = CityZone.HALL_X1;
+		int z0 = CityZone.HALL_Z0;
+		int z1 = CityZone.HALL_Z1;
+		if (!b.touches(x0 - 2, z0 - 2, x1 + 2, -38)) {
+			return;
+		}
+		int cx = (x0 + x1) / 2;
+		// floor, walls and roof
+		b.fill(x0, -1, z0, x1, -1, z1, Blocks.POLISHED_DEEPSLATE);
+		b.fill(cx - 1, -1, z0 + 1, cx + 1, -1, z1 - 1, Blocks.PURPUR_BLOCK);
+		b.fill(x0 + 1, -1, z0 + 8, x1 - 1, -1, z0 + 10, Blocks.PURPUR_BLOCK);
+		b.walls(x0, 0, z0, x1, 6, z1, Blocks.STONE_BRICKS);
+		b.air(x0 + 1, 0, z0 + 1, x1 - 1, 5, z1 - 1);
+		b.fill(x0 + 1, 6, z0 + 1, x1 - 1, 6, z1 - 1, Blocks.DARK_OAK_PLANKS);
+		b.walls(x0, 6, z0, x1, 6, z1, Blocks.CHISELED_STONE_BRICKS);
+		for (int[] c : new int[][] {{x0, z0}, {x1, z0}, {x0, z1}, {x1, z1}, {x0, (z0 + z1) / 2}, {x1, (z0 + z1) / 2}}) {
+			b.fill(c[0], 0, c[1], c[0], 6, c[1], Blocks.PURPUR_PILLAR);
+		}
+		for (int z = z0 + 3; z <= z1 - 3; z += 4) {
+			b.fill(x0, 2, z, x0, 3, z, Build.glass(DyeColor.PURPLE));
+			b.fill(x1, 2, z, x1, 3, z, Build.glass(DyeColor.PURPLE));
+		}
+		for (int x = x0 + 3; x <= x1 - 3; x += 4) {
+			b.fill(x, 2, z0, x, 3, z0, Build.glass(DyeColor.PURPLE));
+		}
+		b.gableRoof(x0, z0, x1, z1, 7, Blocks.PURPUR_STAIRS, Blocks.PURPUR_BLOCK, false);
+		// entrance (south) and path to the road
+		b.air(cx - 1, 0, z1, cx + 1, 3, z1);
+		b.fill(cx - 2, 4, z1, cx + 2, 4, z1, Blocks.CHISELED_QUARTZ_BLOCK);
+		for (int z = z1 + 1; z <= -38; z++) {
+			for (int x = cx - 1; x <= cx + 1; x++) {
+				b.set(x, -1, z, Build.paving(x, z));
+				b.air(x, 0, z, x, 2, z);
+			}
+		}
+		b.flag(cx - 3, z1 + 1, 6, Build.wool(DyeColor.PURPLE), Build.wool(DyeColor.MAGENTA), Direction.SOUTH);
+		b.flag(cx + 3, z1 + 1, 6, Build.wool(DyeColor.PURPLE), Build.wool(DyeColor.MAGENTA), Direction.SOUTH);
+		// four enchanting stations: bookshelves on the ring two blocks out, two high, open toward the south
+		for (var table : CityZone.enchantingTables(0)) {
+			int tx = table.getX();
+			int tz = table.getZ();
+			b.set(tx, 0, tz, Blocks.ENCHANTING_TABLE);
+			for (int dx = -2; dx <= 2; dx++) {
+				for (int dz = -2; dz <= 2; dz++) {
+					boolean ring = Math.abs(dx) == 2 || Math.abs(dz) == 2;
+					boolean opening = dz == 2 && Math.abs(dx) <= 1;
+					if (ring && !opening) {
+						b.fill(tx + dx, 0, tz + dz, tx + dx, 1, tz + dz, Blocks.BOOKSHELF);
+					}
+				}
+			}
+			b.set(tx - 2, 2, tz - 2, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 3).setValue(CandleBlock.LIT, true));
+			b.set(tx + 2, 2, tz - 2, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 2).setValue(CandleBlock.LIT, true));
+			b.lantern(tx, 5, tz, true, false);
+		}
+		// anvils and a grindstone along the side walls, a lectern at the back
+		for (var anvil : CityZone.anvils(0)) {
+			if (anvil.getX() >= x0 && anvil.getX() <= x1 && anvil.getZ() >= z0 && anvil.getZ() <= z1) {
+				b.set(anvil.getX(), 0, anvil.getZ(), Blocks.ANVIL);
+			}
+		}
+		b.set(x0 + 1, 0, z0 + 13, Blocks.GRINDSTONE);
+		b.set(x1 - 1, 0, z0 + 13, Blocks.GRINDSTONE);
+		b.set(cx, 0, z0 + 1, Blocks.LECTERN);
+		b.lantern(cx, 5, z0 + 9, true, false);
+		b.lantern(cx, 5, z1 - 2, true, false);
 	}
 
 	// ------------------------------------------------------------------ warrior quarter

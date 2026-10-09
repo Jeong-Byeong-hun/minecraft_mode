@@ -3,6 +3,7 @@ package com.minecraftmode.city;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.job.JobClass;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
@@ -94,6 +95,22 @@ public final class CityZone {
 			case BLACKSMITH -> new BlockPos(-17, base, 87);
 			case RAID_MARSHAL -> new BlockPos(10, base, -55);
 		};
+	}
+
+	/** The Enchanter's Hall east of the mage tower (outer walls). */
+	public static final int HALL_X0 = -53;
+	public static final int HALL_X1 = -35;
+	public static final int HALL_Z0 = -79;
+	public static final int HALL_Z1 = -61;
+
+	/** The hall's four enchanting tables; each has a full ring of bookshelves (level 30 enchanting). */
+	public static List<BlockPos> enchantingTables(final int base) {
+		return List.of(new BlockPos(-48, base, -74), new BlockPos(-40, base, -74), new BlockPos(-48, base, -66), new BlockPos(-40, base, -66));
+	}
+
+	/** Anvils the city keeps in repair (the forge and the Enchanter's Hall); players cannot replace broken ones there. */
+	public static List<BlockPos> anvils(final int base) {
+		return List.of(new BlockPos(-20, base, 86), new BlockPos(-52, base, -70), new BlockPos(-36, base, -70));
 	}
 
 	private CityZone() {

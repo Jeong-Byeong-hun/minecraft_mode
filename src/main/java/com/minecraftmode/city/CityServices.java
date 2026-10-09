@@ -22,6 +22,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
@@ -31,6 +32,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.WrittenBookContent;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
@@ -48,6 +52,7 @@ public final class CityServices {
 			if (server.getTickCount() % 100 == 0) {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());
+				keepAnvils(server.overworld());
 			}
 			if (server.getTickCount() % 20 == 0) {
 				driveOffHostiles(server.overworld());
@@ -162,6 +167,32 @@ public final class CityServices {
 			}
 			if (keep.blockPosition().distManhattan(home) > 2) {
 				keep.teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
+			}
+		}
+	}
+
+	/**
+	 * Anvils wear out and break with use, and nobody may place blocks in the city: worn or missing city
+	 * anvils are put back as new ones (keeping their facing).
+	 */
+	public static void keepAnvils(final ServerLevel level) {
+		if (!CityZone.isCityLevel(level)) {
+			return;
+		}
+		for (BlockPos pos : CityZone.anvils(CityZone.baseY(level))) {
+			if (!level.isLoaded(pos)) {
+				continue;
+			}
+			BlockState state = level.getBlockState(pos);
+			if (state.is(Blocks.ANVIL)) {
+				continue;
+			}
+			BlockState fresh = Blocks.ANVIL.defaultBlockState();
+			if (state.hasProperty(AnvilBlock.FACING)) {
+				fresh = fresh.setValue(AnvilBlock.FACING, state.getValue(AnvilBlock.FACING));
+			}
+			if (state.isAir() || state.is(BlockTags.ANVIL)) {
+				level.setBlockAndUpdate(pos, fresh);
 			}
 		}
 	}

@@ -51,6 +51,7 @@ final class CityChecks {
 
 	static void run(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		int base = checkLayout(server, connection);
+		checkEnchanterHall(server, base);
 		checkTrainers(context, server, base);
 		map(server, base);
 		checkProtection(context, server, connection, base);
@@ -112,6 +113,39 @@ final class CityChecks {
 			MinecraftMode.LOGGER.info("[city] base Y {}, spawn {}, fountain, walls and gates in place", base, spawn);
 			return base;
 		});
+	}
+
+	/** Every hall table has the full 15 bookshelves, the anvils are there, and a worn anvil is put back as new. */
+	private static void checkEnchanterHall(final TestServerContext server, final int base) {
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			StringBuilder out = new StringBuilder();
+			for (BlockPos table : CityZone.enchantingTables(base)) {
+				if (!level.getBlockState(table).is(Blocks.ENCHANTING_TABLE)) {
+					return "no enchanting table at " + table;
+				}
+				long shelves = net.minecraft.world.level.block.EnchantingTableBlock.BOOKSHELF_OFFSETS.stream()
+					.filter(offset -> net.minecraft.world.level.block.EnchantingTableBlock.isValidBookShelf(level, table, offset)).count();
+				if (shelves < 15) {
+					return "the table at " + table + " has only " + shelves + " working bookshelves (15 give level 30)";
+				}
+				out.append(shelves).append(" ");
+			}
+			for (BlockPos anvil : CityZone.anvils(base)) {
+				if (!level.getBlockState(anvil).is(Blocks.ANVIL)) {
+					return "no anvil at " + anvil;
+				}
+			}
+			BlockPos worn = CityZone.anvils(base).get(1);
+			level.setBlockAndUpdate(worn, Blocks.DAMAGED_ANVIL.defaultBlockState());
+			CityServices.keepAnvils(level);
+			if (!level.getBlockState(worn).is(Blocks.ANVIL)) {
+				return "a damaged city anvil should be replaced";
+			}
+			return "shelves per table: " + out.toString().trim();
+		});
+		require(report.startsWith("shelves"), report);
+		MinecraftMode.LOGGER.info("[city] enchanter's hall: 4 tables at level 30 ({}), anvils kept in repair", report);
 	}
 
 	// ------------------------------------------------------------ trainers
@@ -374,6 +408,7 @@ final class CityChecks {
 		view(context, server, "city_plaza", new BlockPos(0, base + 4, 30), new BlockPos(0, base + 4, -20));
 		view(context, server, "city_keep", new BlockPos(0, base + 8, -22), new BlockPos(0, base + 12, -75));
 		view(context, server, "city_mage_quarter", new BlockPos(-35, base + 14, -30), new BlockPos(-66, base + 18, -62));
+		view(context, server, "city_enchanter_hall", new BlockPos(-44, base + 2, -63), new BlockPos(-48, base, -72));
 		view(context, server, "city_warrior_quarter", new BlockPos(40, base + 16, -40), new BlockPos(72, base + 2, -78));
 		view(context, server, "city_old_town", new BlockPos(-36, base + 9, 22), new BlockPos(-68, base + 4, 24));
 		view(context, server, "city_market_guild", new BlockPos(17, base + 7, 28), new BlockPos(17, base + 3, 60));

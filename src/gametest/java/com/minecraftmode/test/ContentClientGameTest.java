@@ -523,6 +523,12 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		shot(context, "content_guide");
 		requireFits(context, "guide", 340);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		GuideScreen.showTopic(GuideScreen.Topic.LEVELING);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new GuideScreen()));
+		context.waitForScreen(GuideScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_guide_leveling");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 		GuideScreen.showTopic(GuideScreen.Topic.PLACES);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(new GuideScreen()));
 		context.waitForScreen(GuideScreen.class);

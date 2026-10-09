@@ -30,13 +30,18 @@ final class ContentLang {
 	private static void guide(final TranslationBuilder b, final boolean ko) {
 		b.add("screen.minecraft_mode.guide.title", ko ? "안내원 넬라 — 무엇이든 물어보세요" : "Guide Nella - ask me anything");
 		b.add("screen.minecraft_mode.guide.plaza", ko ? "광장 (시작 지점)" : "Plaza (spawn)");
+		b.add("screen.minecraft_mode.guide.leveling_left", ko ? "지금 Lv %s · 레벨 %3$s까지 경험치 %2$s 남음" : "Now Lv %s · %s EXP to level %s");
+		b.add("screen.minecraft_mode.guide.leveling_done", ko ? "레벨 10 달성! 원하는 직업의 교관을 찾아가세요 (길 안내)." : "Level 10 reached! Visit the trainer of your class (see Directions).");
 		b.add("message.minecraft_mode.starter_kit.given", ko ? "보급관 브람에게서 철 갑옷 한 벌과 철 검·곡괭이·도끼를 받았습니다!"
 			: "Quartermaster Bram hands you a set of iron armor and an iron sword, pickaxe and axe!");
 		b.add("message.minecraft_mode.starter_kit.taken", ko ? "보급품은 모험가마다 한 번만 받을 수 있네." : "The kit is one per adventurer - you already have yours.");
 		String[][] topics = {
 			{"start", "Getting started", "처음 시작",
-				"Defeat monsters and mine iron or better ores to gain class experience. At level 10, take the trial of the trainer whose class you want.\n\nFirst pick up a set of iron gear from Quartermaster Bram here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
-				"몬스터를 처치하고 철 이상의 광석을 캐면 직업 경험치가 오릅니다. 레벨 10이 되면 원하는 직업의 교관에게서 시련을 받아 직업을 고르세요.\n\n먼저 바로 옆 보급관 브람에게서 철 장비 한 벌을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
+				"Defeat monsters and mine iron or better ores to gain class experience (see Leveling to 10). At level 10, take the trial of the trainer whose class you want.\n\nFirst pick up a set of iron gear from Quartermaster Bram here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
+				"몬스터를 처치하고 철 이상의 광석을 캐면 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게서 시련을 받아 직업을 고르세요.\n\n먼저 바로 옆 보급관 브람에게서 철 장비 한 벌을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
+			{"leveling", "Leveling to 10", "빠른 성장 (Lv 10)",
+				"Level 10 takes %s EXP. Hunting is fastest: a monster gives EXP equal to its max health (zombie or skeleton 20, enderman 40, named 40-60), so about %s zombies. Ores are slow (iron 2, diamond 8).\n\n· Wear Bram's iron gear and hunt outside the walls at night\n· A monster spawner room is the best spot\n· Scholar's Coffee from the alchemist in the market (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP",
+				"레벨 10까지 경험치 %s. 사냥이 가장 빠릅니다: 몬스터 경험치는 최대 체력과 같아서 좀비·스켈레톤 20, 엔더맨 40, 네임드 40~60이니 좀비 약 %s마리면 됩니다. 광석은 철 2, 다이아 8로 느립니다.\n\n· 브람의 철 장비를 입고 밤에 성벽 밖에서 사냥\n· 몬스터 스포너가 있는 방이 최고의 사냥터\n· 시장 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다"},
 			{"classes", "Classes", "직업과 전직",
 				"Seven classes: Warrior, Rogue, Mage, Archer, Pirate, Soul Reaper and Hunter. Every advancement is a trial from the class trainer: defeat the listed monsters, collect their trial tokens and hand them in with essence. Tiers open at levels 10, 25, 45 and 70.\n\nThe class screen (K) shows your next trial and where its trainer stands. Past level 100 you gain paragon levels.",
 				"직업은 전사·도적·법사·궁수·해적·사신·헌터 7가지입니다. 모든 전직은 교관의 시련입니다: 목표 몬스터를 처치해 시련 증표를 모으고 정수와 함께 제출하세요. 레벨 10·25·45·70에 1~4차가 열립니다.\n\n직업 창(K)에서 다음 시련과 교관 위치를 볼 수 있습니다. 레벨 100 이후에는 초월 레벨이 쌓입니다."},

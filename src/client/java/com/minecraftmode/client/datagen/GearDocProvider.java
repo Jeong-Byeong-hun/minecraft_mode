@@ -446,6 +446,7 @@ public class GearDocProvider implements DataProvider {
 		{"item.minecraft.glass_bottle", "유리병"}, {"item.minecraft.spider_eye", "거미 눈"}, {"item.minecraft.honey_bottle", "꿀이 든 병"},
 		{"item.minecraft.iron_ingot", "철 주괴"}, {"item.minecraft.cocoa_beans", "코코아 콩"}, {"item.minecraft.gold_ingot", "금 주괴"},
 		{"item.minecraft.lapis_lazuli", "청금석"}, {"item.minecraft.ender_pearl", "엔더 진주"}, {"item.minecraft.compass", "나침반"}, {"item.minecraft.diamond", "다이아몬드"},
+		{"item.minecraft_mode.mythril_ingot", "미스릴 주괴"}, {"item.minecraft_mode.raw_mythril", "미스릴 원석"}, {"item.minecraft_mode.mythril_nugget", "미스릴 조각"},
 		{"entity.minecraft.pillager", "약탈자"}, {"entity.minecraft.vindicator", "변명자"}, {"entity.minecraft.zombie", "좀비"}, {"entity.minecraft.spider", "거미"},
 		{"entity.minecraft.cave_spider", "동굴 거미"}, {"entity.minecraft.witch", "마녀"}, {"entity.minecraft.drowned", "드라운드"},
 		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
@@ -465,7 +466,7 @@ public class GearDocProvider implements DataProvider {
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
 
 		md.append("## 광장의 안내원과 보급관\n\n");
-		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 직업, 키와 명령어, 길 안내(모든 NPC·교관 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
+		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 명령어, 길 안내(모든 NPC·교관 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
 		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없는 ").append(StarterKit.ITEMS.size())
 			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼.\n\n");
 		md.append("## 칭호 이름표\n\n");

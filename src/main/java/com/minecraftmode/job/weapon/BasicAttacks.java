@@ -34,7 +34,7 @@ public final class BasicAttacks {
 	private static void fire(final ServerPlayer player, final ItemStack stack, final WeaponDef def, final float power) {
 		JobData data = JobProgression.get(player);
 		boolean active = JobWeapons.isActive(data, def);
-		EngraveTotals mods = active ? JobWeapons.engravings(stack).totals() : EngraveTotals.EMPTY;
+		EngraveTotals mods = active ? JobWeapons.activeTotals(player) : EngraveTotals.EMPTY;
 		float damage = def.power() * def.archetype().shotMultiplier() * power * (1.0F + mods.fraction(EngraveStat.SHOT_DAMAGE));
 		if (CombatHooks.has(data, JobClass.ARCHER, 1)) {
 			damage *= 1.15F;

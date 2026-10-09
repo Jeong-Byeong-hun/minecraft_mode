@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:ranger_cloak"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:ranger_cloak"
+      }
+    ]
+  }
+}

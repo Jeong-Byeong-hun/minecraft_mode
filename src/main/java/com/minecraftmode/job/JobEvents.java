@@ -88,7 +88,8 @@ public final class JobEvents {
 		}
 		float maxHealth = entity.getMaxHealth();
 		boolean boss = maxHealth >= BOSS_HEALTH;
-		JobProgression.addExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))));
+		gainExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))));
+		onKill(killer);
 
 		// Essence: monsters drop it at random, bosses always drop condensed essence
 		if (boss) {
@@ -104,6 +105,33 @@ public final class JobEvents {
 			int copper = 1 + (int)(maxHealth / 20.0F);
 			drop(level, entity, copper >= 9 ? new ItemStack(ModItems.SILVER_COIN, copper / 9) : new ItemStack(ModItems.COPPER_COIN, copper));
 			level.sendParticles(ParticleTypes.WAX_ON, entity.getX(), entity.getY(0.5), entity.getZ(), 8, 0.3, 0.3, 0.3, 0.1);
+		}
+	}
+
+	/** Class EXP with the EXP bonus of the player's gear. */
+	public static void gainExp(final ServerPlayer player, final int amount) {
+		float bonus = JobWeapons.activeTotals(player).fraction(EngraveStat.EXP_BONUS);
+		JobProgression.addExp(player, Math.round(amount * (1.0F + bonus)));
+	}
+
+	/** Kill procs from gear: heal, MP, stealth and swiftness. */
+	private static void onKill(final ServerPlayer killer) {
+		var mods = JobWeapons.activeTotals(killer);
+		float heal = mods.get(EngraveStat.KILL_HEAL);
+		if (heal > 0.0F) {
+			killer.heal(heal);
+		}
+		int mana = (int)mods.get(EngraveStat.KILL_MANA);
+		if (mana > 0) {
+			JobStats.addMana(killer, mana);
+		}
+		int stealth = Math.round(mods.get(EngraveStat.STEALTH_ON_KILL) * 20.0F);
+		if (stealth > 0) {
+			killer.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, stealth, 0, false, false, true));
+		}
+		int speed = Math.round(mods.get(EngraveStat.SPEED_ON_KILL) * 20.0F);
+		if (speed > 0) {
+			killer.addEffect(new MobEffectInstance(MobEffects.SPEED, speed, 1, false, false, true));
 		}
 	}
 
@@ -145,7 +173,7 @@ public final class JobEvents {
 		if (reward == null || !player.hasCorrectToolForDrops(state)) {
 			return;
 		}
-		JobProgression.addExp(serverPlayer, reward.exp);
+		gainExp(serverPlayer, reward.exp);
 		ItemStack tool = player.getMainHandItem();
 		if (EnchantLevels.get(level, Enchantments.SILK_TOUCH, tool) > 0) {
 			return;

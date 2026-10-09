@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:ember_weave"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:ember_weave"
+      }
+    ]
+  }
+}

@@ -15,6 +15,7 @@ final class CitySouth {
 	static void build(final Build b) {
 		archerPark(b);
 		market(b);
+		forge(b);
 		harbor(b);
 	}
 
@@ -119,6 +120,52 @@ final class CitySouth {
 		b.cylinder(9.0, 89.0, 1.0, 0, 0, Blocks.WATER, false);
 		b.tree(18, 84, 6, Blocks.CHERRY_LOG, Blocks.CHERRY_LEAVES);
 		b.tree(-18, 84, 6, Blocks.CHERRY_LOG, Blocks.CHERRY_LEAVES);
+	}
+
+	/**
+	 * The blacksmith's forge west of the south square: an open-fronted smithy (cobblestone walls, dark oak
+	 * roof, brick chimney with a smoking campfire) with blast furnace, furnace, lava cauldron, anvil,
+	 * grindstone and smithing table. Master Smith Volund stands at its open side ({@link CityZone#npcHome}).
+	 */
+	private static void forge(final Build b) {
+		int x0 = -26;
+		int x1 = -15;
+		int z0 = 82;
+		int z1 = 92;
+		if (!b.touches(x0 - 1, z0 - 1, x1 + 1, z1 + 1)) {
+			return;
+		}
+		b.fill(x0, -1, z0, x1, -1, z1, Blocks.STONE_BRICKS);
+		b.air(x0, 0, z0, x1, 6, z1);
+		b.fill(x0, 0, z0, x0, 4, z1, Blocks.COBBLESTONE);
+		b.fill(x0, 0, z0, x1 - 3, 4, z0, Blocks.COBBLESTONE);
+		b.fill(x0, 0, z1, x1 - 3, 4, z1, Blocks.COBBLESTONE);
+		b.fill(x0, 2, z0 + 3, x0, 2, z0 + 4, Blocks.IRON_BARS);
+		b.fill(x0, 2, z1 - 4, x0, 2, z1 - 3, Blocks.IRON_BARS);
+		for (int[] post : new int[][] {{x1, z0}, {x1, z1}, {x1 - 3, z0}, {x1 - 3, z1}}) {
+			b.fill(post[0], 0, post[1], post[0], 4, post[1], Build.log(Blocks.DARK_OAK_LOG, Direction.Axis.Y));
+		}
+		b.fill(x0, 5, z0, x1, 5, z1, Blocks.DARK_OAK_PLANKS);
+		b.fill(x0, 6, z0, x1, 6, z0, Blocks.DARK_OAK_SLAB);
+		b.fill(x0, 6, z1, x1, 6, z1, Blocks.DARK_OAK_SLAB);
+		// chimney with a smoking campfire
+		b.fill(x0 + 1, 0, z0 + 1, x0 + 2, 8, z0 + 2, Blocks.BRICKS);
+		b.set(x0 + 1, 9, z0 + 1, Blocks.CAMPFIRE);
+		b.set(x0 + 2, 0, z0 + 2, Blocks.BLAST_FURNACE);
+		b.set(x0 + 1, 0, z0 + 3, Blocks.FURNACE);
+		b.set(x0 + 1, 0, z0 + 5, Blocks.LAVA_CAULDRON);
+		b.set(x0 + 1, 0, z0 + 6, Blocks.WATER_CAULDRON);
+		b.set(x0 + 1, 0, z1 - 2, Blocks.SMITHING_TABLE);
+		b.set(x0 + 1, 0, z1 - 1, Blocks.BARREL);
+		b.set(x0 + 6, 0, z0 + 4, Blocks.ANVIL);
+		b.set(x0 + 6, 0, z0 + 7, Blocks.GRINDSTONE);
+		b.fill(x0 + 4, 4, z0 + 5, x0 + 4, 4, z0 + 5, Blocks.IRON_CHAIN);
+		b.lantern(x0 + 4, 3, z0 + 5, true, false);
+		b.lantern(x1 - 1, 4, z0 + 2, true, false);
+		b.lantern(x1 - 1, 4, z1 - 2, true, false);
+		b.set(x1 + 1, 0, z0 + 1, Blocks.BARREL);
+		b.set(x1 + 1, 0, z1 - 1, Blocks.BARREL);
+		b.flag(x1 + 1, z0 + 5, 5, Build.wool(DyeColor.ORANGE), Build.wool(DyeColor.BLACK), Direction.EAST);
 	}
 
 	/** Market stall: four posts, striped awning, counter and the goods (a shop block) at the back. */

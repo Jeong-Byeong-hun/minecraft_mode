@@ -7,6 +7,10 @@ import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.command.JobCommand;
+import com.minecraftmode.command.RaidCommands;
+import com.minecraftmode.raid.Parties;
+import com.minecraftmode.raid.Raids;
+import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.job.JobEvents;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
@@ -22,6 +26,7 @@ import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModCreativeTabs;
 import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModEntities;
+import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import net.fabricmc.api.ModInitializer;
@@ -47,6 +52,7 @@ public class MinecraftMode implements ModInitializer {
 		ModEntities.init();
 		ModItems.init();
 		JobWeapons.init();
+		ClassArmor.init();
 		Quests.init();
 		ModMenus.init();
 		ModCreativeTabs.init();
@@ -61,8 +67,12 @@ public class MinecraftMode implements ModInitializer {
 		JobEvents.init();
 		QuestService.init();
 		CityServices.init();
+		Parties.init();
+		Raids.init();
+		LootSessions.init();
 		ModNetworking.init();
 		JobCommand.init();
+		RaidCommands.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

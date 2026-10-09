@@ -5,6 +5,8 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
+import com.minecraftmode.job.gear.ArmorPieceDef;
+import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.skill.SkillCaster;
@@ -35,6 +37,11 @@ public final class JobTooltips {
 			WeaponDef def = JobWeapons.def(stack);
 			if (def != null) {
 				lines.addAll(1, build(stack, def));
+				return;
+			}
+			ArmorPieceDef armor = ClassArmor.def(stack);
+			if (armor != null) {
+				lines.addAll(1, GearTooltips.build(stack, armor));
 			}
 		});
 	}
@@ -79,7 +86,7 @@ public final class JobTooltips {
 		Engravings engravings = JobWeapons.engravings(stack);
 		boolean detail = Minecraft.getInstance().hasShiftDown();
 		lines.add(Component.translatable(detail ? "tooltip.minecraft_mode.weapon.skills" : "tooltip.minecraft_mode.weapon.skills_hint").withStyle(ChatFormatting.YELLOW));
-		var mods = engravings.totals();
+		var mods = player == null ? engravings.totals() : JobWeapons.activeTotals(player);
 		for (int i = 0; i < def.skills().size(); i++) {
 			Skill skill = def.skills().get(i);
 			String key = JobKeys.SKILLS[i].getTranslatedKeyMessage().getString();
@@ -95,7 +102,7 @@ public final class JobTooltips {
 			}
 		}
 
-		lines.add(Component.translatable("tooltip.minecraft_mode.weapon.engravings", engravings.lines().size(), Engravings.MAX_LINES).withStyle(ChatFormatting.LIGHT_PURPLE));
+		lines.add(Component.translatable("tooltip.minecraft_mode.weapon.engravings", engravings.lines().size(), Engravings.WEAPON_LINES).withStyle(ChatFormatting.LIGHT_PURPLE));
 		Map<Engraving, Integer> counts = new LinkedHashMap<>();
 		for (Engraving e : engravings.resolved()) {
 			counts.merge(e, 1, Integer::sum);

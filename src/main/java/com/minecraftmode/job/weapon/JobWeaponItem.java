@@ -145,6 +145,6 @@ public class JobWeaponItem extends Item {
 		if (!JobWeapons.isActive(JobProgression.get(player), def)) {
 			return 0.0F;
 		}
-		return JobWeapons.engravings(player.getMainHandItem()).totals().fraction(EngraveStat.DRAW_SPEED);
+		return JobWeapons.activeTotals(player).fraction(EngraveStat.DRAW_SPEED);
 	}
 }

@@ -2,6 +2,7 @@ package com.minecraftmode.client.job;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.network.CastSkillPayload;
+import com.minecraftmode.network.InnateAbilityPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -9,7 +10,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
-/** Skill keys (R, G, V, Z by default) and the class screen key (K). */
+/** Skill keys (R, G, V, Z by default), the innate class ability (B) and the class screen key (K). */
 public final class JobKeys {
 	public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(MinecraftMode.id("classes"));
 	public static final KeyMapping[] SKILLS = {
@@ -19,6 +20,7 @@ public final class JobKeys {
 		register("skill_4", InputConstants.KEY_Z)
 	};
 	public static final KeyMapping OPEN_SCREEN = register("job_screen", InputConstants.KEY_K);
+	public static final KeyMapping INNATE = register("innate_ability", InputConstants.KEY_B);
 
 	private static KeyMapping register(final String name, final int key) {
 		return KeyMappingHelper.registerKeyMapping(new KeyMapping("key.minecraft_mode." + name, InputConstants.Type.KEYBOARD, key, CATEGORY));
@@ -37,6 +39,11 @@ public final class JobKeys {
 				if (ClientPlayNetworking.canSend(CastSkillPayload.TYPE)) {
 					ClientPlayNetworking.send(new CastSkillPayload(i));
 				}
+			}
+		}
+		while (INNATE.consumeClick()) {
+			if (ClientPlayNetworking.canSend(InnateAbilityPayload.TYPE)) {
+				ClientPlayNetworking.send(InnateAbilityPayload.INSTANCE);
 			}
 		}
 		while (OPEN_SCREEN.consumeClick()) {

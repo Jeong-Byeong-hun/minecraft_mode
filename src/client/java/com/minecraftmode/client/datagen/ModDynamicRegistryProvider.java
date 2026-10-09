@@ -7,7 +7,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 
 /**
- * Writes the mod's ore features, placed features and enchantments (see {@code buildRegistry}).
+ * Writes the mod's ore features, placed features, enchantments and the raid dimension type (see {@code buildRegistry}).
  */
 public class ModDynamicRegistryProvider extends FabricDynamicRegistryProvider {
 	public ModDynamicRegistryProvider(final FabricPackOutput output, final CompletableFuture<HolderLookup.Provider> registries) {
@@ -19,6 +19,7 @@ public class ModDynamicRegistryProvider extends FabricDynamicRegistryProvider {
 		entries.addAll(registries.lookupOrThrow(Registries.FEATURE));
 		entries.addAll(registries.lookupOrThrow(Registries.PLACED_FEATURE));
 		entries.addAll(registries.lookupOrThrow(Registries.ENCHANTMENT));
+		entries.addAll(registries.lookupOrThrow(Registries.DIMENSION_TYPE));
 	}
 
 	@Override

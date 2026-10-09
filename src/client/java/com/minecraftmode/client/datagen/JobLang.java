@@ -155,6 +155,10 @@ final class JobLang {
 		b.add("screen.minecraft_mode.engraving.reroll", ko ? "후보 새로 고침" : "Reroll offers");
 
 		TrialLang.add(b, ko);
+		GearLang.add(b, ko);
+		LootLang.add(b, ko);
+		MonsterLang.add(b, ko);
+		RaidLang.add(b, ko);
 	}
 
 	private JobLang() {

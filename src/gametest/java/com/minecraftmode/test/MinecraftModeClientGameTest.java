@@ -124,21 +124,29 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 	private static void checkOreFeaturePlaces(final ClientGameTestContext context, final TestServerContext server) {
 		// The test world is superflat (no stone), so build a stone cube in the air and place the ore inside it.
 		server.runCommand("fill -4 100 -4 4 108 4 minecraft:stone");
-		server.runCommand("place feature minecraft_mode:ore_mythril 0 104 0");
-		server.runCommand("place feature minecraft_mode:ore_aluminum 0 104 0");
-		context.waitTicks(2);
-		int[] counts = server.computeOnServer(s -> {
-			ServerLevel level = s.overworld();
-			int mythril = 0, aluminum = 0;
-			for (BlockPos pos : BlockPos.betweenClosed(-4, 100, -4, 4, 108, 4)) {
-				if (level.getBlockState(pos).is(ModBlocks.MYTHRIL_ORE)) {
-					mythril++;
-				} else if (level.getBlockState(pos).is(ModBlocks.ALUMINUM_ORE)) {
-					aluminum++;
-				}
+		// placement is random and the cube is small, so a vein can miss now and then: try a few times
+		int[] counts = {0, 0};
+		for (int attempt = 0; attempt < 4 && (counts[0] == 0 || counts[1] == 0); attempt++) {
+			if (counts[0] == 0) {
+				server.runCommand("place feature minecraft_mode:ore_mythril 0 104 0");
 			}
-			return new int[] {mythril, aluminum};
-		});
+			if (counts[1] == 0) {
+				server.runCommand("place feature minecraft_mode:ore_aluminum 0 104 0");
+			}
+			context.waitTicks(2);
+			counts = server.computeOnServer(s -> {
+				ServerLevel level = s.overworld();
+				int mythril = 0, aluminum = 0;
+				for (BlockPos pos : BlockPos.betweenClosed(-4, 100, -4, 4, 108, 4)) {
+					if (level.getBlockState(pos).is(ModBlocks.MYTHRIL_ORE)) {
+						mythril++;
+					} else if (level.getBlockState(pos).is(ModBlocks.ALUMINUM_ORE)) {
+						aluminum++;
+					}
+				}
+				return new int[] {mythril, aluminum};
+			});
+		}
 		require(counts[0] > 0 && counts[1] > 0, "ore features placed nothing: mythril=" + counts[0] + " aluminum=" + counts[1]);
 		server.runCommand("fill -4 100 -4 4 108 4 minecraft:air");
 		MinecraftMode.LOGGER.info("[test] ore features placed mythril={} aluminum={}", counts[0], counts[1]);

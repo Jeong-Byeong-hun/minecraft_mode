@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:storm_hunter"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:storm_hunter"
+      }
+    ]
+  }
+}

@@ -27,6 +27,7 @@ import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.network.QuestActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
@@ -472,8 +473,18 @@ public class JobClientGameTest implements FabricClientGameTest {
 			JobProgression.set(player, saved);
 			return new int[] {warriorTier2, none};
 		});
-		require(offers[0] == 9 + 2, "a tier 2 warrior should see 9 weapons + 2 extras, got " + offers[0]);
-		require(offers[1] == 15 + 2, "players without a class should see the 15 tier 1 weapons + 2 extras, got " + offers[1]);
+		// one weapon + one armor piece per bracket up to the next bracket (Lv 25 -> 10, 20, 30); no class: the Lv 10 items of every class
+		int warriorItems = 0;
+		for (int bracket = 10; bracket <= 30; bracket += 10) {
+			warriorItems += GearIndex.shopItems(JobClass.WARRIOR, bracket).size();
+		}
+		int starterItems = 0;
+		for (JobClass job : JobClass.PLAYABLE) {
+			starterItems += GearIndex.shopItems(job, 10).size();
+		}
+		require(warriorItems == 6 && starterItems == 10, "expected 2 shop items per class and bracket, got " + warriorItems + " / " + starterItems);
+		require(offers[0] == warriorItems + 2, "a Lv 25 warrior should see " + warriorItems + " gear offers + 2 extras, got " + offers[0]);
+		require(offers[1] == starterItems + 2, "players without a class should see " + starterItems + " starter offers + 2 extras, got " + offers[1]);
 
 		// a boss kill: condensed essence, golem core, double experience
 		server.runCommand("summon minecraft_mode:mythril_golem 0.5 -60 -6.5 {NoAI:1b}");

@@ -1,9 +1,11 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.Actions;
+import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModEntities;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +47,7 @@ public final class CityServices {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 100 == 0) {
 				keepTrainers(server.overworld());
+				keepNpcs(server.overworld());
 			}
 			if (server.getTickCount() % 20 == 0) {
 				driveOffHostiles(server.overworld());
@@ -132,6 +135,37 @@ public final class CityServices {
 		}
 	}
 
+	/** One blacksmith and one raid marshal at their posts, like the trainers. */
+	public static void keepNpcs(final ServerLevel level) {
+		if (!CityZone.isCityLevel(level)) {
+			return;
+		}
+		int base = CityZone.baseY(level);
+		for (CityNpc.Role role : CityNpc.Role.values()) {
+			BlockPos home = CityZone.npcHome(role, base);
+			if (!level.isLoaded(home) || !level.shouldTickBlocksAt(home)) {
+				continue;
+			}
+			List<CityNpc> found = level.getEntitiesOfClass(CityNpc.class, new AABB(home).inflate(32), n -> n.role() == role);
+			if (found.isEmpty()) {
+				CityNpc npc = ModEntities.CITY_NPC.create(level, EntitySpawnReason.STRUCTURE);
+				if (npc != null) {
+					npc.setRole(role);
+					npc.snapTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 0.0F, 0.0F);
+					level.addFreshEntity(npc);
+				}
+				continue;
+			}
+			CityNpc keep = found.getFirst();
+			for (int i = 1; i < found.size(); i++) {
+				found.get(i).discard();
+			}
+			if (keep.blockPosition().distManhattan(home) > 2) {
+				keep.teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
+			}
+		}
+	}
+
 	// ------------------------------------------------------------------ safe zone rules
 
 	/**
@@ -152,11 +186,11 @@ public final class CityServices {
 		}
 	}
 
-	/** Players may not build or break inside the city unless they are operators or in creative. */
+	/** Players may not build or break inside the city or in raid arenas unless they are operators or in creative. */
 	public static boolean blocksBuilding(final Player player, final BlockPos pos) {
 		return !player.isCreative()
 			&& !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
-			&& CityZone.protectedAt(player.level(), pos);
+			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()));
 	}
 
 	/** Hostile natural spawns are refused inside the city. */
@@ -164,9 +198,10 @@ public final class CityServices {
 		return monster && CityZone.protectedAt(level, pos);
 	}
 
-	/** No player-versus-player damage inside the city. */
+	/** No player-versus-player damage inside the city or in raid arenas. */
 	public static boolean blocksPvp(final Entity victim, final Entity attacker) {
-		return victim instanceof Player && attacker instanceof Player && attacker != victim && CityZone.protectedAt(victim.level(), victim.blockPosition());
+		return victim instanceof Player && attacker instanceof Player && attacker != victim
+			&& (CityZone.protectedAt(victim.level(), victim.blockPosition()) || RaidDimension.is(victim.level()));
 	}
 
 	private CityServices() {

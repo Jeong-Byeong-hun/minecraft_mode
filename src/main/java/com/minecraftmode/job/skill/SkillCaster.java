@@ -67,7 +67,7 @@ public final class SkillCaster {
 		if (data.readyAt(skill.id()) > now) {
 			return Result.COOLDOWN;
 		}
-		EngraveTotals mods = JobWeapons.engravings(stack).totals();
+		EngraveTotals mods = JobWeapons.activeTotals(player);
 		int cost = manaCost(skill, mods);
 		if (data.mana() < cost && !player.isCreative()) {
 			return Result.NO_MANA;
@@ -83,6 +83,10 @@ public final class SkillCaster {
 		SkillContext ctx = new SkillContext(player, def, skill, stack, mods, powerBonus);
 		player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 		skill.cast(ctx);
+		float heal = mods.get(EngraveStat.HEAL_ON_SKILL);
+		if (heal > 0.0F) {
+			player.heal(heal);
+		}
 		if (echo) {
 			ctx.fx.burst(ctx.level, Fx.Kind.RUNE, player.position().add(0, 2.2, 0), 1, 0.0, 0.0);
 		}
@@ -93,9 +97,15 @@ public final class SkillCaster {
 		return Math.round(skill.manaCost() * (1.0F - mods.fraction(EngraveStat.MANA_COST)));
 	}
 
+	/**
+	 * Percent reductions (capped at 60%) first, then flat seconds from armor; a skill never drops
+	 * below 1 second (or its own cooldown if that is shorter).
+	 */
 	public static int cooldown(final JobData data, final Skill skill, final EngraveTotals mods) {
 		float reduction = mods.fraction(EngraveStat.COOLDOWN) + (CombatHooks.has(data, JobClass.MAGE, 4) ? 0.20F : 0.0F);
-		return Math.max(10, Math.round(skill.cooldownTicks() * (1.0F - Math.min(0.6F, reduction))));
+		int ticks = Math.round(skill.cooldownTicks() * (1.0F - Math.min(0.6F, reduction)));
+		ticks -= Math.round(mods.get(EngraveStat.COOLDOWN_FLAT) * 20.0F);
+		return Math.max(Math.min(skill.cooldownTicks(), 20), ticks);
 	}
 
 	private static Component message(final ServerPlayer player, final int slot, final Result result) {

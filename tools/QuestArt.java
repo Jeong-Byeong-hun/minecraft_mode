@@ -29,11 +29,15 @@ final class QuestArt {
 		TextureGen.write("item/haki_crystal", hakiCrystal());
 		TextureGen.write("item/sea_kings_treasure", treasureChest());
 
+		TextureGen.write("item/evolution_ether", evolutionEther());
+
 		TextureGen.write("entity/trainer/warrior", bedivere());
 		TextureGen.write("entity/trainer/rogue", hanzo());
 		TextureGen.write("entity/trainer/mage", merlin());
 		TextureGen.write("entity/trainer/archer", chiron());
 		TextureGen.write("entity/trainer/pirate", drake());
+		TextureGen.write("entity/npc/blacksmith", volund());
+		TextureGen.write("entity/npc/raid_marshal", aldric());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -625,6 +629,33 @@ final class QuestArt {
 		return img;
 	}
 
+	/** Evolution Ether: a stoppered crystal phial with a swirling teal-gold glow. */
+	static BufferedImage evolutionEther() {
+		BufferedImage img = image();
+		// glass body (round flask)
+		shape(img, (x, y) -> Math.hypot(x - 7.5, y - 10.0) <= 5.2 || (y >= 3 && y <= 6 && x >= 6 && x <= 9), 0x1E3A4A, (x, y) -> {
+			double d = Math.hypot(x - 7.5, y - 10.0);
+			if (y <= 6) {
+				return 0xBFE6F0;
+			}
+			if (d < 1.6) {
+				return 0xFFF8D0;
+			}
+			double swirl = Math.sin(Math.atan2(y - 10.0, x - 7.5) * 2 + d * 1.3);
+			return swirl > 0.3 ? 0x5EE0D0 : swirl > -0.4 ? 0x2FA8B8 : 0xE8C45A;
+		});
+		// cork
+		for (int x = 6; x <= 9; x++) {
+			rgb(img, x, 2, 0x8A5A2A);
+			rgb(img, x, 1, x == 6 || x == 9 ? 0x5A3A1A : 0xA87440);
+		}
+		rgb(img, 5, 8, 0xFFFFFF);
+		rgb(img, 5, 9, 0xE8FFFF);
+		sparkle(img, 13, 4, 0xFFF8D0, 0x5EE0D0);
+		sparkle(img, 2, 13, 0xFFF8D0, 0x5EE0D0);
+		return img;
+	}
+
 	// ---------------------------------------------------------------- trainer skins
 
 	static BufferedImage newSkin(final long seed) {
@@ -876,6 +907,82 @@ final class QuestArt {
 		fill(0, 24, 16, 1, 0x5A3A26);
 		fill(8, 16, 4, 4, 0x3A2418);
 		return img;
+	}
+
+	/** Master Smith Volund: bald, a great red beard, leather apron over a soot-grey shirt, heavy gloves. */
+	static BufferedImage volund() {
+		BufferedImage img = newSkin(106);
+		int skin = 0xC08A64, beard = 0xA8442A, apron = 0x6B4A2B, shirt = 0x4E4E56, glove = 0x3A2A1C, soot = 0x2A2A2E;
+		head(skin, skin);
+		fill(8, 0, 8, 8, shade(skin, 1.08F));
+		eyes(11, 0xFFFFFF, 0x3A5A8A);
+		fill(9, 10, 6, 1, beard);
+		fill(9, 13, 6, 3, beard);
+		fill(8, 12, 8, 1, beard);
+		fill(0, 13, 8, 3, beard);
+		fill(16, 13, 8, 3, beard);
+		px(11, 13, 0x7A2A1A);
+		px(12, 13, 0x7A2A1A);
+		fill(16, 0, 8, 8, beard);
+
+		body(shirt);
+		fill(20, 20, 8, 12, apron);
+		fill(20, 20, 8, 1, 0x4A3220);
+		fill(32, 20, 8, 1, 0x4A3220);
+		px(21, 25, 0x9A7A4A);
+		px(26, 25, 0x9A7A4A);
+		fill(16, 29, 24, 1, 0x2A1A10);
+
+		arms(skin);
+		fill(40, 20, 16, 3, shirt);
+		fill(44, 16, 4, 4, shirt);
+		fill(40, 23, 16, 3, soot);
+		fill(40, 26, 16, 6, glove);
+		fill(48, 16, 4, 4, glove);
+
+		legs(0x3A3A40);
+		fill(0, 26, 16, 6, 0x2A1E14);
+		fill(8, 16, 4, 4, 0x2A1E14);
+		return img;
+	}
+
+	/** Raid Marshal Aldric: black hair, a scar, dark plate with a crimson tabard and cape. */
+	static BufferedImage aldric() {
+		BufferedImage img = newSkin(107);
+		int skin = 0xD8A888, hair = 0x1E1A1A, steel = 0x4A4E58, light = 0x8A92A0, crimson = 0x8C1E28, gold = 0xD9B44A;
+		head(skin, hair);
+		hair(hair, 2, 4, 7);
+		eyes(12, 0xFFFFFF, 0x6A4A2A);
+		px(9, 11, 0xF4D8C0);
+		px(10, 13, 0xF4D8C0);
+		px(11, 14, 0x9A6A5A);
+		px(12, 14, 0x9A6A5A);
+
+		body(steel);
+		fill(21, 20, 6, 12, crimson);
+		fill(21, 20, 6, 1, gold);
+		px(23, 23, gold);
+		px(24, 23, gold);
+		px(23, 24, gold);
+		px(24, 24, gold);
+		fill(32, 20, 8, 12, crimson);
+		fill(16, 29, 24, 1, 0x2A1A10);
+		px(23, 29, gold);
+
+		arms(steel);
+		fill(40, 20, 16, 3, light);
+		fill(44, 16, 4, 4, light);
+		fill(40, 28, 16, 4, 0x2E3038);
+
+		legs(steel);
+		fill(0, 24, 16, 2, light);
+		fill(0, 29, 16, 3, 0x2E3038);
+		fill(8, 16, 4, 4, 0x2E3038);
+		return img;
+	}
+
+	static int shade(final int rgb, final float factor) {
+		return TextureGen.shade(rgb, factor);
 	}
 
 	private QuestArt() {

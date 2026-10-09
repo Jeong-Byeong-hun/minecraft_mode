@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:leaf_shinobi"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:leaf_shinobi"
+      }
+    ]
+  }
+}

@@ -1,5 +1,9 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.job.gear.ArmorPieceDef;
+import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
@@ -48,11 +52,17 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.COPPER_COIN, ModItems.SILVER_COIN, ModItems.GOLD_COIN,
 			ModItems.MYTHRIL_HELMET, ModItems.MYTHRIL_CHESTPLATE, ModItems.MYTHRIL_LEGGINGS, ModItems.MYTHRIL_BOOTS,
 			ModItems.MINE_RAIDER_SPAWN_EGG, ModItems.MYTHRIL_GOLEM_SPAWN_EGG,
-			ModItems.ESSENCE, ModItems.CONDENSED_ESSENCE, ModItems.GOLEM_CORE, ModItems.CLASS_RESET_SCROLL,
+			ModItems.ESSENCE, ModItems.CONDENSED_ESSENCE, ModItems.GOLEM_CORE, ModItems.CLASS_RESET_SCROLL, ModItems.EVOLUTION_ETHER,
 			ModItems.PROJECTILE_SHURIKEN, ModItems.PROJECTILE_KUNAI, ModItems.PROJECTILE_KNIFE, ModItems.PROJECTILE_BULLET,
 			ModItems.PROJECTILE_CANNONBALL, ModItems.PROJECTILE_ICICLE, ModItems.PROJECTILE_HARPOON
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
+		for (ArmorPieceDef piece : ClassArmor.pieces()) {
+			generators.generateFlatItem(ClassArmor.item(piece), ModelTemplates.FLAT_ITEM);
+		}
+		for (NamedDef def : NamedMobs.all()) {
+			generators.generateFlatItem(NamedMobs.egg(def), ModelTemplates.FLAT_ITEM);
 		}
 		for (Item token : Quests.tokens()) {
 			generators.generateFlatItem(token, ModelTemplates.FLAT_ITEM);

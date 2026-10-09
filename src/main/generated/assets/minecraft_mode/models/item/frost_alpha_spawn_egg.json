@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "minecraft_mode:item/frost_alpha_spawn_egg"
+  }
+}

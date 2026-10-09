@@ -1,5 +1,6 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.job.JobClass;
 import java.util.Arrays;
 import java.util.Map;
@@ -84,6 +85,14 @@ public final class CityZone {
 			case ARCHER -> new BlockPos(-64, base, 86);
 			case PIRATE -> new BlockPos(52, base, 54);
 			default -> spawn(base);
+		};
+	}
+
+	/** Where the city service NPCs stand: the blacksmith at the forge, the raid marshal by the raid gate. */
+	public static BlockPos npcHome(final CityNpc.Role role, final int base) {
+		return switch (role) {
+			case BLACKSMITH -> new BlockPos(-17, base, 87);
+			case RAID_MARSHAL -> new BlockPos(10, base, -55);
 		};
 	}
 

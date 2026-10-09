@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:pickpocket_leathers"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:pickpocket_leathers"
+      }
+    ]
+  }
+}

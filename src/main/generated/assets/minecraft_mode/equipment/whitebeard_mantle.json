@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:whitebeard_mantle"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:whitebeard_mantle"
+      }
+    ]
+  }
+}

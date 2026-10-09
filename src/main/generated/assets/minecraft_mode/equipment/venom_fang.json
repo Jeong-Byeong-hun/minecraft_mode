@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:venom_fang"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:venom_fang"
+      }
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:crimson_demon"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:crimson_demon"
+      }
+    ]
+  }
+}

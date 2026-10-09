@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:straw_hat_crew"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:straw_hat_crew"
+      }
+    ]
+  }
+}

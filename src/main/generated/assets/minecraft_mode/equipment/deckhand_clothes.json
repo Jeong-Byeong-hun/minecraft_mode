@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:deckhand_clothes"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:deckhand_clothes"
+      }
+    ]
+  }
+}

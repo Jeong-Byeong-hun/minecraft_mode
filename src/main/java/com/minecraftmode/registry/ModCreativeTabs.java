@@ -2,7 +2,11 @@ package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.gear.ArmorPieceDef;
+import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.quest.Quests;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
@@ -78,6 +82,9 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.GOLEM_CORE);
 					output.accept(ModItems.CLASS_RESET_SCROLL);
 					output.accept(ModItems.ENGRAVING_TABLE);
+					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
+						output.accept(EvolutionEtherItem.of(grade, 1));
+					}
 					for (Item token : Quests.tokens()) {
 						output.accept(token);
 					}
@@ -85,6 +92,9 @@ public final class ModCreativeTabs {
 					for (JobClass job : JobClass.PLAYABLE) {
 						for (WeaponDef def : JobWeapons.of(job)) {
 							output.accept(JobWeapons.item(def));
+						}
+						for (ArmorPieceDef piece : ClassArmor.pieces(job)) {
+							output.accept(ClassArmor.item(piece));
 						}
 					}
 				})

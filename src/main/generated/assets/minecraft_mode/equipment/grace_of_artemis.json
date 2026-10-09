@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:grace_of_artemis"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:grace_of_artemis"
+      }
+    ]
+  }
+}

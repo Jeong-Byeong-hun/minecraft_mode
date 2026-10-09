@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.ModMaterials;
 import java.util.function.Function;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -61,6 +62,8 @@ public final class ModItems {
 	public static final Item PROJECTILE_CANNONBALL = register("projectile_cannonball");
 	public static final Item PROJECTILE_ICICLE = register("projectile_icicle");
 	public static final Item PROJECTILE_HARPOON = register("projectile_harpoon");
+
+	public static final Item EVOLUTION_ETHER = register("evolution_ether", EvolutionEtherItem::new, new Item.Properties().rarity(Rarity.EPIC));
 
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(

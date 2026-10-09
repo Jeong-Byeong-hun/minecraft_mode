@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:mad_enhancement"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:mad_enhancement"
+      }
+    ]
+  }
+}

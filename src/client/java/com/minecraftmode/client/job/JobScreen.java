@@ -6,6 +6,9 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.job.gear.ClassAbilities;
+import com.minecraftmode.job.gear.LevelRewards;
+import com.minecraftmode.job.gear.StatLine;
 import com.minecraftmode.job.quest.QuestData;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
@@ -21,6 +24,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 /**
  * Class screen (K): level, experience, MP and the four tiers with their passives on the left; the
@@ -29,7 +33,7 @@ import net.minecraft.network.chat.Component;
  */
 public class JobScreen extends Screen {
 	private static final int W = 340;
-	private static final int H = 214;
+	private static final int H = 236;
 
 	private JobData shown;
 	private QuestData shownQuest;
@@ -120,6 +124,7 @@ public class JobScreen extends Screen {
 				}
 				ty += 24;
 			}
+			this.levelBonus(g, data, x + 12, ty + 2);
 		}
 
 		// right: the trial
@@ -154,6 +159,29 @@ public class JobScreen extends Screen {
 			JobKeys.SKILLS[3].getTranslatedKeyMessage()), rx, Math.max(ry + 8, y + 132), 152, 0xFF8A8A8A);
 
 		super.extractRenderState(g, mouseX, mouseY, a);
+	}
+
+	/** Level rewards of the class and the innate ability (key B). */
+	private void levelBonus(final GuiGraphicsExtractor g, final JobData data, final int x, final int y) {
+		int ty = y;
+		List<StatLine> rewards = LevelRewards.of(data);
+		if (!rewards.isEmpty()) {
+			MutableComponent text = Component.translatable("screen.minecraft_mode.job.level_bonus").append(": ");
+			for (int i = 0; i < rewards.size(); i++) {
+				if (i > 0) {
+					text.append(", ");
+				}
+				text.append(Component.translatable(rewards.get(i).stat().key(), JobTooltips.num(rewards.get(i).value())));
+			}
+			ty = g.textWithWordWrap(this.font, text, x, ty, 150, 0xFF9CE89C) + 1;
+		}
+		ClassAbilities.Ability ability = ClassAbilities.Ability.of(data.job());
+		if (ability != null) {
+			Component line = LevelRewards.hasInnate(data)
+				? Component.translatable("screen.minecraft_mode.job.innate", JobKeys.INNATE.getTranslatedKeyMessage(), Component.translatable(ability.nameKey()))
+				: Component.translatable("screen.minecraft_mode.job.innate_locked", LevelRewards.INNATE_LEVEL);
+			g.textWithWordWrap(this.font, line, x, ty, 150, LevelRewards.hasInnate(data) ? 0xFFFFD27F : 0xFF777777);
+		}
 	}
 
 	private int activeQuest(final GuiGraphicsExtractor g, final LocalPlayer player, final QuestDef quest, final int x, final int y) {

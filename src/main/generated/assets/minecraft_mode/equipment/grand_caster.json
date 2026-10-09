@@ -1,0 +1,14 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "minecraft_mode:grand_caster"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "minecraft_mode:grand_caster"
+      }
+    ]
+  }
+}

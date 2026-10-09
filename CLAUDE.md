@@ -14,7 +14,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 
 ## Layout
 
-- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, coin drops), `enchantment/` + `worldgen/` (bootstraps used by datagen), `job/` (class system, `job/quest/` advancement trials), `city/` (the capital at 0, 0), `network/`, `command/`, `mixin/`.
+- `src/main` — common code. `registry/` (blocks, items, effects, entities, tabs, tags, particles, menus, components, attachments), `entity/`, `economy/` (shop merchant, offers, coin drops), `enchantment/` + `worldgen/` (bootstraps used by datagen), `job/` (class system, `job/quest/` advancement trials, `job/gear/` class armor and stat totals), `loot/` (shop split, drops, ether, evolution), `entity/named/` + `entity/boss/` (named monsters, raid bosses), `raid/` (raid dimension, arenas, parties, instances, loot sessions), `city/` (the capital at 0, 0), `network/`, `command/`, `mixin/`.
 - `src/client` — renderer, model layer, **datagen providers** (`client/datagen`).
 - `src/main/generated` — datagen output, committed. Never hand-edit; change the provider and run `./gradlew runDatagen`.
 - `src/gametest` — client game test (`./gradlew runClientGameTest`); keep it passing after changes.
@@ -37,7 +37,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - Content: one file per class in `job/content/` built with the `ClassContent` DSL (`weapon(...)` + `skill(...)` + `Actions.*`). Startup validates tier/level ranges and skill counts (3 per weapon, 4 at tier 4); ids are saved item/cooldown keys — never rename them. Tooltips, lang and docs are generated from these definitions.
 - Skills: `job/skill/Actions` holds every building block with its own tooltip template (`Actions.texts()` -> lang). Add new behavior there, not in content files. Damage from skills/shots goes through `CombatHooks.deal` with a `DamageKind`; `LivingEntityMixin` feeds `CombatHooks.modifyIncoming` (passives, engravings, marks, stances, vulnerability). Delayed steps use `SkillScheduler`; `SkillContext.valid()` must be checked in delayed code.
 - A class weapon is "active" only when class, tier and level all match (`JobWeapons.isActive`); otherwise it is a plain weapon (basic attack/shot only, no skills, no engravings).
-- Engravings: `Engraving` enum (per class, optional archetype filter), stored in the `ModDataComponents.ENGRAVINGS` item component (max 3 lines, duplicates stack, caps in `EngraveStat`). The `EngravingMenu` (engraving table) charges essence from the inventory; condensed essence = 9.
+- Engravings: `Engraving` enum (per class, optional archetype filter), stored in the `ModDataComponents.ENGRAVINGS` item component (max 3 lines on weapons, 4 on class armor with per-slot armor engravings; duplicates stack, caps in `EngraveStat`). The `EngravingMenu` (engraving table) charges essence from the inventory; condensed essence = 9.
 - Guild shop offers depend on the visitor (`ShopOffers.trades(ShopType, Player)`); trade keys stay stable for market pressure.
 - `docs/CLASSES.md` is written by `ClassDocProvider` during `runDatagen`; do not edit it by hand.
 - `JobClientGameTest` casts every skill of every weapon once; keep it passing when adding or changing skills.
@@ -59,3 +59,15 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 ## Content direction
 
 - New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece and Fate are already used). Keep Korean names faithful to the official Korean translations.
+
+## Gear, named monsters, raids
+
+Design notes: `docs/DESIGN-gear-raids.md`. `docs/GEAR.md` and `docs/MONSTERS.md` are written by `GearDocProvider` during `runDatagen`; do not edit them by hand.
+
+- Stats: weapon engravings, armor options/engravings, set bonuses and level rewards all sum into `EngraveStat` through `GearStats.of(player)` (cached per tick, separate client/server caches). `JobWeapons.activeTotals` delegates to it. A new stat = an `EngraveStat` entry + the code that reads it.
+- Armor (`job/gear/`): one content file per class (`ArmorContent` DSL, 10 sets x 4 pieces). Set/piece ids are saved item keys — never rename. Only the matching class/tier/level can wear a piece (`GearRules`); options roll lazily (`GearArmorItem.inventoryTick`) or on drop (`GearDrops.create`).
+- Shop: one weapon + one armor piece per class and 10-level bracket (`GearIndex.shopItems`); everything else is drop-only. Evolution (blacksmith `CityNpc` -> `UpgradeMenu`) costs `GearUpgrades.ETHER_COST` ether of the target bracket.
+- Named monsters: definitions in `NamedMobs.define()`, behavior in `NamedMob` (one method per `Ability.Type`). Models are body plans (`client/creature/NamedPlans`, `BossPlans`) rendered by `CreatureModel`; textures/glow/eggs are painted at datagen by `CreaturePainter` (`build/creature-preview.png` shows sizes in blocks — size hitboxes from it).
+- Bosses (`entity/boss/`): `RaidBoss` holds phases, boss bar, damage divisor (health attribute is always 1000; toughness = `BossDef.health` x party scale), leash and the pattern scheduler. Each boss lists `pattern(id, phase, cooldown, range, busy, action)`. Every area attack is telegraphed first (`Telegraph` / `RaidBoss.circle|line|cone|donut|rain`), and delayed code must check `alive()`.
+- Raids (`raid/`): dimension type from `RaidDimension.bootstrapType` (datagen dynamic registry), level stem from `RaidDimensionProvider`. `Raids` runs instances (arena slots 1024 blocks apart, rebuilt by `Arenas.build` each time); dying in the raid dimension never kills (`Raids.fall` -> sent home with items). Building and PvP are blocked there through `CityServices.blocksBuilding/blocksPvp`. Parties (`Parties`), raids and loot sessions (`raid/loot/`) live in server memory only.
+- `GearRaidClientGameTest` checks content counts, armor/sets/cooldown floor, evolution, named spawns, runs every boss pattern once, the raid flow, dying in a raid and both loot modes; keep it passing.

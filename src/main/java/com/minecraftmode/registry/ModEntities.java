@@ -1,9 +1,13 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.entity.MineRaider;
 import com.minecraftmode.entity.MythrilGolem;
+import com.minecraftmode.entity.combat.MobProjectile;
+import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.job.skill.SkillProjectile;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
@@ -58,6 +62,20 @@ public final class ModEntities {
 			.build(SKILL_PROJECTILE_KEY)
 	);
 
+	public static final ResourceKey<EntityType<?>> MOB_PROJECTILE_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("mob_projectile"));
+
+	/** Bolts, boulders and orbs of named monsters and bosses. Never saved. */
+	public static final EntityType<MobProjectile> MOB_PROJECTILE = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		MOB_PROJECTILE_KEY,
+		EntityType.Builder.<MobProjectile>of(MobProjectile::new, MobCategory.MISC)
+			.sized(0.45F, 0.45F)
+			.clientTrackingRange(8)
+			.updateInterval(2)
+			.noSave()
+			.build(MOB_PROJECTILE_KEY)
+	);
+
 	public static final ResourceKey<EntityType<?>> CLASS_TRAINER_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("class_trainer"));
 
 	/** Class trainer NPC (one per class in the capital). */
@@ -71,7 +89,21 @@ public final class ModEntities {
 			.build(CLASS_TRAINER_KEY)
 	);
 
+	public static final ResourceKey<EntityType<?>> CITY_NPC_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("city_npc"));
+
+	/** Blacksmith and raid marshal in the capital. */
+	public static final EntityType<CityNpc> CITY_NPC = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		CITY_NPC_KEY,
+		EntityType.Builder.<CityNpc>of(CityNpc::new, MobCategory.MISC)
+			.sized(0.6F, 1.95F)
+			.eyeHeight(1.74F)
+			.clientTrackingRange(10)
+			.build(CITY_NPC_KEY)
+	);
+
 	public static void init() {
+		FabricDefaultAttributeRegistry.register(CITY_NPC, CityNpc.createAttributes());
 		FabricDefaultAttributeRegistry.register(CLASS_TRAINER, ClassTrainer.createAttributes());
 		FabricDefaultAttributeRegistry.register(MYTHRIL_GOLEM, MythrilGolem.createAttributes());
 		SpawnPlacements.register(MYTHRIL_GOLEM, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, MythrilGolem::checkMythrilGolemSpawnRules);
@@ -83,6 +115,9 @@ public final class ModEntities {
 		// Spawn checks reject Y >= 40, so in practice they only appear in caves. The weight is zombie-level
 		// because most spawn attempts land above Y=40; at weight 40 only ~1.4% of monsters were raiders.
 		BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(), MobCategory.MONSTER, MINE_RAIDER, 100, 1, 2);
+
+		NamedMobs.init();
+		RaidBosses.init();
 	}
 
 	private ModEntities() {

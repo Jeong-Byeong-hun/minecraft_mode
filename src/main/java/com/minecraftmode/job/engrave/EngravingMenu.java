@@ -1,8 +1,7 @@
 package com.minecraftmode.job.engrave;
 
 import com.minecraftmode.job.JobProgression;
-import com.minecraftmode.job.weapon.JobWeapons;
-import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
@@ -28,9 +27,10 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Engraving table: put a class weapon in the slot, then pick one of three offered lines from the
- * weapon class's pool, paid with essence from the inventory (condensed essence counts as 9).
- * Lines stack, up to {@link Engravings#MAX_LINES}; a line can be removed and the offers rerolled.
+ * Engraving table: put a class weapon or armor piece in the slot, then pick one of three offered
+ * lines from its pool (class and weapon shape, or class and armor slot), paid with essence from the
+ * inventory (condensed essence counts as 9). Lines stack, up to 3 on weapons and 4 on armor; a line
+ * can be removed and the offers rerolled.
  *
  * <p>Buttons: 0-2 engrave offer, 3 reroll offers, 10-12 remove line.
  */
@@ -65,7 +65,7 @@ public class EngravingMenu extends AbstractContainerMenu {
 		this.addSlot(new Slot(this.container, 0, WEAPON_X, WEAPON_Y) {
 			@Override
 			public boolean mayPlace(final ItemStack itemStack) {
-				return JobWeapons.def(itemStack) != null;
+				return ClassGear.of(itemStack) != null;
 			}
 
 			@Override
@@ -110,26 +110,30 @@ public class EngravingMenu extends AbstractContainerMenu {
 
 	private void updateOffers() {
 		ItemStack stack = this.weapon();
-		WeaponDef def = JobWeapons.def(stack);
-		if (def == null) {
+		ClassGear gear = ClassGear.of(stack);
+		if (gear == null) {
 			for (int i = 0; i < 6; i++) {
 				this.data.set(i, i < 3 ? -1 : 0);
 			}
 			return;
 		}
-		Engravings engravings = JobWeapons.engravings(stack);
-		List<Engraving> offers = offers(def, engravings);
+		Engravings engravings = engravings(stack);
+		List<Engraving> offers = offers(gear, engravings);
 		for (int i = 0; i < 3; i++) {
-			this.data.set(i, i < offers.size() && engravings.lines().size() < Engravings.MAX_LINES ? offers.get(i).ordinal() : -1);
+			this.data.set(i, i < offers.size() && engravings.lines().size() < gear.maxLines() ? offers.get(i).ordinal() : -1);
 		}
-		this.data.set(3, 4 * def.tier() * (engravings.lines().size() + 1));
-		this.data.set(4, 2 * def.tier());
-		this.data.set(5, 2 * def.tier());
+		this.data.set(3, (gear.isWeapon() ? 4 : 3) * gear.tier() * (engravings.lines().size() + 1));
+		this.data.set(4, 2 * gear.tier());
+		this.data.set(5, 2 * gear.tier());
 	}
 
-	/** Three distinct lines from the class pool, fixed by the weapon's seed and line count. */
-	public static List<Engraving> offers(final WeaponDef def, final Engravings engravings) {
-		List<Engraving> pool = new ArrayList<>(Engraving.pool(def.job(), def.archetype()));
+	public static Engravings engravings(final ItemStack stack) {
+		return stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);
+	}
+
+	/** Three distinct lines from the item's pool, fixed by its seed and line count. */
+	public static List<Engraving> offers(final ClassGear gear, final Engravings engravings) {
+		List<Engraving> pool = new ArrayList<>(gear.engravingPool());
 		Collections.shuffle(pool, new Random(engravings.seed() * 31L + engravings.lines().size()));
 		return pool.subList(0, Math.min(3, pool.size()));
 	}
@@ -137,18 +141,18 @@ public class EngravingMenu extends AbstractContainerMenu {
 	@Override
 	public boolean clickMenuButton(final Player player, final int buttonId) {
 		ItemStack stack = this.weapon();
-		WeaponDef def = JobWeapons.def(stack);
-		if (def == null) {
+		ClassGear gear = ClassGear.of(stack);
+		if (gear == null) {
 			return false;
 		}
-		Engravings engravings = JobWeapons.engravings(stack);
+		Engravings engravings = engravings(stack);
 		boolean engrave = buttonId >= 0 && buttonId < 3;
 		boolean remove = buttonId >= BUTTON_REMOVE && buttonId < BUTTON_REMOVE + engravings.lines().size();
 		if (!engrave && !remove && buttonId != BUTTON_REROLL) {
 			return false;
 		}
 		int cost = engrave ? this.engraveCost() : buttonId == BUTTON_REROLL ? this.rerollCost() : this.removeCost();
-		if (engrave && (this.offer(buttonId) == null || engravings.lines().size() >= Engravings.MAX_LINES)) {
+		if (engrave && (this.offer(buttonId) == null || engravings.lines().size() >= gear.maxLines())) {
 			return false;
 		}
 		if (!player.isCreative() && essence(player.getInventory()) < cost) {
@@ -213,7 +217,7 @@ public class EngravingMenu extends AbstractContainerMenu {
 				if (!this.moveItemStackTo(stack, 1, 37, true)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (JobWeapons.def(stack) != null && !this.slots.get(0).hasItem()) {
+			} else if (ClassGear.of(stack) != null && !this.slots.get(0).hasItem()) {
 				if (!this.moveItemStackTo(stack, 0, 1, false)) {
 					return ItemStack.EMPTY;
 				}

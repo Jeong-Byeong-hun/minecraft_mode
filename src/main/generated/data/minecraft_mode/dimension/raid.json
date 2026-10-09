@@ -1,0 +1,12 @@
+{
+  "type": "minecraft_mode:raid",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:the_void",
+      "features": false,
+      "lakes": false,
+      "layers": []
+    }
+  }
+}

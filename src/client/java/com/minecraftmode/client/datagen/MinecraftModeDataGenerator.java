@@ -1,6 +1,7 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.enchantment.ModEnchantments;
+import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
@@ -14,7 +15,10 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 
 		pack.addProvider(ModModelProvider::new);
 		pack.addProvider(WeaponTextureProvider::new);
+		pack.addProvider(ArmorAssetProvider::new);
+		pack.addProvider(CreatureTextureProvider::new);
 		pack.addProvider(ClassDocProvider::new);
+		pack.addProvider(GearDocProvider::new);
 		pack.addProvider(ModRecipeProvider::new);
 		pack.addProvider(ModLootProviders.Blocks::new);
 		pack.addProvider(ModLootProviders.Entities::new);
@@ -22,6 +26,7 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider((output, registries) -> new ModTagProviders.Items(output, registries, blockTags));
 		pack.addProvider(ModTagProviders.Enchantments::new);
 		pack.addProvider(ModDynamicRegistryProvider::new);
+		pack.addProvider(RaidDimensionProvider::new);
 		pack.addProvider(ModLanguageProviders.English::new);
 		pack.addProvider(ModLanguageProviders.Korean::new);
 	}
@@ -31,5 +36,6 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		registryBuilder.add(Registries.FEATURE, ModOreGeneration::bootstrapFeatures);
 		registryBuilder.add(Registries.PLACED_FEATURE, ModOreGeneration::bootstrapPlacedFeatures);
 		registryBuilder.add(Registries.ENCHANTMENT, ModEnchantments::bootstrap);
+		registryBuilder.add(Registries.DIMENSION_TYPE, RaidDimension::bootstrapType);
 	}
 }

@@ -4,7 +4,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-/** Summed engraving values of one weapon, with caps applied. */
+/**
+ * Summed stat values with caps applied: the engravings of one item, or everything a player has
+ * (see {@code GearStats}: weapon, armor options, set bonuses and level rewards).
+ */
 public final class EngraveTotals {
 	public static final EngraveTotals EMPTY = new EngraveTotals(new EnumMap<>(EngraveStat.class));
 
@@ -18,11 +21,15 @@ public final class EngraveTotals {
 		if (lines.isEmpty()) {
 			return EMPTY;
 		}
-		Map<EngraveStat, Float> map = new EnumMap<>(EngraveStat.class);
+		Builder builder = builder();
 		for (Engraving e : lines) {
-			map.merge(e.stat(), e.value(), Float::sum);
+			builder.add(e.stat(), e.value());
 		}
-		return new EngraveTotals(map);
+		return builder.build();
+	}
+
+	public static Builder builder() {
+		return new Builder();
 	}
 
 	/** Raw sum, capped. Percent stats are returned as percent (8 = 8%). */
@@ -38,5 +45,27 @@ public final class EngraveTotals {
 
 	public boolean isEmpty() {
 		return this.values.isEmpty();
+	}
+
+	public static final class Builder {
+		private final Map<EngraveStat, Float> map = new EnumMap<>(EngraveStat.class);
+
+		public Builder add(final EngraveStat stat, final float value) {
+			if (value != 0.0F) {
+				this.map.merge(stat, value, Float::sum);
+			}
+			return this;
+		}
+
+		public Builder addAll(final List<Engraving> lines) {
+			for (Engraving e : lines) {
+				this.add(e.stat(), e.value());
+			}
+			return this;
+		}
+
+		public EngraveTotals build() {
+			return this.map.isEmpty() ? EMPTY : new EngraveTotals(new EnumMap<>(this.map));
+		}
 	}
 }

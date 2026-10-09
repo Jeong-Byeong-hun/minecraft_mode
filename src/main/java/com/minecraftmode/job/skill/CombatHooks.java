@@ -1,6 +1,7 @@
 package com.minecraftmode.job.skill;
 
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.entity.EliteMob;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -9,6 +10,7 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.registry.ModEffects;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -46,8 +48,10 @@ public final class CombatHooks {
 		SKILL,
 		/** Wide Swing splash; never splashes again. */
 		SPLASH,
-		/** Counter stance; never reflected again. */
-		REFLECT
+		/** Counter stance and thorns; never reflected again. */
+		REFLECT,
+		/** Double strike and chain lightning procs; never proc again. */
+		EXTRA
 	}
 
 	private static @Nullable DamageKind current;
@@ -168,6 +172,10 @@ public final class CombatHooks {
 				ServerLevel level = attacker.level();
 				level.sendParticles(ParticleTypes.CRIT, victim.getX(), victim.getY(0.6), victim.getZ(), 12, 0.3, 0.3, 0.3, 0.3);
 				level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.8F, 1.2F);
+				float refund = mods.get(EngraveStat.CRIT_REFUND);
+				if (refund > 0.0F) {
+					shortenCooldowns(attacker, Math.round(refund * 20.0F));
+				}
 			}
 			if (isBehind(attacker, victim)) {
 				bonus += mods.fraction(EngraveStat.BACKSTAB) + (has(data, JobClass.ROGUE, 3) ? 0.30F : 0.0F);
@@ -195,15 +203,56 @@ public final class CombatHooks {
 		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
 			bonus += 0.25F;
 		}
+		if (victim instanceof EliteMob) {
+			bonus += mods.fraction(EngraveStat.BOSS_DAMAGE);
+		}
+		if (victim.getHealth() >= victim.getMaxHealth() * 0.9F) {
+			bonus += mods.fraction(EngraveStat.FIRST_STRIKE);
+		}
 		bonus += state.markBonus(victim.getUUID(), now);
 		return amount * (1.0F + bonus) * crit;
+	}
+
+	/** Brings every running skill cooldown of {@code player} forward by {@code ticks}. */
+	public static void shortenCooldowns(final ServerPlayer player, final int ticks) {
+		JobData data = JobProgression.get(player);
+		if (data.cooldowns().isEmpty()) {
+			return;
+		}
+		Map<String, Long> shorter = new java.util.HashMap<>();
+		data.cooldowns().forEach((skill, readyAt) -> shorter.put(skill, readyAt - ticks));
+		JobProgression.set(player, data.withCooldowns(shorter));
 	}
 
 	private static float incoming(final ServerPlayer player, final DamageSource source, final float amount, final @Nullable DamageKind kind, final long now) {
 		CombatState state = CombatState.of(player);
 		EngraveTotals mods = JobWeapons.activeTotals(player);
 		float reduce = state.stanceValue(CombatState.Stance.GUARD, now) / 100.0F + mods.fraction(EngraveStat.DAMAGE_REDUCTION);
+		if (player.getHealth() < player.getMaxHealth() * 0.3F) {
+			reduce += mods.fraction(EngraveStat.LAST_STAND);
+		}
 		float result = amount * (1.0F - Math.min(0.8F, reduce));
+		// Mana shield: part of the hit is paid with MP, one point per point of damage
+		float shield = mods.fraction(EngraveStat.MANA_SHIELD);
+		if (shield > 0.0F && result > 0.0F) {
+			JobData data = JobProgression.get(player);
+			int paid = Math.min(data.mana(), (int)Math.ceil(result * shield));
+			if (paid > 0) {
+				JobProgression.set(player, data.withMana(data.mana() - paid));
+				result = Math.max(0.0F, result - paid);
+				player.level().sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY(0.6), player.getZ(), 8, 0.4, 0.5, 0.4, 0.4);
+			}
+		}
+		// Thorns: melee attackers take part of the hit back
+		float thorns = mods.fraction(EngraveStat.THORNS);
+		if (thorns > 0.0F && kind != DamageKind.REFLECT && source.getDirectEntity() instanceof LivingEntity attacker && attacker != player && attacker.isAlive()) {
+			float reflected = amount * thorns;
+			SkillScheduler.schedule(1, () -> {
+				if (attacker.isAlive() && player.isAlive()) {
+					deal(player, attacker, reflected, player.damageSources().thorns(player), DamageKind.REFLECT);
+				}
+			});
+		}
 		float counter = state.stanceValue(CombatState.Stance.COUNTER, now);
 		if (counter > 0.0F && kind != DamageKind.REFLECT && source.getEntity() instanceof LivingEntity attacker && attacker != player && attacker.isAlive()) {
 			float reflected = amount * counter / 100.0F;
@@ -268,6 +317,18 @@ public final class CombatHooks {
 			if (melee && splash > 0.0F) {
 				splash(attacker, victim, damageTaken * 0.5F, splash);
 			}
+			if (melee && attacker.getRandom().nextFloat() < mods.fraction(EngraveStat.DOUBLE_STRIKE)) {
+				float again = damageTaken;
+				SkillScheduler.schedule(3, () -> {
+					if (victim.isAlive() && attacker.isAlive()) {
+						deal(attacker, victim, again, attacker.damageSources().playerAttack(attacker), DamageKind.EXTRA);
+						attacker.level().sendParticles(ParticleTypes.SWEEP_ATTACK, victim.getX(), victim.getY(0.6), victim.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
+					}
+				});
+			}
+			if (attacker.getRandom().nextFloat() < mods.fraction(EngraveStat.CHAIN_LIGHTNING)) {
+				chainLightning(attacker, victim, Math.max(2.0F, damageTaken * 0.5F));
+			}
 		}
 		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
 			lifesteal += 0.05F;
@@ -302,6 +363,24 @@ public final class CombatHooks {
 		if (slow > 0) {
 			victim.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, slow, 1));
 		}
+	}
+
+	/** Lightning jumps from the victim to up to three more enemies within 6 blocks. */
+	private static void chainLightning(final ServerPlayer attacker, final LivingEntity victim, final float damage) {
+		ServerLevel level = attacker.level();
+		Fx fx = new Fx(Fx.Kind.BOLT, 0x9FD0FF);
+		List<LivingEntity> targets = new java.util.ArrayList<>(level.getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(6.0),
+			e -> e != victim && isEnemy(attacker, e)));
+		targets.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(victim)));
+		Vec3 from = victim.position().add(0, victim.getBbHeight() * 0.6, 0);
+		for (LivingEntity target : targets.subList(0, Math.min(3, targets.size()))) {
+			Vec3 to = target.position().add(0, target.getBbHeight() * 0.6, 0);
+			fx.line(level, from, to, 0.35);
+			deal(attacker, target, damage, attacker.damageSources().playerAttack(attacker), DamageKind.EXTRA);
+			from = to;
+		}
+		fx.burst(level, Fx.Kind.SPARK, victim.position().add(0, victim.getBbHeight() * 0.6, 0), 10, 0.3, 0.2);
+		level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.4F, 1.6F);
 	}
 
 	private static void splash(final ServerPlayer attacker, final LivingEntity victim, final float damage, final float radius) {

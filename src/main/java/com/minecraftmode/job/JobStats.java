@@ -3,6 +3,7 @@ package com.minecraftmode.job;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
+import com.minecraftmode.job.gear.GearRules;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.registry.ModEffects;
@@ -31,6 +32,8 @@ public final class JobStats {
 	private static final Identifier ENGRAVE_SPEED = MinecraftMode.id("job/engrave_speed");
 	private static final Identifier ENGRAVE_ATTACK_SPEED = MinecraftMode.id("job/engrave_attack_speed");
 	private static final Identifier ENGRAVE_REACH = MinecraftMode.id("job/engrave_reach");
+	private static final Identifier GEAR_ARMOR = MinecraftMode.id("job/gear_armor");
+	private static final Identifier GEAR_KNOCKBACK = MinecraftMode.id("job/gear_knockback");
 
 	public static int maxMana(final Player player) {
 		JobData data = JobProgression.get(player);
@@ -48,7 +51,7 @@ public final class JobStats {
 		if (player.hasEffect(ModEffects.MANA_FLOW)) {
 			regen *= 2;
 		}
-		return regen;
+		return regen + (int)JobWeapons.activeTotals(player).get(EngraveStat.MANA_REGEN);
 	}
 
 	public static void addMana(final ServerPlayer player, final int amount) {
@@ -61,7 +64,14 @@ public final class JobStats {
 
 	/** Called every 10 ticks per player. */
 	static void tick(final ServerPlayer player, final int tick) {
+		GearRules.enforce(player);
 		refresh(player);
+		if (tick % 80 == 0 && player.isAlive() && player.getHealth() < player.getMaxHealth()) {
+			float regen = JobWeapons.activeTotals(player).get(EngraveStat.HEALTH_REGEN);
+			if (regen > 0.0F) {
+				player.heal(regen);
+			}
+		}
 		JobData data = JobProgression.get(player);
 		int max = maxMana(player);
 		int mana = data.mana();
@@ -95,6 +105,8 @@ public final class JobStats {
 		set(player, Attributes.MOVEMENT_SPEED, ENGRAVE_SPEED, mods.fraction(EngraveStat.MOVE_SPEED), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 		set(player, Attributes.ATTACK_SPEED, ENGRAVE_ATTACK_SPEED, mods.fraction(EngraveStat.ATTACK_SPEED), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 		set(player, Attributes.ENTITY_INTERACTION_RANGE, ENGRAVE_REACH, mods.get(EngraveStat.REACH), AttributeModifier.Operation.ADD_VALUE);
+		set(player, Attributes.ARMOR, GEAR_ARMOR, mods.get(EngraveStat.ARMOR), AttributeModifier.Operation.ADD_VALUE);
+		set(player, Attributes.KNOCKBACK_RESISTANCE, GEAR_KNOCKBACK, mods.fraction(EngraveStat.KNOCKBACK_RES), AttributeModifier.Operation.ADD_VALUE);
 		if (player.getHealth() > player.getMaxHealth()) {
 			player.setHealth(player.getMaxHealth());
 		}

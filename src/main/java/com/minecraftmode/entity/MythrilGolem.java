@@ -39,7 +39,7 @@ import net.minecraft.world.phys.Vec3;
  * Rare mini-boss of the deep caves (below Y=0, at most one per 64 blocks). Hits like an iron golem
  * and periodically slams the ground, hurting, knocking back and cutting nearby players.
  */
-public class MythrilGolem extends Monster {
+public class MythrilGolem extends Monster implements EliteMob {
 	private static final int MAX_SPAWN_Y = 0;
 	private static final double SPAWN_EXCLUSION_RADIUS = 64.0;
 	private static final int SLAM_COOLDOWN_TICKS = 160;

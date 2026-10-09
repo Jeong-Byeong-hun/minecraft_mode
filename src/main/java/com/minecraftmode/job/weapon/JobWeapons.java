@@ -11,6 +11,7 @@ import com.minecraftmode.job.content.RogueContent;
 import com.minecraftmode.job.content.WarriorContent;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engravings;
+import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.registry.ModDataComponents;
 import java.util.ArrayList;
@@ -105,14 +106,12 @@ public final class JobWeapons {
 		return stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);
 	}
 
-	/** Engraving totals of the main-hand class weapon, or empty when it is not usable by the player. */
+	/**
+	 * Everything the player's gear and level add up to (see {@link GearStats}): the active weapon's
+	 * engravings, usable class armor, set bonuses and level rewards.
+	 */
 	public static EngraveTotals activeTotals(final Player player) {
-		ItemStack stack = player.getMainHandItem();
-		WeaponDef def = def(stack);
-		if (def == null || !isActive(JobProgression.get(player), def)) {
-			return EngraveTotals.EMPTY;
-		}
-		return engravings(stack).totals();
+		return GearStats.of(player);
 	}
 
 	private JobWeapons() {

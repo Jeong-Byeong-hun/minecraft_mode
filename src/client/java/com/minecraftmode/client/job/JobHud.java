@@ -117,7 +117,7 @@ public final class JobHud {
 		}
 		Font font = minecraft.font;
 		boolean active = JobWeapons.isActive(data, def);
-		EngraveTotals mods = JobWeapons.engravings(stack).totals();
+		EngraveTotals mods = JobWeapons.activeTotals(player);
 		long now = minecraft.level.getGameTime();
 		int x0 = g.guiWidth() / 2 + 98;
 		int y = g.guiHeight() - 22;

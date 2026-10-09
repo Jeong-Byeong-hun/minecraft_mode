@@ -3,8 +3,7 @@ package com.minecraftmode.client.job;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
-import com.minecraftmode.job.weapon.JobWeapons;
-import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.job.gear.ClassGear;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -19,14 +18,16 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Engraving table screen: current lines (click ✕ to remove), three offers to engrave, reroll, and
- * the essence the player carries. Drawn with plain fills, no texture.
+ * Engraving table screen: current lines (click ✕ to remove; 3 on weapons, 4 on armor), three offers
+ * to engrave, reroll, and the essence the player carries. Drawn with plain fills, no texture.
  */
 public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 	private static final int ROW_X = 40;
 	private static final int ROW_W = 152;
 	private static final int LINES_Y = 18;
-	private static final int OFFERS_Y = 70;
+	private static final int LINE_STEP = 11;
+	private static final int OFFERS_Y = 75;
+	private static final int OFFER_STEP = 15;
 	private static final int REROLL_X = 7;
 	private static final int REROLL_Y = 46;
 
@@ -68,21 +69,22 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		g.outline(x + EngravingMenu.WEAPON_X - 2, y + EngravingMenu.WEAPON_Y - 2, 20, 20, 0xFF7B3FBF);
 
 		ItemStack weapon = this.menu.weapon();
-		WeaponDef def = JobWeapons.def(weapon);
-		Engravings engravings = JobWeapons.engravings(weapon);
+		ClassGear def = ClassGear.of(weapon);
+		Engravings engravings = EngravingMenu.engravings(weapon);
 
 		// current lines
-		for (int i = 0; i < Engravings.MAX_LINES; i++) {
-			int ry = y + LINES_Y + i * 13;
-			g.fill(x + ROW_X, ry, x + ROW_X + ROW_W, ry + 12, 0xFF2B2140);
+		int rows = def == null ? Engravings.WEAPON_LINES : def.maxLines();
+		for (int i = 0; i < rows; i++) {
+			int ry = y + LINES_Y + i * LINE_STEP;
+			g.fill(x + ROW_X, ry, x + ROW_X + ROW_W, ry + 10, 0xFF2B2140);
 			if (def != null && i < engravings.lines().size()) {
 				Engraving e = Engraving.byId(engravings.lines().get(i));
 				Component name = e == null ? Component.literal("?") : Component.translatable(e.nameKey());
-				g.text(this.font, Component.literal((i + 1) + ". ").append(name), x + ROW_X + 3, ry + 2, 0xFFE3C9FF, false);
-				boolean hover = this.inside(mouseX, mouseY, x + ROW_X + ROW_W - 12, ry, 12, 12);
-				g.text(this.font, "✕", x + ROW_X + ROW_W - 9, ry + 2, hover ? 0xFFFF6B6B : 0xFFB0B0B0, false);
+				g.text(this.font, Component.literal((i + 1) + ". ").append(name), x + ROW_X + 3, ry + 1, 0xFFE3C9FF, false);
+				boolean hover = this.inside(mouseX, mouseY, x + ROW_X + ROW_W - 12, ry, 12, 10);
+				g.text(this.font, "✕", x + ROW_X + ROW_W - 9, ry + 1, hover ? 0xFFFF6B6B : 0xFFB0B0B0, false);
 			} else {
-				g.text(this.font, Component.literal((i + 1) + ". ").append(Component.translatable("screen.minecraft_mode.engraving.empty_line")), x + ROW_X + 3, ry + 2,
+				g.text(this.font, Component.literal((i + 1) + ". ").append(Component.translatable("screen.minecraft_mode.engraving.empty_line")), x + ROW_X + 3, ry + 1,
 					0xFF6E6585, false);
 			}
 		}
@@ -90,7 +92,7 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		// offers
 		g.text(this.font, Component.translatable("screen.minecraft_mode.engraving.offers"), x + ROW_X, y + OFFERS_Y - 11, 0xFF404040, false);
 		for (int i = 0; i < 3 && def != null; i++) {
-			int ry = y + OFFERS_Y + i * 16;
+			int ry = y + OFFERS_Y + i * OFFER_STEP;
 			Engraving offer = this.menu.offer(i);
 			boolean enabled = offer != null && this.canPay(this.menu.engraveCost());
 			boolean hover = offer != null && this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, 14);
@@ -120,14 +122,14 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		int x = this.leftPos;
 		int y = this.topPos;
 		ItemStack weapon = this.menu.weapon();
-		WeaponDef def = JobWeapons.def(weapon);
+		ClassGear def = ClassGear.of(weapon);
 		if (def == null) {
 			return;
 		}
-		Engravings engravings = JobWeapons.engravings(weapon);
+		Engravings engravings = EngravingMenu.engravings(weapon);
 		for (int i = 0; i < engravings.lines().size(); i++) {
-			int ry = y + LINES_Y + i * 13;
-			if (this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, 12)) {
+			int ry = y + LINES_Y + i * LINE_STEP;
+			if (this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, 10)) {
 				Engraving e = Engraving.byId(engravings.lines().get(i));
 				List<Component> tip = new ArrayList<>();
 				if (e != null) {
@@ -139,7 +141,7 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		}
 		for (int i = 0; i < 3; i++) {
 			Engraving offer = this.menu.offer(i);
-			int ry = y + OFFERS_Y + i * 16;
+			int ry = y + OFFERS_Y + i * OFFER_STEP;
 			if (offer != null && this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, 14)) {
 				int already = (int)engravings.resolved().stream().filter(e -> e == offer).count();
 				List<Component> tip = new ArrayList<>();
@@ -165,14 +167,14 @@ public class EngravingScreen extends AbstractContainerScreen<EngravingMenu> {
 		int y = this.topPos;
 		double mx = event.x();
 		double my = event.y();
-		Engravings engravings = JobWeapons.engravings(this.menu.weapon());
+		Engravings engravings = EngravingMenu.engravings(this.menu.weapon());
 		for (int i = 0; i < 3; i++) {
-			if (this.inside(mx, my, x + ROW_X, y + OFFERS_Y + i * 16, ROW_W, 14) && this.press(i)) {
+			if (this.inside(mx, my, x + ROW_X, y + OFFERS_Y + i * OFFER_STEP, ROW_W, 14) && this.press(i)) {
 				return true;
 			}
 		}
 		for (int i = 0; i < engravings.lines().size(); i++) {
-			if (this.inside(mx, my, x + ROW_X + ROW_W - 12, y + LINES_Y + i * 13, 12, 12) && this.press(EngravingMenu.BUTTON_REMOVE + i)) {
+			if (this.inside(mx, my, x + ROW_X + ROW_W - 12, y + LINES_Y + i * LINE_STEP, 12, 10) && this.press(EngravingMenu.BUTTON_REMOVE + i)) {
 				return true;
 			}
 		}

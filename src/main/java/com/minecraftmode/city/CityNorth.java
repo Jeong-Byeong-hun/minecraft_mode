@@ -43,6 +43,7 @@ final class CityNorth {
 		CityCore.tower(b, -7, -48, 3, 10);
 		CityCore.tower(b, 7, -48, 3, 10);
 		b.fill(-1, -1, -62, 1, -1, -49, Build.wool(DyeColor.RED));
+		raidGate(b);
 
 		// great hall
 		int x0 = -18;
@@ -100,6 +101,29 @@ final class CityNorth {
 	}
 
 	// ------------------------------------------------------------------ mage quarter
+
+	/**
+	 * Raid gate in the keep courtyard: a crying-obsidian arch with a violet veil, braziers and banners.
+	 * The raid marshal stands beside it and sends parties to the raid arenas.
+	 */
+	private static void raidGate(final Build b) {
+		int x0 = 13;
+		int x1 = 19;
+		int z = -58;
+		b.fill(x0, 0, z, x0, 6, z, Blocks.CRYING_OBSIDIAN);
+		b.fill(x1, 0, z, x1, 6, z, Blocks.CRYING_OBSIDIAN);
+		b.fill(x0, 7, z, x1, 7, z, Blocks.OBSIDIAN);
+		b.fill(x0 + 1, 6, z, x1 - 1, 6, z, Blocks.CRYING_OBSIDIAN);
+		b.fill(x0 + 1, 0, z, x1 - 1, 5, z, Build.glass(DyeColor.PURPLE));
+		b.set((x0 + x1) / 2, 8, z, Blocks.END_ROD);
+		b.fill(x0 - 1, -1, z - 1, x1 + 1, -1, z + 3, Blocks.POLISHED_BLACKSTONE_BRICKS);
+		for (int x : new int[] {x0 - 1, x1 + 1}) {
+			b.set(x, 0, z + 2, Blocks.POLISHED_BLACKSTONE_BRICKS);
+			b.set(x, 1, z + 2, Blocks.SOUL_CAMPFIRE);
+		}
+		b.flag(x0 - 2, z + 1, 6, Build.wool(DyeColor.RED), Build.wool(DyeColor.BLACK), Direction.SOUTH);
+		b.flag(x1 + 2, z + 1, 6, Build.wool(DyeColor.RED), Build.wool(DyeColor.BLACK), Direction.SOUTH);
+	}
 
 	private static void mageQuarter(final Build b) {
 		if (!b.touches(-97, -97, -35, -47)) {

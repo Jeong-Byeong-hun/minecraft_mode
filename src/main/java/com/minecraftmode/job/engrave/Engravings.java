@@ -10,11 +10,14 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 /**
- * Item component on class weapons: up to {@link #MAX_LINES} engraving ids (duplicates allowed and
- * stacking) plus the seed that picks the table's current offers.
+ * Item component on class gear: engraving ids (duplicates allowed and stacking; up to
+ * {@link #WEAPON_LINES} on weapons and {@link #ARMOR_LINES} on armor) plus the seed that picks the
+ * table's current offers.
  */
 public record Engravings(List<String> lines, int seed) {
-	public static final int MAX_LINES = 3;
+	public static final int WEAPON_LINES = 3;
+	public static final int ARMOR_LINES = 4;
+	public static final int MAX_LINES = Math.max(WEAPON_LINES, ARMOR_LINES);
 	public static final Engravings EMPTY = new Engravings(List.of(), 0);
 
 	public static final Codec<Engravings> CODEC = RecordCodecBuilder.create(i -> i.group(

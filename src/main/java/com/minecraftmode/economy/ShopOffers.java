@@ -2,15 +2,17 @@ package com.minecraftmode.economy;
 
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
-import com.minecraftmode.job.weapon.JobWeapons;
-import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.ItemLevels;
+import com.minecraftmode.loot.GearIndex;
+import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
@@ -123,33 +125,30 @@ public final class ShopOffers {
 	}
 
 	/**
-	 * Class weapons of the visitor's class up to their tier (all tier 1 weapons for players without a
-	 * class), priced in coins plus essence, and the class reset scroll.
+	 * Class gear for the visitor: for every 10-level bracket up to one above their own, the bracket's
+	 * shop weapon and shop armor piece of their class (everything else only drops; see {@link GearIndex}).
+	 * Players without a class see the Lv 10 items of every class. Plus essence and the class reset scroll.
 	 */
 	private static List<Trade> guild(final @Nullable Player player) {
 		JobData data = player == null ? JobData.DEFAULT : JobProgression.get(player);
 		List<Trade> list = new ArrayList<>();
-		for (WeaponDef def : JobWeapons.all()) {
-			boolean visible = data.hasClass() ? def.job() == data.job() && def.tier() <= data.tier() : def.tier() == 1;
-			if (visible) {
-				list.add(weaponTrade(def));
+		if (data.hasClass()) {
+			int top = Math.min(ItemLevels.MAX_BRACKET, ItemLevels.bracket(data.level()) + 10);
+			for (int bracket = ItemLevels.MIN_BRACKET; bracket <= top; bracket += 10) {
+				for (ClassGear gear : GearIndex.shopItems(data.job(), bracket)) {
+					list.add(GearShop.trade(gear));
+				}
+			}
+		} else {
+			for (JobClass job : JobClass.PLAYABLE) {
+				for (ClassGear gear : GearIndex.shopItems(job, ItemLevels.MIN_BRACKET)) {
+					list.add(GearShop.trade(gear));
+				}
 			}
 		}
 		list.add(sell(ModItems.ESSENCE, 6, ModItems.COPPER_COIN, 2));
 		list.add(buy(ModItems.GOLD_COIN, 4, ModItems.CLASS_RESET_SCROLL, 1));
 		return list;
-	}
-
-	/** T1: silver + essence, T2: gold + essence, T3/T4: gold + condensed essence; pricier with the level requirement. */
-	private static Trade weaponTrade(final WeaponDef def) {
-		Item weapon = JobWeapons.item(def);
-		int above = def.level() - JobProgression.levelForTier(def.tier());
-		return switch (def.tier()) {
-			case 1 -> new Trade(ModItems.SILVER_COIN, 2 + above / 4, weapon, 1, ModItems.ESSENCE, 8);
-			case 2 -> new Trade(ModItems.GOLD_COIN, 1 + above / 8, weapon, 1, ModItems.ESSENCE, 16);
-			case 3 -> new Trade(ModItems.GOLD_COIN, 3 + above / 8, weapon, 1, ModItems.CONDENSED_ESSENCE, 4);
-			default -> new Trade(ModItems.GOLD_COIN, 8 + above / 10, weapon, 1, ModItems.CONDENSED_ESSENCE, 10);
-		};
 	}
 
 	private static Trade sell(final ItemLike goods, final int goodsCount, final ItemLike coin, final int coinCount) {

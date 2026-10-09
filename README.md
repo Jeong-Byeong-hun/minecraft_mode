@@ -1,6 +1,6 @@
 # Minecraft Mode
 
-Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출혈 효과, 적대적 몹과 미니보스, 인챈트, 코인 경제와 지갑, 소모품 40종, 4차 전직 직업 시스템(7직업)과 전직 시련, 직업 방어구·세트 효과, 네임드 몬스터 22종과 네임드 소굴 22곳(개인 보상·소굴의 군주), 파티 레이드 보스 6종(즉사 기믹, 일반·영웅·악몽)과 경매/주사위 분배, 길드 의뢰, 장비 강화 +15, 거래소, 도감·업적·칭호, 특성, 0, 0의 수도 **스톰홀드**를 추가한다. 반복 콘텐츠는 마인크래프트 날짜로 3일마다 초기화된다. 멀티플레이 서버를 기준으로 만든다.
+Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출혈 효과, 적대적 몹과 미니보스, 인챈트, 코인 경제와 지갑, 소모품 40종, 4차 전직 직업 시스템(7직업)과 전직 시련, 직업 방어구·세트 효과, 네임드 몬스터 22종과 네임드 소굴 22곳(개인 보상·소굴의 군주), 파티 레이드 보스 6종(즉사 기믹, 일반·영웅·악몽)과 경매/주사위 분배, 길드 의뢰, 장비 강화 +15와 각성, 거래소, 도감·업적·칭호, 특성, 초월 레벨, 생활 기술 3종, 펫 8종·탈것 6종, 2–4인 쐐기돌 던전 5곳, 월드 이벤트(거신·수도 침공), 메인 스토리 11장, 0, 0의 수도 **스톰홀드**를 추가한다. 반복 콘텐츠는 마인크래프트 날짜로 3일마다 초기화된다. 멀티플레이 서버를 기준으로 만든다.
 
 ## 콘텐츠
 
@@ -35,11 +35,18 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 | 길드 의뢰 | 모험가 길드의 "길드 접수원 리나": 일일 의뢰 3개 + 3일 의뢰 1개(처치·특정 몹·네임드·소굴·채굴·레이드·납품, 레벨에 맞춰 굴림). 보상은 동전·**공적**·에테르·강화석. **공적 상점**에서 강화석·보호 주문서·소굴 지도·정수·에테르·소모품 |
 | 장비 강화 (+15) | 대장간의 "강화 장인 브로크": 직업 무기·방어구를 +15까지. 성공률 100%(+5까지) → 20%(+15), 실패할 때마다 **장인의 기운** +5%, +11부터 실패하면 하락(**보호 주문서**로 방지). 동전·정수·강화석 소모, 단계당 무기 피해 +3%·방어구 피해 감소 +0.5%와 체력, +10·+15 보너스. 이름에 "+N", 진화해도 유지 |
 | 거래소 | 시장의 "중개인 모건": 플레이어끼리 즉시 구매가로 거래(1인 10건, 3일). 등록 수수료 1%, 판매 수수료 5%, 대금·반환품은 우편함. 검색·분류·정렬·최저가 제안(서버가 찾아 한 쪽씩 보냄), 물건이 든 상자·데이터가 큰 물건은 등록 불가 |
-| 도감·업적·칭호 (J) | 네임드 22종·소굴 22곳 수집 기록과 영구 **수집 보너스**(보스 피해·아이템 발견·경험치), 업적 31개(공적 보상), 칭호 18개(이름 앞에 표시). 처치 기록은 근처(48블록) 파티원과 함께 올라간다 |
+| 도감·업적·칭호 (J) | 네임드 22종·소굴 22곳 수집 기록과 영구 **수집 보너스**(보스 피해·아이템 발견·경험치), 업적 48개(공적 보상), 칭호 27개, 메인 스토리 탭. 칭호는 스코어보드 팀 없이 모드가 직접 이름 앞에 붙인다(머리 위·채팅·탭 목록, 다른 플러그인과 충돌 없음). 처치 기록은 근처(48블록) 파티원과 함께 올라간다 |
 | 특성 (N) | 직업마다 3계열 × 5단계(마지막은 핵심 특성). Lv 10부터 3레벨마다 2점, Lv 100에 60점 — 한 계열 최대 21점이라 전부 찍을 수 없다. 동전으로 초기화 |
+| 초월 (N) | Lv 100부터 경험치가 초월 레벨로 쌓이고, 초월 레벨마다 8가지 능력치(위력·활력·정밀·흉포·수호·가속·정신·행운) 중 하나에 1점(능력치당 50랭크). HUD에 ✦레벨과 보라색 경험치 바 |
+| 각성 (✦1–✦5) | +15 장비를 강화 장인에게서 각성. 실패 없음, 각성의 결정(던전 +5 이상)과 동전. 단계마다 무기 기본·스킬·보스 피해 +2%, 방어구 피해 감소·체력 +0.6. 이름에 "+15✦N", 서버 전체 알림 |
+| 생활 기술 | 요리·연금술·대장 기술(Lv 1–50). 수도 시장의 조리대·연금술 작업대, 대장간의 대장 작업대(직접 조합도 가능)에서 레시피 36종(소모품, 강화석, 진화의 에테르 등). 레벨에 따라 두 배 제작. 풀·꽃을 부수면 **약초** 6종(햇살잎·달꽃잎·서리뿌리·빛버섯·잿불꽃·공허버섯) |
+| 펫·탈것 (P, H) | 펫 8종(불여우·서리 부엉이·황금 풍뎅이·이끼 거북·불꽃 정령·그림자 고양이·수정 슬라임·아기 용): 주인을 따라다니며 소환 중 보너스(아이템 발견·경험치·동전·피해 감소·MP·치명타·체력·보스 피해), 처치로 Lv 10까지 성장. 탈것 6종(질풍마·사막 랩터·서리 늑대·화염 사자·수정 사슴·폭풍 그리핀 — 그리핀은 시선 방향으로 비행). 전용 모델과 텍스처. 공적 상점·네임드·소굴·던전·레이드·거신·스토리에서 획득 |
+| 던전 (2–4인) | 성 안뜰 던전 문의 "던전 관리인 카엘": 산적 은신처(Lv 10)·균사 심연(30)·가라앉은 동굴(40)·잿불 용광로(60)·공허의 첨탑(80). 전용 차원에서 홀 3개(문이 하나씩 열림, 정예 몬스터) → 네임드 챔피언 보스. 쓰러지면 입구에서 깨어나고 15초 손해. **쐐기돌**: 단계마다 몬스터 체력 +12%·피해 +8%, +4/+7/+10에 속성(견고·폭군·강화·분노·화산), 제한 시간 안에 깨면 +1(+2)되어 다른 던전으로, 늦거나 포기하면 -1. 보상: 동전·에테르·강화석·장비·각성의 결정·펫/탈것 |
+| 월드 이벤트 | 매일 해 질 녘. **거신**(도시 밖 플레이어 근처에 레벨에 맞는 네임드의 거대 챔피언, 20분, 체력 2% 이상 피해를 준 모두에게 거신의 파편·에테르·강화석·10% 영웅 펫/탈것)과 사흘에 한 번 **수도 침공**(성문 세 곳으로 3웨이브와 침공 군주, 경비병이 막지 않음, 막아 내면 보상·공적) |
+| 메인 스토리 (11장) | 광장의 "왕실 전령 엘릭": 직업 선택 → 레벨 10 → 네임드 → 소굴 → 2차 전직 → 던전 → 생활 기술 → 레이드 → +5 쐐기돌 → 거신 → Lv 100. 장마다 동전과 보상(질풍마·펫 부적·각성의 결정·폭풍 그리핀 등), 끝내면 칭호 "스톰홀드의 영웅" |
 | 스킬 이펙트 | 새로 그린 파티클 12종(색 지정), 투사체(표창·쿠나이·총알·포탄·마력탄·검기 등), 직업 HUD(레벨·EXP·MP·스킬 쿨다운) |
 
-직업·전직 시련·무기·스킬·각인 전체 목록과 수치: [docs/CLASSES.md](docs/CLASSES.md) · 장비(상점·드롭률·방어구 세트): [docs/GEAR.md](docs/GEAR.md) · 네임드·소굴·보스: [docs/MONSTERS.md](docs/MONSTERS.md) · 소모품: [docs/CONSUMABLES.md](docs/CONSUMABLES.md) · 엔드게임(의뢰·강화·거래소·업적·특성): [docs/ENDGAME.md](docs/ENDGAME.md) · 설계: [docs/DESIGN-gear-raids.md](docs/DESIGN-gear-raids.md), [docs/DESIGN-economy-consumables.md](docs/DESIGN-economy-consumables.md), [docs/DESIGN-endgame.md](docs/DESIGN-endgame.md)
+직업·전직 시련·무기·스킬·각인 전체 목록과 수치: [docs/CLASSES.md](docs/CLASSES.md) · 장비(상점·드롭률·방어구 세트): [docs/GEAR.md](docs/GEAR.md) · 네임드·소굴·보스: [docs/MONSTERS.md](docs/MONSTERS.md) · 소모품: [docs/CONSUMABLES.md](docs/CONSUMABLES.md) · 엔드게임(의뢰·강화·거래소·업적·특성): [docs/ENDGAME.md](docs/ENDGAME.md) · 초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·스토리: [docs/CONTENT.md](docs/CONTENT.md) · 설계: [docs/DESIGN-gear-raids.md](docs/DESIGN-gear-raids.md), [docs/DESIGN-economy-consumables.md](docs/DESIGN-economy-consumables.md), [docs/DESIGN-endgame.md](docs/DESIGN-endgame.md)
 
 직업·스킬은 헌터×헌터, 블리치, 나루토, 타입문(Fate) 같은 작품을 중심으로 고른다(사신·헌터 추가됨).
 
@@ -48,10 +55,11 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 - 대장간 = 잡화점 + 대장장이 작업대, 식료품점 = 잡화점 + 건초 더미, 보석상 = 잡화점 + 다이아몬드, 연금술사 = 잡화점 + 양조기, 직업 길드 = 잡화점 + 정수
 - 소모품 12종(김밥·떡볶이·삼계탕·체력 물약 등)은 제작대에서 조합 — [docs/CONSUMABLES.md](docs/CONSUMABLES.md)
 - 정수 각인대: `정수 ×3 / 다이아몬드·미스릴 주괴·다이아몬드 / 흑요석 ×3`, 응축된 정수 = 정수 ×9
+- 조리대: `철 주괴·정수·철 주괴 / 판자·훈연기·판자 / 판자 ×3`, 연금술 작업대: `유리병·정수·유리병 / 판자·양조기·판자 / 판자 ×3`, 대장 작업대: `철 주괴·정수·철 주괴 / 조약돌·모루·조약돌 / 조약돌 ×3`
 
-명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 L 키). 키: K 직업 창, N 특성, J 도감, B 고유 기술
+명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 L 키), `/dungeon leave`(던전에서 귀환), `/story`(현재 장). 키: K 직업 창, N 특성·초월, J 도감·스토리, B 고유 기술, P 펫·탈것, H 탈것 호출/내리기
 
-관리자 명령어(권한 2): `/job info|set|level|exp|mana|cooldowns|cast`, `/job trainer <직업>`(그 자리에 교관 소환), `/job quest <대상> clear|goals`(시련 취소 / 처치 목표 채우기), `/raid start <보스> [플레이어]`(사령관·레벨 확인 없이 레이드 시작), `/raid list`, `/wallet give|set <플레이어> <금액>`, `/locate structure minecraft_mode:lair_<네임드 id>`(소굴 찾기)
+관리자 명령어(권한 2): `/job info|set|level|exp|mana|cooldowns|cast`, `/job trainer <직업>`(그 자리에 교관 소환), `/job quest <대상> clear|goals`(시련 취소 / 처치 목표 채우기), `/raid start <보스> [플레이어]`(사령관·레벨 확인 없이 레이드 시작), `/raid list`, `/dungeon start <던전> [단계]|list`, `/worldevent titan [네임드]|invasion|stop`, `/story set <장>`, `/wallet give|set <플레이어> <금액>`, `/locate structure minecraft_mode:lair_<네임드 id>`(소굴 찾기)
 
 ## 개발 환경
 
@@ -61,7 +69,7 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 ```bash
 ./gradlew build              # build/libs/minecraft_mode-<ver>.jar
 ./gradlew runClient          # 개발용 클라이언트 실행
-./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트/차원 JSON, 무기·방어구·몬스터 텍스처 → src/main/generated, docs/CLASSES.md·GEAR.md·MONSTERS.md·CONSUMABLES.md·ENDGAME.md
+./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트/차원 JSON, 무기·방어구·몬스터 텍스처 → src/main/generated, docs/CLASSES.md·GEAR.md·MONSTERS.md·CONSUMABLES.md·ENDGAME.md·CONTENT.md
 ./gradlew runClientGameTest  # 자동 테스트 (월드 생성 → 검증 → 스크린샷 build/run/clientGameTest/screenshots)
 java tools/TextureGen.java src/main/resources/assets/minecraft_mode/textures  # 텍스처 재생성
 ```
@@ -70,7 +78,7 @@ java tools/TextureGen.java src/main/resources/assets/minecraft_mode/textures  # 
 
 ## 텍스처
 
-모든 텍스처는 직접 그린다(바닐라 에셋을 읽지 않음). 일반 텍스처는 `tools/TextureGen.java`(+ `tools/ClassArt.java`: 파티클·정수·각인대 등, `tools/QuestArt.java`: 시련 증표 28종·교관과 도시 NPC 스킨, `tools/EndgameArt.java`: 강화석·보호 주문서·소굴 지도·소굴 상자), 직업 무기 161종·직업 방어구 280부위·소모품 40종(아이콘과 버프 아이콘)(아이콘과 착용 텍스처)·네임드와 보스 28종(파츠 모델에 맞춘 텍스처와 발광 레이어)은 데이터 생성 단계에서 정의로부터 그린다(`client/datagen/art`). 미리보기: `build/weapon-preview.png`, `build/armor-preview.png`, `build/creature-preview.png`, `build/consumable-preview.png`.
+모든 텍스처는 직접 그린다(바닐라 에셋을 읽지 않음). 일반 텍스처는 `tools/TextureGen.java`(+ `tools/ClassArt.java`: 파티클·정수·각인대 등, `tools/QuestArt.java`: 시련 증표 28종·교관과 도시 NPC 스킨, `tools/EndgameArt.java`: 강화석·보호 주문서·소굴 지도·소굴 상자, `tools/ContentArt.java`: 약초·각성의 결정·거신의 파편·쐐기돌·생활 기술 작업대), 직업 무기 161종·직업 방어구 280부위·소모품 40종(아이콘과 버프 아이콘)(아이콘과 착용 텍스처)·네임드와 보스 28종·펫 8종·탈것 6종(파츠 모델에 맞춘 텍스처와 발광 레이어), 펫 부적·탈것 호루라기 아이콘은 데이터 생성 단계에서 정의로부터 그린다(`client/datagen/art`). 미리보기: `build/weapon-preview.png`, `build/armor-preview.png`, `build/creature-preview.png`, `build/consumable-preview.png`.
 
 - 아이템(주괴·조각·원석·갑옷·플라스틱 판): 16x16 문자 격자 + 5단계 팔레트
 - 도구: 대각선 축 위의 모양 함수(자루 왼쪽 아래, 머리 오른쪽 위)

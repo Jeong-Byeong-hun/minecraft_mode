@@ -44,6 +44,9 @@ public final class ModLootProviders {
 			this.dropSelf(ModBlocks.ALCHEMIST_SHOP);
 			this.dropSelf(ModBlocks.GUILD_SHOP);
 			this.dropSelf(ModBlocks.ENGRAVING_TABLE);
+			this.dropSelf(ModBlocks.KITCHEN_STATION);
+			this.dropSelf(ModBlocks.ALCHEMY_STATION);
+			this.dropSelf(ModBlocks.SMITHING_STATION);
 		}
 	}
 

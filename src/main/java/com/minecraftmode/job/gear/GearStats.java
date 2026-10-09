@@ -1,9 +1,11 @@
 package com.minecraftmode.job.gear;
 
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -71,7 +73,7 @@ public final class GearStats {
 			builder.addAll(JobWeapons.engravings(main).resolved());
 			ClassGear gear = ClassGear.of(main);
 			if (gear != null) {
-				for (StatLine line : Enhancement.lines(gear, Enhancement.level(main))) {
+				for (StatLine line : Enhancement.lines(gear, Enhancement.level(main), Enhancement.of(main).awaken())) {
 					add(builder, line);
 				}
 			}
@@ -90,7 +92,7 @@ public final class GearStats {
 			builder.addAll(stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY).resolved());
 			ClassGear gear = ClassGear.of(stack);
 			if (gear != null) {
-				for (StatLine line : Enhancement.lines(gear, Enhancement.level(stack))) {
+				for (StatLine line : Enhancement.lines(gear, Enhancement.level(stack), Enhancement.of(stack).awaken())) {
 					add(builder, line);
 				}
 			}
@@ -115,6 +117,12 @@ public final class GearStats {
 			add(builder, line);
 		}
 		for (StatLine line : CollectionBonuses.lines(Progress.get(player))) {
+			add(builder, line);
+		}
+		for (StatLine line : Paragon.lines(player)) {
+			add(builder, line);
+		}
+		for (StatLine line : Companions.lines(player)) {
 			add(builder, line);
 		}
 		return builder.build();

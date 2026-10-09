@@ -12,7 +12,7 @@ import net.minecraft.client.model.geom.ModelLayerLocation;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Every creature body plan (named monsters and raid bosses), keyed by entity id, plus their model
+ * Every creature body plan (named monsters, raid bosses, pets and mounts), keyed by entity id, plus their model
  * layer locations. Used by the client renderers and by datagen to paint the textures.
  */
 public final class CreaturePlans {
@@ -24,6 +24,7 @@ public final class CreaturePlans {
 			Map<String, BodyPlan> map = new LinkedHashMap<>();
 			List<BodyPlan> list = new ArrayList<>(NamedPlans.all());
 			list.addAll(BossPlans.all());
+				list.addAll(CompanionPlans.all());
 			for (BodyPlan plan : list) {
 				if (map.put(plan.id, plan) != null) {
 					throw new IllegalStateException("Duplicate creature plan " + plan.id);

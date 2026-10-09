@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "minecraft_mode:block/kitchen_station_bottom",
+    "side": "minecraft_mode:block/kitchen_station_side",
+    "top": "minecraft_mode:block/kitchen_station_top"
+  }
+}

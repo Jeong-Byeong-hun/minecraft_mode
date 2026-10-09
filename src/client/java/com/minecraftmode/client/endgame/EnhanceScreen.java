@@ -81,10 +81,11 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			String key = switch (result) {
 				case EnhanceMenu.RESULT_SUCCESS -> "screen.minecraft_mode.enhance.result.success";
 				case EnhanceMenu.RESULT_SAVED -> "screen.minecraft_mode.enhance.result.saved";
+				case EnhanceMenu.RESULT_AWAKENED -> "screen.minecraft_mode.enhance.result.awakened";
 				case EnhanceMenu.RESULT_DROP -> "screen.minecraft_mode.enhance.result.drop";
 				default -> "screen.minecraft_mode.enhance.result.fail";
 			};
-			int color = result == EnhanceMenu.RESULT_SUCCESS ? 0xFF1E8A2E : result == EnhanceMenu.RESULT_SAVED ? 0xFF2A6AB0 : 0xFFB02A2A;
+			int color = result == EnhanceMenu.RESULT_AWAKENED ? 0xFFB02AB0 : result == EnhanceMenu.RESULT_SUCCESS ? 0xFF1E8A2E : result == EnhanceMenu.RESULT_SAVED ? 0xFF2A6AB0 : 0xFFB02A2A;
 			g.centeredText(this.font, Component.translatable(key), x + EnhanceMenu.SLOT_X + 8, y + EnhanceMenu.SLOT_Y + 24, color);
 		}
 		if (this.minecraft.player != null) {
@@ -100,8 +101,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 		}
 		Enhancement now = Enhancement.of(this.menu.input());
 		if (now.level() >= Enhancement.MAX) {
-			g.text(this.font, Component.literal("+" + Enhancement.MAX).withStyle(ChatFormatting.BOLD), px, ty, Enhancement.color(Enhancement.MAX) | 0xFF000000, false);
-			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.enhance.max"), px, ty + 12, PW, 0xFF404040);
+			this.awakenPanel(g, x, y, px, ty, now, mouseX, mouseY);
 			return;
 		}
 		int target = this.target();
@@ -143,6 +143,31 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 		}
 	}
 
+	/** +15 gear: the awakening step, its cost and the button (or the fully awakened note). */
+	private void awakenPanel(final GuiGraphicsExtractor g, final int x, final int y, final int px, int ty, final Enhancement now, final int mouseX, final int mouseY) {
+		g.text(this.font, Component.literal("+" + Enhancement.MAX + (now.awaken() > 0 ? " ✦" + now.awaken() : "")).withStyle(ChatFormatting.BOLD), px, ty, 0xFFB02AB0, false);
+		if (now.awaken() >= Enhancement.MAX_AWAKEN) {
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.enhance.max"), px, ty + 12, PW, 0xFF404040);
+			return;
+		}
+		ClassGear gear = ClassGear.of(this.menu.input());
+		int target = now.awaken() + 1;
+		g.text(this.font, Component.translatable("screen.minecraft_mode.enhance.awaken_to", target, Enhancement.MAX_AWAKEN), px, ty + 11, 0xFF6A2A8A, false);
+		ty += 25;
+		Inventory inventory = this.minecraft.player.getInventory();
+		boolean creative = this.minecraft.player.isCreative();
+		int coins = Enhancement.awakenCoins(gear, target);
+		this.costLine(g, px, ty, Component.translatable("screen.minecraft_mode.enhance.coins"), Coins.format(coins), creative || Coins.total(this.minecraft.player) >= coins);
+		ty += 9;
+		int crystals = JobProgression.count(inventory, ModItems.AWAKENING_CRYSTAL);
+		this.costLine(g, px, ty, Component.translatable(ModItems.AWAKENING_CRYSTAL.getDescriptionId()), crystals + "/" + Enhancement.crystals(target),
+			creative || crystals >= Enhancement.crystals(target));
+		ty += 11;
+		g.text(this.font, Component.translatable("screen.minecraft_mode.enhance.awaken_safe"), px, ty, 0xFF505050, false);
+		this.button(g, x + PX, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.awaken"), EnhanceMenu.canPayAwaken(this.minecraft.player, gear, target),
+			mouseX, mouseY);
+	}
+
 	private static int darker(final int rgb) {
 		int r = (rgb >> 16 & 0xFF) * 3 / 5;
 		int gr = (rgb >> 8 & 0xFF) * 3 / 5;
@@ -165,6 +190,17 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	protected void extractTooltip(final GuiGraphicsExtractor g, final int mouseX, final int mouseY) {
 		super.extractTooltip(g, mouseX, mouseY);
 		ClassGear gear = ClassGear.of(this.menu.input());
+		if (gear != null && this.menu.canAwaken() && inside(mouseX, mouseY, this.leftPos + PX, this.topPos + BUTTON_Y, BUTTON_W, BUTTON_H)) {
+			int target = Enhancement.of(this.menu.input()).awaken() + 1;
+			List<Component> tip = new ArrayList<>();
+			tip.add(Component.translatable("screen.minecraft_mode.enhance.awaken_next", target).withColor(0xFF55FF));
+			for (StatLine line : Enhancement.lines(gear, 0, target)) {
+				tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(ChatFormatting.LIGHT_PURPLE)));
+			}
+			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
+			return;
+		}
 		if (!this.ready() || gear == null) {
 			return;
 		}
@@ -190,6 +226,12 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
 		int bx = this.leftPos + PX;
 		int by = this.topPos + BUTTON_Y;
+		if (this.menu.canAwaken() && this.minecraft.player != null && inside(event.x(), event.y(), bx, by, BUTTON_W, BUTTON_H)
+			&& this.menu.clickMenuButton(this.minecraft.player, EnhanceMenu.BUTTON_AWAKEN)) {
+			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+			this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, EnhanceMenu.BUTTON_AWAKEN);
+			return true;
+		}
 		if (this.ready() && this.minecraft.player != null) {
 			int button = -1;
 			if (inside(event.x(), event.y(), bx, by, BUTTON_W, BUTTON_H)) {

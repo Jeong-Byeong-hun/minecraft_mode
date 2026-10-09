@@ -5,6 +5,9 @@
     "minecraft_mode:grocer_shop",
     "minecraft_mode:jeweler_shop",
     "minecraft_mode:guild_shop",
-    "minecraft_mode:alchemist_shop"
+    "minecraft_mode:alchemist_shop",
+    "minecraft_mode:kitchen_station",
+    "minecraft_mode:alchemy_station",
+    "minecraft_mode:smithing_station"
   ]
 }

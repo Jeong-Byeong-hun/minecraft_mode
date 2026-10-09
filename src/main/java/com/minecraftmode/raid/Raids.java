@@ -1,6 +1,7 @@
 package com.minecraftmode.raid;
 
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
@@ -53,6 +54,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -526,6 +528,7 @@ public final class Raids {
 			classes.add(data);
 			reward(p, def, difficulty, random);
 			Progress.raidCleared(p, def, difficulty, cycle);
+			Companions.rollDrop(p, Companions.raidDrop(difficulty), Rarity.EPIC);
 		}
 		int lots = participants.isEmpty() ? 0 : 3 + participants.size() / 2 + difficulty.extraLots;
 		List<ItemStack> items = new ArrayList<>();

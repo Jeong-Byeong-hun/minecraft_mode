@@ -1,6 +1,7 @@
 package com.minecraftmode.bounty;
 
 import com.minecraftmode.bounty.BountyData.Bounty;
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.economy.Wallet;
@@ -27,6 +28,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Rarity;
 
 /**
  * Guild bounties. Every Minecraft day a player gets three daily bounties and every three-day cycle one
@@ -73,7 +75,9 @@ public final class Bounties {
 		new Offer("ether", 35, (level, r) -> EvolutionEtherItem.of(Math.max(10, level), 10)),
 		new Offer("tier3", 25, (level, r) -> random(3, 2, r)),
 		new Offer("tier4", 90, (level, r) -> random(4, 1, r)),
-		new Offer("return_scrolls", 5, (level, r) -> new ItemStack(ModItems.RETURN_SCROLL, 3)));
+		new Offer("return_scrolls", 5, (level, r) -> new ItemStack(ModItems.RETURN_SCROLL, 3)),
+		new Offer("pet_charm", 50, (level, r) -> Companions.randomPet(Rarity.UNCOMMON, r)),
+		new Offer("mount_whistle", 40, (level, r) -> new ItemStack(Companions.mountItem("swift_stallion"))));
 
 	private static ItemStack random(final int tier, final int count, final RandomSource random) {
 		List<ConsumableDef> pool = Consumables.tier(tier);

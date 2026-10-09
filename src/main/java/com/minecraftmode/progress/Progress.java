@@ -2,6 +2,7 @@ package com.minecraftmode.progress;
 
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.bounty.BountyKind;
+import com.minecraftmode.craft.Profession;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.job.JobProgression;
@@ -9,6 +10,7 @@ import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairDef;
 import java.util.ArrayList;
@@ -124,6 +126,43 @@ public final class Progress {
 		check(player);
 	}
 
+	/** A pet or mount joined the collection (story chapters watch this). */
+	public static void companionLearned(final ServerPlayer player) {
+		check(player);
+	}
+
+	/** A profession reached {@code level} (story chapters watch this). */
+	public static void professionLevel(final ServerPlayer player, final Profession profession, final int level) {
+		check(player);
+	}
+
+	/** A dungeon run was cleared (the dungeon records are already updated). */
+	public static void dungeonCleared(final ServerPlayer player) {
+		check(player);
+	}
+
+	/** {@code player} helped defeat a world boss. */
+	public static void worldBossDefeated(final ServerPlayer player) {
+		player.setAttached(ModAttachments.STORY, Story.data(player).withWorldBoss());
+		check(player);
+	}
+
+	public static void awakened(final ServerPlayer player, final int awaken) {
+		set(player, get(player).withAwaken(awaken));
+		check(player);
+	}
+
+	/** {@code player} helped repel an invasion of the capital. */
+	public static void invasionRepelled(final ServerPlayer player) {
+		set(player, get(player).withInvasion());
+		check(player);
+	}
+
+	/** A paragon level or anything else achievements watch changed. */
+	public static void changed(final ServerPlayer player) {
+		check(player);
+	}
+
 	public static void enhanced(final ServerPlayer player, final int level) {
 		set(player, get(player).withEnhance(level));
 		check(player);
@@ -132,7 +171,7 @@ public final class Progress {
 	// ------------------------------------------------------------------ achievements and titles
 
 	public static Achievements.State state(final Player player) {
-		return new Achievements.State(get(player), JobProgression.get(player), Wallet.balance(player), Talents.spent(player));
+		return new Achievements.State(get(player), JobProgression.get(player), Wallet.balance(player), Talents.spent(player), player);
 	}
 
 	/** Unlocks every achievement that is now reached; each pays its merit and is announced. */
@@ -161,6 +200,7 @@ public final class Progress {
 		if (changed) {
 			set(player, records);
 		}
+		Story.check(player);
 	}
 
 	/** Wears the title of achievement {@code id} ("" takes it off). Returns false when it is not unlocked. */

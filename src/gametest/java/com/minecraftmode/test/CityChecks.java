@@ -6,8 +6,10 @@ import com.minecraftmode.city.CityZone;
 import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.network.OpenTrainerPayload;
+import com.minecraftmode.registry.ModBlocks;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +61,46 @@ final class CityChecks {
 		checkProtection(context, server, connection, base);
 		checkNoHostiles(context, server, base);
 		screenshots(context, server, connection, base);
+		checkInvasion(context, server, base);
+	}
+
+	/**
+	 * An invasion: waves come in through the gates tagged as invaders, the city guards leave them alone, and stopping the event
+	 * removes them.
+	 */
+	private static void checkInvasion(final ClientGameTestContext context, final TestServerContext server, final int base) {
+		server.runCommand("time set midnight");
+		require(server.computeOnServer(s -> WorldEvents.startInvasion(s.overworld())), "the invasion should start in the capital");
+		context.waitTicks(10);
+		int first = server.computeOnServer(s -> WorldEvents.invaders().size());
+		require(first > 0 && WorldEvents.invasionWave() == 1, "wave 1 should bring invaders, got " + first);
+		server.runCommand("tp @p " + (CityZone.WALL - 14) + ".5 " + (base + 6) + " 0.5");
+		context.waitTicks(10);
+		context.getInput().lookAt(new BlockPos(CityZone.WALL - 4, base + 1, 0));
+		context.waitTicks(80);
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			CityServices.driveOffHostiles(level);
+			int alive = 0;
+			int inside = 0;
+			for (java.util.UUID id : WorldEvents.invaders()) {
+				if (level.getEntity(id) instanceof net.minecraft.world.entity.Mob mob && mob.isAlive()) {
+					alive++;
+					require(mob.entityTags().contains(WorldEvents.INVADER_TAG), "invaders carry the invader tag");
+					inside += CityZone.inside(mob.blockPosition()) ? 1 : 0;
+				}
+			}
+			require(alive > 0 && inside > 0, "the guards must not remove invaders (alive " + alive + ", inside the walls " + inside + ")");
+			return alive + " invaders, " + inside + " inside the walls";
+		});
+		context.takeScreenshot("city_invasion");
+		server.runOnServer(s -> WorldEvents.stopInvasion(s.overworld()));
+		context.waitTicks(5);
+		require(server.computeOnServer(s -> !WorldEvents.invasionRunning() && s.overworld().getEntitiesOfClass(net.minecraft.world.entity.Mob.class,
+			new AABB(-CityZone.WALL, base - 10, -CityZone.WALL, CityZone.WALL, base + 40, CityZone.WALL), m -> m.entityTags().contains(WorldEvents.INVADER_TAG)).isEmpty()),
+			"stopping the invasion removes the invaders");
+		server.runCommand("time set noon");
+		MinecraftMode.LOGGER.info("[city] invasion: {}", report);
 	}
 
 	/** Leaves the city for natural land (surface above sea level) so the terrain checks see untouched chunks. */
@@ -209,6 +251,10 @@ final class CityChecks {
 					role.id() + " is stuck in a block at " + at);
 				lines.add(role.id() + "@" + at.toShortString());
 			}
+			// the profession stations in the market and the forge
+			require(level.getBlockState(new BlockPos(-23, base, 69)).is(ModBlocks.KITCHEN_STATION), "the grocer's stall should have the kitchen station");
+			require(level.getBlockState(new BlockPos(-13, base, 59)).is(ModBlocks.ALCHEMY_STATION), "the alchemist's stall should have the alchemy station");
+			require(level.getBlockState(new BlockPos(-25, base, 91)).is(ModBlocks.SMITHING_STATION), "the forge should have the smithing station");
 			// a trainer that wandered off is brought back
 			ClassTrainer mage = level.getEntitiesOfClass(ClassTrainer.class, new AABB(CityZone.trainerHome(JobClass.MAGE, base)).inflate(32), t -> t.job() == JobClass.MAGE).getFirst();
 			mage.teleportTo(mage.getX() + 6, mage.getY(), mage.getZ());
@@ -456,7 +502,8 @@ final class CityChecks {
 			view(context, server, "trainer_" + job.id(), camera, home.above());
 		}
 
-		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER}) {
+		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
+			CityNpc.Role.HERALD}) {
 			BlockPos home = CityZone.npcHome(role, base);
 			BlockPos camera = server.computeOnServer(s -> {
 				ServerLevel level = s.overworld();

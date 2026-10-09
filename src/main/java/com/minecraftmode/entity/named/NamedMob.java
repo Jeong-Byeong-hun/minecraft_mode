@@ -99,6 +99,9 @@ public class NamedMob extends CreatureMob {
 	private boolean lord;
 	private @Nullable BlockPos lordHome;
 	private @Nullable ServerBossEvent lordBar;
+	/** A champion: a dungeon boss or a world boss (tougher, boss bar, the wrath on a timer, leashed to its home). Never saved. */
+	private boolean champion;
+	private double championLeash;
 	public static final float LORD_HEALTH = 3.0F;
 	public static final float LORD_DAMAGE = 1.3F;
 	public static final float LORD_SCALE = 1.2F;
@@ -237,6 +240,32 @@ public class NamedMob extends CreatureMob {
 		this.setHealth(this.getMaxHealth());
 	}
 
+	/**
+	 * Turns this monster into a champion at {@code home}: top level, health times {@code health}, size times {@code scale}, named by
+	 * {@code titleKey} (with the monster's name), a boss bar, the wrath every {@link #WRATH_INTERVAL} ticks, and back home when
+	 * lured farther than {@code leash}.
+	 */
+	public void makeChampion(final float health, final float scale, final String titleKey, final BlockPos home, final double leash) {
+		this.champion = true;
+		this.championLeash = leash;
+		this.lordHome = home;
+		this.applyLevel(this.def().hi());
+		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * health);
+		this.getAttribute(Attributes.SCALE).setBaseValue(scale);
+		this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
+		Component name = Component.translatable(titleKey, Component.literal("[Lv." + this.namedLevel + "] ").withStyle(ChatFormatting.GRAY)
+			.append(Component.translatable(this.def().nameKey()).withStyle(ChatFormatting.GOLD))).withStyle(ChatFormatting.RED);
+		this.setCustomName(name);
+		this.lordBar = new ServerBossEvent(Mth.createInsecureUUID(this.random), name, BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.NOTCHED_10);
+		this.setHomeTo(home, (int)Math.max(8, leash * 0.6));
+		this.setPersistenceRequired();
+		this.setHealth(this.getMaxHealth());
+	}
+
+	public boolean isChampion() {
+		return this.champion;
+	}
+
 	private void applyLord() {
 		NamedDef def = this.def();
 		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * LORD_HEALTH);
@@ -307,6 +336,8 @@ public class NamedMob extends CreatureMob {
 		this.minions.removeIf(m -> !m.isAlive());
 		if (this.lord) {
 			this.tickLord(level);
+		} else if (this.champion) {
+			this.tickChampion(level);
 		}
 	}
 
@@ -330,6 +361,20 @@ public class NamedMob extends CreatureMob {
 			return;
 		}
 		this.wrath(level);
+	}
+
+	private void tickChampion(final ServerLevel level) {
+		if (this.lordBar != null) {
+			this.lordBar.setProgress(this.getHealth() / this.getMaxHealth());
+		}
+		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > this.championLeash * this.championLeash) {
+			this.setTarget(null);
+			this.getNavigation().stop();
+			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 0.5);
+		}
+		if (this.tickCount % WRATH_INTERVAL == WRATH_INTERVAL / 2 && this.getTarget() != null) {
+			this.wrath(level);
+		}
 	}
 
 	/** Casts the lair's wrath now (also used by tests). */

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "E": "minecraft_mode:essence",
+    "I": "minecraft:iron_ingot",
+    "P": "#minecraft:planks",
+    "S": "minecraft:smoker"
+  },
+  "pattern": [
+    "IEI",
+    "PSP",
+    "PPP"
+  ],
+  "result": {
+    "id": "minecraft_mode:kitchen_station"
+  }
+}

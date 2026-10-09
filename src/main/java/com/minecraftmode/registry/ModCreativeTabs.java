@@ -1,8 +1,13 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.dungeon.DungeonDef;
+import com.minecraftmode.dungeon.Dungeons;
+import com.minecraftmode.dungeon.Keystone;
+import com.minecraftmode.dungeon.KeystoneItem;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ClassArmor;
@@ -71,6 +76,21 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 					output.accept(ModItems.RETURN_SCROLL);
 					output.accept(ModItems.LAIR_MAP);
+					output.accept(ModItems.KITCHEN_STATION);
+					output.accept(ModItems.ALCHEMY_STATION);
+					output.accept(ModItems.SMITHING_STATION);
+					for (Item herb : new Item[] {ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP}) {
+						output.accept(herb);
+					}
+					for (Companions.PetDef def : Companions.pets()) {
+						output.accept(Companions.petItem(def.id()));
+					}
+					for (Companions.MountDef def : Companions.mounts()) {
+						output.accept(Companions.mountItem(def.id()));
+					}
+					for (DungeonDef def : Dungeons.all()) {
+						output.accept(KeystoneItem.of(new Keystone(def.id(), Keystone.MIN_LEVEL)));
+					}
 					for (ConsumableDef def : Consumables.all()) {
 						output.accept(Consumables.item(def));
 					}
@@ -92,6 +112,8 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.ENGRAVING_TABLE);
 					output.accept(ModItems.ENHANCEMENT_STONE);
 					output.accept(ModItems.PROTECTION_SCROLL);
+					output.accept(ModItems.AWAKENING_CRYSTAL);
+					output.accept(ModItems.TITAN_SHARD);
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));
 					}

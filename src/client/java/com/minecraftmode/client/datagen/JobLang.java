@@ -162,6 +162,7 @@ final class JobLang {
 		EconomyLang.add(b, ko);
 		ConsumableLang.add(b, ko);
 		EndgameLang.add(b, ko);
+		ContentLang.add(b, ko);
 	}
 
 	private JobLang() {

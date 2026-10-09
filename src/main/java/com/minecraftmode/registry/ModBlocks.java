@@ -2,6 +2,8 @@ package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.block.ShopBlock;
+import com.minecraftmode.craft.CraftStationBlock;
+import com.minecraftmode.craft.Profession;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.job.engrave.EngravingTableBlock;
 import com.minecraftmode.worldgen.lair.LairChestBlock;
@@ -98,6 +100,15 @@ public final class ModBlocks {
 			.lightLevel(state -> 7)
 			.strength(5.0F, 1200.0F)
 	);
+
+	// Professions: the stations where cooking, alchemy and smithing are done
+	public static final Block KITCHEN_STATION = register("kitchen_station", p -> new CraftStationBlock(Profession.COOKING, p), station(MapColor.COLOR_ORANGE));
+	public static final Block ALCHEMY_STATION = register("alchemy_station", p -> new CraftStationBlock(Profession.ALCHEMY, p), station(MapColor.COLOR_GREEN));
+	public static final Block SMITHING_STATION = register("smithing_station", p -> new CraftStationBlock(Profession.SMITHING, p), station(MapColor.METAL));
+
+	private static BlockBehaviour.Properties station(final MapColor color) {
+		return BlockBehaviour.Properties.of().mapColor(color).instrument(NoteBlockInstrument.BASS).strength(2.5F, 6.0F).sound(SoundType.WOOD).lightLevel(state -> 4);
+	}
 
 	// Named lairs: personal treasure and supply caches (unbreakable)
 	public static final Block LAIR_CHEST = register("lair_chest", p -> new LairChestBlock(false, p), lairChest());

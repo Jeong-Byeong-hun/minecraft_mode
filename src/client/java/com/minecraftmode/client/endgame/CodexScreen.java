@@ -10,6 +10,7 @@ import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.story.Story;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
@@ -37,9 +38,11 @@ public class CodexScreen extends Screen {
 	private static final int TITLE_ROW = 18;
 	private static final int TITLE_ROWS = 10;
 	private static final int TITLE_COL = 154;
+	private static final int TITLES_PER_PAGE = TITLE_ROWS * 2;
+	private static final int STORY_ROW = 16;
 
 	enum Tab {
-		CODEX, ACHIEVEMENTS, TITLES
+		CODEX, ACHIEVEMENTS, TITLES, STORY
 	}
 
 	private static Tab tab = Tab.CODEX;
@@ -76,7 +79,7 @@ public class CodexScreen extends Screen {
 				tab = t;
 				page = 0;
 				this.rebuildWidgets();
-			}).bounds(this.left + W - 8 - (tabs.length - i) * 72, this.top + 5, 70, 16).build();
+			}).bounds(this.left + W - 8 - (tabs.length - i) * 58, this.top + 5, 56, 16).build();
 			b.active = t != tab;
 			this.addRenderableWidget(b);
 		}
@@ -98,8 +101,14 @@ public class CodexScreen extends Screen {
 			this.addRenderableWidget(next);
 		} else if (tab == Tab.TITLES) {
 			List<Achievements.Achievement> titled = titled();
-			for (int i = 0; i < titled.size(); i++) {
-				Achievements.Achievement ach = titled.get(i);
+			int pages = Math.max(1, (titled.size() + TITLES_PER_PAGE - 1) / TITLES_PER_PAGE);
+			page = Math.min(page, pages - 1);
+			for (int i = 0; i < TITLES_PER_PAGE; i++) {
+				int index = page * TITLES_PER_PAGE + i;
+				if (index >= titled.size()) {
+					break;
+				}
+				Achievements.Achievement ach = titled.get(index);
 				boolean wearing = records.title().equals(ach.id());
 				Button wear = Button.builder(Component.translatable(wearing ? "screen.minecraft_mode.codex.worn" : "screen.minecraft_mode.codex.wear"),
 					b -> EndgameClient.progress(ProgressActionPayload.TITLE, ach.id()))
@@ -111,6 +120,18 @@ public class CodexScreen extends Screen {
 				.bounds(this.left + 8, this.top + H - 22, 90, 18).build();
 			off.active = !records.title().isEmpty();
 			this.addRenderableWidget(off);
+			Button prev = Button.builder(Component.literal("◀"), b -> {
+				page--;
+				this.rebuildWidgets();
+			}).bounds(this.left + W - 116, this.top + H - 22, 20, 18).build();
+			prev.active = page > 0;
+			this.addRenderableWidget(prev);
+			Button next = Button.builder(Component.literal("▶"), b -> {
+				page++;
+				this.rebuildWidgets();
+			}).bounds(this.left + W - 94, this.top + H - 22, 20, 18).build();
+			next.active = page < pages - 1;
+			this.addRenderableWidget(next);
 		}
 	}
 
@@ -141,6 +162,7 @@ public class CodexScreen extends Screen {
 			case CODEX -> this.codex(g, player, mouseX, mouseY);
 			case ACHIEVEMENTS -> this.achievements(g, player, mouseX, mouseY);
 			case TITLES -> this.titles(g, player, mouseX, mouseY);
+			case STORY -> this.story(g, player, mouseX, mouseY);
 		};
 		super.extractRenderState(g, mouseX, mouseY, a);
 		if (tip != null) {
@@ -275,11 +297,15 @@ public class CodexScreen extends Screen {
 		Component worn = records.title().isEmpty() ? Component.translatable("screen.minecraft_mode.codex.no_title")
 			: Component.translatable("screen.minecraft_mode.codex.wearing", Component.translatable(Achievements.get(records.title()) == null ? ""
 				: Achievements.get(records.title()).titleKey()));
-		g.text(this.font, this.font.plainSubstrByWidth(worn.getString(), 140), x + 104, y + H - 17, 0xFFC08AFF, false);
+		g.text(this.font, this.font.plainSubstrByWidth(worn.getString(), 96), x + 104, y + H - 17, 0xFFC08AFF, false);
 		List<Achievements.Achievement> titled = titled();
 		List<Component> tip = null;
-		for (int i = 0; i < titled.size(); i++) {
-			Achievements.Achievement ach = titled.get(i);
+		for (int i = 0; i < TITLES_PER_PAGE; i++) {
+			int index = page * TITLES_PER_PAGE + i;
+			if (index >= titled.size()) {
+				break;
+			}
+			Achievements.Achievement ach = titled.get(index);
 			boolean has = records.has(ach.id());
 			int rx = x + 8 + i / TITLE_ROWS * TITLE_COL;
 			int ry = y + 28 + i % TITLE_ROWS * TITLE_ROW;
@@ -292,6 +318,39 @@ public class CodexScreen extends Screen {
 					Component.translatable(ach.descKey()).withStyle(ChatFormatting.DARK_GRAY));
 			}
 		}
+		return tip;
+	}
+
+	/** The story journal: every chapter (finished, current, or still hidden) and the current goal. */
+	private List<Component> story(final GuiGraphicsExtractor g, final LocalPlayer player, final int mouseX, final int mouseY) {
+		int x = this.left;
+		int y = this.top;
+		List<Story.Chapter> chapters = Story.chapters();
+		int current = Story.data(player).chapter();
+		List<Component> tip = null;
+		for (int i = 0; i < chapters.size(); i++) {
+			Story.Chapter chapter = chapters.get(i);
+			int ry = y + 26 + i * STORY_ROW;
+			boolean done = i < current;
+			boolean now = i == current;
+			g.fill(x + 8, ry, x + W - 8, ry + STORY_ROW - 2, now ? 0x40E8C24A : done ? 0x2040FF40 : 0x40000000);
+			String label = (done ? "✔ " : now ? "▶ " : "  ") + Component.translatable("screen.minecraft_mode.codex.chapter", i + 1).getString() + "  "
+				+ (done || now ? Component.translatable(chapter.key()).getString() : "???");
+			g.text(this.font, label, x + 12, ry + 3, done ? 0xFF7CFC7C : now ? 0xFFFFD27F : 0xFF606060, false);
+			if (now) {
+				String goal = chapter.progress(player) + "/" + chapter.goal();
+				g.text(this.font, goal, x + W - 12 - this.font.width(goal), ry + 3, chapter.done(player) ? 0xFF7CFC7C : 0xFFBBBBBB, false);
+			}
+			if ((done || now) && mouseX >= x + 8 && mouseX < x + W - 8 && mouseY >= ry && mouseY < ry + STORY_ROW - 2) {
+				tip = List.of(Component.translatable(chapter.key()).withStyle(ChatFormatting.GOLD),
+					Component.translatable(chapter.key() + ".text").withStyle(ChatFormatting.GRAY),
+					Component.translatable("screen.minecraft_mode.codex.chapter_goal", Component.translatable(chapter.key() + ".goal")).withStyle(ChatFormatting.AQUA),
+					Component.translatable("screen.minecraft_mode.codex.chapter_reward", Component.translatable(chapter.key() + ".reward")).withStyle(ChatFormatting.YELLOW));
+			}
+		}
+		Component footer = current >= chapters.size() ? Component.translatable("screen.minecraft_mode.codex.story_done")
+			: Component.translatable("screen.minecraft_mode.codex.story_hint");
+		g.text(this.font, this.font.plainSubstrByWidth(footer.getString(), W - 90), x + 10, y + H - 17, 0xFF8A8A8A, false);
 		return tip;
 	}
 

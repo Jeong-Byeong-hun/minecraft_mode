@@ -1,5 +1,6 @@
 package com.minecraftmode.worldgen.lair;
 
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModBlockEntities;
@@ -15,6 +16,7 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -93,6 +95,7 @@ public class LairChestBlock extends BaseEntityBlock {
 				.withStyle(ChatFormatting.GOLD));
 			if (!chest.isCache() && def != null) {
 				Progress.lairCleared(player, def);
+				Companions.rollDrop(player, Companions.LAIR_DROP, Rarity.RARE);
 			}
 		}
 		return true;

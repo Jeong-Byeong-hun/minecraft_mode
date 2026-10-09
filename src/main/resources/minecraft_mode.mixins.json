@@ -10,7 +10,9 @@
 		"MerchantMenuMixin",
 		"NaturalSpawnerMixin",
 		"PlayerMixin",
-		"ServerExplosionMixin"
+		"PlayerNameMixin",
+		"ServerExplosionMixin",
+		"ServerPlayerTabNameMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

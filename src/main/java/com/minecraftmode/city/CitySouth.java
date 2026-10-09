@@ -137,6 +137,9 @@ final class CitySouth {
 		stall(b, -14, 48, Build.wool(DyeColor.PURPLE), ModBlocks.JEWELER_SHOP);
 		stall(b, -14, 58, Build.wool(DyeColor.CYAN), ModBlocks.ALCHEMIST_SHOP);
 		stall(b, -14, 68, Build.wool(DyeColor.LIGHT_BLUE), Blocks.LECTERN);
+		// profession stations: the grocer's kitchen and the alchemist's table take the stalls' barrel corners
+		b.set(-23, 0, 69, ModBlocks.KITCHEN_STATION);
+		b.set(-13, 0, 59, ModBlocks.ALCHEMY_STATION);
 		// Adventurers' Guild: guild shop and engraving tables
 		Houses.house(b, 8, 48, 26, 70, Style.CAPITAL, Direction.WEST, 2);
 		b.fill(9, -1, 49, 25, -1, 69, Blocks.POLISHED_ANDESITE);
@@ -169,7 +172,7 @@ final class CitySouth {
 	/**
 	 * The blacksmith's forge west of the south square: an open-fronted smithy (cobblestone walls, dark oak
 	 * roof, brick chimney with a smoking campfire) with blast furnace, furnace, lava cauldron, anvil,
-	 * grindstone and smithing table. Master Smith Volund stands at its open side ({@link CityZone#npcHome}).
+	 * grindstone, smithing table and the smithing station. Master Smith Volund stands at its open side ({@link CityZone#npcHome}).
 	 */
 	private static void forge(final Build b) {
 		int x0 = -26;
@@ -200,7 +203,7 @@ final class CitySouth {
 		b.set(x0 + 1, 0, z0 + 5, Blocks.LAVA_CAULDRON);
 		b.set(x0 + 1, 0, z0 + 6, Blocks.WATER_CAULDRON);
 		b.set(x0 + 1, 0, z1 - 2, Blocks.SMITHING_TABLE);
-		b.set(x0 + 1, 0, z1 - 1, Blocks.BARREL);
+		b.set(x0 + 1, 0, z1 - 1, ModBlocks.SMITHING_STATION);
 		b.set(x0 + 6, 0, z0 + 4, Blocks.ANVIL);
 		b.set(x0 + 6, 0, z0 + 7, Blocks.GRINDSTONE);
 		b.fill(x0 + 4, 4, z0 + 5, x0 + 4, 4, z0 + 5, Blocks.IRON_CHAIN);

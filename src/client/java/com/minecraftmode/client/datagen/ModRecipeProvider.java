@@ -67,6 +67,26 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 					.unlockedBy(getHasName(ModItems.ESSENCE), this.has(ModItems.ESSENCE))
 					.save(this.output);
 				this.themedShop(ModItems.GUILD_SHOP, ModItems.ESSENCE);
+				this.stations();
+			}
+
+			/** Profession stations, so players can cook, brew and smith at home too (the capital has one of each). */
+			private void stations() {
+				this.shaped(RecipeCategory.DECORATIONS, ModItems.KITCHEN_STATION)
+					.define('I', Items.IRON_INGOT).define('S', Items.SMOKER).define('P', ItemTags.PLANKS).define('E', ModItems.ESSENCE)
+					.pattern("IEI").pattern("PSP").pattern("PPP")
+					.unlockedBy(getHasName(ModItems.ESSENCE), this.has(ModItems.ESSENCE))
+					.save(this.output);
+				this.shaped(RecipeCategory.DECORATIONS, ModItems.ALCHEMY_STATION)
+					.define('G', Items.GLASS_BOTTLE).define('B', Items.BREWING_STAND).define('P', ItemTags.PLANKS).define('E', ModItems.ESSENCE)
+					.pattern("GEG").pattern("PBP").pattern("PPP")
+					.unlockedBy(getHasName(ModItems.ESSENCE), this.has(ModItems.ESSENCE))
+					.save(this.output);
+				this.shaped(RecipeCategory.DECORATIONS, ModItems.SMITHING_STATION)
+					.define('I', Items.IRON_INGOT).define('A', Items.ANVIL).define('C', Items.COBBLESTONE).define('E', ModItems.ESSENCE)
+					.pattern("IEI").pattern("CAC").pattern("CCC")
+					.unlockedBy(getHasName(ModItems.ESSENCE), this.has(ModItems.ESSENCE))
+					.save(this.output);
 			}
 
 			private void metal(

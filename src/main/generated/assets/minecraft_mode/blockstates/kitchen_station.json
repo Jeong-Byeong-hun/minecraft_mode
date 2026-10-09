@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minecraft_mode:block/kitchen_station"
+    }
+  }
+}

@@ -109,6 +109,8 @@ final class EndgameLang {
 				case "tier3" -> ko ? "3등급 소모품 2개" : "2 Tier-3 Supplies";
 				case "tier4" -> ko ? "4등급 소모품" : "Tier-4 Supply";
 				case "return_scrolls" -> ko ? "귀환 주문서 3개" : "3 Return Scrolls";
+				case "pet_charm" -> ko ? "펫 부적 (무작위)" : "Pet Charm (random)";
+				case "mount_whistle" -> ko ? "질풍마 호루라기" : "Swift Stallion Whistle";
 				default -> offer.id();
 			});
 		}

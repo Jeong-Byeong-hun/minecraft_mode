@@ -1,8 +1,11 @@
 package com.minecraftmode.client;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.companion.CompanionClient;
+import com.minecraftmode.client.craft.CraftScreen;
 import com.minecraftmode.client.creature.CreaturePlans;
 import com.minecraftmode.client.creature.CreatureRenderer;
+import com.minecraftmode.client.dungeon.DungeonClient;
 import com.minecraftmode.client.endgame.EndgameClient;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.entity.CityNpcRenderer;
@@ -57,6 +60,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		for (BossDef def : RaidBosses.all()) {
 			creature(RaidBosses.type(def), def.id());
 		}
+		CompanionClient.init();
 		ClientPlayNetworking.registerGlobalReceiver(OpenTrainerPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TrainerScreen(payload.entityId(), payload.job()))
 		));
@@ -71,11 +75,15 @@ public class MinecraftModeClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.ENGRAVING, EngravingScreen::new);
 		MenuScreens.register(ModMenus.UPGRADE, UpgradeScreen::new);
 		MenuScreens.register(ModMenus.ENHANCE, EnhanceScreen::new);
+		MenuScreens.register(ModMenus.CRAFT_COOKING, CraftScreen::new);
+		MenuScreens.register(ModMenus.CRAFT_ALCHEMY, CraftScreen::new);
+		MenuScreens.register(ModMenus.CRAFT_SMITHING, CraftScreen::new);
 		JobKeys.init();
 		JobHud.init();
 		JobTooltips.init();
 		RaidClient.init();
 		EndgameClient.init();
+		DungeonClient.init();
 		WalletDisplay.init();
 		ConsumableTooltips.init();
 	}

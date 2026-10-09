@@ -5,17 +5,18 @@ import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.quest.QuestData;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
-import java.util.ArrayList;
-import java.util.List;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.Coins;
+import java.util.ArrayList;
+import java.util.List;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.DeltaTracker;
@@ -56,7 +57,8 @@ public final class JobHud {
 		int x = 4;
 		int y = 4;
 		Component title = Component.translatable(data.job().tierKey(data.tier())).withColor(data.job().color());
-		String level = "Lv " + data.level();
+		Paragon.ParagonData paragon = Paragon.get(player);
+		String level = "Lv " + data.level() + (data.level() >= JobProgression.MAX_LEVEL && paragon.level() > 0 ? " ✦" + paragon.level() : "");
 		int w = Math.max(124, font.width(title) + font.width(level) + 18);
 		int color = 0xFF000000 | data.job().color();
 		g.fill(x, y, x + w, y + 40, 0x90000000);
@@ -65,8 +67,10 @@ public final class JobHud {
 		g.text(font, level, x + w - 4 - font.width(level), y + 3, 0xFFFFE08A, true);
 		// experience
 		int need = JobProgression.expToNext(data.level());
-		float expFraction = data.level() >= JobProgression.MAX_LEVEL ? 1.0F : Math.min(1.0F, (float)data.exp() / need);
-		bar(g, x + 6, y + 14, w - 10, 3, expFraction, 0xFFE8C547);
+		boolean capped = data.level() >= JobProgression.MAX_LEVEL;
+		float expFraction = capped ? Math.min(1.0F, (float)paragon.exp() / Paragon.expToNext(paragon.level())) : Math.min(1.0F, (float)data.exp() / need);
+		// past the cap the bar fills paragon levels (violet)
+		bar(g, x + 6, y + 14, w - 10, 3, expFraction, capped ? 0xFFC060FF : 0xFFE8C547);
 		// MP
 		int max = Math.max(1, JobStats.maxMana(player));
 		String mp = data.mana() + "/" + max;

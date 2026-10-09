@@ -109,8 +109,12 @@ public final class GearTooltips {
 			head.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(Component.translatable("tooltip.minecraft_mode.enhance.pity", e.pity())
 				.withStyle(ChatFormatting.GRAY));
 		}
+		if (e.awaken() > 0) {
+			head.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(Component.translatable("tooltip.minecraft_mode.enhance.awaken", e.awaken(),
+				Enhancement.MAX_AWAKEN).withColor(0xFF55FF));
+		}
 		lines.add(head);
-		for (StatLine line : Enhancement.lines(gear, e.level())) {
+		for (StatLine line : Enhancement.lines(gear, e.level(), e.awaken())) {
 			lines.add(statLine(line, ChatFormatting.GREEN));
 		}
 	}

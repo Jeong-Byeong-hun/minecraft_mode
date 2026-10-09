@@ -604,7 +604,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 	private static void checkProgress(final TestServerContext server, final TestServerConnection connection) {
 		String report = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			require(Achievements.all().size() == 31, "expected 31 achievements, got " + Achievements.all().size());
+			require(Achievements.all().size() == 48, "expected 48 achievements (31 endgame + 17 later content), got " + Achievements.all().size());
 			Progress.check(player);
 			PlayerRecords records = Progress.get(player);
 			require(records.has("level_25"), "level 30 should unlock the level 25 achievement");
@@ -613,8 +613,8 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			require(!Progress.setTitle(player, titled.id()), "a locked title cannot be worn");
 			Progress.set(player, records.withAchievement(titled.id()));
 			require(Progress.setTitle(player, titled.id()), "an unlocked title can be worn");
-			PlayerTeam team = s.getScoreboard().getPlayersTeam(player.getScoreboardName());
-			require(team != null && team.getName().startsWith(Titles.PREFIX) && !team.getPlayerPrefix().getString().isEmpty(), "the title should be a name prefix");
+			require(Titles.of(player).equals(titled.id()) && player.getDisplayName().getString().startsWith("["), "the title should be in front of the name, got " + player.getDisplayName().getString());
+			require(s.getScoreboard().getPlayersTeam(player.getScoreboardName()) == null, "titles must not use scoreboard teams");
 			// collection bonuses: two mastered named kinds give boss damage
 			GearStats.invalidate(player);
 			float boss = GearStats.of(player).get(EngraveStat.BOSS_DAMAGE);
@@ -630,7 +630,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			float bossAfter = GearStats.of(player).get(EngraveStat.BOSS_DAMAGE);
 			require(Math.abs(bossAfter - boss - 1.0F) < 0.01F, "two mastered kinds should add 1% boss damage, got " + (bossAfter - boss));
 			Progress.check(player);
-			return Progress.get(player).achievements().size() + " achievements, title " + team.getPlayerPrefix().getString();
+			return Progress.get(player).achievements().size() + " achievements, name " + player.getDisplayName().getString();
 		});
 		MinecraftMode.LOGGER.info("[endgame] progress: {}", report);
 	}

@@ -11,7 +11,7 @@ import net.minecraft.world.level.Level;
  * Base of the mod's custom-modelled monsters (named monsters and raid bosses): synced one-shot
  * animations for the generic creature model and the {@link EliteMob} marker.
  */
-public abstract class CreatureMob extends Monster implements EliteMob {
+public abstract class CreatureMob extends Monster implements EliteMob, AnimatedCreature {
 	/** Low 8 bits: {@link CreatureAnim} ordinal; higher bits: a counter so the same animation can replay. */
 	private static final EntityDataAccessor<Integer> DATA_ANIM = SynchedEntityData.defineId(CreatureMob.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_PHASE = SynchedEntityData.defineId(CreatureMob.class, EntityDataSerializers.INT);

@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.dungeon.Keystone;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.GearRolls;
@@ -37,6 +38,13 @@ public final class ModDataComponents {
 		BuiltInRegistries.DATA_COMPONENT_TYPE,
 		MinecraftMode.id("enhancement"),
 		DataComponentType.<Enhancement>builder().persistent(Enhancement.CODEC).networkSynchronized(Enhancement.STREAM_CODEC).build()
+	);
+
+	/** A dungeon keystone's dungeon and level. */
+	public static final DataComponentType<Keystone> KEYSTONE = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("keystone"),
+		DataComponentType.<Keystone>builder().persistent(Keystone.CODEC).networkSynchronized(Keystone.STREAM_CODEC).build()
 	);
 
 	public static void init() {

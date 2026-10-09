@@ -5,11 +5,13 @@ import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.OpenBountyPayload;
+import com.minecraftmode.network.OpenDungeonPayload;
 import com.minecraftmode.network.OpenRaidPayload;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.story.Story;
 import java.util.List;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
@@ -57,7 +59,13 @@ public class CityNpc extends PathfinderMob {
 			"남이 찾은 물건은 사고, 필요 없는 물건은 파시오. 등록 수수료 1%, 팔리면 5%요."),
 		ENHANCER("enhancer", 0x4AC8E0, "Artisan Brokk", "강화 장인 브로크",
 			"Stones, essence and nerve. Past +10 a failure costs a level, unless you bring a protection scroll.",
-			"강화석, 정수, 그리고 배짱. +10을 넘기면 실패할 때 단계가 깎이네. 보호 주문서가 있으면 막을 수 있지.");
+			"강화석, 정수, 그리고 배짱. +10을 넘기면 실패할 때 단계가 깎이네. 보호 주문서가 있으면 막을 수 있지."),
+		DUNGEON_WARDEN("dungeon_warden", 0x5AA87A, "Dungeon Warden Kael", "던전 관리인 카엘",
+			"Two to four of you, and a keystone if you are brave. Beat the clock and the key grows stronger.",
+			"둘에서 넷이면 충분하네. 용감하다면 쐐기돌을 가져오게. 시간 안에 돌파하면 쐐기돌이 더 강해지지."),
+		HERALD("herald", 0xD84050, "Royal Herald Elric", "왕실 전령 엘릭",
+			"Hear ye! The realm has need of heroes. Come, I have news of the war against the dark.",
+			"들으시오! 왕국에 영웅이 필요하오. 이리 오시오, 어둠과의 전쟁 소식을 전하겠소.");
 
 		private final String id;
 		private final int color;
@@ -141,6 +149,8 @@ public class CityNpc extends PathfinderMob {
 			case BOUNTY_CLERK -> Items.WRITABLE_BOOK;
 			case BROKER -> ModItems.GOLD_COIN;
 			case ENHANCER -> Items.MACE;
+			case DUNGEON_WARDEN -> Items.TRIAL_KEY;
+			case HERALD -> Items.GOAT_HORN;
 		}));
 	}
 
@@ -180,6 +190,12 @@ public class CityNpc extends PathfinderMob {
 				case BROKER -> AuctionService.send(serverPlayer, this.getId());
 				case ENHANCER -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new EnhanceMenu(id, inventory, this),
 					Component.translatable("container.minecraft_mode.enhance")));
+				case DUNGEON_WARDEN -> {
+					if (ServerPlayNetworking.canSend(serverPlayer, OpenDungeonPayload.TYPE)) {
+						ServerPlayNetworking.send(serverPlayer, new OpenDungeonPayload(this.getId(), ResetCycle.cycle(serverPlayer.level())));
+					}
+				}
+				case HERALD -> Story.talk(serverPlayer, this);
 			}
 		}
 		return InteractionResult.SUCCESS;

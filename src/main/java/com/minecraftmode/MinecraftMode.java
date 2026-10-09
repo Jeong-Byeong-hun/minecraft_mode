@@ -1,16 +1,21 @@
 package com.minecraftmode;
 
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.command.EventCommands;
 import com.minecraftmode.command.JobCommand;
 import com.minecraftmode.command.RaidCommands;
 import com.minecraftmode.command.WalletCommand;
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.Herbs;
+import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.economy.ModEconomy;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enchantment.ArmorAuras;
 import com.minecraftmode.enchantment.AutoSmeltLoot;
 import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobEvents;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestService;
@@ -34,6 +39,7 @@ import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
 import com.minecraftmode.registry.ModParticles;
+import com.minecraftmode.story.Story;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import net.fabricmc.api.ModInitializer;
@@ -67,6 +73,8 @@ public class MinecraftMode implements ModInitializer {
 		NamedLairs.init();
 		Progress.init();
 		AuctionService.init();
+		Herbs.init();
+		Companions.init();
 		ModEconomy.init();
 		Wallet.init();
 		AutoSmeltLoot.init();
@@ -81,10 +89,14 @@ public class MinecraftMode implements ModInitializer {
 		Consumables.initEvents();
 		Parties.init();
 		Raids.init();
+		Dungeons.init();
+		WorldEvents.init();
+		Story.init();
 		LootSessions.init();
 		ModNetworking.init();
 		JobCommand.init();
 		RaidCommands.init();
+		EventCommands.init();
 		WalletCommand.init();
 
 		LOGGER.info("Minecraft Mode initialized");

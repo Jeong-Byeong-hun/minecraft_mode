@@ -49,6 +49,7 @@ final class CityNorth {
 		CityCore.tower(b, 7, -48, 3, 10);
 		b.fill(-1, -1, -62, 1, -1, -49, Build.wool(DyeColor.RED));
 		raidGate(b);
+		dungeonGate(b);
 
 		// great hall
 		int x0 = -18;
@@ -128,6 +129,26 @@ final class CityNorth {
 		}
 		b.flag(x0 - 2, z + 1, 6, Build.wool(DyeColor.RED), Build.wool(DyeColor.BLACK), Direction.SOUTH);
 		b.flag(x1 + 2, z + 1, 6, Build.wool(DyeColor.RED), Build.wool(DyeColor.BLACK), Direction.SOUTH);
+	}
+
+	/** Dungeon gate across the courtyard from the raid gate: a mossy arch over a stairway into the dark, lanterns and green banners. */
+	private static void dungeonGate(final Build b) {
+		int x0 = -19;
+		int x1 = -13;
+		int z = -58;
+		b.fill(x0, 0, z, x0, 6, z, Blocks.MOSSY_STONE_BRICKS);
+		b.fill(x1, 0, z, x1, 6, z, Blocks.MOSSY_STONE_BRICKS);
+		b.fill(x0, 7, z, x1, 7, z, Blocks.CHISELED_STONE_BRICKS);
+		b.fill(x0 + 1, 6, z, x1 - 1, 6, z, Blocks.MOSSY_STONE_BRICKS);
+		b.fill(x0 + 1, 0, z, x1 - 1, 5, z, Build.glass(DyeColor.BLACK));
+		b.set((x0 + x1) / 2, 8, z, Blocks.LANTERN);
+		b.fill(x0 - 1, -1, z - 1, x1 + 1, -1, z + 3, Blocks.MOSSY_COBBLESTONE);
+		for (int x : new int[] {x0 - 1, x1 + 1}) {
+			b.set(x, 0, z + 2, Blocks.MOSSY_STONE_BRICK_WALL);
+			b.set(x, 1, z + 2, Blocks.LANTERN);
+		}
+		b.flag(x0 - 2, z + 1, 6, Build.wool(DyeColor.GREEN), Build.wool(DyeColor.BLACK), Direction.SOUTH);
+		b.flag(x1 + 2, z + 1, 6, Build.wool(DyeColor.GREEN), Build.wool(DyeColor.BLACK), Direction.SOUTH);
 	}
 
 	private static void mageQuarter(final Build b) {

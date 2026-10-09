@@ -36,7 +36,8 @@ public final class ModTagProviders {
 					key(ModBlocks.PLASTIC_BLOCK), key(ModBlocks.ENGRAVING_TABLE)
 				);
 			this.builder(BlockTags.MINEABLE_WITH_AXE)
-				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP), key(ModBlocks.GUILD_SHOP), key(ModBlocks.ALCHEMIST_SHOP));
+				.add(key(ModBlocks.SHOP_BLOCK), key(ModBlocks.BLACKSMITH_SHOP), key(ModBlocks.GROCER_SHOP), key(ModBlocks.JEWELER_SHOP), key(ModBlocks.GUILD_SHOP), key(ModBlocks.ALCHEMIST_SHOP),
+					key(ModBlocks.KITCHEN_STATION), key(ModBlocks.ALCHEMY_STATION), key(ModBlocks.SMITHING_STATION));
 			this.builder(BlockTags.NEEDS_IRON_TOOL)
 				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.MYTHRIL_BLOCK), key(ModBlocks.RAW_MYTHRIL_BLOCK), key(ModBlocks.ENGRAVING_TABLE));
 			this.builder(BlockTags.NEEDS_STONE_TOOL)

@@ -55,6 +55,8 @@ public final class JobProgression {
 			gained++;
 		}
 		if (level >= MAX_LEVEL) {
+			// past the cap experience fills paragon levels
+			Paragon.addExp(player, exp);
 			exp = 0;
 		}
 		set(player, data.withProgress(level, exp));

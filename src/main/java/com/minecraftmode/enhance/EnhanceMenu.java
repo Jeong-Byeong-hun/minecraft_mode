@@ -42,12 +42,15 @@ public class EnhanceMenu extends AbstractContainerMenu {
 	public static final int INVENTORY_Y = 114;
 	public static final int BUTTON_ENHANCE = 0;
 	public static final int BUTTON_PROTECTED = 1;
+	/** At +15: awaken the piece one step (awakening crystals and coins, always succeeds). */
+	public static final int BUTTON_AWAKEN = 2;
 
 	public static final int RESULT_NONE = 0;
 	public static final int RESULT_SUCCESS = 1;
 	public static final int RESULT_FAIL = 2;
 	public static final int RESULT_DROP = 3;
 	public static final int RESULT_SAVED = 4;
+	public static final int RESULT_AWAKENED = 5;
 
 	private final @Nullable Entity npc;
 	private final DataSlot result = DataSlot.standalone();
@@ -113,8 +116,56 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			&& (!protect || JobProgression.count(inventory, ModItems.PROTECTION_SCROLL) > 0);
 	}
 
+	/** True when the slot holds a +15 piece that can be awakened further. */
+	public boolean canAwaken() {
+		Enhancement e = Enhancement.of(this.input());
+		return ClassGear.of(this.input()) != null && e.level() >= Enhancement.MAX && e.awaken() < Enhancement.MAX_AWAKEN;
+	}
+
+	public static boolean canPayAwaken(final Player player, final ClassGear gear, final int target) {
+		return player.isCreative() || Coins.total(player) >= Enhancement.awakenCoins(gear, target)
+			&& JobProgression.count(player.getInventory(), ModItems.AWAKENING_CRYSTAL) >= Enhancement.crystals(target);
+	}
+
+	private boolean awaken(final Player player) {
+		ItemStack stack = this.input();
+		ClassGear gear = ClassGear.of(stack);
+		if (gear == null || !this.canAwaken()) {
+			return false;
+		}
+		Enhancement current = Enhancement.of(stack);
+		int target = current.awaken() + 1;
+		if (!canPayAwaken(player, gear, target)) {
+			return false;
+		}
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return true;
+		}
+		if (!player.isCreative()) {
+			if (!Wallet.take(player, Enhancement.awakenCoins(gear, target))) {
+				return false;
+			}
+			JobProgression.removeItems(player.getInventory(), ModItems.AWAKENING_CRYSTAL, Enhancement.crystals(target));
+		}
+		stack.set(ModDataComponents.ENHANCEMENT, current.awakened());
+		this.container.setChanged();
+		this.result.set(RESULT_AWAKENED);
+		ServerLevel level = serverPlayer.level();
+		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0F, 1.2F);
+		level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY(1.0), player.getZ(), 40, 0.6, 0.8, 0.6, 0.1);
+		serverPlayer.sendOverlayMessage(Component.translatable("message.minecraft_mode.enhance.awakened", target).withColor(0xFF55FF));
+		level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("message.minecraft_mode.enhance.awaken_broadcast", player.getDisplayName(),
+			stack.getHoverName(), target).withColor(0xFF55FF), false);
+		Progress.awakened(serverPlayer, target);
+		this.broadcastChanges();
+		return true;
+	}
+
 	@Override
 	public boolean clickMenuButton(final Player player, final int buttonId) {
+		if (buttonId == BUTTON_AWAKEN) {
+			return this.awaken(player);
+		}
 		if (buttonId != BUTTON_ENHANCE && buttonId != BUTTON_PROTECTED) {
 			return false;
 		}

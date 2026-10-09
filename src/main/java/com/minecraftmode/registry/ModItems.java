@@ -2,6 +2,7 @@ package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.consumable.ReturnScrollItem;
+import com.minecraftmode.dungeon.KeystoneItem;
 import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.ModMaterials;
 import com.minecraftmode.loot.EvolutionEtherItem;
@@ -73,7 +74,20 @@ public final class ModItems {
 	/** Keeps a failed enhancement from dropping a level (from +11). */
 	public static final Item PROTECTION_SCROLL = register("protection_scroll", new Item.Properties().rarity(Rarity.RARE).stacksTo(16));
 	/** Becomes an explorer map to the nearest named lair. */
+	// Herbs: gathered from plants (see Herbs), used by alchemy and cooking
+	public static final Item SUNLEAF = register("sunleaf");
+	public static final Item MOONPETAL = register("moonpetal");
+	public static final Item FROSTROOT = register("frostroot");
+	public static final Item GLOWCAP = register("glowcap");
+	public static final Item EMBERBLOOM = register("emberbloom", new Item.Properties().rarity(Rarity.UNCOMMON));
+	public static final Item VOIDCAP = register("voidcap", new Item.Properties().rarity(Rarity.UNCOMMON));
+	/** Pays for awakening past +15 (smithing, world bosses, high dungeon keys). */
+	public static final Item AWAKENING_CRYSTAL = register("awakening_crystal", new Item.Properties().rarity(Rarity.EPIC).stacksTo(16));
+	/** Dropped by world bosses; the smith turns it into awakening crystals. */
+	public static final Item TITAN_SHARD = register("titan_shard", new Item.Properties().rarity(Rarity.EPIC));
 	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));
+	/** A dungeon keystone (component {@code keystone}): the leader's key to a harder, timed run. */
+	public static final Item DUNGEON_KEYSTONE = register("dungeon_keystone", KeystoneItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
 
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(
@@ -102,6 +116,9 @@ public final class ModItems {
 	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
 	public static final Item LAIR_CHEST = registerBlockItem(ModBlocks.LAIR_CHEST);
 	public static final Item LAIR_CACHE = registerBlockItem(ModBlocks.LAIR_CACHE);
+	public static final Item KITCHEN_STATION = registerBlockItem(ModBlocks.KITCHEN_STATION);
+	public static final Item ALCHEMY_STATION = registerBlockItem(ModBlocks.ALCHEMY_STATION);
+	public static final Item SMITHING_STATION = registerBlockItem(ModBlocks.SMITHING_STATION);
 
 	private static Item register(final String name) {
 		return register(name, Item::new, new Item.Properties());

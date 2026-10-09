@@ -1,8 +1,12 @@
 package com.minecraftmode.network;
 
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.companion.Companions;
+import com.minecraftmode.dungeon.DungeonDef;
+import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.SkillCaster;
@@ -28,6 +32,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(QuestActionPayload.TYPE, QuestActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(InnateAbilityPayload.TYPE, InnateAbilityPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(RaidEnterPayload.TYPE, RaidEnterPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(DungeonEnterPayload.TYPE, DungeonEnterPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenDungeonPayload.TYPE, OpenDungeonPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LootActionPayload.TYPE, LootActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(BountyActionPayload.TYPE, BountyActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(AuctionActionPayload.TYPE, AuctionActionPayload.CODEC);
@@ -45,6 +51,12 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(InnateAbilityPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> ClassAbilities.use(context.player())
 		));
+		ServerPlayNetworking.registerGlobalReceiver(DungeonEnterPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			DungeonDef def = Dungeons.def(payload.dungeon());
+			if (def != null) {
+				Dungeons.tryEnter(context.player(), payload.wardenId(), def, payload.keystone());
+			}
+		}));
 		ServerPlayNetworking.registerGlobalReceiver(RaidEnterPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			BossDef def = RaidBosses.byId(payload.boss());
 			if (def != null) {
@@ -128,6 +140,10 @@ public final class ModNetworking {
 			case ProgressActionPayload.TITLE -> Progress.setTitle(player, payload.value());
 			case ProgressActionPayload.TALENT -> Talents.spend(player, payload.value());
 			case ProgressActionPayload.TALENT_RESET -> Talents.reset(player);
+			case ProgressActionPayload.PARAGON -> Paragon.spend(player, payload.value());
+			case ProgressActionPayload.PARAGON_RESET -> Paragon.reset(player);
+			case ProgressActionPayload.PET -> Companions.summonPet(player, payload.value());
+			case ProgressActionPayload.MOUNT -> Companions.toggleMount(player, payload.value());
 			default -> {
 			}
 		}

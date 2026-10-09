@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.enchantment.ModEnchantments;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.raid.RaidDimension;
@@ -20,6 +21,7 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(ArmorAssetProvider::new);
 		pack.addProvider(CreatureTextureProvider::new);
 		pack.addProvider(ConsumableAssetProvider::new);
+		pack.addProvider(CompanionAssetProvider::new);
 		pack.addProvider(ClassDocProvider::new);
 		pack.addProvider(GearDocProvider::new);
 		pack.addProvider(ModRecipeProvider::new);
@@ -40,7 +42,10 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		registryBuilder.add(Registries.FEATURE, ModOreGeneration::bootstrapFeatures);
 		registryBuilder.add(Registries.PLACED_FEATURE, ModOreGeneration::bootstrapPlacedFeatures);
 		registryBuilder.add(Registries.ENCHANTMENT, ModEnchantments::bootstrap);
-		registryBuilder.add(Registries.DIMENSION_TYPE, RaidDimension::bootstrapType);
+		registryBuilder.add(Registries.DIMENSION_TYPE, context -> {
+			RaidDimension.bootstrapType(context);
+			DungeonDimension.bootstrapType(context);
+		});
 		registryBuilder.add(Registries.DAMAGE_TYPE, RaidDamage::bootstrap);
 		registryBuilder.add(Registries.STRUCTURE, NamedLairs::bootstrapStructures);
 		registryBuilder.add(Registries.STRUCTURE_SET, NamedLairs::bootstrapSets);

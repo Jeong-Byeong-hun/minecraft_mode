@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "A": "minecraft:anvil",
+    "C": "minecraft:cobblestone",
+    "E": "minecraft_mode:essence",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "IEI",
+    "CAC",
+    "CCC"
+  ],
+  "result": {
+    "id": "minecraft_mode:smithing_station"
+  }
+}

@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.named.NamedDef;
@@ -47,6 +48,10 @@ public class ModModelProvider extends FabricModelProvider {
 		// lair_chest_side / _top, lair_cache_side / _top
 		generators.createTrivialBlock(ModBlocks.LAIR_CHEST, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.LAIR_CACHE, TexturedModel.COLUMN);
+		// <station>_top / _side / _bottom
+		generators.createTrivialBlock(ModBlocks.KITCHEN_STATION, TexturedModel.CUBE_BOTTOM_TOP);
+		generators.createTrivialBlock(ModBlocks.ALCHEMY_STATION, TexturedModel.CUBE_BOTTOM_TOP);
+		generators.createTrivialBlock(ModBlocks.SMITHING_STATION, TexturedModel.CUBE_BOTTOM_TOP);
 	}
 
 	@Override
@@ -80,6 +85,18 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.generateFlatItem(ModItems.ENHANCEMENT_STONE, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.PROTECTION_SCROLL, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
+		for (Item item : new Item[] {
+			ModItems.AWAKENING_CRYSTAL, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
+			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
+		}) {
+			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
+		for (Companions.PetDef def : Companions.pets()) {
+			generators.generateFlatItem(Companions.petItem(def.id()), ModelTemplates.FLAT_ITEM);
+		}
+		for (Companions.MountDef def : Companions.mounts()) {
+			generators.generateFlatItem(Companions.mountItem(def.id()), ModelTemplates.FLAT_ITEM);
+		}
 
 		for (Item tool : new Item[] {
 			ModItems.MYTHRIL_SWORD, ModItems.MYTHRIL_PICKAXE, ModItems.MYTHRIL_AXE, ModItems.MYTHRIL_SHOVEL, ModItems.MYTHRIL_HOE

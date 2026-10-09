@@ -51,6 +51,8 @@ final class QuestArt {
 		TextureGen.write("entity/npc/bounty_clerk", lina());
 		TextureGen.write("entity/npc/broker", morgan());
 		TextureGen.write("entity/npc/enhancer", brokk());
+		TextureGen.write("entity/npc/dungeon_warden", kael());
+		TextureGen.write("entity/npc/herald", elric());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1113,6 +1115,75 @@ final class QuestArt {
 		legs(0x3A3A40);
 		fill(0, 26, 16, 6, 0x2A1E14);
 		fill(8, 16, 4, 4, 0x2A1E14);
+		return img;
+	}
+
+	/** Dungeon Warden Kael: a grey-green hooded cloak, a scar across the cheek, chain mail, a keyring and a lantern at the belt. */
+	static BufferedImage kael() {
+		BufferedImage img = newSkin(112);
+		int skin = 0xD8A888, hair = 0x3A3028, cloak = 0x3E5A48, dark = 0x2A3E32, mail = 0x8A9098, gold = 0xE8C24A, lamp = 0xFFD870;
+		head(skin, hair);
+		hair(hair, 1, 3, 6);
+		eyes(12, 0xFFFFFF, 0x5A7A5A);
+		px(13, 13, 0xA05A4A);                // scar
+		px(14, 14, 0xA05A4A);
+		fill(9, 15, 6, 1, shade(hair, 0.9F)); // stubble
+		fill(32, 0, 32, 8, cloak);           // hood on the hat layer
+		fill(32, 8, 8, 2, cloak);
+		fill(48, 8, 8, 2, cloak);
+		fill(56, 8, 8, 8, cloak);
+		fill(40, 8, 8, 2, dark);
+
+		body(mail);
+		fill(16, 20, 4, 12, cloak);          // cloak over the shoulders and back
+		fill(28, 20, 12, 12, cloak);
+		fill(20, 20, 8, 2, dark);
+		fill(16, 29, 24, 1, 0x2A1A10);       // belt with a keyring and a lantern
+		px(21, 30, gold);
+		px(22, 31, gold);
+		fill(25, 29, 2, 3, lamp);
+
+		arms(cloak);
+		fill(40, 28, 16, 4, 0x4A3A2A);       // leather gloves
+		fill(48, 16, 4, 4, 0x4A3A2A);
+
+		legs(0x3A3A40);
+		fill(0, 26, 16, 6, 0x2A2018);
+		fill(8, 16, 4, 4, 0x2A2018);
+		return img;
+	}
+
+	/** Royal Herald Elric: a feathered crimson cap, a crimson-and-gold tabard with the crown, white hose and a horn. */
+	static BufferedImage elric() {
+		BufferedImage img = newSkin(113);
+		int skin = 0xF0C8A8, hair = 0xC89048, red = 0xA8202A, dark = 0x6A1018, gold = 0xE8C24A, white = 0xEEEAE0;
+		head(skin, hair);
+		hair(hair, 2, 4, 7);
+		eyes(12, 0xFFFFFF, 0x3A5A9A);
+		px(11, 14, 0xC88A7A);
+		px(12, 14, 0xC88A7A);
+		fill(32, 0, 32, 8, red);             // cap on the hat layer
+		fill(32, 8, 32, 2, red);
+		fill(40, 8, 8, 1, gold);
+		fill(46, 2, 2, 6, white);            // feather
+
+		body(red);
+		fill(20, 20, 8, 12, red);
+		fill(20, 20, 8, 1, gold);            // tabard trim and the crown
+		fill(23, 23, 2, 3, gold);
+		px(22, 23, gold);
+		px(25, 23, gold);
+		fill(16, 29, 24, 1, dark);
+		fill(26, 29, 2, 2, gold);            // horn at the belt
+
+		arms(dark);
+		fill(40, 28, 16, 1, gold);
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(white);
+		fill(0, 28, 16, 4, 0x2A1A14);
+		fill(8, 16, 4, 4, 0x2A1A14);
 		return img;
 	}
 

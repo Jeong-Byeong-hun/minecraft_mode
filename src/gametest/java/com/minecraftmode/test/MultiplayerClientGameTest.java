@@ -46,7 +46,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.scores.PlayerTeam;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -293,10 +292,8 @@ public class MultiplayerClientGameTest implements FabricClientGameTest {
 			flag("bought", "");
 
 			await(context, "titled");
-			waitClient(context, mc -> {
-				PlayerTeam team = mc.level.getScoreboard().getPlayersTeam("Alice");
-				return team != null && !team.getPlayerPrefix().getString().isEmpty();
-			}, 200, "Bob should see Alice's title");
+			waitClient(context, mc -> mc.level.players().stream().anyMatch(p -> p.getPlainTextName().equals("Alice") && p.getDisplayName().getString().startsWith("[")), 200,
+				"Bob should see Alice's title in front of her name");
 			context.waitTicks(20);
 			context.takeScreenshot("mp_bob_sees_title");
 			int bobKills = context.computeOnClient(mc -> Progress.get(mc.player).kills(NAMED));

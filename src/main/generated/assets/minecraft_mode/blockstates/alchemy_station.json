@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "minecraft_mode:block/alchemy_station"
+    }
+  }
+}

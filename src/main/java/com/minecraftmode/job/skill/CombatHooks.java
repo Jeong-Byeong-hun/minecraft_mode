@@ -1,6 +1,7 @@
 package com.minecraftmode.job.skill;
 
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.EliteMob;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
@@ -145,6 +146,7 @@ public final class CombatHooks {
 			result *= 1.0F + 0.15F * (vulnerable.getAmplifier() + 1);
 		}
 		if (victim instanceof ServerPlayer player) {
+			result *= MobPower.factor(source.getEntity());
 			result = incoming(player, source, result, kind, now);
 		}
 		return result;

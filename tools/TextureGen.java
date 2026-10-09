@@ -112,6 +112,8 @@ public class TextureGen {
 		QuestArt.writeAll();
 		// --- Endgame (enhancement stone, protection scroll, lair map, personal lair chests) ---
 		EndgameArt.writeAll();
+		// --- Herbs, awakening crystal, titan shard, dungeon keystone, profession stations ---
+		ContentArt.writeAll();
 
 		if (args.length > 1) {
 			writePreview(Path.of(args[1]));

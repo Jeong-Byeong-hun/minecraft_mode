@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "B": "minecraft:brewing_stand",
+    "E": "minecraft_mode:essence",
+    "G": "minecraft:glass_bottle",
+    "P": "#minecraft:planks"
+  },
+  "pattern": [
+    "GEG",
+    "PBP",
+    "PPP"
+  ],
+  "result": {
+    "id": "minecraft_mode:alchemy_station"
+  }
+}

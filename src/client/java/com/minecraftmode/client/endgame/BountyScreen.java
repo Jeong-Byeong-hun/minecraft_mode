@@ -33,7 +33,7 @@ public class BountyScreen extends Screen {
 	private static final int ROWS_Y = 24;
 	private static final int SHOP_Y = 134;
 	/** The merit shop is one row of offers: icon, then the buy button with the price. */
-	private static final int CELL_W = 33;
+	private static final int CELL_W = 27;
 
 	private OpenBountyPayload info;
 	private BountyData shown = BountyData.DEFAULT;

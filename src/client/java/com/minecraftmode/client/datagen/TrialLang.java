@@ -125,6 +125,12 @@ final class TrialLang {
 				"사흘마다\n\n소굴 보물은 개인 보상이며 마인크래프트 날짜로 3일마다, 소굴의 군주를 쓰러뜨리면 다시 받습니다. 레이드 보상(일반·영웅·악몽)도 같은 주기로 초기화됩니다.\n\n길드 접수원 리나의 의뢰로 공적을 모으세요."},
 			{"Growing stronger\n\nArtisan Brokk at the forge enhances class gear up to +15. Broker Morgan runs the market at the stall with the lectern.\n\nTalents: N. Codex, achievements and titles: J.",
 				"더 강해지기\n\n대장간의 강화 장인 브로크가 직업 장비를 +15까지 강화합니다. 시장 노점(독서대)의 중개인 모건이 거래소를 엽니다.\n\n특성: N, 도감·업적·칭호: J."},
+			{"The main story\n\nRoyal Herald Elric waits on the plaza. Hear his chapters, reach each goal and come back for the reward (/story, codex J).\n\nPast level 100 you gain paragon levels (N) and can awaken +15 gear.",
+				"메인 스토리\n\n광장에서 왕실 전령 엘릭이 기다립니다. 장을 듣고 목표를 이룬 뒤 돌아가 보상을 받으세요 (/story, 도감 J).\n\n레벨 100이 넘으면 초월 레벨(N)이 쌓이고, +15 장비를 각성할 수 있습니다."},
+			{"Dungeons and events\n\nDungeon Warden Kael stands by the dungeon gate in the keep courtyard: 2-4 players, three halls and a boss. Keystones make them harder and timed.\n\nAt dusk titans rise in the wilds, and every third day the capital is invaded.",
+				"던전과 이벤트\n\n성 안뜰의 던전 문 옆에 던전 관리인 카엘이 있습니다. 2–4명이 홀 3개와 보스에 도전합니다. 쐐기돌을 쓰면 더 어렵고 시간 제한이 붙습니다.\n\n해 질 녘에는 황야에 거신이 나타나고, 사흘에 한 번 수도가 침공당합니다."},
+			{"Pets, mounts and crafts\n\nPet charms and mount whistles join your collection (P); press H to ride your mount.\n\nCook, brew and smith at the stations in the market and the forge; herbs drop from grass and flowers.",
+				"펫·탈것·생활 기술\n\n펫 부적과 탈것 호루라기를 쓰면 수집품(P)에 추가됩니다. H를 누르면 탈것을 탑니다.\n\n시장과 대장간의 작업대에서 요리·연금술·대장 기술을 익히세요. 약초는 풀과 꽃에서 나옵니다."},
 		};
 		for (int i = 0; i < pages.length; i++) {
 			b.add("book.minecraft_mode.guide.page" + (i + 1), ko ? pages[i][1] : pages[i][0]);

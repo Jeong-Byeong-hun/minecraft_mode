@@ -1,7 +1,9 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.Actions;
@@ -96,9 +98,9 @@ public final class CityServices {
 	}
 
 	/** Number of handbook pages ({@code book.minecraft_mode.guide.page1..N}). */
-	public static final int GUIDE_PAGES = 11;
+	public static final int GUIDE_PAGES = 14;
 
-	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet. Pages are translated on the client. */
+	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet, the story, dungeons, companions. Pages are translated on the client. */
 	public static ItemStack guideBook() {
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 		List<Filterable<Component>> pages = new ArrayList<>();
@@ -214,17 +216,18 @@ public final class CityServices {
 		int w = CityZone.WALL;
 		AABB city = new AABB(-w, level.getMinY(), -w, w + 1, level.getMaxY(), w + 1);
 		for (Mob mob : level.getEntitiesOfClass(Mob.class, city,
-			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG) && CityZone.inside(m.blockPosition()))) {
+			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG)
+				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && CityZone.inside(m.blockPosition()))) {
 			level.sendParticles(ParticleTypes.POOF, mob.getX(), mob.getY() + mob.getBbHeight() / 2.0, mob.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
 			mob.discard();
 		}
 	}
 
-	/** Players may not build or break inside the city or in raid arenas unless they are operators or in creative. */
+	/** Players may not build or break inside the city, in raid arenas or in dungeons unless they are operators or in creative. */
 	public static boolean blocksBuilding(final Player player, final BlockPos pos) {
 		return !player.isCreative()
 			&& !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
-			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()));
+			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()) || DungeonDimension.is(player.level()));
 	}
 
 	/** Hostile natural spawns are refused inside the city. */
@@ -232,10 +235,10 @@ public final class CityServices {
 		return monster && CityZone.protectedAt(level, pos);
 	}
 
-	/** No player-versus-player damage inside the city or in raid arenas. */
+	/** No player-versus-player damage inside the city, in raid arenas or in dungeons. */
 	public static boolean blocksPvp(final Entity victim, final Entity attacker) {
 		return victim instanceof Player && attacker instanceof Player && attacker != victim
-			&& (CityZone.protectedAt(victim.level(), victim.blockPosition()) || RaidDimension.is(victim.level()));
+			&& (CityZone.protectedAt(victim.level(), victim.blockPosition()) || RaidDimension.is(victim.level()) || DungeonDimension.is(victim.level()));
 	}
 
 	private CityServices() {

@@ -1,7 +1,7 @@
 package com.minecraftmode.client.creature;
 
 import com.minecraftmode.MinecraftMode;
-import com.minecraftmode.entity.CreatureMob;
+import com.minecraftmode.entity.AnimatedCreature;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -11,14 +11,15 @@ import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
 
 /**
- * Renders any {@link CreatureMob} with the {@link CreatureModel} of its plan, the painted texture
+ * Renders any mob with {@link AnimatedCreature} with the {@link CreatureModel} of its plan, the painted texture
  * {@code textures/entity/creature/<id>.png}, and an emissive layer {@code <id>_glow.png} for eyes,
  * runes and glowing cracks.
  */
-public class CreatureRenderer<T extends CreatureMob> extends MobRenderer<T, CreatureRenderState, CreatureModel> {
+public class CreatureRenderer<T extends Mob & AnimatedCreature> extends MobRenderer<T, CreatureRenderState, CreatureModel> {
 	private final BodyPlan plan;
 	private final Identifier texture;
 

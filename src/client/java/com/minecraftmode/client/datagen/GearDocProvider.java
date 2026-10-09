@@ -2,9 +2,17 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.CraftRecipes;
+import com.minecraftmode.craft.Profession;
+import com.minecraftmode.dungeon.DungeonAffix;
+import com.minecraftmode.dungeon.DungeonDef;
+import com.minecraftmode.dungeon.DungeonLayout;
+import com.minecraftmode.dungeon.Dungeons;
+import com.minecraftmode.dungeon.Keystone;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.Ability;
@@ -12,8 +20,10 @@ import com.minecraftmode.entity.named.Habitat;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ArmorOptions;
 import com.minecraftmode.job.gear.ArmorPieceDef;
@@ -41,6 +51,7 @@ import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
@@ -61,13 +72,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 /**
  * Writes docs/GEAR.md (shop per bracket, drop rates, every armor set with its pieces and set
  * bonuses, armor options), docs/MONSTERS.md (named monsters, their lairs, raid bosses and their
- * mechanics) and docs/CONSUMABLES.md in Korean, from the same definitions the game uses.
+ * mechanics), docs/CONSUMABLES.md, docs/ENDGAME.md and docs/CONTENT.md (paragon, awakening, professions, pets and mounts,
+ * dungeons, world events, the main story) in Korean, from the same definitions the game uses.
  */
 public class GearDocProvider implements DataProvider {
 	private static final Map<Habitat, String> HABITATS = Map.ofEntries(
@@ -129,6 +144,7 @@ public class GearDocProvider implements DataProvider {
 		this.write("docs/MONSTERS.md", this.monsters());
 		this.write("docs/CONSUMABLES.md", this.consumables());
 		this.write("docs/ENDGAME.md", this.endgame());
+		this.write("docs/CONTENT.md", this.content());
 		return CompletableFuture.completedFuture(null);
 	}
 
@@ -417,6 +433,151 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 직업마다 3계열 × ").append(TalentTree.TIERS).append("단계. 1–4단계는 최대 ").append(TalentTree.RANKS).append("랭크, 5단계는 1랭크 핵심 특성. 다음 단계는 그 계열에 ")
 			.append(TalentTree.PER_TIER).append("점씩 넣어야 열립니다. 초기화는 동전(레벨 구간 가격). 직업별 특성표는 `docs/CLASSES.md`.\n");
 		return md.toString();
+	}
+
+	// ------------------------------------------------------------------ CONTENT.md
+
+	private static final String[][] VANILLA_KO = {
+		{"item.minecraft.dried_kelp", "말린 켈프"}, {"item.minecraft.wheat", "밀"}, {"item.minecraft.carrot", "당근"}, {"item.minecraft.sweet_berries", "달콤한 열매"},
+		{"item.minecraft.baked_potato", "구운 감자"}, {"item.minecraft.sugar", "설탕"}, {"item.minecraft.cod", "생대구"}, {"item.minecraft.cooked_salmon", "익힌 연어"},
+		{"item.minecraft.chicken", "생닭고기"}, {"item.minecraft.bowl", "그릇"}, {"item.minecraft.cooked_beef", "스테이크"}, {"item.minecraft.bone", "뼈"},
+		{"item.minecraft.paper", "종이"}, {"item.minecraft.bread", "빵"}, {"block.minecraft.red_mushroom", "빨간 버섯"}, {"item.minecraft.golden_carrot", "황금 당근"},
+		{"item.minecraft.glass_bottle", "유리병"}, {"item.minecraft.spider_eye", "거미 눈"}, {"item.minecraft.honey_bottle", "꿀이 든 병"},
+		{"item.minecraft.iron_ingot", "철 주괴"}, {"item.minecraft.cocoa_beans", "코코아 콩"}, {"item.minecraft.gold_ingot", "금 주괴"},
+		{"item.minecraft.lapis_lazuli", "청금석"}, {"item.minecraft.ender_pearl", "엔더 진주"}, {"item.minecraft.compass", "나침반"}, {"item.minecraft.diamond", "다이아몬드"},
+		{"entity.minecraft.pillager", "약탈자"}, {"entity.minecraft.vindicator", "변명자"}, {"entity.minecraft.zombie", "좀비"}, {"entity.minecraft.spider", "거미"},
+		{"entity.minecraft.cave_spider", "동굴 거미"}, {"entity.minecraft.witch", "마녀"}, {"entity.minecraft.drowned", "드라운드"},
+		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
+		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"}
+	};
+
+	private String itemName(final Item item) {
+		return this.ko.getOrDefault(item.getDescriptionId(), BuiltInRegistries.ITEM.getKey(item).getPath());
+	}
+
+	private String content() {
+		for (String[] e : VANILLA_KO) {
+			this.ko.putIfAbsent(e[0], e[1]);
+		}
+		StringBuilder md = new StringBuilder();
+		md.append("# 성장 이후 콘텐츠 (초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·메인 스토리)\n\n");
+		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
+
+		md.append("## 칭호 이름표\n\n");
+		md.append("- 착용한 칭호는 스코어보드 팀을 쓰지 않고 모드가 직접 이름 앞에 붙입니다(머리 위 이름·채팅·탭 목록). 다른 플러그인·데이터팩의 팀 설정과 충돌하지 않습니다.\n\n");
+
+		md.append("## 초월 (레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후)\n\n");
+		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append("부터 경험치가 **초월 레벨**로 쌓입니다. 다음 초월 레벨까지 4000 + 40 × 초월 레벨.\n");
+		md.append("- 초월 레벨마다 포인트 1개를 능력치 하나에 넣습니다(능력치마다 최대 ").append(Paragon.MAX_RANK)
+			.append("랭크). 특성 창(N)의 초월 탭. 초기화는 동전(Lv 100 구간 가격).\n\n");
+		md.append("| 능력치 | 랭크당 |\n|---|---|\n");
+		for (Paragon.Stat stat : Paragon.Stat.values()) {
+			md.append("| ").append(stat.ko).append(" | ").append(stat.lines(1).stream().map(this::stat).collect(Collectors.joining(", "))).append(" |\n");
+		}
+
+		md.append("\n## 각성 (+").append(Enhancement.MAX).append(" 이후)\n\n");
+		md.append("- +").append(Enhancement.MAX).append(" 장비를 강화 장인에게서 ✦1–✦").append(Enhancement.MAX_AWAKEN)
+			.append("까지 각성합니다. **실패하지 않습니다.** 비용: 각성의 결정(목표 단계만큼)과 동전(장비 구간 가격 × (1 + 목표 단계)). 서버 전체에 알립니다.\n");
+		md.append("- 각성의 결정: +5 이상 쐐기돌 던전 보상과 메인 스토리. 거신의 파편: 월드 보스(거신) 보상, 최상급 요리·연금 재료.\n\n");
+		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());
+		ClassGear armor = ClassGear.of(ClassArmor.pieces().iterator().next());
+		md.append("| 단계 | 결정 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|\n");
+		for (int a = 1; a <= Enhancement.MAX_AWAKEN; a++) {
+			md.append("| ✦").append(a).append(" | ").append(Enhancement.crystals(a)).append(" | ")
+				.append(Enhancement.lines(weapon, 0, a).stream().map(this::stat).collect(Collectors.joining(", "))).append(" | ")
+				.append(Enhancement.lines(armor, 0, a).stream().map(this::stat).collect(Collectors.joining(", "))).append(" |\n");
+		}
+
+		md.append("\n## 생활 기술\n\n");
+		md.append("- 요리(조리대), 연금술(연금술 작업대), 대장 기술(대장 작업대). 수도에 하나씩(시장 식료품 노점, 연금술사 노점, 대장간) 있고 직접 만들 수도 있습니다.\n");
+		md.append("- 레벨 1–").append(Profession.MAX_LEVEL).append(". 다음 레벨까지 20 + 6 × 레벨. (레벨 ÷ 2)% 확률로 두 배 제작. 레시피 레벨 + 15 이상이면 숙련도 1/4.\n");
+		md.append("- **약초**: 풀·꽃을 부수면 (12 + 연금술 레벨 ÷ 2)% 확률로 떨어지고 연금술 숙련도 +1. 햇살잎(기본), 달꽃잎(밤의 꽃), 서리뿌리(눈 내리는 생물군계), ")
+			.append("빛버섯(버섯·발광 이끼·깊은 지하의 풀), 잿불꽃(네더 식물), 공허버섯(코러스).\n");
+		for (Profession profession : Profession.values()) {
+			md.append("\n### ").append(profession.ko).append("\n\n| 레벨 | 결과 | 재료 | 숙련도 |\n|---|---|---|---|\n");
+			for (CraftRecipes.Recipe recipe : CraftRecipes.of(profession)) {
+				String output = recipe.output() instanceof CraftRecipes.Output out
+					? this.itemName(out.item()) + (out.count() > 1 ? " ×" + out.count() : "")
+					: this.ko.getOrDefault("item.minecraft_mode." + recipe.id(), recipe.id()) + " ×3 (제작자 레벨 구간)";
+				String ingredients = recipe.ingredients().stream().map(in -> this.itemName(in.item()) + " ×" + in.count()).collect(Collectors.joining(", "));
+				md.append("| ").append(recipe.level()).append(" | ").append(output).append(" | ").append(ingredients).append(" | ").append(recipe.exp()).append(" |\n");
+			}
+		}
+
+		md.append("\n## 펫과 탈것\n\n");
+		md.append("- 펫 부적·탈것 호루라기를 쓰면 수집품에 추가되고(아이템 소모) 바로 소환됩니다. 수집품: P. 탈것 호출/내리기: H(마지막 탈것).\n");
+		md.append("- 펫은 주인을 따라다니며(공격받지 않음) 소환 중일 때만 보너스를 줍니다. 레벨 1–").append(Companions.MAX_PET_LEVEL)
+			.append(": 소환한 채 몬스터 처치 1, 네임드 10, 보스 50 경험치. 레벨 L까지 누적 25 × L × (L − 1).\n");
+		md.append("- 탈것은 주인만 타고, 다치지 않으며, 내린 뒤 3초가 지나면 사라집니다. 레이드·던전·물속에서는 부를 수 없습니다. 비행 탈것은 공중에서 시선 방향으로 날아갑니다.\n");
+		md.append("- 획득: 무작위 고급 펫 부적·질풍마 호루라기(공적 상점), 희귀(네임드 처치 ").append(ClassDocProvider.num(Companions.NAMED_DROP * 100)).append("%, 소굴 보물 ")
+			.append(ClassDocProvider.num(Companions.LAIR_DROP * 100)).append("%, 던전 2%), 영웅(레이드 일반 3%·영웅 6%·악몽 10%, 거신 10%, +10 이상 던전), 메인 스토리. ")
+			.append("이미 가진 것은 떨어지지 않습니다.\n\n");
+		md.append("| 펫 | 등급 | 레벨당 보너스 | 비행 |\n|---|---|---|---|\n");
+		for (Companions.PetDef def : Companions.pets()) {
+			md.append("| ").append(def.ko()).append(" | ").append(rarity(def.rarity())).append(" | ").append(def.lines(1).stream().map(this::stat).collect(Collectors.joining(", ")))
+				.append(" | ").append(def.flying() ? "예" : "").append(" |\n");
+		}
+		md.append("\n| 탈것 | 등급 | 속도(블록/초) | 점프 | 비행 |\n|---|---|---|---|---|\n");
+		for (Companions.MountDef def : Companions.mounts()) {
+			md.append("| ").append(def.ko()).append(" | ").append(rarity(def.rarity())).append(" | ").append(Math.round(def.speed() * 43.17)).append(" | ")
+				.append(ClassDocProvider.num((float)def.jump())).append(" | ").append(def.flying() ? "예" : "").append(" |\n");
+		}
+
+		md.append("\n## 던전 (2–4인)\n\n");
+		md.append("- 성 안뜰 서쪽 던전 문의 **던전 관리인 카엘**. 파티장이 입장시키며(").append((int)Dungeons.GATHER_RANGE).append("블록 안의 파티원, 최대 ")
+			.append(Dungeons.MAX_PARTY).append("명) 혼자도 됩니다.\n");
+		md.append("- 구성: 입구 → 홀 ").append(DungeonLayout.HALLS).append("개(들어서면 몬스터가 깨어나고, 모두 쓰러뜨리면 다음 문이 열림, 홀마다 정예 1마리) → 보스 방(네임드의 **챔피언**: 최고 레벨, 체력 ×")
+			.append(ClassDocProvider.num(Dungeons.CHAMPION_HEALTH)).append(", 피해 ×").append(ClassDocProvider.num(Dungeons.CHAMPION_DAMAGE)).append(", 분노 패턴).\n");
+		md.append("- 쓰러지면 죽지 않고 입구에서 깨어나며 ").append(Dungeons.DEATH_PENALTY_SECONDS).append("초를 잃습니다. 건축·PvP 불가. `/dungeon leave`로 나갑니다.\n");
+		md.append("- 몬스터 체력: 기본 × (1 + 던전 힘/10) × 파티(1인 0.7, 2인 1.0, 3인 1.3, 4인 1.6) × 쐐기돌(1 + 0.12 × 단계). 피해: × (1 + 던전 힘/50) × (1 + 0.08 × 단계).\n\n");
+		md.append("| 던전 | 입장 | 보스 | 몬스터 | 제한 시간 |\n|---|---|---|---|---|\n");
+		for (DungeonDef def : Dungeons.all()) {
+			NamedDef boss = NamedMobs.byId(def.boss());
+			String trash = def.trash().stream().map(t -> this.ko.getOrDefault(t.getDescriptionId(), BuiltInRegistries.ENTITY_TYPE.getKey(t).getPath()))
+				.collect(Collectors.joining(", "));
+			md.append("| ").append(def.ko()).append(" | Lv ").append(def.minLevel()).append(" | ").append(boss == null ? def.boss() : boss.ko()).append(" (Lv ")
+				.append(boss == null ? "?" : boss.hi()).append(") | ").append(trash).append(" | ").append(def.timeLimit() / 60).append("분 |\n");
+		}
+		md.append("\n### 쐐기돌\n\n");
+		md.append("- 쐐기돌 없이 클리어하면 쐐기돌이 없는 사람마다 **+").append(Keystone.MIN_LEVEL).append(" 쐐기돌**을 받습니다. 쐐기돌 입장은 파티장의 가장 높은 쐐기돌을 씁니다.\n");
+		md.append("- 제한 시간 안에 클리어하면 +1(60% 안이면 +2)되어 다른 던전으로 바뀌고, 늦거나 포기·실패하면 1 내려갑니다(최소 +").append(Keystone.MIN_LEVEL).append(").\n\n");
+		md.append("| 속성 | 단계 | 효과 |\n|---|---|---|\n");
+		for (DungeonAffix a : DungeonAffix.values()) {
+			md.append("| ").append(this.ko(a.nameKey())).append(" | +").append(a.level()).append(" | ").append(this.ko(a.descKey())).append(" |\n");
+		}
+		md.append("\n- 견고/폭군은 주기마다, 강화/분노는 두 주기마다 번갈아 나옵니다.\n");
+		md.append("- 보상(클리어한 사람마다): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계)), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, 직업 경험치, ")
+			.append("장비 (40 + 4 × 단계)% (+7부터 강화된 채), +5부터 각성의 결정 (15 + 3 × 단계)%, 희귀 펫·탈것 2% (+10부터 영웅 2% + 단계당 0.5%).\n");
+
+		md.append("\n## 월드 이벤트\n\n");
+		md.append("- 오버월드 하루에 한 번, 해 질 녘. 사흘 중 이틀은 **거신**, 하루는 **수도 침공**(몹 스폰 게임 규칙 `spawn_mobs`가 꺼져 있으면 열리지 않음). 관리자: `/worldevent titan [네임드]|invasion|stop`.\n");
+		md.append("- **거신**: 도시 밖에 있는 무작위 플레이어 근처에서, 그 레벨에 맞는 네임드의 거대 챔피언(크기 ×").append(ClassDocProvider.num(WorldEvents.TITAN_SCALE))
+			.append(", 체력 ×").append(ClassDocProvider.num(WorldEvents.TITAN_HEALTH)).append(", 근처 플레이어 1명당 +50%). ").append(WorldEvents.TITAN_LIFETIME / 1200)
+			.append("분 안에 쓰러뜨려야 합니다. 최대 체력의 ").append(Math.round(WorldEvents.CONTRIBUTION * 100))
+			.append("% 이상 피해를 준 모두에게: 거신의 파편 1–2개(상위 3명 +1), 진화의 에테르 4, 강화석 2, 동전, 영웅 펫·탈것 10%.\n");
+		md.append("- **수도 침공**: 동·서·남 성문으로 ").append(WorldEvents.WAVES)
+			.append("웨이브가 몰려옵니다(마지막 웨이브에 침공 군주). 경비병은 침공군을 막지 않습니다. 침공군을 공격한 모두에게: 동전, 진화의 에테르 3, 강화석 2, 공적 10. ")
+			.append(WorldEvents.INVASION_LIFETIME / 1200).append("분이 지나면 물러갑니다.\n");
+
+		md.append("\n## 메인 스토리\n\n");
+		md.append("- 광장의 **왕실 전령 엘릭**에게서 장을 받고, 목표를 이루면 돌아가 보상을 받습니다. 도감(J)의 스토리 탭과 `/story`.\n\n");
+		md.append("| 장 | 제목 | 목표 | 보상 |\n|---|---|---|---|\n");
+		List<Story.Chapter> chapters = Story.chapters();
+		for (int i = 0; i < chapters.size(); i++) {
+			Story.Chapter c = chapters.get(i);
+			md.append("| ").append(i + 1).append(" | ").append(c.titleKo()).append(" | ").append(c.goalKo()).append(" | ").append(Coins.format(Story.coins(i))).append(", ")
+				.append(c.rewardKo()).append(" |\n");
+		}
+		return md.toString();
+	}
+
+	private static String rarity(final net.minecraft.world.item.Rarity rarity) {
+		return switch (rarity) {
+			case EPIC -> "영웅";
+			case RARE -> "희귀";
+			case UNCOMMON -> "고급";
+			default -> "일반";
+		};
 	}
 
 	// ------------------------------------------------------------------ helpers

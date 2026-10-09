@@ -4,8 +4,9 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.consumable.ReturnScrollItem;
 import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.ModMaterials;
-import java.util.function.Function;
 import com.minecraftmode.loot.EvolutionEtherItem;
+import com.minecraftmode.worldgen.lair.LairMapItem;
+import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -67,6 +68,12 @@ public final class ModItems {
 	public static final Item EVOLUTION_ETHER = register("evolution_ether", EvolutionEtherItem::new, new Item.Properties().rarity(Rarity.EPIC));
 	/** Five seconds of reading, then back to the capital (general store). */
 	public static final Item RETURN_SCROLL = register("return_scroll", ReturnScrollItem::new, new Item.Properties().stacksTo(16));
+	/** Needed to enhance gear from +6 (lairs, raids, bounties, named monsters). */
+	public static final Item ENHANCEMENT_STONE = register("enhancement_stone", new Item.Properties().rarity(Rarity.UNCOMMON));
+	/** Keeps a failed enhancement from dropping a level (from +11). */
+	public static final Item PROTECTION_SCROLL = register("protection_scroll", new Item.Properties().rarity(Rarity.RARE).stacksTo(16));
+	/** Becomes an explorer map to the nearest named lair. */
+	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));
 
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(
@@ -93,6 +100,8 @@ public final class ModItems {
 	public static final Item ALCHEMIST_SHOP = registerBlockItem(ModBlocks.ALCHEMIST_SHOP);
 	public static final Item GUILD_SHOP = registerBlockItem(ModBlocks.GUILD_SHOP);
 	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
+	public static final Item LAIR_CHEST = registerBlockItem(ModBlocks.LAIR_CHEST);
+	public static final Item LAIR_CACHE = registerBlockItem(ModBlocks.LAIR_CACHE);
 
 	private static Item register(final String name) {
 		return register(name, Item::new, new Item.Properties());

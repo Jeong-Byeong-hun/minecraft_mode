@@ -2,6 +2,7 @@ package com.minecraftmode.raid;
 
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.job.JobData;
@@ -9,10 +10,15 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.progress.PlayerRecords;
+import com.minecraftmode.progress.Progress;
+import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -137,6 +143,14 @@ public final class Raids {
 	 * leader with what went wrong.
 	 */
 	public static boolean tryEnter(final ServerPlayer leader, final int marshalId, final BossDef def) {
+		return tryEnter(leader, marshalId, def, RaidDifficulty.NORMAL);
+	}
+
+	/**
+	 * Enters {@code def} on {@code difficulty}. Every member must have cleared the difficulty below it; members already
+	 * rewarded for it this cycle come along for practice (no fee, no rewards), the others pay the difficulty's fee.
+	 */
+	public static boolean tryEnter(final ServerPlayer leader, final int marshalId, final BossDef def, final RaidDifficulty difficulty) {
 		if (!(leader.level().getEntity(marshalId) instanceof CityNpc npc) || npc.role() != CityNpc.Role.RAID_MARSHAL || npc.distanceTo(leader) > MARSHAL_RANGE) {
 			return false;
 		}
@@ -144,9 +158,16 @@ public final class Raids {
 			return fail(leader, "not_leader");
 		}
 		List<ServerPlayer> going = new ArrayList<>();
+		Set<UUID> practice = new HashSet<>();
 		List<Component> problems = new ArrayList<>();
+		long cycle = ResetCycle.cycle(leader.level());
+		String key = PlayerRecords.raidKey(def.id(), difficulty.id());
+		int fee = difficulty.fee(def);
 		for (ServerPlayer p : Parties.onlineMembers(leader)) {
 			JobData data = JobProgression.get(p);
+			PlayerRecords records = Progress.get(p);
+			RaidDifficulty previous = difficulty.previous();
+			boolean locked = records.raidLocked(key, cycle);
 			if (instanceOf(p) != null) {
 				problems.add(problem(p, "in_raid"));
 			} else if (p.level() != leader.level() || p.distanceTo(leader) > GATHER_RANGE) {
@@ -155,10 +176,15 @@ public final class Raids {
 				problems.add(problem(p, "level", def.minLevel()));
 			} else if (!p.isAlive()) {
 				problems.add(problem(p, "dead"));
-			} else if (Coins.total(p) < def.fee()) {
-				problems.add(problem(p, "fee", Coins.component(def.fee())));
+			} else if (previous != null && records.raidClears(PlayerRecords.raidKey(def.id(), previous.id())) == 0) {
+				problems.add(problem(p, "difficulty", Component.translatable(previous.nameKey())));
+			} else if (!locked && Coins.total(p) < fee) {
+				problems.add(problem(p, "fee", Coins.component(fee)));
 			} else {
 				going.add(p);
+				if (locked) {
+					practice.add(p.getUUID());
+				}
 			}
 		}
 		if (!problems.isEmpty()) {
@@ -169,10 +195,14 @@ public final class Raids {
 			return false;
 		}
 		for (ServerPlayer p : going) {
-			Coins.take(p, def.fee());
-			p.sendSystemMessage(msg("fee_paid", Coins.component(def.fee())).withStyle(ChatFormatting.GRAY));
+			if (practice.contains(p.getUUID())) {
+				p.sendSystemMessage(msg("practice", ResetCycle.remaining(ResetCycle.ticksToNextCycle(p.level()))).withStyle(ChatFormatting.YELLOW));
+			} else {
+				Coins.take(p, fee);
+				p.sendSystemMessage(msg("fee_paid", Coins.component(fee)).withStyle(ChatFormatting.GRAY));
+			}
 		}
-		return start(leader.level().getServer(), going, def, leader.getUUID()) != null;
+		return start(leader.level().getServer(), going, def, leader.getUUID(), difficulty, practice) != null;
 	}
 
 	private static Component problem(final ServerPlayer p, final String key, final Object... args) {
@@ -181,6 +211,11 @@ public final class Raids {
 
 	/** Builds an arena and sends {@code players} in (no level checks; used by the marshal and by {@code /raid start}). */
 	public static @Nullable RaidInstance start(final MinecraftServer server, final List<ServerPlayer> players, final BossDef def, final UUID leader) {
+		return start(server, players, def, leader, RaidDifficulty.NORMAL, Set.of());
+	}
+
+	public static @Nullable RaidInstance start(final MinecraftServer server, final List<ServerPlayer> players, final BossDef def, final UUID leader,
+		final RaidDifficulty difficulty, final Set<UUID> practice) {
 		ServerLevel level = RaidDimension.level(server);
 		if (level == null || players.isEmpty()) {
 			return null;
@@ -194,8 +229,10 @@ public final class Raids {
 		}
 		BlockPos center = new BlockPos((slot + 1) * SLOT_SPACING, RaidDimension.FLOOR_Y, 0);
 		Arenas.build(level, center, def.arena(), RandomSource.create(server.overworld().getGameTime() ^ slot));
-		RaidInstance instance = new RaidInstance(nextId++, slot, def, center, leader);
+		RaidInstance instance = new RaidInstance(nextId++, slot, def, center, leader, difficulty);
 		instance.partySize = players.size();
+		instance.practice.addAll(practice);
+		instance.affixes = difficulty.modified() ? RaidAffix.forCycle(ResetCycle.cycle(server.overworld())) : List.of();
 		INSTANCES.put(instance.id, instance);
 		for (int i = 0; i < players.size(); i++) {
 			ServerPlayer p = players.get(i);
@@ -210,8 +247,12 @@ public final class Raids {
 			p.setHealth(p.getMaxHealth());
 			p.clearFire();
 			title(p, Component.translatable(def.nameKey()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD),
-				Component.translatable(def.epithetKey()).withStyle(ChatFormatting.YELLOW));
+				Component.translatable(def.epithetKey()).append(" · ").append(Component.translatable(difficulty.nameKey())).withStyle(ChatFormatting.YELLOW));
 			p.sendSystemMessage(msg("entered", Component.translatable(def.nameKey()), COUNTDOWN_TICKS / 20).withStyle(ChatFormatting.GOLD));
+			for (RaidAffix affix : instance.affixes) {
+				p.sendSystemMessage(Component.literal(" ◆ ").append(Component.translatable(affix.nameKey())).append(": ")
+					.append(Component.translatable(affix.descKey())).withStyle(ChatFormatting.LIGHT_PURPLE));
+			}
 		}
 		return instance;
 	}
@@ -376,7 +417,7 @@ public final class Raids {
 		}
 		Vec3 at = Arenas.bossSpawn(instance.center, instance.boss.arena());
 		boss.snapTo(at.x, at.y, at.z, 0.0F, 0.0F);
-		boss.configure(instance.partySize, instance.center);
+		boss.configure(instance.partySize, instance.center, instance.difficulty, instance.affixes);
 		level.addFreshEntity(boss);
 		instance.bossId = boss.getUUID();
 		instance.state = RaidInstance.State.FIGHT;
@@ -456,42 +497,77 @@ public final class Raids {
 			return;
 		}
 		MinecraftServer server = level.getServer();
+		int fightTicks = instance.timer;
 		instance.state = RaidInstance.State.VICTORY;
 		instance.timer = 0;
 		BossDef def = instance.boss;
+		RaidDifficulty difficulty = instance.difficulty;
 		RandomSource random = level.getRandom();
+		long cycle = ResetCycle.cycle(level);
 		Map<UUID, String> participants = new LinkedHashMap<>();
+		List<String> names = new ArrayList<>();
 		List<JobData> classes = new ArrayList<>();
 		for (RaidInstance.Member m : instance.members.values()) {
 			ServerPlayer p = server.getPlayerList().getPlayer(m.id);
+			if (m.id.equals(instance.leader)) {
+				names.addFirst(m.name);
+			} else {
+				names.add(m.name);
+			}
 			if (p == null) {
+				continue;
+			}
+			if (instance.practice.contains(m.id)) {
+				p.sendSystemMessage(msg("practice_done").withStyle(ChatFormatting.YELLOW));
 				continue;
 			}
 			participants.put(m.id, m.name);
 			JobData data = JobProgression.get(p);
 			classes.add(data);
-			reward(p, def, random);
+			reward(p, def, difficulty, random);
+			Progress.raidCleared(p, def, difficulty, cycle);
 		}
-		int lots = 3 + participants.size() / 2;
+		int lots = participants.isEmpty() ? 0 : 3 + participants.size() / 2 + difficulty.extraLots;
 		List<ItemStack> items = new ArrayList<>();
 		for (int i = 0; i < lots; i++) {
 			JobData bias = classes.isEmpty() ? null : classes.get(random.nextInt(classes.size()));
 			ItemStack stack = GearDrops.pick(bias, def.lo(), def.hi(), random);
 			if (!stack.isEmpty()) {
+				if (difficulty.enhanceMax > 0) {
+					stack.set(ModDataComponents.ENHANCEMENT, new Enhancement(difficulty.enhanceMin + random.nextInt(difficulty.enhanceMax - difficulty.enhanceMin + 1), 0));
+				}
 				items.add(stack);
 			}
 		}
 		tell(server, instance, msg("victory", Component.translatable(def.nameKey()), VICTORY_TICKS / 20).withStyle(ChatFormatting.GOLD));
+		int place = RaidRecordsData.get(server).submit(def, difficulty, names, fightTicks, ResetCycle.day(level));
+		tell(server, instance, msg("time", clock(fightTicks), Component.translatable(difficulty.nameKey())).withStyle(ChatFormatting.AQUA));
+		if (place > 0) {
+			tell(server, instance, msg("record", place).withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD));
+		}
 		if (!participants.isEmpty() && !items.isEmpty()) {
 			UUID leader = participants.containsKey(instance.leader) ? instance.leader : participants.keySet().iterator().next();
 			LootSessions.start(server, def, participants, leader, items);
 		}
 	}
 
-	/** Everyone's share: Evolution Ether (5-8), condensed essence (2-4) and job experience. */
-	private static void reward(final ServerPlayer player, final BossDef def, final RandomSource random) {
+	/** "m:ss" of a fight time in ticks. */
+	public static String clock(final int ticks) {
+		int seconds = ticks / 20;
+		return seconds / 60 + ":" + String.format(java.util.Locale.ROOT, "%02d", seconds % 60);
+	}
+
+	/**
+	 * Everyone's share: Evolution Ether (5-8, more on harder difficulties), condensed essence (2-4), consumables, enhancement
+	 * stones, sometimes a protection scroll, and job experience.
+	 */
+	private static void reward(final ServerPlayer player, final BossDef def, final RaidDifficulty difficulty, final RandomSource random) {
 		int grade = def.lo() + random.nextInt(def.hi() - def.lo() + 1);
-		give(player, EvolutionEtherItem.of(grade, 5 + random.nextInt(4)));
+		give(player, EvolutionEtherItem.of(grade, Math.round((5 + random.nextInt(4)) * difficulty.ether)));
+		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, difficulty.stones));
+		if (random.nextFloat() < difficulty.scrollChance) {
+			give(player, new ItemStack(ModItems.PROTECTION_SCROLL));
+		}
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
 		for (ItemStack supply : Consumables.raidRewards(RaidBosses.index(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);

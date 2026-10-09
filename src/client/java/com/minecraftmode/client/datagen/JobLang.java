@@ -161,6 +161,7 @@ final class JobLang {
 		RaidLang.add(b, ko);
 		EconomyLang.add(b, ko);
 		ConsumableLang.add(b, ko);
+		EndgameLang.add(b, ko);
 	}
 
 	private JobLang() {

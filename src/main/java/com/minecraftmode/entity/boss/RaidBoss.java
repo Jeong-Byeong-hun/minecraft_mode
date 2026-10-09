@@ -9,10 +9,13 @@ import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.BossDef;
+import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDamage;
+import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.Raids;
+import com.minecraftmode.registry.ModEffects;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -24,6 +27,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
@@ -38,6 +42,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -88,6 +94,10 @@ public abstract class RaidBoss extends CreatureMob {
 	protected final List<Mob> minions = new ArrayList<>();
 	private @Nullable Vec3 hoverTarget;
 	private int hoverTicks;
+	private RaidDifficulty difficulty = RaidDifficulty.NORMAL;
+	private List<RaidAffix> affixes = List.of();
+	private boolean enraged;
+	private int eruptions;
 
 	protected RaidBoss(final EntityType<? extends RaidBoss> type, final Level level) {
 		super(type, level);
@@ -173,11 +183,22 @@ public abstract class RaidBoss extends CreatureMob {
 
 	/** Scales health to the party and anchors the boss to its arena (null home = free boss, e.g. summoned by command). */
 	public void configure(final int partySize, final @Nullable BlockPos home) {
+		this.configure(partySize, home, RaidDifficulty.NORMAL, List.of());
+	}
+
+	/** As {@link #configure(int, BlockPos)} on {@code difficulty} (toughness and damage) with the cycle's {@code affixes}. */
+	public void configure(final int partySize, final @Nullable BlockPos home, final RaidDifficulty difficulty, final List<RaidAffix> affixes) {
 		BossDef def = this.def();
 		this.partySize = Math.max(1, partySize);
 		this.home = home;
-		float effective = (float)def.health() * (1.0F + PARTY_SCALE * (this.partySize - 1));
+		this.difficulty = difficulty;
+		this.affixes = List.copyOf(affixes);
+		float effective = (float)def.health() * (1.0F + PARTY_SCALE * (this.partySize - 1)) * difficulty.health;
+		if (this.affixes.contains(RaidAffix.FORTIFIED)) {
+			effective /= 0.85F;
+		}
 		this.divisor = effective / HEALTH_BAR;
+		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(def.damage() * difficulty.damage);
 		this.setHealth(this.getMaxHealth());
 		this.configured = true;
 		this.setPhase(1);
@@ -186,8 +207,12 @@ public abstract class RaidBoss extends CreatureMob {
 
 	private void refreshName() {
 		BossDef def = this.def();
-		Component name = Component.literal("[Lv." + def.hi() + "] ").withStyle(ChatFormatting.GRAY)
+		MutableComponent name = Component.literal("[Lv." + def.hi() + "] ").withStyle(ChatFormatting.GRAY)
 			.append(Component.translatable(def.nameKey()).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
+		if (this.difficulty != RaidDifficulty.NORMAL) {
+			name.append(Component.literal(" (").append(Component.translatable(this.difficulty.nameKey())).append(")")
+				.withStyle(this.difficulty == RaidDifficulty.NIGHTMARE ? ChatFormatting.DARK_RED : ChatFormatting.LIGHT_PURPLE));
+		}
 		this.setCustomName(name);
 		this.setCustomNameVisible(false);
 		this.bossEvent.setName(name);
@@ -199,6 +224,14 @@ public abstract class RaidBoss extends CreatureMob {
 
 	public int partySize() {
 		return this.partySize;
+	}
+
+	public RaidDifficulty difficulty() {
+		return this.difficulty;
+	}
+
+	public List<RaidAffix> affixes() {
+		return this.affixes;
 	}
 
 	/** Damage needed per health point of the bar. */
@@ -213,6 +246,10 @@ public abstract class RaidBoss extends CreatureMob {
 		output.putInt("PartySize", this.partySize);
 		output.putFloat("Divisor", this.divisor);
 		output.putInt("Phase", this.phase());
+		output.putString("Difficulty", this.difficulty.id());
+		output.putString("Affixes", String.join(",", this.affixes.stream().map(RaidAffix::id).toList()));
+		output.putBoolean("Enraged", this.enraged);
+		output.putInt("Eruptions", this.eruptions);
 		if (this.home != null) {
 			output.putLong("Home", this.home.asLong());
 		}
@@ -225,6 +262,11 @@ public abstract class RaidBoss extends CreatureMob {
 		this.partySize = input.getIntOr("PartySize", 1);
 		this.divisor = input.getFloatOr("Divisor", 1.0F);
 		this.setPhase(input.getIntOr("Phase", 1));
+		this.difficulty = RaidDifficulty.byId(input.getStringOr("Difficulty", "normal"));
+		String affixes = input.getStringOr("Affixes", "");
+		this.affixes = affixes.isEmpty() ? List.of() : java.util.Arrays.stream(affixes.split(",")).map(RaidAffix::byId).toList();
+		this.enraged = input.getBooleanOr("Enraged", false);
+		this.eruptions = input.getIntOr("Eruptions", 0);
 		this.home = input.getLong("Home").map(BlockPos::of).orElse(null);
 		if (this.configured) {
 			this.refreshName();
@@ -256,6 +298,7 @@ public abstract class RaidBoss extends CreatureMob {
 		this.checkPhase(level);
 		this.fightTicks++;
 		this.tickMechanics(level);
+		this.tickAffixes(level);
 		this.leash();
 		if (this.flies() && this.busyTicks <= 0) {
 			this.hover();
@@ -267,6 +310,40 @@ public abstract class RaidBoss extends CreatureMob {
 			}
 		}
 		this.ambientFx(level);
+	}
+
+	/** The cycle's raid modifiers (Heroic and Nightmare). */
+	private void tickAffixes(final ServerLevel level) {
+		if (this.affixes.isEmpty()) {
+			return;
+		}
+		float fraction = this.getHealth() / this.getMaxHealth();
+		if (this.affixes.contains(RaidAffix.ENRAGE) && !this.enraged && fraction < 0.3F) {
+			this.enraged = true;
+			this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(this.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue() * 1.3);
+			this.title(level, Component.translatable(RaidAffix.ENRAGE.nameKey()).withStyle(ChatFormatting.RED, ChatFormatting.BOLD),
+				Component.translatable(RaidAffix.ENRAGE.descKey()).withStyle(ChatFormatting.GOLD));
+		}
+		if (this.affixes.contains(RaidAffix.BLEEDING) && this.fightTicks % 400 == 200) {
+			for (ServerPlayer p : this.fighters(level)) {
+				p.addEffect(new MobEffectInstance(ModEffects.BLEEDING, 80, 0), this);
+			}
+		}
+		if (this.affixes.contains(RaidAffix.GLOOM) && this.fightTicks % 600 == 300) {
+			for (ServerPlayer p : this.fighters(level)) {
+				p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, 100, 0), this);
+			}
+		}
+		if (this.affixes.contains(RaidAffix.VOLATILE) && this.eruptions < 3 && fraction <= 0.75F - 0.25F * this.eruptions) {
+			this.eruptions++;
+			Vec3 at = this.position();
+			Telegraph.circle(level, at, 7.0, 40, Telegraph.ORANGE, () -> {
+				if (this.isAlive()) {
+					Attacks.hitAll(this, Attacks.inCircle(level, at, 7.0, 5.0), Attacks.damage(this, 1.4F), null);
+					level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y + 1, at.z, 6, 3.0, 0.5, 3.0, 0.0);
+				}
+			});
+		}
 	}
 
 	/** Theme particles around the boss (every few ticks). */
@@ -580,7 +657,8 @@ public abstract class RaidBoss extends CreatureMob {
 	}
 
 	private void startMechanic(final ServerLevel level, final Mechanic m, final LivingEntity target) {
-		this.mechanicDue.put(m.id(), m.interval() > 0 ? this.fightTicks + m.interval() : Long.MAX_VALUE);
+		int interval = this.affixes.contains(RaidAffix.TURBULENT) ? Math.round(m.interval() * 0.8F) : m.interval();
+		this.mechanicDue.put(m.id(), interval > 0 ? this.fightTicks + interval : Long.MAX_VALUE);
 		this.lastMechanic = this.fightTicks;
 		this.mechanicTicks = m.duration();
 		this.mechanicSpots.clear();

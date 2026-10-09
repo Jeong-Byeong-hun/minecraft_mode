@@ -6,12 +6,13 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/** Client -> server: the party leader asks the raid marshal {@code marshalId} to start the raid on {@code boss}. */
-public record RaidEnterPayload(int marshalId, String boss) implements CustomPacketPayload {
+/** Client -> server: the party leader asks the raid marshal {@code marshalId} to start the raid on {@code boss} at {@code difficulty}. */
+public record RaidEnterPayload(int marshalId, String boss, String difficulty) implements CustomPacketPayload {
 	public static final Type<RaidEnterPayload> TYPE = new Type<>(MinecraftMode.id("raid_enter"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, RaidEnterPayload> CODEC = StreamCodec.composite(
 		ByteBufCodecs.VAR_INT, RaidEnterPayload::marshalId,
 		ByteBufCodecs.stringUtf8(32), RaidEnterPayload::boss,
+		ByteBufCodecs.stringUtf8(16), RaidEnterPayload::difficulty,
 		RaidEnterPayload::new
 	);
 

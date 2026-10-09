@@ -70,6 +70,7 @@ public final class JobTooltips {
 		if (!(classOk && tierOk && levelOk)) {
 			lines.add(Component.translatable("tooltip.minecraft_mode.weapon.locked").withStyle(ChatFormatting.RED));
 		}
+		GearTooltips.enhancement(lines, stack);
 
 		Archetype type = def.archetype();
 		MutableComponent basic = Component.translatable(type.nameKey()).withStyle(ChatFormatting.GOLD)

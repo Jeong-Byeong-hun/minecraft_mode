@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.block.ShopBlock;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.job.engrave.EngravingTableBlock;
+import com.minecraftmode.worldgen.lair.LairChestBlock;
 import java.util.function.Function;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -97,6 +98,15 @@ public final class ModBlocks {
 			.lightLevel(state -> 7)
 			.strength(5.0F, 1200.0F)
 	);
+
+	// Named lairs: personal treasure and supply caches (unbreakable)
+	public static final Block LAIR_CHEST = register("lair_chest", p -> new LairChestBlock(false, p), lairChest());
+	public static final Block LAIR_CACHE = register("lair_cache", p -> new LairChestBlock(true, p), lairChest());
+
+	private static BlockBehaviour.Properties lairChest() {
+		return BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).instrument(NoteBlockInstrument.BASS).strength(-1.0F, 3600000.0F).sound(SoundType.WOOD)
+			.noLootTable().lightLevel(state -> 6);
+	}
 
 	/** Same base as the stone ore variants, recolored for deepslate (strength and sound are set per block). */
 	private static BlockBehaviour.Properties deepslateOre() {

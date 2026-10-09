@@ -13,6 +13,8 @@ import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.raid.RaidDamage;
+import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
@@ -25,12 +27,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -89,6 +94,15 @@ public class NamedMob extends CreatureMob {
 	private int healTicks;
 	private float healPerTick;
 	private final List<Mob> minions = new ArrayList<>();
+	/** A lair lord: the cycle's guardian of a lair treasure (tougher, boss bar, the lair's wrath). */
+	private boolean lord;
+	private @Nullable BlockPos lordHome;
+	private @Nullable ServerBossEvent lordBar;
+	public static final float LORD_HEALTH = 3.0F;
+	public static final float LORD_DAMAGE = 1.3F;
+	public static final float LORD_SCALE = 1.2F;
+	/** Ticks between two casts of the lair's wrath. */
+	public static final int WRATH_INTERVAL = 400;
 
 	public NamedMob(final EntityType<? extends NamedMob> type, final Level level) {
 		super(type, level);
@@ -207,10 +221,45 @@ public class NamedMob extends CreatureMob {
 		return this.namedLevel;
 	}
 
+	public boolean isLord() {
+		return this.lord;
+	}
+
+	/** Turns this monster into the lord guarding the lair treasure at {@code home}: top level, tougher, boss bar, stays near home. */
+	public void makeLord(final BlockPos home) {
+		this.lord = true;
+		this.lordHome = home;
+		this.applyLevel(this.def().hi());
+		this.applyLord();
+		this.setHealth(this.getMaxHealth());
+	}
+
+	private void applyLord() {
+		NamedDef def = this.def();
+		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * LORD_HEALTH);
+		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(this.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue() * LORD_DAMAGE);
+		this.getAttribute(Attributes.SCALE).setBaseValue(LORD_SCALE);
+		Component name = Component.translatable("entity.minecraft_mode.lair_lord", Component.literal("[Lv." + this.namedLevel + "] ").withStyle(ChatFormatting.GRAY)
+			.append(Component.translatable(def.nameKey()).withStyle(ChatFormatting.GOLD))).withStyle(ChatFormatting.RED);
+		this.setCustomName(name);
+		if (this.lordBar == null) {
+			this.lordBar = new ServerBossEvent(Mth.createInsecureUUID(this.random), name, BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_6);
+		} else {
+			this.lordBar.setName(name);
+		}
+		if (this.lordHome != null) {
+			this.setHomeTo(this.lordHome, 14);
+		}
+	}
+
 	@Override
 	protected void addAdditionalSaveData(final ValueOutput output) {
 		super.addAdditionalSaveData(output);
 		output.putInt("NamedLevel", this.namedLevel);
+		output.putBoolean("Lord", this.lord);
+		if (this.lordHome != null) {
+			output.putLong("LordHome", this.lordHome.asLong());
+		}
 	}
 
 	@Override
@@ -219,6 +268,13 @@ public class NamedMob extends CreatureMob {
 		int level = input.getIntOr("NamedLevel", 0);
 		if (level > 0) {
 			this.applyLevel(level);
+		}
+		this.lord = input.getBooleanOr("Lord", false);
+		this.lordHome = input.getLong("LordHome").map(BlockPos::of).orElse(null);
+		if (this.lord && level > 0) {
+			float health = this.getHealth();
+			this.applyLord();
+			this.setHealth(health);
 		}
 	}
 
@@ -246,6 +302,55 @@ public class NamedMob extends CreatureMob {
 			new Fx(Fx.Kind.SPARK, color).burst(level, this.position().add(0, this.getBbHeight() * 0.6, 0), 2, this.getBbWidth() * 0.5, 0.01);
 		}
 		this.minions.removeIf(m -> !m.isAlive());
+		if (this.lord) {
+			this.tickLord(level);
+		}
+	}
+
+	/** Boss bar, and every {@link #WRATH_INTERVAL} ticks the lair's wrath: a telegraphed ring that takes 40% of a victim's health. */
+	private void tickLord(final ServerLevel level) {
+		if (this.lordBar != null) {
+			this.lordBar.setProgress(this.getHealth() / this.getMaxHealth());
+		}
+		if (this.tickCount % WRATH_INTERVAL != WRATH_INTERVAL / 2 || this.getTarget() == null) {
+			return;
+		}
+		this.wrath(level);
+	}
+
+	/** Casts the lair's wrath now (also used by tests). */
+	public void wrath(final ServerLevel level) {
+		Vec3 at = this.position();
+		this.busyTicks = Math.max(this.busyTicks, 35);
+		this.playAnim(CreatureAnim.ROAR);
+		level.playSound(null, at.x, at.y, at.z, SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 1.4F, 0.7F);
+		Telegraph.circle(level, at, 5.0, 30, Telegraph.RED, () -> {
+			if (!this.isAlive()) {
+				return;
+			}
+			for (LivingEntity e : Attacks.inCircle(level, at, 5.0, 4.0)) {
+				if (e instanceof Player player && !player.isCreative() && !player.isSpectator()) {
+					RaidDamage.portion(level, player, this, 0.4F);
+				}
+			}
+			level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y + 0.5, at.z, 4, 2.0, 0.3, 2.0, 0.0);
+		});
+	}
+
+	@Override
+	public void startSeenByPlayer(final ServerPlayer player) {
+		super.startSeenByPlayer(player);
+		if (this.lordBar != null) {
+			this.lordBar.addPlayer(player);
+		}
+	}
+
+	@Override
+	public void stopSeenByPlayer(final ServerPlayer player) {
+		super.stopSeenByPlayer(player);
+		if (this.lordBar != null) {
+			this.lordBar.removePlayer(player);
+		}
 	}
 
 	@Override
@@ -286,6 +391,14 @@ public class NamedMob extends CreatureMob {
 		}
 		NamedDef def = this.def();
 		this.dropGlowing(level, GearDrops.ether(def.lo(), def.hi(), this.getRandom()));
+		if (this.lord) {
+			this.dropGlowing(level, new ItemStack(ModItems.ENHANCEMENT_STONE, 1 + this.getRandom().nextInt(2)));
+			if (this.getRandom().nextFloat() < 0.1F) {
+				this.dropGlowing(level, new ItemStack(ModItems.PROTECTION_SCROLL));
+			}
+		} else if (this.getRandom().nextFloat() < 0.1F) {
+			this.dropGlowing(level, new ItemStack(ModItems.ENHANCEMENT_STONE));
+		}
 		// coins grow with the level: about 4 copper at Lv 20, about a gold coin at Lv 90
 		int copper = Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, this.namedLevel)) * 0.15F * (0.6F + this.getRandom().nextFloat() * 0.8F)));
 		for (ItemStack coins : Coins.asItems(copper)) {
@@ -318,6 +431,9 @@ public class NamedMob extends CreatureMob {
 			if (minion.isAlive()) {
 				minion.discard();
 			}
+		}
+		if (this.lordBar != null) {
+			this.lordBar.removeAllPlayers();
 		}
 		super.remove(reason);
 	}

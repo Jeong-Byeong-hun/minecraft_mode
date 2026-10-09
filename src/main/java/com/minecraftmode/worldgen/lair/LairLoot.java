@@ -14,8 +14,8 @@ import net.minecraft.world.item.ItemStack;
 /**
  * What a lair holds. The goal chest always has coins and at least one item from the lair monster's
  * own level range - a consumable (55%) or a piece of class gear (45%) - with a 60% and then 25% chance
- * of more, plus the monster's Evolution Ether and some essence. Dead-end caches hold small change and
- * a snack.
+ * of more, plus the monster's Evolution Ether, essence and enhancement stones. Dead-end caches hold
+ * small change, a snack and sometimes a stone. Every player rolls their own contents each cycle.
  */
 public final class LairLoot {
 	/** Chance that a reward item is gear rather than a consumable. */
@@ -36,6 +36,7 @@ public final class LairLoot {
 		out.add(def.lo() >= 40
 			? new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + random.nextInt(2))
 			: new ItemStack(ModItems.ESSENCE, 3 + random.nextInt(5)));
+		out.add(new ItemStack(ModItems.ENHANCEMENT_STONE, 1 + random.nextInt(2)));
 		out.removeIf(ItemStack::isEmpty);
 		return out;
 	}
@@ -61,6 +62,9 @@ public final class LairLoot {
 		}
 		if (random.nextFloat() < 0.5F) {
 			out.add(new ItemStack(ModItems.ESSENCE, 1 + random.nextInt(3)));
+		}
+		if (random.nextFloat() < 0.25F) {
+			out.add(new ItemStack(ModItems.ENHANCEMENT_STONE));
 		}
 		out.removeIf(ItemStack::isEmpty);
 		return out;

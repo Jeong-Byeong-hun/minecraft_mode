@@ -6,6 +6,7 @@ import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.CombatState;
 import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -35,9 +36,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 
 /**
  * Wires classes into the game: job experience and essence from kills and ores, MP regeneration,
@@ -177,6 +178,7 @@ public final class JobEvents {
 			return;
 		}
 		gainExp(serverPlayer, reward.exp);
+		Progress.oreMined(serverPlayer);
 		ItemStack tool = player.getMainHandItem();
 		if (EnchantLevels.get(level, Enchantments.SILK_TOUCH, tool) > 0) {
 			return;

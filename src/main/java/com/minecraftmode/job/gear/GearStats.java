@@ -1,13 +1,17 @@
 package com.minecraftmode.job.gear;
 
 import com.minecraftmode.consumable.BuffEffects;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.progress.CollectionBonuses;
+import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.talent.Talents;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,7 +22,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * Everything a player's gear and level add up to: engravings of the active class weapon, the
- * options and engravings of class armor they may wear, set bonuses, level rewards, stat passives and buffs. Combat,
+ * options and engravings of class armor they may wear, enhancement, set bonuses, level rewards, stat passives, buffs, talents and
+ * codex collection bonuses. Combat,
  * stats and skills all read this one total. Cached per player for the current game tick.
  */
 public final class GearStats {
@@ -64,6 +69,12 @@ public final class GearStats {
 		WeaponDef weapon = JobWeapons.def(main);
 		if (weapon != null && JobWeapons.isActive(data, weapon)) {
 			builder.addAll(JobWeapons.engravings(main).resolved());
+			ClassGear gear = ClassGear.of(main);
+			if (gear != null) {
+				for (StatLine line : Enhancement.lines(gear, Enhancement.level(main))) {
+					add(builder, line);
+				}
+			}
 		}
 		Map<String, Integer> setCounts = new HashMap<>();
 		for (GearSlot slot : GearSlot.ARMOR) {
@@ -77,6 +88,12 @@ public final class GearStats {
 				add(builder, line);
 			}
 			builder.addAll(stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY).resolved());
+			ClassGear gear = ClassGear.of(stack);
+			if (gear != null) {
+				for (StatLine line : Enhancement.lines(gear, Enhancement.level(stack))) {
+					add(builder, line);
+				}
+			}
 			setCounts.merge(piece.set().id(), 1, Integer::sum);
 		}
 		for (Map.Entry<String, Integer> entry : setCounts.entrySet()) {
@@ -92,6 +109,12 @@ public final class GearStats {
 			add(builder, line);
 		}
 		for (StatLine line : BuffEffects.active(player)) {
+			add(builder, line);
+		}
+		for (StatLine line : Talents.lines(player)) {
+			add(builder, line);
+		}
+		for (StatLine line : CollectionBonuses.lines(Progress.get(player))) {
 			add(builder, line);
 		}
 		return builder.build();

@@ -1,5 +1,6 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -7,6 +8,7 @@ import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ArmorSetDef;
+import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.GearRules;
 import com.minecraftmode.job.gear.GearStats;
@@ -46,6 +48,7 @@ public final class GearTooltips {
 		if (!GearRules.canUse(data, def.job(), def.level())) {
 			lines.add(Component.translatable("tooltip.minecraft_mode.gear.locked").withStyle(ChatFormatting.RED));
 		}
+		enhancement(lines, stack);
 
 		ArmorSetDef set = def.set();
 		int worn = player == null ? 0 : GearStats.setCounts(player).getOrDefault(set.id(), 0);
@@ -92,6 +95,24 @@ public final class GearTooltips {
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.bracket", ItemLevels.bracket(def.level())).withStyle(ChatFormatting.DARK_GRAY));
 		lines.add(Component.empty());
 		return lines;
+	}
+
+	/** "Enhancement +7 (artisan's spirit 10%)" and what the level adds; nothing for unenhanced gear. */
+	public static void enhancement(final List<Component> lines, final ItemStack stack) {
+		ClassGear gear = ClassGear.of(stack);
+		Enhancement e = Enhancement.of(stack);
+		if (gear == null || e.level() <= 0 && e.pity() <= 0) {
+			return;
+		}
+		MutableComponent head = Component.translatable("tooltip.minecraft_mode.enhance.level", e.level(), Enhancement.MAX).withColor(Enhancement.color(e.level()));
+		if (e.pity() > 0) {
+			head.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(Component.translatable("tooltip.minecraft_mode.enhance.pity", e.pity())
+				.withStyle(ChatFormatting.GRAY));
+		}
+		lines.add(head);
+		for (StatLine line : Enhancement.lines(gear, e.level())) {
+			lines.add(statLine(line, ChatFormatting.GREEN));
+		}
 	}
 
 	static Component statLine(final StatLine line, final ChatFormatting color) {

@@ -8,7 +8,11 @@ import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.gear.GearArmorItem;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.loot.EvolutionEtherItem;
+import com.minecraftmode.progress.ResetCycle;
+import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.worldgen.lair.LairChestBlock;
+import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
@@ -26,6 +30,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.MobCategory;
@@ -41,8 +46,8 @@ import net.minecraft.world.phys.AABB;
 /**
  * Named monster lairs: the 22 definitions and their spawn lists, the goal loot rules, mazes that
  * always reach their goal, and on a flat world one lair of every landmark shape (plus a Nether lair)
- * built with /place: walls, gate, a tall landmark, the goal chest with coins and a reward, and the
- * guardian. Screenshots of every shape.
+ * built with /place: walls, gate, a tall landmark, the personal goal chest with coins and a reward, and the
+ * lair lord that wakes for the cycle and seals the chest while it lives. Screenshots of every shape.
  */
 public class LairClientGameTest implements FabricClientGameTest {
 	@Override
@@ -174,10 +179,10 @@ public class LairClientGameTest implements FabricClientGameTest {
 							continue;
 						}
 						top = Math.max(top, by);
-						if (state.is(Blocks.CHEST)) {
+						if (state.is(ModBlocks.LAIR_CHEST)) {
 							require(chest == null, id + ": more than one goal chest");
 							chest = new BlockPos(bx, by, bz);
-						} else if (state.is(Blocks.BARREL)) {
+						} else if (state.is(ModBlocks.LAIR_CACHE)) {
 							barrels++;
 						}
 					}
@@ -213,23 +218,29 @@ public class LairClientGameTest implements FabricClientGameTest {
 				require(logs >= 4, id + ": the tree should have a trunk, got " + trunk);
 			}
 			require(def.shape() == LairDef.Shape.NONE || height >= 24, id + ": the landmark should rise high above the maze, got " + height);
-			// loot
+			// personal loot (the test player's own roll for this cycle)
+			require(level.getBlockEntity(chest) instanceof LairChestBlockEntity, id + ": the goal chest has no block entity");
+			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(chest);
+			require(def.id().equals(goal.lair()) && !goal.isCache(), id + ": the goal chest is not set up for its lair");
+			ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+			long cycle = ResetCycle.cycle(level);
 			int coins = 0;
 			int rewards = 0;
-			if (level.getBlockEntity(chest) instanceof Container container) {
-				for (int slot = 0; slot < container.getContainerSize(); slot++) {
-					ItemStack stack = container.getItem(slot);
-					coins += isCoin(stack) ? 1 : 0;
-					rewards += isReward(stack) ? 1 : 0;
-				}
+			Container container = goal.container(player, cycle);
+			for (int slot = 0; slot < container.getContainerSize(); slot++) {
+				ItemStack stack = container.getItem(slot);
+				coins += isCoin(stack) ? 1 : 0;
+				rewards += isReward(stack) ? 1 : 0;
 			}
 			require(coins > 0, id + ": the goal chest has no coins");
 			require(rewards > 0, id + ": the goal chest has no reward item");
-			// guardian
-			List<NamedMob> guards = level.getEntitiesOfClass(NamedMob.class, new AABB(chest).inflate(4),
-				m -> NamedMobs.def(m.getType()) == def.named() && m.isPersistenceRequired());
-			require(!guards.isEmpty(), id + ": no guardian by the goal");
-			guards.forEach(m -> m.setNoAi(true));
+			// no guardian waits in the structure; the lord wakes for the cycle and seals the chest
+			require(level.getEntitiesOfClass(NamedMob.class, new AABB(chest).inflate(6), NamedMob::isLord).isEmpty(), id + ": a lord before anyone came");
+			NamedMob lord = goal.wakeLord(level, cycle);
+			require(lord != null && lord.isLord() && goal.sealed(), id + ": the lord should wake and seal the chest");
+			require(NamedMobs.def(lord.getType()) == def.named(), id + ": the lord should be the lair's named monster");
+			require(!LairChestBlock.open(player, goal), id + ": a sealed chest must not open");
+			lord.setNoAi(true);
 			return new int[] {chest.getX(), chest.getY(), chest.getZ(), height, coins, rewards, barrels};
 		});
 		MinecraftMode.LOGGER.info("[lair] {} at {}, {}: goal {} {} {}, landmark {} blocks high, {} coin and {} reward stacks, {} caches", id, x, z,

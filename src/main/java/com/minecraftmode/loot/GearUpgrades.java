@@ -1,5 +1,6 @@
 package com.minecraftmode.loot;
 
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ClassGear;
@@ -53,7 +54,7 @@ public final class GearUpgrades {
 		return target.bracket();
 	}
 
-	/** The evolved stack (engravings that fit carried over). */
+	/** The evolved stack (engravings that fit and the enhancement carried over). */
 	public static ItemStack evolve(final ItemStack from, final ClassGear target, final RandomSource random) {
 		ItemStack result = GearDrops.create(target, random);
 		Engravings engravings = from.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);
@@ -66,6 +67,10 @@ public final class GearUpgrades {
 		}
 		if (!kept.isEmpty()) {
 			result.set(ModDataComponents.ENGRAVINGS, new Engravings(kept, random.nextInt()));
+		}
+		Enhancement enhancement = from.get(ModDataComponents.ENHANCEMENT);
+		if (enhancement != null) {
+			result.set(ModDataComponents.ENHANCEMENT, enhancement);
 		}
 		return result;
 	}

@@ -44,6 +44,9 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.GUILD_SHOP, TexturedModel.COLUMN);
 		// engraving_table_top / _side / _bottom
 		generators.createTrivialBlock(ModBlocks.ENGRAVING_TABLE, TexturedModel.CUBE_BOTTOM_TOP);
+		// lair_chest_side / _top, lair_cache_side / _top
+		generators.createTrivialBlock(ModBlocks.LAIR_CHEST, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.LAIR_CACHE, TexturedModel.COLUMN);
 	}
 
 	@Override
@@ -74,6 +77,9 @@ public class ModModelProvider extends FabricModelProvider {
 			generators.generateFlatItem(Consumables.item(def), ModelTemplates.FLAT_ITEM);
 		}
 		generators.generateFlatItem(ModItems.RETURN_SCROLL, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.ENHANCEMENT_STONE, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.PROTECTION_SCROLL, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
 
 		for (Item tool : new Item[] {
 			ModItems.MYTHRIL_SWORD, ModItems.MYTHRIL_PICKAXE, ModItems.MYTHRIL_AXE, ModItems.MYTHRIL_SHOVEL, ModItems.MYTHRIL_HOE

@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.client.job.TrainerScreen;
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.network.OpenTrainerPayload;
@@ -174,8 +175,10 @@ final class CityChecks {
 		server.runOnServer(s -> {
 			ServerLevel level = s.overworld();
 			CityServices.keepTrainers(level);
+			CityServices.keepNpcs(level);
 			// a second pass must not duplicate anyone
 			CityServices.keepTrainers(level);
+			CityServices.keepNpcs(level);
 		});
 		context.waitTicks(5);
 		String report = server.computeOnServer(s -> {
@@ -193,6 +196,18 @@ final class CityChecks {
 					job.id() + " trainer is stuck in a block at " + at);
 				require(trainer.isInvulnerable(), job.id() + " trainer should be invulnerable");
 				lines.add(job.id() + "@" + at.toShortString());
+			}
+			// the service NPCs (smith, marshal, guild clerk, broker, enhancer) stand at their posts too
+			for (CityNpc.Role role : CityNpc.Role.values()) {
+				BlockPos home = CityZone.npcHome(role, base);
+				List<CityNpc> npcs = level.getEntitiesOfClass(CityNpc.class, new AABB(home).inflate(32), n -> n.role() == role);
+				require(npcs.size() == 1, role.id() + " should have exactly one NPC, found " + npcs.size());
+				BlockPos at = npcs.getFirst().blockPosition();
+				require(at.distManhattan(home) <= 2, role.id() + " is at " + at + ", home is " + home);
+				require(!level.getBlockState(at.below()).isAir(), role.id() + " stands on air at " + at);
+				require(!level.getBlockState(at).isSuffocating(level, at) && !level.getBlockState(at.above()).isSuffocating(level, at.above()),
+					role.id() + " is stuck in a block at " + at);
+				lines.add(role.id() + "@" + at.toShortString());
 			}
 			// a trainer that wandered off is brought back
 			ClassTrainer mage = level.getEntitiesOfClass(ClassTrainer.class, new AABB(CityZone.trainerHome(JobClass.MAGE, base)).inflate(32), t -> t.job() == JobClass.MAGE).getFirst();
@@ -439,6 +454,26 @@ final class CityChecks {
 				return home.offset(2, 1, 2);
 			});
 			view(context, server, "trainer_" + job.id(), camera, home.above());
+		}
+
+		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER}) {
+			BlockPos home = CityZone.npcHome(role, base);
+			BlockPos camera = server.computeOnServer(s -> {
+				ServerLevel level = s.overworld();
+				for (int distance = 3; distance >= 2; distance--) {
+					for (Direction direction : Direction.Plane.HORIZONTAL) {
+						boolean clear = true;
+						for (int step = 1; step <= distance; step++) {
+							clear &= level.getBlockState(home.relative(direction, step).above()).isAir() && level.getBlockState(home.relative(direction, step)).isAir();
+						}
+						if (clear) {
+							return home.relative(direction, distance).above();
+						}
+					}
+				}
+				return home.offset(2, 1, 2);
+			});
+			view(context, server, "npc_" + role.id(), camera, home.above());
 		}
 
 		// the dialog over the city, as a right-click opens it

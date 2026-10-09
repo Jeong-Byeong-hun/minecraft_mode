@@ -2,6 +2,7 @@ package com.minecraftmode.worldgen.lair;
 
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.worldgen.lair.LairDef.Decor;
 import com.minecraftmode.worldgen.lair.LairDef.Palette;
 import com.minecraftmode.worldgen.lair.LairDef.Setting;
@@ -32,7 +33,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Builds one lair, clipped to whichever chunk is being decorated. Everything is a pure function of
- * the lair's position and seed, so the chunks agree on one maze, one goal and one guardian.
+ * the lair's position and seed, so the chunks agree on one maze and one goal. The treasure and the caches are personal
+ * {@link LairChestBlock lair chests}; the treasure wakes the lair's lord each cycle.
  * <p>
  * Layout: a square maze of 3-wide, 4-high corridors (cells of {@link #CELL} blocks) with a floor and a
  * roof, the entrance in the middle of the south wall, an apron of {@link #APRON} blocks around it, and
@@ -160,9 +162,9 @@ public class LairPiece extends StructurePiece {
 		for (int[] cache : m.caches()) {
 			BlockPos at = new BlockPos(x0 + 2 + CELL * cache[0], this.floor + 1, z0 + 2 + CELL * cache[1]);
 			if (chunkBB.isInside(at)) {
-				p.set(at.getX(), at.getY(), at.getZ(), Blocks.BARREL.defaultBlockState());
-				if (level.getBlockEntity(at) instanceof Container barrel) {
-					fill(barrel, LairLoot.cache(def.named(), RandomSource.create(this.seed ^ at.asLong())), RandomSource.create(at.asLong()));
+				p.set(at.getX(), at.getY(), at.getZ(), ModBlocks.LAIR_CACHE.defaultBlockState());
+				if (level.getBlockEntity(at) instanceof LairChestBlockEntity cacheChest) {
+					cacheChest.setup(def.id(), this.seed ^ at.asLong(), true);
 				}
 			}
 		}
@@ -404,7 +406,7 @@ public class LairPiece extends StructurePiece {
 		}
 	}
 
-	/** The goal: a lit room with the treasure chest, guarded by the lair's named monster. */
+	/** The goal: a lit room with the treasure chest; its lord wakes when someone comes near (once per cycle). */
 	private void goal(final Placer p, final WorldGenLevel level, final LairDef def, final Maze m, final int x0, final int z0) {
 		Palette pal = def.palette();
 		int gx = x0 + 2 + CELL * m.goalX();
@@ -419,29 +421,9 @@ public class LairPiece extends StructurePiece {
 		if (!p.box().isInside(chest)) {
 			return;
 		}
-		p.set(gx, this.floor + 1, gz, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, Direction.SOUTH));
-		if (level.getBlockEntity(chest) instanceof Container container) {
-			fill(container, LairLoot.goal(def.named(), RandomSource.create(this.seed)), RandomSource.create(this.seed * 31 + 7));
-		}
-		NamedMob guardian = NamedMobs.type(def.named()).create(level.getLevel(), EntitySpawnReason.STRUCTURE);
-		if (guardian != null) {
-			guardian.snapTo(gx + 0.5, this.floor + 1, gz + 1.5, 180.0F, 0.0F);
-			guardian.finalizeSpawn(level, level.getCurrentDifficultyAt(chest), EntitySpawnReason.STRUCTURE, null);
-			guardian.setPersistenceRequired();
-			level.addFreshEntityWithPassengers(guardian);
-		}
-	}
-
-	private static void fill(final Container container, final List<ItemStack> items, final RandomSource random) {
-		int size = container.getContainerSize();
-		for (ItemStack stack : items) {
-			for (int tries = 0; tries < 40; tries++) {
-				int slot = random.nextInt(size);
-				if (container.getItem(slot).isEmpty()) {
-					container.setItem(slot, stack);
-					break;
-				}
-			}
+		p.set(gx, this.floor + 1, gz, ModBlocks.LAIR_CHEST.defaultBlockState());
+		if (level.getBlockEntity(chest) instanceof LairChestBlockEntity treasure) {
+			treasure.setup(def.id(), this.seed, false);
 		}
 	}
 

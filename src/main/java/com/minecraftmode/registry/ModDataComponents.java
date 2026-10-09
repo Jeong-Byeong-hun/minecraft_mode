@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.GearRolls;
 import com.mojang.serialization.Codec;
@@ -29,6 +30,13 @@ public final class ModDataComponents {
 		BuiltInRegistries.DATA_COMPONENT_TYPE,
 		MinecraftMode.id("ether_grade"),
 		DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build()
+	);
+
+	/** Enhancement level (+0..+15) and the artisan's spirit of a class weapon or armor piece. */
+	public static final DataComponentType<Enhancement> ENHANCEMENT = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("enhancement"),
+		DataComponentType.<Enhancement>builder().persistent(Enhancement.CODEC).networkSynchronized(Enhancement.STREAM_CODEC).build()
 	);
 
 	public static void init() {

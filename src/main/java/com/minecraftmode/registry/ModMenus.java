@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.loot.UpgradeMenu;
 import net.minecraft.core.Registry;
@@ -15,6 +16,10 @@ public final class ModMenus {
 
 	public static final MenuType<UpgradeMenu> UPGRADE = Registry.register(
 		BuiltInRegistries.MENU, MinecraftMode.id("upgrade"), new MenuType<>(UpgradeMenu::new, FeatureFlags.VANILLA_SET)
+	);
+
+	public static final MenuType<EnhanceMenu> ENHANCE = Registry.register(
+		BuiltInRegistries.MENU, MinecraftMode.id("enhance"), new MenuType<>(EnhanceMenu::new, FeatureFlags.VANILLA_SET)
 	);
 
 	public static void init() {

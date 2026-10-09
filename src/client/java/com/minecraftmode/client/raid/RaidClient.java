@@ -29,11 +29,13 @@ public final class RaidClient {
 
 	private static List<PartySyncPayload.Member> party = List.of();
 	private static @Nullable LootStatePayload loot;
+	private static @Nullable OpenRaidPayload raidInfo;
 
 	public static void init() {
-		ClientPlayNetworking.registerGlobalReceiver(OpenRaidPayload.TYPE, (payload, context) -> context.client().execute(
-			() -> context.client().gui.setScreen(new RaidScreen(payload.entityId()))
-		));
+		ClientPlayNetworking.registerGlobalReceiver(OpenRaidPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			raidInfo = payload;
+			context.client().gui.setScreen(new RaidScreen(payload.entityId()));
+		}));
 		ClientPlayNetworking.registerGlobalReceiver(PartySyncPayload.TYPE, (payload, context) -> context.client().execute(() -> party = List.copyOf(payload.members())));
 		ClientPlayNetworking.registerGlobalReceiver(LootStatePayload.TYPE, (payload, context) -> context.client().execute(() -> {
 			loot = payload;
@@ -45,6 +47,7 @@ public final class RaidClient {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
 			party = List.of();
 			loot = null;
+			raidInfo = null;
 		}));
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			while (LOOT.consumeClick()) {
@@ -57,6 +60,11 @@ public final class RaidClient {
 
 	public static List<PartySyncPayload.Member> party() {
 		return party;
+	}
+
+	/** What the marshal last sent: the cycle, its modifiers and the record tables. */
+	public static @Nullable OpenRaidPayload raidInfo() {
+		return raidInfo;
 	}
 
 	public static @Nullable LootStatePayload loot() {

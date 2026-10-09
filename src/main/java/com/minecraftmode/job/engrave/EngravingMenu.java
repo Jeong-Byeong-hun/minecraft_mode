@@ -212,7 +212,7 @@ public class EngravingMenu extends AbstractContainerMenu {
 		return JobProgression.count(inventory, ModItems.ESSENCE) + 9 * JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE);
 	}
 
-	private static void pay(final Player player, int units) {
+	public static void pay(final Player player, int units) {
 		if (player.isCreative() || units <= 0) {
 			return;
 		}

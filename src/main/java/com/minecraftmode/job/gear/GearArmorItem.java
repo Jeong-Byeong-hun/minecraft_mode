@@ -1,6 +1,7 @@
 package com.minecraftmode.job.gear;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.registry.ModDataComponents;
 import net.minecraft.core.component.DataComponents;
@@ -64,7 +65,7 @@ public class GearArmorItem extends Item {
 
 	@Override
 	public Component getName(final ItemStack itemStack) {
-		return Component.translatable(this.getDescriptionId()).withColor(JobWeaponItem.tierColor(this.def.tier()));
+		return Enhancement.decorate(Component.translatable(this.getDescriptionId()).withColor(JobWeaponItem.tierColor(this.def.tier())), itemStack);
 	}
 
 	@Override

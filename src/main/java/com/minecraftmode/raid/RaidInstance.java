@@ -2,8 +2,11 @@ package com.minecraftmode.raid;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
@@ -70,13 +73,35 @@ public final class RaidInstance {
 	int timer;
 	@Nullable UUID bossId;
 	int partySize;
+	final RaidDifficulty difficulty;
+	/** Members already rewarded for this boss and difficulty this cycle: they fight for practice (no fee, no rewards). */
+	final Set<UUID> practice = new HashSet<>();
+	List<RaidAffix> affixes = List.of();
 
-	RaidInstance(final int id, final int slot, final BossDef boss, final BlockPos center, final UUID leader) {
+	RaidInstance(final int id, final int slot, final BossDef boss, final BlockPos center, final UUID leader, final RaidDifficulty difficulty) {
 		this.id = id;
 		this.slot = slot;
 		this.boss = boss;
 		this.center = center;
 		this.leader = leader;
+		this.difficulty = difficulty;
+	}
+
+	public RaidDifficulty difficulty() {
+		return this.difficulty;
+	}
+
+	public boolean practice(final UUID player) {
+		return this.practice.contains(player);
+	}
+
+	public List<RaidAffix> affixes() {
+		return this.affixes;
+	}
+
+	/** Ticks spent in the current state (the fight time once the boss is up). */
+	public int timer() {
+		return this.timer;
 	}
 
 	public int id() {

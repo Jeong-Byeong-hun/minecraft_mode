@@ -136,7 +136,7 @@ final class CitySouth {
 		stall(b, -24, 68, Build.wool(DyeColor.GREEN), ModBlocks.GROCER_SHOP);
 		stall(b, -14, 48, Build.wool(DyeColor.PURPLE), ModBlocks.JEWELER_SHOP);
 		stall(b, -14, 58, Build.wool(DyeColor.CYAN), ModBlocks.ALCHEMIST_SHOP);
-		stall(b, -14, 68, Build.wool(DyeColor.LIGHT_BLUE), Blocks.MELON);
+		stall(b, -14, 68, Build.wool(DyeColor.LIGHT_BLUE), Blocks.LECTERN);
 		// Adventurers' Guild: guild shop and engraving tables
 		Houses.house(b, 8, 48, 26, 70, Style.CAPITAL, Direction.WEST, 2);
 		b.fill(9, -1, 49, 25, -1, 69, Blocks.POLISHED_ANDESITE);

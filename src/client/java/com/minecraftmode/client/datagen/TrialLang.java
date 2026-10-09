@@ -121,6 +121,10 @@ final class TrialLang {
 				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기는 3줄, 방어구는 4줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
 			{"Wallet and supplies\n\nCoins go straight into your wallet and take no inventory space; shops are paid from it (/wallet). You keep your items when you die.\n\nThe Alchemist sells potions and food that last 10 minutes.",
 				"지갑과 보급품\n\n동전은 곧바로 지갑에 들어가 인벤토리를 차지하지 않고, 상점은 지갑에서 돈을 받습니다 (/wallet). 죽어도 아이템을 잃지 않습니다.\n\n연금술사는 10분간 지속되는 물약과 음식을 팝니다."},
+			{"Every three days\n\nLair treasure is personal and refills every 3 Minecraft days, after you defeat the lair lord. Raid rewards (Normal, Heroic, Nightmare) reset on the same cycle.\n\nGuild Clerk Lina hands out bounties for merit.",
+				"사흘마다\n\n소굴 보물은 개인 보상이며 마인크래프트 날짜로 3일마다, 소굴의 군주를 쓰러뜨리면 다시 받습니다. 레이드 보상(일반·영웅·악몽)도 같은 주기로 초기화됩니다.\n\n길드 접수원 리나의 의뢰로 공적을 모으세요."},
+			{"Growing stronger\n\nArtisan Brokk at the forge enhances class gear up to +15. Broker Morgan runs the market at the stall with the lectern.\n\nTalents: N. Codex, achievements and titles: J.",
+				"더 강해지기\n\n대장간의 강화 장인 브로크가 직업 장비를 +15까지 강화합니다. 시장 노점(독서대)의 중개인 모건이 거래소를 엽니다.\n\n특성: N, 도감·업적·칭호: J."},
 		};
 		for (int i = 0; i < pages.length; i++) {
 			b.add("book.minecraft_mode.guide.page" + (i + 1), ko ? pages[i][1] : pages[i][0]);

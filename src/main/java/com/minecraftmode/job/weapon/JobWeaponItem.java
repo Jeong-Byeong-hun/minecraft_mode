@@ -1,6 +1,7 @@
 package com.minecraftmode.job.weapon;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import net.minecraft.core.component.DataComponents;
@@ -82,7 +83,7 @@ public class JobWeaponItem extends Item {
 
 	@Override
 	public Component getName(final ItemStack itemStack) {
-		return Component.translatable(this.getDescriptionId()).withColor(tierColor(this.def.tier()));
+		return Enhancement.decorate(Component.translatable(this.getDescriptionId()).withColor(tierColor(this.def.tier())), itemStack);
 	}
 
 	@Override

@@ -48,6 +48,9 @@ final class QuestArt {
 		TextureGen.write("entity/trainer/hunter", biscuit());
 		TextureGen.write("entity/npc/blacksmith", volund());
 		TextureGen.write("entity/npc/raid_marshal", aldric());
+		TextureGen.write("entity/npc/bounty_clerk", lina());
+		TextureGen.write("entity/npc/broker", morgan());
+		TextureGen.write("entity/npc/enhancer", brokk());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -988,6 +991,128 @@ final class QuestArt {
 		fill(0, 24, 16, 2, light);
 		fill(0, 29, 16, 3, 0x2E3038);
 		fill(8, 16, 4, 4, 0x2E3038);
+		return img;
+	}
+
+	/** Guild Clerk Lina: a chestnut ponytail, the guild blue jacket over a white blouse, a yellow scarf and a quill pouch. */
+	static BufferedImage lina() {
+		BufferedImage img = newSkin(109);
+		int skin = 0xF0CDB0, hair = 0x7A4428, blue = 0x2A4A9E, light = 0x4A6EC8, white = 0xF2F0EA, yellow = 0xE8C040;
+		head(skin, hair);
+		hair(hair, 2, 5, 8);
+		px(8, 10, hair);
+		px(15, 10, hair);
+		eyes(12, 0xFFFFFF, 0x3A7A4A);
+		px(11, 14, 0xD88A80);
+		px(12, 14, 0xD88A80);
+		fill(26, 13, 2, 3, shade(hair, 0.8F)); // ponytail tie on the back
+		fill(40, 8, 8, 1, yellow);           // hair band on the hat layer front
+		fill(32, 8, 8, 1, yellow);
+		fill(48, 8, 8, 1, yellow);
+
+		body(blue);
+		fill(22, 20, 4, 8, white);           // blouse
+		fill(21, 20, 6, 2, yellow);          // scarf
+		px(23, 22, yellow);
+		fill(20, 20, 1, 12, light);          // jacket edges
+		fill(27, 20, 1, 12, light);
+		fill(16, 29, 24, 1, 0x3A2414);       // belt with a quill pouch
+		fill(25, 29, 2, 3, 0x6A4A2A);
+		px(26, 28, white);
+
+		arms(blue);
+		fill(40, 28, 16, 1, light);          // cuffs
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(0x2A2A3A);
+		fill(0, 27, 16, 5, 0x4A2E1E);        // boots
+		fill(8, 16, 4, 4, 0x4A2E1E);
+		return img;
+	}
+
+	/** Broker Morgan: slicked grey hair, a gold monocle, a plum waistcoat with a watch chain over a white shirt, a black coat. */
+	static BufferedImage morgan() {
+		BufferedImage img = newSkin(110);
+		int skin = 0xE0B898, hair = 0x9A9AA0, coat = 0x1E1E26, plum = 0x6A2A5A, white = 0xF0EEE8, gold = 0xE8C24A;
+		head(skin, hair);
+		hair(hair, 1, 3, 6);
+		eyes(12, 0xFFFFFF, 0x4A4A6A);
+		px(13, 11, gold);                    // monocle around the left eye
+		px(12, 12, gold);
+		px(14, 12, gold);
+		px(13, 13, gold);
+		fill(10, 14, 4, 1, hair);            // moustache
+		px(9, 15, hair);
+		px(14, 15, hair);
+
+		body(coat);
+		fill(21, 20, 6, 10, plum);           // waistcoat
+		fill(23, 20, 2, 3, white);           // shirt and tie
+		px(23, 21, 0x2A1A2A);
+		px(24, 21, 0x2A1A2A);
+		px(22, 25, gold);                    // watch chain
+		px(23, 26, gold);
+		px(24, 26, gold);
+		px(25, 25, gold);
+		px(23, 24, gold);
+		fill(16, 29, 24, 1, 0x0E0E12);
+
+		arms(coat);
+		fill(40, 28, 16, 1, white);          // shirt cuffs
+		fill(40, 29, 16, 3, skin);
+		fill(48, 16, 4, 4, skin);
+		px(41, 30, gold);                    // a ring
+
+		legs(0x2A2A30);
+		fill(0, 28, 16, 4, 0x0E0E12);        // polished shoes
+		fill(8, 16, 4, 4, 0x0E0E12);
+		return img;
+	}
+
+	/** Artisan Brokk: a braided black beard, brass goggles, a scorched leather apron, glowing rune tattoos on bare forearms. */
+	static BufferedImage brokk() {
+		BufferedImage img = newSkin(111);
+		int skin = 0xC89070, beard = 0x2A1E1A, apron = 0x5A3A22, shirt = 0x8A4A2A, brass = 0xC8A040, glass = 0x6AC8E8, rune = 0x5AE8F4;
+		head(skin, beard);
+		hair(beard, 1, 3, 5);
+		fill(8, 10, 8, 2, brass);            // goggles strap and lenses
+		fill(0, 10, 8, 1, brass);
+		fill(16, 10, 8, 1, brass);
+		fill(24, 10, 8, 1, brass);
+		fill(9, 10, 2, 2, glass);
+		fill(13, 10, 2, 2, glass);
+		fill(8, 13, 8, 3, beard);            // beard
+		fill(0, 13, 8, 3, beard);
+		fill(16, 13, 8, 3, beard);
+		px(11, 13, 0x8A3A2A);
+		px(12, 13, 0x8A3A2A);
+		fill(16, 0, 8, 8, beard);
+
+		body(shirt);
+		fill(20, 20, 8, 12, apron);
+		fill(32, 20, 8, 1, 0x3A2414);
+		px(22, 24, 0x2A2A2A);                // scorch marks
+		px(25, 27, 0x2A2A2A);
+		px(23, 30, 0x2A2A2A);
+		fill(23, 22, 2, 2, brass);           // hammer-and-anvil badge
+		fill(16, 29, 24, 1, 0x2A1A10);
+
+		arms(skin);
+		fill(40, 20, 16, 3, shirt);          // rolled sleeves
+		fill(44, 16, 4, 4, shirt);
+		px(41, 24, rune);
+		px(42, 25, rune);
+		px(45, 24, rune);
+		px(49, 25, rune);
+		px(50, 24, rune);
+		px(53, 25, rune);
+		fill(40, 28, 16, 4, 0x3A2A1C);       // gauntlets
+		fill(48, 16, 4, 4, 0x3A2A1C);
+
+		legs(0x3A3A40);
+		fill(0, 26, 16, 6, 0x2A1E14);
+		fill(8, 16, 4, 4, 0x2A1E14);
 		return img;
 	}
 

@@ -71,6 +71,7 @@ public final class ShopOffers {
 		}
 		if (type == ShopType.GENERAL) {
 			list.add(priced(3 * 9, ModItems.RETURN_SCROLL));
+			list.add(priced(5 * 9, ModItems.LAIR_MAP));
 		}
 		return list;
 	}

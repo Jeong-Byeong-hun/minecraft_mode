@@ -96,7 +96,7 @@ public final class CityServices {
 	}
 
 	/** Number of handbook pages ({@code book.minecraft_mode.guide.page1..N}). */
-	public static final int GUIDE_PAGES = 9;
+	public static final int GUIDE_PAGES = 11;
 
 	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet. Pages are translated on the client. */
 	public static ItemStack guideBook() {
@@ -143,7 +143,7 @@ public final class CityServices {
 		}
 	}
 
-	/** One blacksmith and one raid marshal at their posts, like the trainers. */
+	/** One NPC of each service role at its post, like the trainers. */
 	public static void keepNpcs(final ServerLevel level) {
 		if (!CityZone.isCityLevel(level)) {
 			return;

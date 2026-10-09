@@ -3,6 +3,8 @@ package com.minecraftmode.client;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.creature.CreaturePlans;
 import com.minecraftmode.client.creature.CreatureRenderer;
+import com.minecraftmode.client.endgame.EndgameClient;
+import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.entity.CityNpcRenderer;
 import com.minecraftmode.client.entity.ClassTrainerRenderer;
 import com.minecraftmode.client.entity.MineRaiderRenderer;
@@ -68,10 +70,12 @@ public class MinecraftModeClient implements ClientModInitializer {
 
 		MenuScreens.register(ModMenus.ENGRAVING, EngravingScreen::new);
 		MenuScreens.register(ModMenus.UPGRADE, UpgradeScreen::new);
+		MenuScreens.register(ModMenus.ENHANCE, EnhanceScreen::new);
 		JobKeys.init();
 		JobHud.init();
 		JobTooltips.init();
 		RaidClient.init();
+		EndgameClient.init();
 		WalletDisplay.init();
 		ConsumableTooltips.init();
 	}

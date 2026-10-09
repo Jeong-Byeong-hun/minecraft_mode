@@ -110,6 +110,8 @@ public class TextureGen {
 		ClassArt.writeAll();
 		// --- Advancement trials (trial tokens, class trainer skins) ---
 		QuestArt.writeAll();
+		// --- Endgame (enhancement stone, protection scroll, lair map, personal lair chests) ---
+		EndgameArt.writeAll();
 
 		if (args.length > 1) {
 			writePreview(Path.of(args[1]));

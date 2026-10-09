@@ -1,6 +1,8 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.client.endgame.CodexScreen;
+import com.minecraftmode.client.endgame.TalentScreen;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
@@ -69,6 +71,10 @@ public class JobScreen extends Screen {
 			}).bounds(this.left + W - 92, this.top + H - 30, 80, 20).build());
 		}
 		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + 12, this.top + H - 30, 80, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.talent.title"), b -> this.minecraft.gui.setScreen(new TalentScreen()))
+			.bounds(this.left + 96, this.top + H - 30, 64, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.codex.title"), b -> this.minecraft.gui.setScreen(new CodexScreen()))
+			.bounds(this.left + 164, this.top + H - 30, 64, 20).build());
 	}
 
 	@Override

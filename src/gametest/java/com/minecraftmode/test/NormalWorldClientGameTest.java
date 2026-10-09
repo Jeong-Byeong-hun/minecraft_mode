@@ -387,7 +387,7 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			int chests = 0;
 			for (int bx = x - half; bx <= x + half; bx++) {
 				for (int bz = z - half; bz <= z + half; bz++) {
-					if (level.getBlockState(new BlockPos(bx, floor + 1, bz)).is(Blocks.CHEST)) {
+					if (level.getBlockState(new BlockPos(bx, floor + 1, bz)).is(ModBlocks.LAIR_CHEST)) {
 						chests++;
 					}
 				}

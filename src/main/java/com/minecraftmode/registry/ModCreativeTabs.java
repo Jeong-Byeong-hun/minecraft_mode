@@ -70,6 +70,7 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 					output.accept(ModItems.RETURN_SCROLL);
+					output.accept(ModItems.LAIR_MAP);
 					for (ConsumableDef def : Consumables.all()) {
 						output.accept(Consumables.item(def));
 					}
@@ -89,6 +90,8 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.GOLEM_CORE);
 					output.accept(ModItems.CLASS_RESET_SCROLL);
 					output.accept(ModItems.ENGRAVING_TABLE);
+					output.accept(ModItems.ENHANCEMENT_STONE);
+					output.accept(ModItems.PROTECTION_SCROLL);
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));
 					}

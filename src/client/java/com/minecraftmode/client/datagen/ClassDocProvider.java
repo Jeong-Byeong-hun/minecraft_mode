@@ -13,12 +13,15 @@ import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.talent.TalentTree;
+import com.minecraftmode.talent.Talents;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -102,6 +105,11 @@ public class ClassDocProvider implements DataProvider {
 		md.append("- 정수 각인대에서 직업 무기에 각인을 최대 3줄 붙입니다. 같은 각인을 여러 줄 붙이면 수치가 더해집니다(예: 평타 반경 1.5블록 × 3 = 4.5블록).\n");
 		md.append("- 비용: 차수 × 4 × (현재 줄 수 + 1) 정수. 후보 새로 고침·줄 제거: 차수 × 2 정수.\n\n");
 
+		md.append("## 특성\n\n");
+		md.append("- 특성 창: N. 포인트 = (레벨 - 10) × 2 ÷ 3 (Lv 100에 ").append(Talents.points(JobProgression.MAX_LEVEL)).append("점). 계열마다 1–4단계는 최대 ")
+			.append(TalentTree.RANKS).append("랭크, 5단계는 1랭크 핵심 특성이며, 다음 단계는 그 계열에 ").append(TalentTree.PER_TIER).append("점씩 넣어야 열립니다.\n");
+		md.append("- 표의 수치는 1랭크당 효과입니다(괄호 안은 최대 랭크). 직업별 특성표는 각 직업 절에 있습니다.\n\n");
+
 		for (JobClass job : JobClass.PLAYABLE) {
 			md.append("## ").append(job.ko()).append(" (").append(job.en()).append(")\n\n");
 			md.append("| 차수 | 전직명 | 패시브 | 효과 |\n|---|---|---|---|\n");
@@ -118,6 +126,21 @@ public class ClassDocProvider implements DataProvider {
 					? "전체"
 					: Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).map(Archetype::ko).collect(Collectors.joining(", "));
 				md.append("| ").append(e.ko()).append(" | ").append(statText(e.stat(), e.value())).append(" | ").append(only).append(" |\n");
+			}
+			md.append("\n### 특성\n\n| 단계 |");
+			List<TalentTree.Branch> branches = TalentTree.of(job);
+			for (TalentTree.Branch b : branches) {
+				md.append(" ").append(b.ko()).append(" |");
+			}
+			md.append("\n|---|").append("---|".repeat(branches.size())).append("\n");
+			for (int t = 0; t < TalentTree.TIERS; t++) {
+				md.append("| ").append(t + 1).append(t == TalentTree.TIERS - 1 ? " (핵심)" : "").append(" |");
+				for (TalentTree.Branch b : branches) {
+					TalentTree.Node node = b.nodes().get(t);
+					md.append(" **").append(node.ko()).append("** ").append(node.perRank().stream().map(l -> statText(l.stat(), l.value()))
+						.collect(Collectors.joining(", "))).append(node.maxRank() > 1 ? " (×" + node.maxRank() + ")" : "").append(" |");
+				}
+				md.append("\n");
 			}
 			for (int tier = 1; tier <= 4; tier++) {
 				md.append("\n### ").append(tier).append("차 무기 — ").append(job.tier(tier).ko()).append("\n");

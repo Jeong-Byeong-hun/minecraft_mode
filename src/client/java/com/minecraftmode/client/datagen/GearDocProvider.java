@@ -1,15 +1,19 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.Ability;
 import com.minecraftmode.entity.named.Habitat;
 import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ArmorOptions;
 import com.minecraftmode.job.gear.ArmorPieceDef;
@@ -19,15 +23,26 @@ import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.loot.GearUpgrades;
+import com.minecraftmode.market.AuctionService;
+import com.minecraftmode.progress.Achievements;
+import com.minecraftmode.progress.CollectionBonuses;
+import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
+import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.raid.RaidDifficulty;
+import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.talent.TalentTree;
+import com.minecraftmode.talent.Talents;
+import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
@@ -112,6 +127,7 @@ public class GearDocProvider implements DataProvider {
 		this.write("docs/GEAR.md", this.gear());
 		this.write("docs/MONSTERS.md", this.monsters());
 		this.write("docs/CONSUMABLES.md", this.consumables());
+		this.write("docs/ENDGAME.md", this.endgame());
 		return CompletableFuture.completedFuture(null);
 	}
 
@@ -298,6 +314,102 @@ public class GearDocProvider implements DataProvider {
 			md.append("| **").append(def.ko()).append("** | ").append("★".repeat(def.tier())).append(" | ").append(String.join(" · ", effects)).append(" | ")
 				.append(def.cooldown() > 0 ? def.cooldown() + "초" : "-").append(" | ").append(String.join(", ", sources)).append(" |\n");
 		}
+		return md.toString();
+	}
+
+	// ------------------------------------------------------------------ ENDGAME.md
+
+	private String ko(final String key) {
+		return this.ko.getOrDefault(key, key).replace("%%", "%");
+	}
+
+	private String endgame() {
+		StringBuilder md = new StringBuilder();
+		md.append("# 엔드게임 (반복 콘텐츠와 성장)\n\n");
+		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요. 설계 배경: `docs/DESIGN-endgame.md`.\n\n");
+
+		md.append("## 초기화 주기\n\n");
+		md.append("- 마인크래프트 날짜 기준: 하루 = 오버월드 시계 ").append(ResetCycle.DAY_TICKS).append("틱, **주기 = ").append(ResetCycle.DAYS)
+			.append("일**. 잠을 자서 아침이 와도 날짜가 넘어갑니다.\n");
+		md.append("- 주기마다: 소굴 개인 보상과 소굴의 군주, 레이드 보상 귀속, 주기 의뢰, 레이드 변형. 하루마다: 일일 의뢰.\n\n");
+
+		md.append("## 소굴 — 개인 보상과 소굴의 군주\n\n");
+		md.append("- 보물 상자와 보급품은 **개인 상자**입니다. 플레이어마다 내용물이 따로 굴려지고, 주기마다 다시 채워집니다. 가져가지 않은 물건은 그 주기 동안 남아 있습니다.\n");
+		md.append("- 주기마다 처음으로 플레이어가 보물 상자 ").append((int)LairChestBlockEntity.WAKE_RANGE)
+			.append("블록 안에 오면(또는 상자를 열면) **소굴의 군주**(그 네임드의 최고 레벨 강화판)가 깨어납니다: 체력 ×").append(ClassDocProvider.num(NamedMob.LORD_HEALTH))
+			.append(", 공격 ×").append(ClassDocProvider.num(NamedMob.LORD_DAMAGE)).append(", 크기 ×").append(ClassDocProvider.num(NamedMob.LORD_SCALE)).append(", 보스 바, ").append(NamedMob.WRATH_INTERVAL / 20)
+			.append("초마다 바닥 경고 뒤 **소굴의 분노**(반경 5블록, 최대 체력의 40%).\n");
+		md.append("- 군주가 살아 있는 동안 보물 상자는 **봉인**되어 열리지 않습니다. 군주는 강화석 1–2개, 10% 확률로 보호 주문서를 떨어뜨립니다.\n");
+		md.append("- 보물 상자를 그 주기에 처음 열면 소굴 정복으로 기록됩니다(도감·업적·의뢰). 보물 상자에 강화석 1–2개, 보급품에 25% 확률로 강화석.\n");
+		md.append("- **소굴 지도**: 사용하면 가장 가까운 네임드 소굴을 표시한 지도가 됩니다(잡화점 5S, 공적 상점).\n\n");
+
+		md.append("## 레이드 난이도\n\n| 난이도 | 보스 체력 | 보스 피해 | 입장료 | 추가 분배 | 에테르 | 강화석 | 보호 주문서 | 장비 강화 |\n|---|---|---|---|---|---|---|---|---|\n");
+		for (RaidDifficulty d : RaidDifficulty.values()) {
+			md.append("| ").append(this.ko(d.nameKey())).append(" | ×").append(ClassDocProvider.num(d.health)).append(" | ×").append(ClassDocProvider.num(d.damage))
+				.append(" | ×").append(ClassDocProvider.num(d.fee)).append(" | +").append(d.extraLots).append(" | ×").append(ClassDocProvider.num(d.ether))
+				.append(" | ").append(d.stones).append(" | ").append(Math.round(d.scrollChance * 100)).append("% | ")
+				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" |\n");
+		}
+		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
+		md.append("- **보상 귀속**: 보스·난이도마다 주기에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
+		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
+		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");
+		for (RaidAffix a : RaidAffix.values()) {
+			md.append("| ").append(this.ko(a.nameKey())).append(" | ").append(this.ko(a.descKey())).append(" |\n");
+		}
+
+		md.append("\n## 모험가 길드 의뢰\n\n");
+		md.append("- 길드 접수원 리나(모험가 길드)에게서 **일일 의뢰 ").append(Bounties.DAILY).append("개**(하루마다)와 **주기 의뢰 1개**(").append(ResetCycle.DAYS)
+			.append("일마다). 처치·채굴·소굴·레이드는 자동으로 집계되고, 납품은 보고할 때 인벤토리에서 가져갑니다.\n");
+		md.append("- 종류: 적대 몬스터 처치, 특정 몬스터 처치, 네임드 처치, 소굴 정복, 광석 채굴, 레이드 클리어(Lv 20+ 주기 의뢰), 물품 납품.\n\n");
+		md.append("| 레벨 | 일일 보상 | 주기 보상 |\n|---|---|---|\n");
+		for (int level : new int[] {10, 30, 50, 70, 100}) {
+			Bounties.Reward daily = Bounties.reward(false, level);
+			Bounties.Reward special = Bounties.reward(true, level);
+			md.append("| ").append(level).append(" | ").append(Coins.format(daily.coins())).append(", 공적 ").append(daily.merit()).append(", 에테르 ").append(daily.ether())
+				.append(", 강화석 ").append(daily.stones()).append(" | ").append(Coins.format(special.coins())).append(", 공적 ").append(special.merit()).append(", 에테르 ")
+				.append(special.ether()).append(", 강화석 ").append(special.stones()).append(" |\n");
+		}
+		md.append("\n### 공적 상점\n\n| 물품 | 공적 |\n|---|---|\n");
+		for (Bounties.Offer offer : Bounties.SHOP) {
+			md.append("| ").append(this.ko(offer.nameKey())).append(" | ").append(offer.cost()).append(" |\n");
+		}
+
+		md.append("\n## 장비 강화 (+1 ~ +").append(Enhancement.MAX).append(")\n\n");
+		md.append("- 수도 대장간의 **강화 장인 브로크**. 직업 무기와 직업 방어구, 진화해도 강화 단계는 유지됩니다.\n");
+		md.append("- 실패하면 **장인의 기운** +").append(Enhancement.PITY_STEP).append("%(다음 시도 확률에 더해짐, 성공하면 초기화). +")
+			.append(Enhancement.RISKY_FROM).append("부터는 실패하면 한 단계 하락 — **보호 강화**는 하락을 막을 때만 보호 주문서 1장을 씁니다.\n");
+		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n\n");
+		md.append("| 단계 | 성공률 | 정수 | 강화석 | 실패 시 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|---|---|---|\n");
+		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());
+		ClassGear armor = ClassGear.of(ClassArmor.pieces().iterator().next());
+		for (int t = 1; t <= Enhancement.MAX; t++) {
+			String weaponLines = Enhancement.lines(weapon, t).stream().map(this::stat).collect(Collectors.joining(", "));
+			String armorLines = Enhancement.lines(armor, t).stream().map(this::stat).collect(Collectors.joining(", "));
+			md.append("| +").append(t).append(" | ").append(Enhancement.baseRate(t)).append("% | ").append(Enhancement.condensed(t) ? "응축 " : "")
+				.append(Enhancement.essence(t)).append(" | ").append(Enhancement.stones(t)).append(" | ").append(Enhancement.risky(t) ? "1단계 하락" : "유지")
+				.append(" | ").append(weaponLines).append(" | ").append(armorLines).append(" |\n");
+		}
+
+		md.append("\n## 거래소\n\n");
+		md.append("- 시장 노점의 **중개인 모건**. 즉시 구매가로 사고팝니다. 한 사람당 ").append(AuctionService.MAX_LISTINGS).append("건, 등록 기간 ")
+			.append(AuctionService.DURATION / ResetCycle.DAY_TICKS).append("일.\n");
+		md.append("- 등록 수수료 ").append(AuctionService.LIST_FEE_PERCENT).append("%(등록할 때), 판매 수수료 ").append(AuctionService.SALE_FEE_PERCENT)
+			.append("%(대금에서). 판매 대금과 기간이 끝났거나 취소한 물건은 **우편함**으로 가고 중개인에게서 받습니다. 코인은 팔 수 없습니다.\n");
+		md.append("- 구매 탭: 검색, 분류(장비·소모품·재료), 정렬(가격·마감), 쪽 넘기기. 판매 탭에서 물건을 고르면 지금 최저가가 자동으로 들어갑니다.\n\n");
+
+		md.append("## 업적 (").append(Achievements.all().size()).append("개)\n\n| 업적 | 조건 | 공적 | 칭호 |\n|---|---|---|---|\n");
+		for (Achievements.Achievement a : Achievements.all()) {
+			md.append("| ").append(a.ko()).append(" | ").append(a.descKo()).append(" | ").append(a.merit()).append(" | ").append(a.hasTitle() ? a.titleKo() : "").append(" |\n");
+		}
+		md.append("\n- 칭호는 도감(J)의 칭호 탭에서 착용하며 이름 앞에 붙습니다(머리 위·채팅·탭 목록).\n");
+		md.append("- **수집 보너스**(영구): 네임드 종마다 ").append(CollectionBonuses.KILLS).append("마리 처치하면 보스 피해 +0.5%, 정복한 소굴 종류마다 아이템 발견 +0.5%, 업적 ")
+			.append(CollectionBonuses.ACHIEVEMENT_STEP).append("개마다 경험치 +1%.\n\n");
+
+		md.append("## 특성\n\n");
+		md.append("- 특성 창: N (직업 창 K에도 버튼). 포인트 = (레벨 - 10) × 2 ÷ 3 (Lv 100에 ").append(Talents.points(JobProgression.MAX_LEVEL)).append("점).\n");
+		md.append("- 직업마다 3계열 × ").append(TalentTree.TIERS).append("단계. 1–4단계는 최대 ").append(TalentTree.RANKS).append("랭크, 5단계는 1랭크 핵심 특성. 다음 단계는 그 계열에 ")
+			.append(TalentTree.PER_TIER).append("점씩 넣어야 열립니다. 초기화는 동전(레벨 구간 가격). 직업별 특성표는 `docs/CLASSES.md`.\n");
 		return md.toString();
 	}
 

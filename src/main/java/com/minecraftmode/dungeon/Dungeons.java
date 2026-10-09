@@ -17,6 +17,7 @@ import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.Parties;
@@ -101,6 +102,8 @@ public final class Dungeons {
 	public static final float ELITE_DAMAGE = 1.3F;
 	private static final int SLOT_SPACING = 512;
 	private static final int MAX_SLOTS = 32;
+	/** Marks a mob the Raging affix already enraged. */
+	private static final String RAGING_TAG = "minecraft_mode_raging";
 	private static final Identifier SCALE_ID = MinecraftMode.id("dungeon_scale");
 
 	private static final Map<String, DungeonDef> DEFS = new LinkedHashMap<>();
@@ -307,7 +310,13 @@ public final class Dungeons {
 		if (keystone != null && !takeKeystone(leader, keystone)) {
 			return false;
 		}
-		return start(leader.level().getServer(), going, def, leader.getUUID(), keystone == null ? 0 : keystone.level(), keystone == null ? null : leader.getUUID()) != null;
+		if (start(leader.level().getServer(), going, def, leader.getUUID(), keystone == null ? 0 : keystone.level(), keystone == null ? null : leader.getUUID()) == null) {
+			if (keystone != null) {
+				give(leader, KeystoneItem.of(keystone)); // the run never started: the keystone comes back
+			}
+			return false;
+		}
+		return true;
 	}
 
 	/** Builds a run and sends {@code players} in (no checks; used by the warden and by {@code /dungeon start}). */
@@ -575,7 +584,8 @@ public final class Dungeons {
 		}
 		if (instance.has(DungeonAffix.RAGING) && instance.timer % 20 == 5) {
 			for (UUID id : instance.roomMobs) {
-				if (level.getEntity(id) instanceof Mob mob && mob.getHealth() < mob.getMaxHealth() * 0.3F && !mob.hasEffect(MobEffects.STRENGTH)) {
+				if (level.getEntity(id) instanceof Mob mob && mob.getHealth() < mob.getMaxHealth() * 0.3F && !mob.entityTags().contains(RAGING_TAG)) {
+					mob.addTag(RAGING_TAG); // once per mob, not again every time Strength runs out
 					mob.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 20 * 60, 1));
 					mob.addEffect(new MobEffectInstance(MobEffects.SPEED, 20 * 60, 0));
 					MobPower.scale(id, 1.5F);
@@ -778,6 +788,8 @@ public final class Dungeons {
 			if (owner != null) {
 				DungeonDef to = timed ? randomDungeon(owner, random, def) : def;
 				giveKeystone(owner, new Keystone(to.id(), next), timed ? "keystone_up" : "keystone_down");
+			} else {
+				mailKeystone(server, instance.keystoneOwner, new Keystone(def.id(), next));
 			}
 		}
 	}
@@ -817,6 +829,11 @@ public final class Dungeons {
 		}
 	}
 
+	/** The keystone's owner is offline: it waits in their market mailbox (saved with the world) instead of being lost. */
+	private static void mailKeystone(final MinecraftServer server, final UUID owner, final Keystone keystone) {
+		AuctionHouse.get(server).sendItem(owner, KeystoneItem.of(keystone));
+	}
+
 	private static void giveKeystone(final ServerPlayer player, final Keystone keystone, final String message) {
 		ItemStack stack = KeystoneItem.of(keystone);
 		player.sendSystemMessage(msg(message, stack.getHoverName()).withStyle(ChatFormatting.LIGHT_PURPLE));
@@ -845,8 +862,11 @@ public final class Dungeons {
 		INSTANCES.remove(instance.id);
 		if (unfinished && instance.keystoneOwner != null) {
 			ServerPlayer owner = server.getPlayerList().getPlayer(instance.keystoneOwner);
+			Keystone lowered = new Keystone(instance.def.id(), Math.max(Keystone.MIN_LEVEL, instance.level - 1));
 			if (owner != null) {
-				giveKeystone(owner, new Keystone(instance.def.id(), Math.max(Keystone.MIN_LEVEL, instance.level - 1)), "keystone_down");
+				giveKeystone(owner, lowered, "keystone_down");
+			} else {
+				mailKeystone(server, instance.keystoneOwner, lowered);
 			}
 		}
 		if (instance.bar != null) {

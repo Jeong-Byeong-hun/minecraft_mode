@@ -66,7 +66,7 @@ public class CraftMenu extends AbstractContainerMenu {
 	public boolean clickMenuButton(final Player player, final int buttonId) {
 		List<CraftRecipes.Recipe> recipes = this.recipes();
 		int index = buttonId / 2;
-		if (index < 0 || index >= recipes.size()) {
+		if (buttonId < 0 || index >= recipes.size()) {
 			return false;
 		}
 		CraftRecipes.Recipe recipe = recipes.get(index);

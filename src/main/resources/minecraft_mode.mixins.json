@@ -6,6 +6,7 @@
 		"BlockItemMixin",
 		"BowItemMixin",
 		"ChunkGeneratorMixin",
+		"LivingEntityAccessor",
 		"LivingEntityMixin",
 		"MerchantMenuMixin",
 		"NaturalSpawnerMixin",

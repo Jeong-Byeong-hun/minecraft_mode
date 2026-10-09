@@ -32,8 +32,11 @@ public final class CombatState {
 	public float stealthBonus;
 	public long stealthUntil;
 
-	/** Avalon (warrior tier 4) is ready again at this game time. */
-	public long avalonReadyAt;
+	/** Game time and victim of the last vanilla melee hit: a second victim in the same tick is a sweep, not a basic hit. */
+	public long lastMeleeTick = -1L;
+	public int lastMeleeVictim;
+	/** Set while the hit being processed is a sweep (no basic-hit procs). */
+	public boolean sweep;
 
 	/** target -> mark */
 	public final Map<UUID, Mark> marks = new HashMap<>();

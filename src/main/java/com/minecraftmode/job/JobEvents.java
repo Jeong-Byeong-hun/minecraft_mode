@@ -47,6 +47,8 @@ import net.minecraft.world.level.gamerules.GameRules;
 public final class JobEvents {
 	/** Bosses (this much max health or more) drop condensed essence and give double experience. */
 	private static final float BOSS_HEALTH = 100.0F;
+	/** Cooldown key of Avalon in {@link JobData#cooldowns()}. */
+	public static final String AVALON_COOLDOWN = "passive.avalon";
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(JobEvents::tick);
@@ -125,7 +127,7 @@ public final class JobEvents {
 		if (heal > 0.0F) {
 			killer.heal(heal);
 		}
-		int mana = (int)mods.get(EngraveStat.KILL_MANA);
+		int mana = JobStats.randomRound(mods.get(EngraveStat.KILL_MANA), killer.getRandom());
 		if (mana > 0) {
 			JobStats.addMana(killer, mana);
 		}
@@ -152,12 +154,12 @@ public final class JobEvents {
 		if (!CombatHooks.has(data, JobClass.WARRIOR, 4)) {
 			return true;
 		}
-		CombatState state = CombatState.of(player);
 		long now = player.level().getGameTime();
-		if (now < state.avalonReadyAt) {
+		if (now < data.readyAt(AVALON_COOLDOWN)) {
 			return true;
 		}
-		state.avalonReadyAt = now + 3600;
+		// kept in the saved cooldown map so relogging does not reset it
+		JobProgression.set(player, data.withCooldown(AVALON_COOLDOWN, now + 3600));
 		player.setHealth(player.getMaxHealth() * 0.3F);
 		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 60, 3));
 		ServerLevel level = player.level();
@@ -177,12 +179,13 @@ public final class JobEvents {
 		if (reward == null || !player.hasCorrectToolForDrops(state)) {
 			return;
 		}
-		gainExp(serverPlayer, reward.exp);
-		Progress.oreMined(serverPlayer);
+		// Silk Touch keeps the ore block, which could be placed and mined again forever: like vanilla's ore XP, it earns nothing.
 		ItemStack tool = player.getMainHandItem();
 		if (EnchantLevels.get(level, Enchantments.SILK_TOUCH, tool) > 0) {
 			return;
 		}
+		gainExp(serverPlayer, reward.exp);
+		Progress.oreMined(serverPlayer);
 		if (player.getRandom().nextFloat() < reward.essenceChance) {
 			ItemEntity item = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, new ItemStack(ModItems.ESSENCE));
 			item.setDefaultPickUpDelay();

@@ -116,6 +116,7 @@ final class EndgameLang {
 		}
 		b.add("message.minecraft_mode.bounty.complete", ko ? "의뢰 완료: %s — 길드 접수원에게 보고하세요." : "Bounty complete: %s - report to the guild clerk.");
 		b.add("message.minecraft_mode.bounty.claimed", ko ? "의뢰 보고 완료: %s (공적 +%s)" : "Bounty handed in: %s (+%s merit)");
+		b.add("message.minecraft_mode.bounty.shop_owned", ko ? "이미 모두 가지고 있는 물건입니다." : "You already own everything this would give.");
 
 		b.add("screen.minecraft_mode.bounty.title", ko ? "모험가 길드 의뢰" : "Adventurers' Guild Bounties");
 		b.add("screen.minecraft_mode.bounty.merit", ko ? "공적 ★%s" : "Merit ★%s");
@@ -170,6 +171,8 @@ final class EndgameLang {
 
 	private static void market(final TranslationBuilder b, final boolean ko) {
 		b.add("message.minecraft_mode.market.not_sellable", ko ? "코인은 팔 수 없습니다." : "Coins cannot be sold.");
+		b.add("message.minecraft_mode.market.full", ko ? "가방에 빈 칸이 없습니다." : "Your inventory has no free slot.");
+		b.add("message.minecraft_mode.market.mail_left", ko ? "가방이 가득 차 %s개는 우편함에 남겨 두었습니다." : "%s item(s) stay in your mailbox - your inventory is full.");
 		b.add("message.minecraft_mode.market.has_contents", ko ? "안에 물건이 든 상자나 꾸러미는 비우고 파세요." : "Empty boxes and bundles before selling them.");
 		b.add("message.minecraft_mode.market.too_large", ko ? "데이터가 너무 큰 물건(긴 책 등)은 거래소에 올릴 수 없습니다." : "This item carries too much data (a long book?) to be listed.");
 		b.add("message.minecraft_mode.market.bad_price", ko ? "가격은 1C에서 1000G 사이로 정하세요." : "Set a price between 1C and 1000G.");

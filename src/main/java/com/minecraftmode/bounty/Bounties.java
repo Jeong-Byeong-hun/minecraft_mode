@@ -14,7 +14,6 @@ import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -45,9 +44,9 @@ public final class Bounties {
 
 	private static final List<Target> KILL_TYPES = List.of(
 		new Target("minecraft:zombie", 15, 0), new Target("minecraft:skeleton", 15, 0), new Target("minecraft:spider", 12, 0),
-		new Target("minecraft:creeper", 10, 0), new Target("minecraft:drowned", 12, 10), new Target("minecraft:husk", 12, 10),
-		new Target("minecraft:enderman", 8, 15), new Target("minecraft:stray", 12, 15), new Target("minecraft:witch", 4, 20),
-		new Target("minecraft:blaze", 10, 40), new Target("minecraft:magma_cube", 10, 40), new Target("minecraft:wither_skeleton", 8, 55));
+		new Target("minecraft:creeper", 10, 0), new Target("minecraft:drowned", 8, 10), new Target("minecraft:husk", 8, 10),
+		new Target("minecraft:enderman", 5, 15), new Target("minecraft:stray", 6, 15), new Target("minecraft:witch", 2, 20),
+		new Target("minecraft:blaze", 6, 40), new Target("minecraft:magma_cube", 6, 40), new Target("minecraft:wither_skeleton", 5, 55));
 	private static final List<Target> DELIVERIES = List.of(
 		new Target("minecraft:iron_ingot", 16, 0), new Target("minecraft:wheat", 32, 0), new Target("minecraft:cooked_beef", 16, 0),
 		new Target("minecraft:leather", 12, 0), new Target("minecraft:string", 16, 0), new Target("minecraft:gold_ingot", 8, 10),
@@ -59,25 +58,33 @@ public final class Bounties {
 	public record Reward(int coins, int merit, int ether, int stones) {
 	}
 
-	/** One merit shop offer: the merit price and what it gives a player of a level. */
-	public record Offer(String id, int cost, BiFunction<Integer, RandomSource, ItemStack> item) {
+	/** What a merit shop offer gives {@code player} (of class level {@code level}); empty when they can make no use of it. */
+	@FunctionalInterface
+	public interface Gift {
+		ItemStack make(Player player, int level, RandomSource random);
+	}
+
+	/** One merit shop offer: the merit price and what it gives. */
+	public record Offer(String id, int cost, Gift item) {
 		public String nameKey() {
 			return "merit.minecraft_mode." + this.id;
 		}
 	}
 
 	public static final List<Offer> SHOP = List.of(
-		new Offer("enhancement_stone", 12, (level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE)),
-		new Offer("enhancement_stones", 55, (level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE, 5)),
-		new Offer("protection_scroll", 60, (level, r) -> new ItemStack(ModItems.PROTECTION_SCROLL)),
-		new Offer("lair_map", 15, (level, r) -> new ItemStack(ModItems.LAIR_MAP)),
-		new Offer("condensed_essence", 10, (level, r) -> new ItemStack(ModItems.CONDENSED_ESSENCE, 2)),
-		new Offer("ether", 35, (level, r) -> EvolutionEtherItem.of(Math.max(10, level), 10)),
-		new Offer("tier3", 25, (level, r) -> random(3, 2, r)),
-		new Offer("tier4", 90, (level, r) -> random(4, 1, r)),
-		new Offer("return_scrolls", 5, (level, r) -> new ItemStack(ModItems.RETURN_SCROLL, 3)),
-		new Offer("pet_charm", 50, (level, r) -> Companions.randomPet(Rarity.UNCOMMON, r)),
-		new Offer("mount_whistle", 40, (level, r) -> new ItemStack(Companions.mountItem("swift_stallion"))));
+		new Offer("enhancement_stone", 12, (p, level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE)),
+		new Offer("enhancement_stones", 55, (p, level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE, 5)),
+		new Offer("protection_scroll", 60, (p, level, r) -> new ItemStack(ModItems.PROTECTION_SCROLL)),
+		new Offer("lair_map", 15, (p, level, r) -> new ItemStack(ModItems.LAIR_MAP)),
+		new Offer("condensed_essence", 10, (p, level, r) -> new ItemStack(ModItems.CONDENSED_ESSENCE, 2)),
+		new Offer("ether", 35, (p, level, r) -> EvolutionEtherItem.of(Math.max(10, level), 10)),
+		new Offer("tier3", 25, (p, level, r) -> random(3, 2, r)),
+		new Offer("tier4", 90, (p, level, r) -> random(4, 1, r)),
+		new Offer("return_scrolls", 5, (p, level, r) -> new ItemStack(ModItems.RETURN_SCROLL, 3)),
+		// a pet the buyer does not own yet; nothing (and no charge) once they have them all
+		new Offer("pet_charm", 50, (p, level, r) -> Companions.randomPet(Rarity.UNCOMMON, r, Companions.data(p))),
+		new Offer("mount_whistle", 40, (p, level, r) -> Companions.data(p).hasMount("swift_stallion") ? ItemStack.EMPTY
+			: new ItemStack(Companions.mountItem("swift_stallion"))));
 
 	private static ItemStack random(final int tier, final int count, final RandomSource random) {
 		List<ConsumableDef> pool = Consumables.tier(tier);
@@ -98,23 +105,42 @@ public final class Bounties {
 
 	// ------------------------------------------------------------------ rolling
 
-	/** Rolls new daily bounties on a new day and a new cycle bounty on a new cycle. */
+	/**
+	 * Rolls new daily bounties on a new day and a new cycle bounty on a new cycle. A bounty that is finished but not handed in
+	 * yet is carried over instead (the player never loses a reward to the clock); the new roll takes its slot once it is claimed.
+	 */
 	public static void ensure(final ServerPlayer player) {
 		BountyData data = get(player);
 		long day = ResetCycle.day(player.level());
 		long cycle = ResetCycle.cycle(player.level());
 		boolean changed = false;
 		if (data.day() != day) {
-			data = new BountyData(day, rollDaily(player, day), data.cycle(), data.special(), data.merit());
+			List<Bounty> daily = rollDaily(player, day);
+			for (int i = 0; i < daily.size() && i < data.daily().size(); i++) {
+				if (data.daily().get(i).keeps()) {
+					daily.set(i, data.daily().get(i).asCarried());
+				}
+			}
+			data = new BountyData(day, daily, data.cycle(), data.special(), data.merit());
 			changed = true;
 		}
 		if (data.cycle() != cycle) {
-			data = new BountyData(data.day(), data.daily(), cycle, rollSpecial(player, cycle), data.merit());
+			Bounty special = data.special().keeps() ? data.special().asCarried() : rollSpecial(player, cycle);
+			data = new BountyData(data.day(), data.daily(), cycle, special, data.merit());
 			changed = true;
 		}
 		if (changed) {
 			set(player, data);
 		}
+	}
+
+	/** The bounty slot {@code index} would hold now if nothing had been carried over. */
+	private static Bounty fresh(final ServerPlayer player, final BountyData data, final int index) {
+		if (index == SPECIAL) {
+			return rollSpecial(player, data.cycle());
+		}
+		List<Bounty> daily = rollDaily(player, data.day());
+		return index < daily.size() ? daily.get(index) : Bounty.EMPTY;
 	}
 
 	private static List<Bounty> rollDaily(final Player player, final long day) {
@@ -134,7 +160,10 @@ public final class Bounties {
 	private static Bounty rollSpecial(final Player player, final long cycle) {
 		RandomSource random = RandomSource.create(player.getUUID().getMostSignificantBits() ^ cycle * 0x9E3779B97F4A7C15L);
 		int level = level(player);
-		List<BountyKind> pool = new ArrayList<>(List.of(BountyKind.KILL_NAMED, BountyKind.CLEAR_LAIR, BountyKind.KILL_ANY));
+		List<BountyKind> pool = new ArrayList<>(List.of(BountyKind.KILL_NAMED, BountyKind.KILL_ANY));
+		if (level >= 10) {
+			pool.add(BountyKind.CLEAR_LAIR);
+		}
 		if (level >= 20) {
 			pool.add(BountyKind.RAID);
 		}
@@ -256,7 +285,8 @@ public final class Bounties {
 		Wallet.add(player, reward.coins());
 		give(player, EvolutionEtherItem.of(Math.max(10, level), reward.ether()));
 		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, reward.stones()));
-		set(player, data.with(index, bounty.asClaimed()).withMerit(data.merit() + reward.merit()));
+		Bounty after = bounty.carried() ? fresh(player, data, index) : bounty.asClaimed();
+		set(player, data.with(index, after).withMerit(data.merit() + reward.merit()));
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.bounty.claimed", describe(bounty), reward.merit()).withStyle(ChatFormatting.GREEN));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.4F);
 		Progress.bountyDone(player);
@@ -280,8 +310,9 @@ public final class Bounties {
 		if (data.merit() < offer.cost()) {
 			return false;
 		}
-		ItemStack stack = offer.item().apply(level(player), player.getRandom());
+		ItemStack stack = offer.item().make(player, level(player), player.getRandom());
 		if (stack.isEmpty()) {
+			player.sendSystemMessage(Component.translatable("message.minecraft_mode.bounty.shop_owned").withStyle(ChatFormatting.RED));
 			return false;
 		}
 		set(player, data.withMerit(data.merit() - offer.cost()));

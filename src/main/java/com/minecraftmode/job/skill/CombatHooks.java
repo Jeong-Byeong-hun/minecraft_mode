@@ -7,6 +7,8 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.mixin.LivingEntityAccessor;
+import com.minecraftmode.raid.Parties;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -114,6 +116,9 @@ public final class CombatHooks {
 		if (living.isAlliedTo(caster) || CityServices.blocksPvp(living, caster)) {
 			return false;
 		}
+		if (living instanceof Player other && Parties.together(caster.getUUID(), other.getUUID())) {
+			return false;
+		}
 		return !(living instanceof Player player) || caster.canHarmPlayer(player);
 	}
 
@@ -127,6 +132,12 @@ public final class CombatHooks {
 		DamageKind kind = current;
 		float result = amount;
 		Entity direct = source.getDirectEntity();
+		// Vanilla hits (melee, arrows) that vanilla is about to discard - damage cooldown, invulnerability - must not trigger crit
+		// refunds, consume empower/stealth, drain mana shields or reflect; skills reset the cooldown themselves before dealing.
+		if (kind == null && (victim.isInvulnerableTo(level, source)
+			|| victim.damageCooldownTime > 10 && !source.is(DamageTypeTags.BYPASSES_COOLDOWN) && amount <= ((LivingEntityAccessor)victim).minecraftMode$lastHurt())) {
+			return amount;
+		}
 		Float arrowDamage = direct == null ? null : ARROWS.get(direct);
 		if (arrowDamage != null && kind == null) {
 			result = arrowDamage;
@@ -158,8 +169,17 @@ public final class CombatHooks {
 		JobData data = JobProgression.get(attacker);
 		EngraveTotals mods = JobWeapons.activeTotals(attacker);
 		boolean melee = kind == null && source.getDirectEntity() == attacker;
-		boolean basic = melee || kind == DamageKind.SHOT;
 		CombatState state = CombatState.of(attacker);
+		if (melee) {
+			// a second victim of the same swing is a sweep: plain damage, none of the basic-hit effects
+			state.sweep = state.lastMeleeTick == now && state.lastMeleeVictim != victim.getId();
+			if (!state.sweep) {
+				state.lastMeleeTick = now;
+				state.lastMeleeVictim = victim.getId();
+			}
+			melee = !state.sweep;
+		}
+		boolean basic = melee || kind == DamageKind.SHOT;
 		float bonus = 0.0F;
 		float crit = 1.0F;
 		if (basic) {
@@ -304,14 +324,14 @@ public final class CombatHooks {
 			skillArrow.ctx.afterArrowHit(victim, damageTaken);
 			return;
 		}
-		boolean melee = kind == null && direct == attacker;
+		boolean melee = kind == null && direct == attacker && !CombatState.of(attacker).sweep;
 		boolean shot = kind == DamageKind.SHOT || kind == null && direct != null && ARROWS.containsKey(direct);
 		JobData data = JobProgression.get(attacker);
 		EngraveTotals mods = JobWeapons.activeTotals(attacker);
 		float lifesteal = 0.0F;
 		if (melee || shot) {
 			lifesteal += mods.fraction(EngraveStat.LIFESTEAL);
-			int manaOnHit = (int)mods.get(EngraveStat.MANA_ON_HIT);
+			int manaOnHit = JobStats.randomRound(mods.get(EngraveStat.MANA_ON_HIT), attacker.getRandom());
 			if (manaOnHit > 0) {
 				JobStats.addMana(attacker, manaOnHit);
 			}

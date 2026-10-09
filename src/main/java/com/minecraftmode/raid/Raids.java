@@ -204,7 +204,16 @@ public final class Raids {
 				p.sendSystemMessage(msg("fee_paid", Coins.component(fee)).withStyle(ChatFormatting.GRAY));
 			}
 		}
-		return start(leader.level().getServer(), going, def, leader.getUUID(), difficulty, practice) != null;
+		if (start(leader.level().getServer(), going, def, leader.getUUID(), difficulty, practice) == null) {
+			// no arena free (or no raid dimension): nobody should pay for a raid that never started
+			for (ServerPlayer p : going) {
+				if (!practice.contains(p.getUUID())) {
+					Coins.give(p, fee);
+				}
+			}
+			return false;
+		}
+		return true;
 	}
 
 	private static Component problem(final ServerPlayer p, final String key, final Object... args) {
@@ -521,6 +530,10 @@ public final class Raids {
 			}
 			if (instance.practice.contains(m.id)) {
 				p.sendSystemMessage(msg("practice_done").withStyle(ChatFormatting.YELLOW));
+				continue;
+			}
+			if (!m.active && !m.fallen) {
+				// left the fight (/raid leave or walked out): no reward, no lockout, no seat in the loot session
 				continue;
 			}
 			participants.put(m.id, m.name);

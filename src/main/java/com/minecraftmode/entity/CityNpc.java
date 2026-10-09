@@ -230,6 +230,12 @@ public class CityNpc extends PathfinderMob {
 		return false;
 	}
 
+	/** Townsfolk cannot be killed by players (griefing in the capital); the void, /kill and creative players still can. */
+	@Override
+	public boolean isInvulnerableTo(final net.minecraft.server.level.ServerLevel level, final net.minecraft.world.damagesource.DamageSource source) {
+		return super.isInvulnerableTo(level, source) || !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY) && !source.isCreativePlayer();
+	}
+
 	@Override
 	public boolean removeWhenFarAway(final double distSqr) {
 		return false;

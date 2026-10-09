@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
@@ -81,6 +82,8 @@ public final class WorldEvents {
 	private static @Nullable UUID titan;
 	private static @Nullable NamedDef titanDef;
 	private static int titanAge;
+	/** Where the titan rose; it is put back there if it follows someone into the capital. */
+	private static @Nullable BlockPos titanHome;
 	private static final Map<UUID, Float> DEALT = new HashMap<>();
 	private static long lastDay = -1L;
 	private static @Nullable Invasion invasion;
@@ -110,6 +113,13 @@ public final class WorldEvents {
 			DEALT.clear();
 			invasion = null;
 			lastDay = -1L;
+		});
+		// Invaders are persistent and spawn inside the walls: ones saved with the world (server stopped mid-invasion) would roam
+		// the capital forever, ignored by the guards, so they vanish when no invasion is running.
+		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+			if (invasion == null && entity.entityTags().contains(INVADER_TAG)) {
+				entity.discard();
+			}
 		});
 	}
 
@@ -206,6 +216,7 @@ public final class WorldEvents {
 		titan = mob.getUUID();
 		titanDef = chosen;
 		titanAge = 0;
+		titanHome = at;
 		DEALT.clear();
 		MobPower.set(mob.getUUID(), 1.5F);
 		level.addFreshEntity(mob);
@@ -237,6 +248,13 @@ public final class WorldEvents {
 	private static void tickTitan(final ServerLevel level) {
 		titanAge++;
 		Entity entity = level.getEntity(titan);
+		if (entity != null && titanHome != null && titanAge % 20 == 0 && CityZone.inside(entity.blockPosition())) {
+			// the guards would remove it (and the event would hang): a titan that reaches the walls is sent back where it rose
+			entity.teleportTo(titanHome.getX() + 0.5, titanHome.getY(), titanHome.getZ() + 0.5);
+			if (entity instanceof Mob mob) {
+				mob.setTarget(null);
+			}
+		}
 		if (titanAge > TITAN_LIFETIME) {
 			if (entity != null) {
 				entity.discard();
@@ -478,7 +496,9 @@ public final class WorldEvents {
 			stopInvasion(level);
 			return;
 		}
-		boolean waveDone = inv.alive.isEmpty() || inv.wave < WAVES && inv.alive.size() <= inv.waveSize / 5 && inv.waveAge > 20 * 30
+		// the last wave also ends once only stragglers are left for a while (an invader stuck in an unloaded chunk or the void
+		// would otherwise hold the whole invasion until it retreats without rewards)
+		boolean waveDone = inv.alive.isEmpty() || inv.alive.size() <= inv.waveSize / 5 && inv.waveAge > 20 * (inv.wave < WAVES ? 30 : 120)
 			|| inv.wave < WAVES && inv.waveAge > 20 * 150;
 		if (!waveDone) {
 			return;
@@ -489,6 +509,13 @@ public final class WorldEvents {
 		}
 		// victory
 		MinecraftServer server = level.getServer();
+		for (UUID id : inv.alive) {
+			Entity e = level.getEntity(id);
+			if (e != null) {
+				e.discard();
+			}
+			MobPower.clear(id);
+		}
 		int rewarded = 0;
 		for (UUID id : inv.fighters) {
 			ServerPlayer p = server.getPlayerList().getPlayer(id);

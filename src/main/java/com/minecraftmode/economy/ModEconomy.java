@@ -1,6 +1,12 @@
 package com.minecraftmode.economy;
 
+import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.enchantment.ModEnchantments;
+import com.minecraftmode.entity.MobPower;
+import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.entity.named.NamedMob;
+import com.minecraftmode.event.WorldEvents;
+import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
@@ -32,6 +38,12 @@ public final class ModEconomy {
 
 	private static void dropMobCoins(final LivingEntity entity, final DamageSource source) {
 		if (!(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy) || !(source.getEntity() instanceof Player)) {
+			return;
+		}
+		// Only ordinary mobs: the health thresholds below would pay gold for every health-scaled dungeon, invasion or event mob,
+		// and named monsters, raid bosses, lairs and instances have their own coin rewards.
+		if (entity instanceof NamedMob || entity instanceof RaidBoss || MobPower.has(entity.getUUID()) || entity.entityTags().contains(WorldEvents.INVADER_TAG)
+			|| RaidDimension.is(level) || DungeonDimension.is(level)) {
 			return;
 		}
 

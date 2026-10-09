@@ -2,6 +2,7 @@ package com.minecraftmode.job.gear;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
+import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Fx;
@@ -94,10 +95,17 @@ public final class ClassAbilities {
 	}
 
 	public static void use(final ServerPlayer player) {
+		if (!player.isAlive() || player.isSpectator()) {
+			return;
+		}
 		JobData data = JobProgression.get(player);
 		Ability ability = Ability.of(data.job());
 		if (ability == null || !data.hasClass()) {
 			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.ability.no_class").withStyle(ChatFormatting.GRAY));
+			return;
+		}
+		if (player.hasEffect(ModEffects.STUN)) {
+			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.skill.stunned").withStyle(ChatFormatting.YELLOW));
 			return;
 		}
 		if (data.level() < LevelRewards.INNATE_LEVEL) {

@@ -159,6 +159,8 @@ public class MountEntity extends AbstractHorse implements AnimatedCreature {
 
 	@Override
 	public boolean causeFallDamage(final double fallDistance, final float damageModifier, final DamageSource damageSource) {
+		// the mount itself cannot be hurt, but like a horse it passes the fall on to its rider
+		this.propagateFallToPassengers(fallDistance, damageModifier, damageSource);
 		return false;
 	}
 

@@ -19,7 +19,7 @@ public record QuestActionPayload(Action action, int entityId) implements CustomP
 		COMPLETE,
 		ABANDON;
 
-		public static final StreamCodec<ByteBuf, Action> STREAM_CODEC = ByteBufCodecs.idMapper(i -> values()[i], Action::ordinal);
+		public static final StreamCodec<ByteBuf, Action> STREAM_CODEC = ByteBufCodecs.idMapper(i -> values()[Math.floorMod(i, values().length)], Action::ordinal);
 	}
 
 	@Override

@@ -60,6 +60,12 @@ public final class Parties {
 		return BY_PLAYER.get(player);
 	}
 
+	/** True when both players are in the same party (never for a player without one). */
+	public static boolean together(final UUID a, final UUID b) {
+		Party party = BY_PLAYER.get(a);
+		return party != null && party == BY_PLAYER.get(b);
+	}
+
 	/** Online members of {@code player}'s party, or just the player. */
 	public static List<ServerPlayer> onlineMembers(final ServerPlayer player) {
 		Party party = of(player.getUUID());

@@ -180,7 +180,10 @@ public class BountyScreen extends Screen {
 			int cx = x + 9 + i * CELL_W;
 			int cy = y + SHOP_Y + 12;
 			g.fill(cx, cy, cx + CELL_W - 2, cy + 20, 0x40000000);
-			ItemStack stack = offer.item().apply(level, preview);
+			ItemStack stack = offer.item().make(this.minecraft.player, level, preview);
+			if (stack.isEmpty()) {
+				stack = new ItemStack(Items.BARRIER); // nothing left to give (pets or mount already owned)
+			}
 			g.fakeItem(stack, cx + (CELL_W - 2 - 16) / 2, cy + 2);
 			g.itemDecorations(this.font, stack, cx + (CELL_W - 2 - 16) / 2, cy + 2);
 			if (mouseX >= cx && mouseX < cx + CELL_W - 2 && mouseY >= cy && mouseY < cy + 20) {

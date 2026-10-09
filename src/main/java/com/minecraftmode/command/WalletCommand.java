@@ -23,7 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
  * {@code 40s}, {@code 120}.
  */
 public final class WalletCommand {
-	private static final Pattern PART = Pattern.compile("(\\d+)\\s*([gGsScC]?)");
+	private static final Pattern PART = Pattern.compile("(\\d{1,9})\\s*([gGsScC]?)");
 
 	public static void init() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, context, selection) -> register(dispatcher));

@@ -69,7 +69,7 @@ public final class Story {
 			"Some monsters have grown cunning and earned names. Scouts report them across the wilds. Prove you can bring them down.",
 			"어떤 마물은 교활해져 이름까지 얻었소. 정찰병들이 황야 곳곳에서 그들을 보았다 하오. 그들을 쓰러뜨릴 수 있음을 증명하시오.",
 			"Defeat 3 named monsters", "네임드 몬스터 3마리 처치", 3, p -> Progress.get(p).totalNamedKills(),
-			p -> List.of(companion(p, false, "swift_stallion")), "Swift Stallion whistle", "질풍마 호루라기");
+			p -> companion(p, false, "swift_stallion"), "Swift Stallion whistle (coins if owned)", "질풍마 호루라기(이미 있으면 동전)");
 		chapter("lair_secrets", "Secrets of the Lairs", "소굴의 비밀",
 			"The named ones hoard treasure in their lairs. Find one, defeat its guardians and open the chest at its heart.",
 			"이름 있는 마물들은 소굴에 보물을 쌓아 두오. 소굴을 찾아 수호자를 물리치고 그 중심의 상자를 여시오.",
@@ -84,7 +84,7 @@ public final class Story {
 			"Beneath the keep the dungeon warden keeps the gate to dark places. Gather companions and clear a dungeon.",
 			"성 아래에는 던전 관리인이 어둠으로 향하는 문을 지키고 있소. 동료를 모아 던전을 정복하시오.",
 			"Clear a dungeon", "던전 클리어", 1, p -> Dungeons.data(p).totalClears(),
-			p -> List.of(Companions.randomPet(Rarity.UNCOMMON, p.getRandom())), "a pet charm", "펫 부적 1개");
+			p -> petCharm(p), "a pet charm (coins if you own them all)", "펫 부적 1개(모두 있으면 동전)");
 		chapter("craftsmanship", "Craftsmanship", "장인의 길",
 			"An army marches on food, potions and good steel. Learn a profession at the market or the forge and master its basics.",
 			"군대는 음식과 물약, 좋은 강철로 움직이오. 시장이나 대장간에서 생활 기술을 익혀 기본을 다지시오.",
@@ -110,7 +110,7 @@ public final class Story {
 			"Only one step remains: reach the pinnacle of your strength. The realm will remember your name.",
 			"남은 것은 한 걸음뿐이오. 힘의 정점에 오르시오. 왕국은 그대의 이름을 기억할 것이오.",
 			"Reach level 100", "레벨 100 달성", 100, p -> JobProgression.get(p).level(),
-			p -> List.of(companion(p, false, "storm_griffin")), "Storm Griffin whistle", "폭풍 그리핀 호루라기");
+			p -> companion(p, false, "storm_griffin"), "Storm Griffin whistle (coins if owned)", "폭풍 그리핀 호루라기(이미 있으면 동전)");
 	}
 
 	private static void chapter(final String id, final String titleEn, final String titleKo, final String textEn, final String textKo, final String goalEn,
@@ -150,13 +150,19 @@ public final class Story {
 		return best;
 	}
 
-	/** The whistle or charm, or (already owned) coins worth a lot instead. */
-	private static ItemStack companion(final ServerPlayer player, final boolean pet, final String id) {
+	/** A pet charm the player does not own yet, or (all owned) coins instead. */
+	private static List<ItemStack> petCharm(final ServerPlayer player) {
+		ItemStack charm = Companions.randomPet(Rarity.UNCOMMON, player.getRandom(), Companions.data(player));
+		return charm.isEmpty() ? Coins.asItems(GearShop.bracketPrice(Math.max(10, JobProgression.get(player).level())) * 4) : List.of(charm);
+	}
+
+	/** The whistle or charm, or (already owned) its merit-shop worth in coins instead. */
+	private static List<ItemStack> companion(final ServerPlayer player, final boolean pet, final String id) {
 		Companions.Data data = Companions.data(player);
 		if (pet ? data.hasPet(id) : data.hasMount(id)) {
-			return ItemStack.EMPTY;
+			return Coins.asItems(GearShop.bracketPrice(Math.max(10, JobProgression.get(player).level())) * 4);
 		}
-		return new ItemStack(pet ? Companions.petItem(id) : Companions.mountItem(id));
+		return List.of(new ItemStack(pet ? Companions.petItem(id) : Companions.mountItem(id)));
 	}
 
 	/** Coins for finishing chapter {@code index}. */

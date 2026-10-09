@@ -177,6 +177,9 @@ public final class AuctionService {
 		if (listing.seller().equals(player.getUUID())) {
 			return fail(player, "message.minecraft_mode.market.own");
 		}
+		if (player.getInventory().getFreeSlot() < 0) {
+			return fail(player, "message.minecraft_mode.market.full");
+		}
 		if (!Wallet.take(player, listing.price())) {
 			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.market.no_coins", Coins.component(listing.price())).withStyle(ChatFormatting.RED));
 			return false;
@@ -202,24 +205,44 @@ public final class AuctionService {
 		if (listing == null || !listing.seller().equals(player.getUUID())) {
 			return fail(player, "message.minecraft_mode.market.gone");
 		}
+		if (player.getInventory().getFreeSlot() < 0) {
+			return fail(player, "message.minecraft_mode.market.full");
+		}
 		house.remove(listing);
 		player.getInventory().placeItemBackInInventory(listing.item().copy(), Prediction.SERVER_ONLY);
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.cancelled", listing.item().getHoverName()).withStyle(ChatFormatting.YELLOW));
 		return true;
 	}
 
-	/** Empties the mailbox: proceeds into the wallet, returned items into the inventory; sales count toward the records. */
+	/**
+	 * Empties the mailbox: proceeds into the wallet, returned items into the inventory (as many as have a free slot; the rest
+	 * stays in the mailbox instead of landing on the floor); sales count toward the records.
+	 */
 	public static boolean claim(final ServerPlayer player) {
-		AuctionHouse.Mail mail = AuctionHouse.get(player.level().getServer()).takeMail(player.getUUID());
+		AuctionHouse house = AuctionHouse.get(player.level().getServer());
+		AuctionHouse.Mail mail = house.takeMail(player.getUUID());
 		if (mail.isEmpty()) {
 			return fail(player, "message.minecraft_mode.market.no_mail");
 		}
 		Wallet.add(player, mail.coins());
+		int given = 0;
+		List<ItemStack> left = new ArrayList<>();
 		for (ItemStack stack : mail.items()) {
+			if (!left.isEmpty() || player.getInventory().getFreeSlot() < 0) {
+				left.add(stack);
+				continue;
+			}
 			player.getInventory().placeItemBackInInventory(stack.copy(), Prediction.SERVER_ONLY);
+			given++;
 		}
-		player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.claimed", Coins.component(mail.coins()), mail.items().size())
+		for (ItemStack stack : left) {
+			house.sendItem(player.getUUID(), stack);
+		}
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.claimed", Coins.component(mail.coins()), given)
 			.withStyle(ChatFormatting.GREEN));
+		if (!left.isEmpty()) {
+			player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.mail_left", left.size()).withStyle(ChatFormatting.YELLOW));
+		}
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.8F, 1.0F);
 		if (mail.sales() > 0) {
 			Progress.marketSold(player, mail.sales());

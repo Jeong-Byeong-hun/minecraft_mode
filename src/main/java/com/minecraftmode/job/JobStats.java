@@ -10,6 +10,7 @@ import com.minecraftmode.registry.ModEffects;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -41,8 +42,12 @@ public final class JobStats {
 		return JobProgression.BASE_MANA + 2 * data.level() + bonus + (int)JobWeapons.activeTotals(player).get(EngraveStat.MAX_MANA);
 	}
 
-	/** MP regenerated per second. */
+	/** MP regenerated per second (rounded for display; the tick pays fractions out over time). */
 	public static int manaRegen(final Player player) {
+		return Math.round(manaRegenExact(player));
+	}
+
+	public static float manaRegenExact(final Player player) {
 		JobData data = JobProgression.get(player);
 		int regen = 1 + data.level() / 25;
 		if (CombatHooks.has(data, JobClass.MAGE, 2)) {
@@ -51,7 +56,13 @@ public final class JobStats {
 		if (player.hasEffect(ModEffects.MANA_FLOW)) {
 			regen *= 2;
 		}
-		return regen + (int)JobWeapons.activeTotals(player).get(EngraveStat.MANA_REGEN);
+		return regen + JobWeapons.activeTotals(player).get(EngraveStat.MANA_REGEN);
+	}
+
+	/** {@code value} rounded down, plus one with the probability of its fraction, so "+0.4 per rank" lines pay out on average. */
+	public static int randomRound(final float value, final RandomSource random) {
+		int whole = (int)value;
+		return value - whole > random.nextFloat() ? whole + 1 : whole;
 	}
 
 	public static void addMana(final ServerPlayer player, final int amount) {
@@ -76,7 +87,7 @@ public final class JobStats {
 		int max = maxMana(player);
 		int mana = data.mana();
 		if (tick % 20 == 0) {
-			mana = Math.min(max, mana + manaRegen(player));
+			mana = Math.min(max, mana + randomRound(manaRegenExact(player), player.getRandom()));
 		}
 		mana = Math.min(max, mana);
 		JobData updated = data.withMana(mana);

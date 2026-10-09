@@ -32,7 +32,22 @@ import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.BoneMealItem;
+import net.minecraft.world.item.BrushItem;
+import net.minecraft.world.item.DyeItem;
+import net.minecraft.world.item.EndCrystalItem;
+import net.minecraft.world.item.FireChargeItem;
+import net.minecraft.world.item.FlintAndSteelItem;
+import net.minecraft.world.item.HoneycombItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.PotionItem;
+import net.minecraft.world.item.ShearsItem;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Items;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.component.WrittenBookContent;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -49,6 +64,15 @@ import net.minecraft.world.phys.AABB;
 public final class CityServices {
 	public static void init() {
 		ServerLifecycleEvents.SERVER_STARTED.register(CityServices::setSpawn);
+		// Items that change blocks without placing one (fire, stripping, paths, tilling, bone meal, wax, dye...) bypass
+		// Player.mayUseItemAt, so the protected zones refuse them here; doors, chests, tables and NPCs still work.
+		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
+			ItemStack stack = player.getItemInHand(hand);
+			if (!stack.isEmpty() && changesBlocks(stack) && blocksBuilding(player, hit.getBlockPos())) {
+				return InteractionResult.FAIL;
+			}
+			return InteractionResult.PASS;
+		});
 		ServerPlayerEvents.JOIN.register(CityServices::welcome);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 100 == 0) {
@@ -217,13 +241,22 @@ public final class CityServices {
 		AABB city = new AABB(-w, level.getMinY(), -w, w + 1, level.getMaxY(), w + 1);
 		for (Mob mob : level.getEntitiesOfClass(Mob.class, city,
 			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG)
-				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && CityZone.inside(m.blockPosition()))) {
+				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && !m.getUUID().equals(WorldEvents.titan()) && CityZone.inside(m.blockPosition()))) {
 			level.sendParticles(ParticleTypes.POOF, mob.getX(), mob.getY() + mob.getBbHeight() / 2.0, mob.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
 			mob.discard();
 		}
 	}
 
 	/** Players may not build or break inside the city, in raid arenas or in dungeons unless they are operators or in creative. */
+	/** Items whose use on a block alters it (no block placed, so {@code BlockItem.place} never sees them). */
+	private static boolean changesBlocks(final ItemStack stack) {
+		Item item = stack.getItem();
+		return item instanceof FlintAndSteelItem || item instanceof FireChargeItem || stack.is(ItemTags.AXES) || stack.is(ItemTags.SHOVELS)
+			|| stack.is(ItemTags.HOES) || item instanceof BoneMealItem || item instanceof HoneycombItem || item instanceof ShearsItem
+			|| item instanceof DyeItem || item instanceof PotionItem || item instanceof EndCrystalItem || item instanceof BrushItem
+			|| item == Items.INK_SAC || item == Items.GLOW_INK_SAC;
+	}
+
 	public static boolean blocksBuilding(final Player player, final BlockPos pos) {
 		return !player.isCreative()
 			&& !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)

@@ -313,9 +313,9 @@ public final class Companions {
 		return out;
 	}
 
-	/** A random pet charm of {@code rarity} (the merit shop's offer). */
-	public static ItemStack randomPet(final Rarity rarity, final RandomSource random) {
-		List<PetDef> pool = PETS.values().stream().filter(d -> d.rarity() == rarity).toList();
+	/** A random pet charm of {@code rarity} that {@code owned} does not have yet (the merit shop's offer); empty when it has them all. */
+	public static ItemStack randomPet(final Rarity rarity, final RandomSource random, final Data owned) {
+		List<PetDef> pool = PETS.values().stream().filter(d -> d.rarity() == rarity && !owned.hasPet(d.id())).toList();
 		return pool.isEmpty() ? ItemStack.EMPTY : new ItemStack(PET_ITEMS.get(pool.get(random.nextInt(pool.size())).id()));
 	}
 
@@ -431,7 +431,8 @@ public final class Companions {
 		if (def == null || !data.hasMount(id)) {
 			return false;
 		}
-		if (RaidDimension.is(owner.level()) || com.minecraftmode.dungeon.DungeonDimension.is(owner.level()) || owner.isPassenger() || owner.isInWater()) {
+		if (RaidDimension.is(owner.level()) || com.minecraftmode.dungeon.DungeonDimension.is(owner.level()) || owner.isPassenger() || owner.isInWater()
+			|| !owner.onGround()) {
 			owner.sendOverlayMessage(Component.translatable("message.minecraft_mode.mount.not_here").withStyle(ChatFormatting.RED));
 			return false;
 		}

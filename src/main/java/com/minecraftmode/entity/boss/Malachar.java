@@ -20,6 +20,7 @@ import java.util.List;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
@@ -182,6 +183,12 @@ public class Malachar extends RaidBoss {
 			}
 		});
 		this.after(80, () -> {
+			// the raised dead would shove players out of their stillness: they crumble when the requiem begins
+			for (Mob minion : this.minions) {
+				level.sendParticles(ParticleTypes.SOUL, minion.getX(), minion.getY(0.5), minion.getZ(), 10, 0.3, 0.4, 0.3, 0.02);
+				minion.discard();
+			}
+			this.minions.clear();
 			Map<UUID, Vec3> start = new HashMap<>();
 			for (ServerPlayer p : this.fighters(level)) {
 				start.put(p.getUUID(), p.position());

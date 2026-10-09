@@ -445,7 +445,8 @@ public class NamedMob extends CreatureMob {
 	@Override
 	public void die(final DamageSource source) {
 		super.die(source);
-		if (this.lord && this.lordHome != null && this.level() instanceof ServerLevel level && level.isLoaded(this.lordHome)
+		// the chest may sit in a chunk that just unloaded (the lord roams up to its leash): loading it once is worth the credit
+		if (this.lord && this.lordHome != null && this.level() instanceof ServerLevel level
 			&& level.getBlockEntity(this.lordHome) instanceof LairChestBlockEntity chest) {
 			chest.lordDefeated(level, this, source);
 		}
@@ -631,11 +632,11 @@ public class NamedMob extends CreatureMob {
 		Vec3 start = this.position();
 		Vec3 dir = target.position().subtract(start).multiply(1, 0, 1).normalize();
 		Vec3 end = start.add(dir.scale(ability.range()));
-		this.busyTicks = 12;
+		this.busyTicks = 18;
 		this.playAnim(CreatureAnim.CHARGE);
 		this.getLookControl().setLookAt(target);
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 0.8F, 1.4F);
-		Telegraph.line(level, start, end, ability.radius() * 2, 12, Telegraph.RED, () -> {
+		Telegraph.line(level, start, end, ability.radius() * 2, 18, Telegraph.RED, () -> {
 			Set<UUID> hit = new HashSet<>();
 			for (int i = 0; i < 10; i++) {
 				SkillScheduler.schedule(i, () -> {

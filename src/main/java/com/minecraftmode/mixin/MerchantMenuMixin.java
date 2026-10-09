@@ -4,6 +4,7 @@ import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.Wallet;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.inventory.MerchantContainer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -40,6 +41,25 @@ public abstract class MerchantMenuMixin {
 		if (this.trader instanceof ShopMerchant shop) {
 			shop.playTradeSound();
 			ci.cancel();
+		}
+	}
+
+	/**
+	 * Closing the shop (also by dying or logging off, when vanilla would drop the payment slots on the floor): coins the wallet
+	 * put into the payment slots go straight back into the wallet.
+	 */
+	@Inject(method = "removed", at = @At("HEAD"))
+	private void minecraftMode$coinsBackToWallet(final Player player, final CallbackInfo ci) {
+		if (!(this.trader instanceof ShopMerchant) || !(player instanceof ServerPlayer serverPlayer)) {
+			return;
+		}
+		for (int slot = 0; slot < 2; slot++) {
+			ItemStack stack = this.tradeContainer.getItem(slot);
+			int each = stack.isEmpty() ? 0 : Wallet.value(stack.getItem());
+			if (each > 0) {
+				Wallet.add(serverPlayer, each * stack.getCount());
+				this.tradeContainer.setItem(slot, ItemStack.EMPTY);
+			}
 		}
 	}
 

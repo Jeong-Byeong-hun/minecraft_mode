@@ -30,6 +30,9 @@ import net.minecraft.world.item.ItemStack;
  * blue when MP is short).
  */
 public final class JobHud {
+	/** Bottom of the top-left panels drawn this frame (other HUD parts stay below it). */
+	private static int leftBottom = 34;
+
 	public static void init() {
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, MinecraftMode.id("job_hud"), JobHud::extract);
 	}
@@ -41,6 +44,7 @@ public final class JobHud {
 			return;
 		}
 		JobData data = JobProgression.get(player);
+		leftBottom = 34;
 		drawPanel(graphics, minecraft.font, player, data);
 		drawQuest(graphics, minecraft.font, player);
 		drawSkills(graphics, minecraft, player, data);
@@ -91,6 +95,7 @@ public final class JobHud {
 		int y = 38;
 		int w = 150;
 		int h = 13 + labels.size() * 10;
+		leftBottom = y + h;
 		g.fill(x, y, x + w, y + h, 0x70000000);
 		g.text(font, Component.translatable(quest.nameKey()).withColor(quest.job().color()), x + 4, y + 3, 0xFFFFFFFF, true);
 		for (int i = 0; i < labels.size(); i++) {
@@ -101,6 +106,10 @@ public final class JobHud {
 			String count = Math.min(c[0], c[1]) + "/" + c[1];
 			g.text(font, count, x + w - 4 - font.width(count), ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
 		}
+	}
+
+	public static int leftBottom() {
+		return leftBottom;
 	}
 
 	private static void bar(final GuiGraphicsExtractor g, final int x, final int y, final int w, final int h, final float fraction, final int color) {

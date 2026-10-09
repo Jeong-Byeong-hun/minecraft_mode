@@ -491,6 +491,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		waitFor(context, server, s -> lot(session[0], 0).state() == LootSession.State.RUNNING, 200, "the first lot should open");
 		context.waitTicks(2);
 		context.takeScreenshot("raid_loot_auction");
+		requireFits(context, "loot screen");
 		int start = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			LootSessions.handle(player, new LootActionPayload(session[0], LootActionPayload.Action.BID, 1));
@@ -542,7 +543,33 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(RaidScreen.class);
 		context.waitTicks(10);
 		context.takeScreenshot("raid_board");
+		requireFits(context, "raid board");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new com.minecraftmode.client.job.JobScreen()));
+		context.waitForScreen(com.minecraftmode.client.job.JobScreen.class);
+		requireFits(context, "class screen");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+	}
+
+	/**
+	 * Minecraft never lays the GUI out narrower than 320 (4:3 screens at auto GUI scale); every button
+	 * of the open screen must sit inside the middle 320 so nothing is cut off on any monitor.
+	 */
+	private static void requireFits(final ClientGameTestContext context, final String what) {
+		String report = context.computeOnClient(minecraft -> {
+			net.minecraft.client.gui.screens.Screen screen = minecraft.gui.screen();
+			if (screen == null) {
+				return what + " is not open";
+			}
+			int lo = (screen.width - 320) / 2;
+			int hi = lo + 320;
+			for (var child : screen.children()) {
+				if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && (w.getX() < lo || w.getRight() > hi)) {
+					return what + ": " + w.getMessage().getString() + " at " + w.getX() + ".." + w.getRight() + " is outside " + lo + ".." + hi;
+				}
+			}
+			return "";
+		});
+		require(report.isEmpty(), report);
 	}
 
 	/** Every boss in its arena, seen from where the party arrives. */

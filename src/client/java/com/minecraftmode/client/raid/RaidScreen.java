@@ -23,7 +23,8 @@ import net.minecraft.network.chat.Component;
  * player) starts the raid; the server checks everything again.
  */
 public class RaidScreen extends Screen {
-	private static final int W = 360;
+	/** 320 wide: the narrowest GUI Minecraft lays out (4:3 screens at auto GUI scale). */
+	private static final int W = 320;
 	private static final int H = 236;
 	private static int selected;
 
@@ -54,15 +55,15 @@ public class RaidScreen extends Screen {
 			Button b = Button.builder(Component.translatable(def.nameKey()), button -> {
 				selected = index;
 				this.rebuildWidgets();
-			}).bounds(this.left + 10, this.top + 28 + i * 24, 112, 20).build();
+			}).bounds(this.left + 8, this.top + 26 + i * 24, 100, 20).build();
 			b.active = i != Math.floorMod(selected, all.size());
 			this.addRenderableWidget(b);
 		}
 		Button enter = Button.builder(Component.translatable("screen.minecraft_mode.raid.enter").withStyle(ChatFormatting.BOLD), b -> this.enter())
-			.bounds(this.left + W - 112, this.top + H - 28, 100, 20).build();
+			.bounds(this.left + 8, this.top + H - 52, 100, 20).build();
 		enter.active = this.canEnter();
 		this.addRenderableWidget(enter);
-		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + 10, this.top + H - 28, 70, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + 8, this.top + H - 28, 100, 20).build());
 	}
 
 	private boolean isLeader() {
@@ -124,11 +125,11 @@ public class RaidScreen extends Screen {
 		g.fill(x, y, x + W, y + H, 0xE8101018);
 		g.outline(x, y, W, H, 0xFFC0263A);
 		g.text(this.font, this.title.copy().withStyle(ChatFormatting.GOLD), x + 10, y + 10, 0xFFFFFFFF, true);
-		g.fill(x + 128, y + 26, x + 129, y + H - 34, 0x40FFFFFF);
+		g.fill(x + 116, y + 26, x + 117, y + H - 8, 0x40FFFFFF);
 
-		int rx = x + 138;
-		int rw = W - 148;
-		int ty = y + 28;
+		int rx = x + 124;
+		int rw = W - 132;
+		int ty = y + 26;
 		g.text(this.font, Component.translatable(def.nameKey()).withStyle(ChatFormatting.BOLD), rx, ty, color, true);
 		g.text(this.font, Component.translatable(def.epithetKey()), rx, ty + 11, 0xFFAAAAAA, false);
 		ty += 26;
@@ -157,9 +158,12 @@ public class RaidScreen extends Screen {
 				ty += 10;
 			}
 		}
-		Component hint = !this.isLeader() ? Component.translatable("screen.minecraft_mode.raid.not_leader")
-			: Component.translatable("screen.minecraft_mode.raid.hint", (int)Raids.GATHER_RANGE);
-		g.textWithWordWrap(this.font, hint, rx, ty + 4, rw, !this.isLeader() ? 0xFFFF9F6B : 0xFF8A8A8A);
+		// the invite hint only while there is room (a full party fills the column)
+		if (!this.isLeader()) {
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.raid.not_leader"), rx, ty + 4, rw, 0xFFFF9F6B);
+		} else if (party.size() < 5) {
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.raid.hint", (int)Raids.GATHER_RANGE), rx, ty + 4, rw, 0xFF8A8A8A);
+		}
 		super.extractRenderState(g, mouseX, mouseY, a);
 	}
 

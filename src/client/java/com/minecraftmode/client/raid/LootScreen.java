@@ -20,7 +20,8 @@ import org.jspecify.annotations.Nullable;
  * anyone bids or rolls. Rebuilt whenever the server sends a new state.
  */
 public class LootScreen extends Screen {
-	private static final int W = 330;
+	/** 320 wide: the narrowest GUI Minecraft lays out (4:3 screens at auto GUI scale). */
+	private static final int W = 320;
 	private static final int H = 220;
 	private static final int ROW = 22;
 
@@ -58,7 +59,7 @@ public class LootScreen extends Screen {
 				int s = steps[i];
 				int amount = lot.bid() == 0 ? lot.start() + lot.step() * (s - 1) : lot.bid() + lot.step() * s;
 				Button b = Button.builder(Component.literal("+" + Coins.format(amount)), button -> RaidClient.send(LootActionPayload.Action.BID, s))
-					.bounds(bx + i * 64, by, 62, 20).build();
+					.bounds(bx + i * 61, by, 59, 20).build();
 				b.active = this.coins() >= amount && !this.isHighest(state, lot);
 				this.addRenderableWidget(b);
 			}

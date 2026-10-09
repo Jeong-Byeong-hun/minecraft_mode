@@ -89,3 +89,27 @@ publishing {
 	repositories {
 	}
 }
+
+// Two scripted clients for MultiplayerClientGameTest: start `./gradlew runServer` (offline mode, RCON on) first, then
+// `./gradlew runMpAlice -PmpRcon=<password>` and `./gradlew runMpBob`. The clients keep their own game directories.
+loom {
+	runs {
+		mpAlice {
+			inherit loom.runs.getByName("clientGameTest")
+			name "Multiplayer test (Alice)"
+			runDir "build/run/mpAlice"
+			property "minecraft_mode.mp.role", "alice"
+			property "minecraft_mode.mp.dir", file("build/mp").absolutePath
+			property "minecraft_mode.mp.rcon", (project.findProperty("mpRcon") ?: "").toString()
+			programArgs "--username", "Alice"
+		}
+		mpBob {
+			inherit loom.runs.getByName("clientGameTest")
+			name "Multiplayer test (Bob)"
+			runDir "build/run/mpBob"
+			property "minecraft_mode.mp.role", "bob"
+			property "minecraft_mode.mp.dir", file("build/mp").absolutePath
+			programArgs "--username", "Bob"
+		}
+	}
+}

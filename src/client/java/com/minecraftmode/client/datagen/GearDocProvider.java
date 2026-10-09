@@ -339,7 +339,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 주기마다 처음으로 플레이어가 보물 상자 ").append((int)LairChestBlockEntity.WAKE_RANGE)
 			.append("블록 안에 오면(또는 상자를 열면) **소굴의 군주**(그 네임드의 최고 레벨 강화판)가 깨어납니다: 체력 ×").append(ClassDocProvider.num(NamedMob.LORD_HEALTH))
 			.append(", 공격 ×").append(ClassDocProvider.num(NamedMob.LORD_DAMAGE)).append(", 크기 ×").append(ClassDocProvider.num(NamedMob.LORD_SCALE)).append(", 보스 바, ").append(NamedMob.WRATH_INTERVAL / 20)
-			.append("초마다 바닥 경고 뒤 **소굴의 분노**(반경 5블록, 최대 체력의 40%).\n");
+			.append("초마다 바닥 경고 뒤 **소굴의 분노**(반경 5블록, 최대 체력의 40%). 상자에서 ").append((int)NamedMob.LORD_LEASH)
+			.append("블록 넘게 끌려 나가면 추격을 멈추고 상자 옆으로 돌아갑니다.\n");
 		md.append("- 보물 상자는 그 주기에 군주를 쓰러뜨릴 때 ").append((int)LairChestBlockEntity.CREDIT_RANGE)
 			.append("블록 안에 있던 사람(그리고 마지막 일격을 넣은 사람)에게만 열립니다. 아직 못 잡은 사람이 오면 그 사람을 위한 군주가 다시 깨어납니다. 군주는 강화석 1–2개, 10% 확률로 보호 주문서를 떨어뜨립니다.\n");
 		md.append("- 보물 상자를 그 주기에 처음 열면 소굴 정복으로 기록됩니다(도감·업적·의뢰). 보물 상자에 강화석 1–2개, 보급품에 25% 확률로 강화석.\n");

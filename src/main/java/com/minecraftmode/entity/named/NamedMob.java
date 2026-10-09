@@ -102,6 +102,8 @@ public class NamedMob extends CreatureMob {
 	public static final float LORD_HEALTH = 3.0F;
 	public static final float LORD_DAMAGE = 1.3F;
 	public static final float LORD_SCALE = 1.2F;
+	/** A lord this far from its chest drops the chase and returns (it cannot be lured out of its lair). */
+	public static final double LORD_LEASH = 24.0;
 	/** Ticks between two casts of the lair's wrath. */
 	public static final int WRATH_INTERVAL = 400;
 
@@ -318,6 +320,11 @@ public class NamedMob extends CreatureMob {
 			&& !(level.getBlockEntity(this.lordHome) instanceof LairChestBlockEntity chest && chest.isLord(this))) {
 			this.discard();
 			return;
+		}
+		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > LORD_LEASH * LORD_LEASH) {
+			this.setTarget(null);
+			this.getNavigation().stop();
+			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 1.5);
 		}
 		if (this.tickCount % WRATH_INTERVAL != WRATH_INTERVAL / 2 || this.getTarget() == null) {
 			return;

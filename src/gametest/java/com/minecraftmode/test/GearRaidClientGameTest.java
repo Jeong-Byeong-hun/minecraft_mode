@@ -101,6 +101,10 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			checkLoot(context, server, connection);
 			raidBoard(context, server, connection);
 			arenaShots(context, server, connection);
+			// Let the server catch up before the world closes: Fabric's client gametest close() submits a blocking task to the server
+			// (IntegratedServer.halt) right as the tick phase starts, and a server that is behind schedule skips its idle task window and
+			// parks on the test phaser first - both sides then wait on each other forever (seen once after a 65-tick lag spike).
+			context.waitTicks(40);
 		}
 	}
 

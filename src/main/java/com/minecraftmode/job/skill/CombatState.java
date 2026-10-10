@@ -32,10 +32,7 @@ public final class CombatState {
 	public float stealthBonus;
 	public long stealthUntil;
 
-	/** Game time and victim of the last vanilla melee hit: a second victim in the same tick is a sweep, not a basic hit. */
-	public long lastMeleeTick = -1L;
-	public int lastMeleeVictim;
-	/** Set while the hit being processed is a sweep (no basic-hit procs). */
+	/** Set by {@code PlayerMixin} while the player's sweep attack hits its extra victims (plain damage, no basic-hit procs). */
 	public boolean sweep;
 
 	/** target -> mark */

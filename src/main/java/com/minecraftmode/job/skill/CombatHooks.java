@@ -168,17 +168,9 @@ public final class CombatHooks {
 	) {
 		JobData data = JobProgression.get(attacker);
 		EngraveTotals mods = JobWeapons.activeTotals(attacker);
-		boolean melee = kind == null && source.getDirectEntity() == attacker;
 		CombatState state = CombatState.of(attacker);
-		if (melee) {
-			// a second victim of the same swing is a sweep: plain damage, none of the basic-hit effects
-			state.sweep = state.lastMeleeTick == now && state.lastMeleeVictim != victim.getId();
-			if (!state.sweep) {
-				state.lastMeleeTick = now;
-				state.lastMeleeVictim = victim.getId();
-			}
-			melee = !state.sweep;
-		}
+		// the extra victims of a sweep (flagged by PlayerMixin around Player.doSweepAttack) take plain damage, no basic-hit effects
+		boolean melee = kind == null && source.getDirectEntity() == attacker && !state.sweep;
 		boolean basic = melee || kind == DamageKind.SHOT;
 		float bonus = 0.0F;
 		float crit = 1.0F;

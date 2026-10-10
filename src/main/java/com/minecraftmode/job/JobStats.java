@@ -35,6 +35,8 @@ public final class JobStats {
 	private static final Identifier ENGRAVE_REACH = MinecraftMode.id("job/engrave_reach");
 	private static final Identifier GEAR_ARMOR = MinecraftMode.id("job/gear_armor");
 	private static final Identifier GEAR_KNOCKBACK = MinecraftMode.id("job/gear_knockback");
+	private static final Identifier CLASS_HEALTH = MinecraftMode.id("job/class_health");
+	private static final Identifier CLASS_ARMOR = MinecraftMode.id("job/class_armor");
 
 	public static int maxMana(final Player player) {
 		JobData data = JobProgression.get(player);
@@ -112,6 +114,9 @@ public final class JobStats {
 		EngraveTotals mods = JobWeapons.activeTotals(player);
 		set(player, Attributes.MAX_HEALTH, LEVEL_HEALTH, data.level() / 10, AttributeModifier.Operation.ADD_VALUE);
 		set(player, Attributes.MAX_HEALTH, PASSIVE_HEALTH, CombatHooks.has(data, JobClass.WARRIOR, 1) ? 4 : 0, AttributeModifier.Operation.ADD_VALUE);
+		// melee classes stand in front: health and armor per tier (JobClass.vitalityHealth/vitalityArmor)
+		set(player, Attributes.MAX_HEALTH, CLASS_HEALTH, data.job().vitalityHealth() * data.tier(), AttributeModifier.Operation.ADD_VALUE);
+		set(player, Attributes.ARMOR, CLASS_ARMOR, data.job().vitalityArmor() * data.tier(), AttributeModifier.Operation.ADD_VALUE);
 		double speed = (CombatHooks.has(data, JobClass.ROGUE, 1) ? 0.10 : 0.0) + (CombatHooks.has(data, JobClass.ARCHER, 2) ? 0.08 : 0.0);
 		set(player, Attributes.MOVEMENT_SPEED, PASSIVE_SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 		set(player, Attributes.LUCK, PASSIVE_LUCK, CombatHooks.has(data, JobClass.PIRATE, 4) ? 2 : 0, AttributeModifier.Operation.ADD_VALUE);

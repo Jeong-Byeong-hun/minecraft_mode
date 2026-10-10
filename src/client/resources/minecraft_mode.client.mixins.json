@@ -3,6 +3,8 @@
 	"package": "com.minecraftmode.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
+		"AbstractContainerScreenAccessor",
+		"BossHealthOverlayAccessor",
 		"LightmapRenderStateExtractorMixin"
 	],
 	"injectors": {

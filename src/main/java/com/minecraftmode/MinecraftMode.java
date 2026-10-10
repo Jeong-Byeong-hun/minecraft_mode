@@ -1,5 +1,6 @@
 package com.minecraftmode;
 
+import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.command.EventCommands;
 import com.minecraftmode.command.JobCommand;
@@ -91,6 +92,7 @@ public class MinecraftMode implements ModInitializer {
 		Parties.init();
 		Raids.init();
 		Dungeons.init();
+		TrialHunts.init();
 		WorldEvents.init();
 		Story.init();
 		HeldLight.init();

@@ -3,6 +3,7 @@ package com.minecraftmode.dungeon;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
+import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.MobPower;
@@ -150,7 +151,7 @@ public final class Dungeons {
 		ServerPlayerEvents.JOIN.register(Dungeons::onJoin);
 		// monsters saved with a dungeon chunk (server stopped mid-run) must not haunt the next run there
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
-			if (DungeonDimension.is(level) && entity instanceof Mob && !insideRunning(entity.position())) {
+			if (DungeonDimension.is(level) && entity instanceof Mob && !insideRunning(entity.position()) && !TrialHunts.insideAnyArena(entity.position())) {
 				entity.discard();
 			}
 		});

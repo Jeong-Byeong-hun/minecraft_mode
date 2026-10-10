@@ -17,7 +17,9 @@ import com.minecraftmode.registry.ModEffects;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import com.minecraftmode.network.TargetHealthPayload;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -33,6 +35,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.monster.illager.Vindicator;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -57,6 +60,9 @@ public final class CombatHooks {
 		/** Double strike and chain lightning procs; never proc again. */
 		EXTRA
 	}
+
+	/** What a vindicator's melee hit deals to a player on every difficulty, before armor (2.5 hearts). */
+	public static final float VINDICATOR_DAMAGE = 5.0F;
 
 	private static @Nullable DamageKind current;
 	/** Vanilla arrows loosed by class bows -> their damage. */
@@ -157,6 +163,10 @@ public final class CombatHooks {
 			result *= 1.0F + 0.15F * (vulnerable.getAmplifier() + 1);
 		}
 		if (victim instanceof ServerPlayer player) {
+			if (source.getEntity() instanceof Vindicator && source.getDirectEntity() == source.getEntity()) {
+				// the axe swing hits for a flat 2.5 hearts on every difficulty (before armor and event multipliers)
+				result = VINDICATOR_DAMAGE;
+			}
 			result *= MobPower.factor(source.getEntity());
 			result = incoming(player, source, result, kind, now);
 		}
@@ -287,6 +297,13 @@ public final class CombatHooks {
 		if (source.getEntity() != null && CityServices.blocksPvp(victim, source.getEntity())) {
 			return false;
 		}
+		if (victim instanceof ServerPlayer guarded && Engage.guarded(guarded) && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
+			&& !RaidDamage.is(source)) {
+			if (source.getEntity() != null) {
+				Engage.deflected(guarded);
+			}
+			return false;
+		}
 		if (!(victim instanceof ServerPlayer player) || source.getEntity() == null || source.getEntity() == player
 			|| source.is(DamageTypeTags.BYPASSES_INVULNERABILITY) || RaidDamage.is(source)) {
 			return true;
@@ -308,6 +325,10 @@ public final class CombatHooks {
 	private static void afterDamage(final LivingEntity victim, final DamageSource source, final float baseDamage, final float damageTaken, final boolean blocked) {
 		if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim) {
 			return;
+		}
+		// the attacker's client shows this target's health bar (TargetHealthHud); fake players have no client
+		if (ServerPlayNetworking.canSend(attacker, TargetHealthPayload.TYPE)) {
+			ServerPlayNetworking.send(attacker, new TargetHealthPayload(victim.getId()));
 		}
 		DamageKind kind = current;
 		Entity direct = source.getDirectEntity();

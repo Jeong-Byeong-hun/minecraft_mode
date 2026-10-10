@@ -17,7 +17,7 @@ import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 
 /**
- * Builds the capital during chunk decoration ({@code ChunkGeneratorMixin}). Chunks inside the core
+ * Builds the capital (and flattens the homestead plains east of it, {@link Homestead}) during chunk decoration ({@code ChunkGeneratorMixin}). Chunks inside the core
  * square skip surface features and structures (ores stay), get flattened to the city floor and
  * then receive their slice of every building. Chunks in the ring around it only blend the terrain
  * before vanilla decoration runs, so trees still grow on the new slopes.
@@ -31,14 +31,26 @@ public final class CityGenerator {
 		return Math.max(nearX, nearZ);
 	}
 
-	/** Core chunks: no surface features or structures, the city is built there instead. */
+	/** Distance (Chebyshev) from the flattened land (the city core and the homestead plains) to the nearest column of the chunk. */
+	private static int flatDistance(final ChunkAccess chunk) {
+		ChunkPos pos = chunk.getPos();
+		int homestead = Homestead.distance(pos.getMinBlockX(), pos.getMinBlockZ(), pos.getMaxBlockX(), pos.getMaxBlockZ());
+		return Math.min(Math.max(chunkDistance(chunk) - CityZone.CORE, 0), homestead);
+	}
+
+	/** Distance (Chebyshev) from the flattened land to one column (0 on it). */
+	private static int flatDistance(final int x, final int z) {
+		return Math.min(Math.max(Math.max(Math.abs(x), Math.abs(z)) - CityZone.CORE, 0), Homestead.distance(x, z));
+	}
+
+	/** Core chunks (the city and the homestead plains): no surface features or structures, the city is built there instead. */
 	public static boolean isCore(final ChunkGenerator generator, final WorldGenLevel level, final ChunkAccess chunk) {
-		return CityZone.isCityGenerator(generator, level.getLevel()) && chunkDistance(chunk) <= CityZone.CORE;
+		return CityZone.isCityGenerator(generator, level.getLevel()) && flatDistance(chunk) == 0;
 	}
 
 	private static boolean isBlend(final ChunkGenerator generator, final WorldGenLevel level, final ChunkAccess chunk) {
-		int d = chunkDistance(chunk);
-		return CityZone.isCityGenerator(generator, level.getLevel()) && d > CityZone.CORE && d <= CityZone.CORE + CityZone.BLEND;
+		int d = flatDistance(chunk);
+		return CityZone.isCityGenerator(generator, level.getLevel()) && d > 0 && d <= CityZone.BLEND;
 	}
 
 	/** Keeps only the ore steps for core chunks. */
@@ -69,6 +81,8 @@ public final class CityGenerator {
 		CityMiddle.build(build);
 		CitySouth.build(build);
 		TrainingGrounds.build(build);
+		CityFixtures.build(build);
+		Homestead.build(build);
 		CityCore.lamps(build);
 	}
 
@@ -93,8 +107,8 @@ public final class CityGenerator {
 		int top = highestSection < 0 ? chunk.getMinY() : SectionPos.sectionToBlockCoord(chunk.getSectionYFromSectionIndex(highestSection)) + 15;
 		for (int x = chunkPos.getMinBlockX(); x <= chunkPos.getMaxBlockX(); x++) {
 			for (int z = chunkPos.getMinBlockZ(); z <= chunkPos.getMaxBlockZ(); z++) {
-				int d = Math.max(Math.abs(x), Math.abs(z));
-				if (d > CityZone.CORE + CityZone.BLEND) {
+				int d = flatDistance(x, z);
+				if (d > CityZone.BLEND) {
 					continue;
 				}
 				int surface = top;
@@ -106,11 +120,11 @@ public final class CityGenerator {
 					solid--;
 				}
 				int target;
-				boolean core = d <= CityZone.CORE;
+				boolean core = d == 0;
 				if (core) {
 					target = base - 1;
 				} else {
-					float t = (d - CityZone.CORE) / (float)CityZone.BLEND;
+					float t = d / (float)CityZone.BLEND;
 					t = t * t * (3 - 2 * t);
 					target = Math.round(Mth.lerp(t, base - 1, solid));
 				}

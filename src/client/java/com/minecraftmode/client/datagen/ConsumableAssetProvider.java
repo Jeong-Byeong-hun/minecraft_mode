@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.google.common.hash.Hashing;
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.BagKind;
 import com.minecraftmode.client.datagen.art.ConsumableArtist;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -24,7 +25,7 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.world.effect.MobEffect;
 
 /**
- * Draws the consumable icons, the return scroll and the buff effect icons ({@link ConsumableArtist}),
+ * Draws the consumable icons, the bags, the return scroll and the buff effect icons ({@link ConsumableArtist}),
  * and a review sheet of all of them at build/consumable-preview.png.
  */
 public class ConsumableAssetProvider implements DataProvider {
@@ -43,6 +44,11 @@ public class ConsumableAssetProvider implements DataProvider {
 			BufferedImage icon = ConsumableArtist.icon(def);
 			writes.add(write(cache, assets.resolve("textures/item/" + def.id() + ".png"), icon));
 			sheet.add(icon);
+		}
+		for (BagKind kind : BagKind.values()) {
+			BufferedImage bag = ConsumableArtist.bag(kind);
+			writes.add(write(cache, assets.resolve("textures/item/" + kind.id() + ".png"), bag));
+			sheet.add(bag);
 		}
 		BufferedImage scroll = ConsumableArtist.scroll();
 		writes.add(write(cache, assets.resolve("textures/item/return_scroll.png"), scroll));

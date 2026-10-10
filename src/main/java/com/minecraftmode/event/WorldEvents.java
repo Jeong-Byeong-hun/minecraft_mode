@@ -78,6 +78,14 @@ public final class WorldEvents {
 	public static final int WAVES = 3;
 	public static final int INVASION_LIFETIME = 20 * 60 * 10;
 	private static final double INVASION_RANGE = 160.0;
+	/** Invaders fight at the defenders' average level minus this. */
+	public static final int INVASION_LEVEL_OFFSET = 5;
+	/** Invader health stops growing past this many defenders. */
+	public static final int INVASION_PARTY_CAP = 4;
+	/** Invaders are weakened: what they deal is multiplied by this (on top of their level). */
+	public static final float INVADER_DAMAGE = 0.6F;
+	/** The warlord's damage multiplier (also weakened). */
+	public static final float WARLORD_DAMAGE = 0.9F;
 
 	private static @Nullable UUID titan;
 	private static @Nullable NamedDef titanDef;
@@ -400,14 +408,15 @@ public final class WorldEvents {
 		inv.waveAge = 0;
 		int base = CityZone.baseY(level);
 		List<ServerPlayer> defenders = defenders(level);
-		int players = Math.max(1, defenders.size());
+		int players = Math.min(INVASION_PARTY_CAP, Math.max(1, defenders.size()));
 		int avgLevel = defenders.isEmpty() ? 20 : (int)defenders.stream().mapToInt(p -> JobProgression.get(p).level()).average().orElse(20);
-		float health = Dungeons.powerHealth(avgLevel) * (0.6F + 0.4F * players);
-		float damage = Dungeons.powerDamage(avgLevel);
+		int power = invasionPower(avgLevel);
+		float health = invaderHealth(power, players);
+		float damage = invaderDamage(power);
 		RandomSource random = level.getRandom();
 		List<EntityType<? extends Mob>> kinds = List.of(EntityTypes.ZOMBIE, EntityTypes.SKELETON, EntityTypes.PILLAGER, EntityTypes.VINDICATOR, EntityTypes.HUSK);
 		BlockPos[] gates = {new BlockPos(CityZone.WALL - 6, base, 0), new BlockPos(-CityZone.WALL + 6, base, 0), new BlockPos(0, base, CityZone.WALL - 6)};
-		int count = 6 + 3 * inv.wave + 3 * players;
+		int count = invaderCount(inv.wave, players);
 		for (int i = 0; i < count; i++) {
 			BlockPos gate = gates[i % gates.length];
 			Mob mob = kinds.get(random.nextInt(kinds.size())).create(level, EntitySpawnReason.EVENT);
@@ -423,10 +432,10 @@ public final class WorldEvents {
 			if (boss != null) {
 				BlockPos gate = gates[random.nextInt(gates.length)];
 				boss.snapTo(gate.getX() + 0.5, gate.getY(), gate.getZ() + 0.5, 0.0F, 0.0F);
-				boss.makeChampion(3.0F * (0.6F + 0.4F * players), 1.4F, "entity.minecraft_mode.warlord", CityZone.spawn(base), 140.0);
+				boss.makeChampion(3.0F * partyScale(players), 1.4F, "entity.minecraft_mode.warlord", CityZone.spawn(base), 140.0);
 				boss.addTag(INVADER_TAG);
 				inv.alive.add(boss.getUUID());
-				MobPower.set(boss.getUUID(), 1.2F);
+				MobPower.set(boss.getUUID(), WARLORD_DAMAGE);
 				level.addFreshEntity(boss);
 			}
 		}
@@ -437,6 +446,30 @@ public final class WorldEvents {
 			title(p, msg("invasion_wave", inv.wave, WAVES).withStyle(ChatFormatting.RED, ChatFormatting.BOLD), Component.empty());
 		}
 		level.playSound(null, CityZone.spawn(base), SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 8.0F, 1.0F);
+	}
+
+	/** The level invaders fight at: the defenders' average level minus {@link #INVASION_LEVEL_OFFSET} (at least 1). */
+	public static int invasionPower(final int avgLevel) {
+		return Math.max(1, avgLevel - INVASION_LEVEL_OFFSET);
+	}
+
+	/** Health share by defenders (capped at {@link #INVASION_PARTY_CAP}): 0.7 alone up to 1.0 with four or more. */
+	public static float partyScale(final int players) {
+		return 0.6F + 0.1F * Mth.clamp(players, 1, INVASION_PARTY_CAP);
+	}
+
+	/** Health multiplier of an invader: +5% per level of power, times {@link #partyScale}. */
+	public static float invaderHealth(final int power, final int players) {
+		return (1.0F + power / 20.0F) * partyScale(players);
+	}
+
+	public static float invaderDamage(final int power) {
+		return Dungeons.powerDamage(power) * INVADER_DAMAGE;
+	}
+
+	/** Invaders per wave: fewer than before, and no more past four defenders. */
+	public static int invaderCount(final int wave, final int players) {
+		return 5 + 2 * wave + 2 * Mth.clamp(players, 1, INVASION_PARTY_CAP);
 	}
 
 	private static void spawnInvader(final ServerLevel level, final Mob mob, final BlockPos at, final float health, final float damage) {

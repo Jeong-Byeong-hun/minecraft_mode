@@ -1,5 +1,6 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.registry.ModAttachments;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -20,7 +21,8 @@ import net.minecraft.world.item.Items;
  * Quartermaster Bram's starter kit: one set of plain (unenchanted) iron armor, an iron sword, pickaxe and axe and a shield, once
  * per player (attachment {@code ModAttachments.STARTER_KIT}, kept on death). The shield came later, so players who took the kit
  * before collect it on their next visit ({@code ModAttachments.STARTER_SHIELD}). Every piece is unbreakable and named
- * "Quartermaster's ..." ({@link #stack}).
+ * "Quartermaster's ..." ({@link #stack}). The three bags ({@link Bags#giveStarter}) come with the kit, or on the next visit for players
+ * who took the kit before bags existed.
  */
 public final class StarterKit {
 	public static final List<Item> ITEMS = List.of(Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS, Items.IRON_SWORD,
@@ -52,9 +54,12 @@ public final class StarterKit {
 	 * player already had everything.
 	 */
 	public static boolean give(final ServerPlayer player) {
+		boolean bags = Bags.giveStarter(player);
 		if (taken(player) && shieldTaken(player)) {
-			player.sendSystemMessage(Component.translatable("message.minecraft_mode.starter_kit.taken").withStyle(ChatFormatting.YELLOW));
-			return false;
+			if (!bags) {
+				player.sendSystemMessage(Component.translatable("message.minecraft_mode.starter_kit.taken").withStyle(ChatFormatting.YELLOW));
+			}
+			return bags;
 		}
 		boolean shieldOnly = taken(player);
 		player.setAttached(ModAttachments.STARTER_KIT, true);

@@ -15,4 +15,14 @@ public interface SkillAction {
 	default boolean isModifier() {
 		return false;
 	}
+
+	/** Takes the caster somewhere (dash, leap, blink, step, grapple). */
+	default boolean moves() {
+		return false;
+	}
+
+	/** Can hurt enemies. A skill with a step that {@link #moves} and one that damages closes in on enemies (see {@link Skill#engages}). */
+	default boolean damages() {
+		return false;
+	}
 }

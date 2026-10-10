@@ -26,6 +26,14 @@ public record Skill(String id, String en, String ko, SkillKind kind, int cooldow
 		return new Skill(this.id, this.en, this.ko, this.kind, this.cooldownTicks, this.manaCost, this.actions, new Fx(kind, this.fx == null ? -1 : this.fx.color()));
 	}
 
+	/**
+	 * Moves the caster and hurts enemies (dash strikes, leaps, steps behind a target, blink and slash): such a skill lands its caster
+	 * next to monsters, so the move leaves a short guard ({@code Engage.GUARD_TICKS}) and its hits stagger ({@code Engage.stagger}).
+	 */
+	public boolean engages() {
+		return this.actions.stream().anyMatch(SkillAction::moves) && this.actions.stream().anyMatch(SkillAction::damages);
+	}
+
 	void cast(final SkillContext ctx) {
 		for (SkillAction action : this.actions) {
 			if (action.isModifier()) {

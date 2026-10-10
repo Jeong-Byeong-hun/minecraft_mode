@@ -9,6 +9,7 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.Quests;
+import com.minecraftmode.job.skill.Engage;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.weapon.Archetype;
@@ -124,6 +125,10 @@ public class ClassDocProvider implements DataProvider {
 				JobClass.Tier t = job.tier(tier);
 				md.append("| ").append(tier).append("차 | ").append(t.ko()).append(" | ").append(t.passiveKo()).append(" | ").append(t.passiveDescKo()).append(" |\n");
 			}
+			if (job.vitalityHealth() > 0) {
+				md.append("\n근접 체질: 차수마다 최대 체력 +").append(job.vitalityHealth()).append(", 방어 +").append(num(job.vitalityArmor()))
+					.append(" (4차에 체력 +").append(job.vitalityHealth() * 4).append(", 방어 +").append(num(job.vitalityArmor() * 4)).append(").\n");
+			}
 			md.append("\n### 각인\n\n| 각인 | 효과 (1줄) | 장착 가능 무기 |\n|---|---|---|\n");
 			for (Engraving e : Engraving.values()) {
 				if (e.job() != job) {
@@ -165,7 +170,9 @@ public class ClassDocProvider implements DataProvider {
 					String[] keys = {"R", "G", "V", "Z"};
 					for (int i = 0; i < def.skills().size(); i++) {
 						Skill skill = def.skills().get(i);
-						String effects = skill.actions().stream().map(SkillAction::describe).map(this::render).collect(Collectors.joining("<br>"));
+						String effects = skill.actions().stream().map(SkillAction::describe).map(this::render).collect(Collectors.joining("<br>"))
+							+ (skill.engages() ? "<br>돌진 보호: 이동 후 " + Engage.seconds(Engage.GUARD_TICKS) + "초 무적, 맞은 적 " + Engage.seconds(Engage.STAGGER_TICKS)
+								+ "초 경직(보스 " + Engage.seconds(Engage.BOSS_STAGGER_TICKS) + "초)" : "");
 						md.append("| ").append(keys[i]).append(" | ").append(skill.ko()).append(" | ").append(skill.kind().ko()).append(" | ").append(skill.manaCost())
 							.append(" | ").append(num(skill.cooldownTicks() / 20.0)).append("초 | ").append(effects).append(" |\n");
 					}

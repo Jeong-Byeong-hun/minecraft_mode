@@ -32,6 +32,9 @@ public final class CombatState {
 	public float stealthBonus;
 	public long stealthUntil;
 
+	/** Game time until which a gap-closing skill guards the player (see {@link Engage}). */
+	public long guardUntil;
+
 	/** Set by {@code PlayerMixin} while the player's sweep attack hits its extra victims (plain damage, no basic-hit procs). */
 	public boolean sweep;
 

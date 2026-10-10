@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen.art;
 
+import com.minecraftmode.bag.BagKind;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.ConsumableDef.Shape;
 import java.awt.image.BufferedImage;
@@ -553,6 +554,45 @@ public final class ConsumableArtist {
 	/** The return scroll uses the SCROLL shape in blue and gold. */
 	public static BufferedImage scroll() {
 		return paint(SHAPES.get(Shape.SCROLL), 16, 0, 0x2E5AA8, 0xC89A50);
+	}
+
+	private static final String[] BAG = {
+		"................",
+		"......xxxx......",
+		".....xKkkKx.....",
+		".....xk..kx.....",
+		"...xxxxxxxxxx...",
+		"..xLLLLLLLLLLx..",
+		".xCLLLLLLLLLLCx.",
+		".xCCCCAAAACCCcx.",
+		".xCCCCAaaACCCcx.",
+		".xCCCCCCCCCCCcx.",
+		".xCCCCCCCCCCCcx.",
+		".xCCCCCCCCCCCcx.",
+		".xCCCCCCCCCCCcx.",
+		".xcCCCCCCCCCccx.",
+		"..xccccccccccx..",
+		"...xxxxxxxxxx...",
+	};
+
+	/** A cloth bag in the kind's color with a gold buckle and a white badge: sword (gear), flask (supplies) or gem (ores). */
+	public static BufferedImage bag(final BagKind kind) {
+		String[] badge = switch (kind) {
+			case GEAR -> new String[] {"...W", "..W.", "WW..", ".W.."};
+			case SUPPLY -> new String[] {".WW.", ".WW.", "WWWW", "WWWW"};
+			case ORE -> new String[] {".WW.", "WWWW", "WWWW", ".WW."};
+		};
+		String[] rows = BAG.clone();
+		for (int y = 0; y < badge.length; y++) {
+			char[] row = rows[9 + y].toCharArray();
+			for (int x = 0; x < badge[y].length(); x++) {
+				if (badge[y].charAt(x) == 'W') {
+					row[6 + x] = 'W';
+				}
+			}
+			rows[9 + y] = new String(row);
+		}
+		return paint(rows, 16, 0, kind.color(), 0xE8B730);
 	}
 
 	public static BufferedImage effectIcon(final String id, final int color) {

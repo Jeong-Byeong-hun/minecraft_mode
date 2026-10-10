@@ -1,10 +1,14 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.CityFixtures;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
+import com.minecraftmode.city.Homestead;
 import com.minecraftmode.city.TrainingGrounds;
+import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.map.MapSettings;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
@@ -17,6 +21,7 @@ import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.DungeonLayout;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.dungeon.Keystone;
+import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.Ability;
@@ -37,6 +42,7 @@ import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
@@ -511,6 +517,25 @@ public class GearDocProvider implements DataProvider {
 			.append(TrainingGrounds.EXP_MULTIPLIER).append("배로 얻어, 레벨 10까지(경험치 ").append(toTen).append(") 좀비 약 ")
 			.append((toTen + 20 * TrainingGrounds.EXP_MULTIPLIER - 1) / (20 * TrainingGrounds.EXP_MULTIPLIER))
 			.append("마리면 됩니다. 아무도 수련하지 않으면 몬스터는 사라지고, 계단으로 따라 올라온 몬스터는 경비병이 쫓아냅니다. 직업이 있는 플레이어만 있으면 몬스터가 나오지 않습니다.\n\n");
+		md.append("## 마을 편의 시설\n\n");
+		BlockPos nether = CityFixtures.netherPortal(0);
+		BlockPos end = CityFixtures.endPortal(0);
+		md.append("- **차원문**: 성 안뜰의 레이드·던전 문 사이에 켜진 네더 차원문(x ").append(nether.getX()).append(", z ").append(nether.getZ())
+			.append(")과 엔드 차원문(x ").append(end.getX()).append(", z ").append(end.getZ()).append(").\n");
+		md.append("- **엔더 상자** ").append(CityFixtures.ENDER_CHESTS.size()).append("개: 광장(스폰 뒤·분수 북쪽), 성 안뜰, 모험가 길드 안, 시장, 남쪽 광장.\n");
+		md.append("- **건축 평야**: 동문 밖 x ").append(Homestead.X0).append("–").append(Homestead.X1).append(", z ").append(-Homestead.HALF_Z).append("–").append(Homestead.HALF_Z)
+			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 새로 생성되는 월드(청크)에만 평지로 만들어집니다.\n");
+		md.append("- **이동 마법진**(자석석): 광장 스폰 바로 뒤(x 0, z ").append(CityFixtures.WAYSTONE.getZ()).append(")와 건축 평야 한가운데(x ").append(Homestead.CENTER_X)
+			.append(", z ").append(Homestead.CENTER_Z).append("). 우클릭하면 서로 이동합니다(3초 재사용 대기). 귀환 주문서로도 광장에 돌아올 수 있습니다.\n");
+		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");
+		md.append("- **가방**: 보급관 브람이 장비·소비·광물 가방을 한 번씩 줍니다(잡화점에서 은화 ").append(ShopOffers.BAG_PRICE / Coins.SILVER).append("개에 추가 구매). 가방마다 ")
+			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 광물 가방: 광석·원석·주괴·보석·돌·흙. ")
+			.append("동전·정수·진화의 에테르·시련 증표·쐐기돌·화살·불사의 토템은 가방에 들어가지 않습니다(상점과 교관이 인벤토리에서 찾음). 들고 우클릭하거나 인벤토리에서 우클릭하면 열리고, 아이템을 든 채 가방을 우클릭하면 넣습니다. 가방에는 가방·셜커 상자를 넣을 수 없습니다.\n");
+		md.append("- **쓰레기통**: 인벤토리 오른쪽의 \"버림\" 버튼. 커서에 든 아이템을 없애고, 빈 커서로 누르면 마지막에 버린 것을 한 번 되돌립니다. 잡템(막대기·씨앗·켈프·네더랙·석영 등)은 잡화점이 싸게 사 줍니다.\n");
+		md.append("- **대상 체력 바**: 마지막으로 때린 몬스터의 이름과 체력이 화면 위(보스 바 아래)에 ").append(TargetHealthHud.SHOW_TICKS / 20).append("초 동안 보입니다.\n");
+		md.append("- **시련 사냥터**: 광장의 **사냥터지기 개릭**에게 말을 걸면, 진행 중인 시련에 아직 필요한 몬스터만 나오는 개인 사냥터(던전 차원)로 갑니다. 동시에 최대 ")
+			.append(TrialHunts.CAP).append("마리(보스는 한 마리씩, 엔더 드래곤은 엔드에서), 필요한 처치·증표를 다 채우면 ").append("몬스터가 더 나오지 않고 잠시 뒤 돌아옵니다. 입구의 자석석을 우클릭하면 언제든 나갑니다. 쓰러지면 광장으로 돌아옵니다.\n");
+		md.append("- **전직 장비**: 전직할 때마다(1차 포함) 지금 레벨 구간에 맞는 직업 무기 1개와 방어구 한 벌(투구·흉갑·레깅스·부츠)을 받습니다. 직업·차수마다 한 번뿐입니다(직업 초기화 후 다시 받지 않음).\n\n");
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
 			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");
@@ -612,6 +637,12 @@ public class GearDocProvider implements DataProvider {
 		md.append("- **수도 침공**: 동·서·남 성문으로 ").append(WorldEvents.WAVES)
 			.append("웨이브가 몰려옵니다(마지막 웨이브에 침공 군주). 경비병은 침공군을 막지 않습니다. 침공군을 공격한 모두에게: 동전, 진화의 에테르 3, 강화석 2, 공적 10. ")
 			.append(WorldEvents.INVASION_LIFETIME / 1200).append("분이 지나면 물러갑니다.\n");
+		md.append("- 침공군 세기: 수도 근처 수비대(직업 있는 플레이어) 평균 레벨 - ").append(WorldEvents.INVASION_LEVEL_OFFSET)
+			.append(". 체력 배율 = (1 + 레벨/20) × 인원 보정(1명 ").append(ClassDocProvider.num(WorldEvents.partyScale(1))).append(", 2명 ").append(ClassDocProvider.num(WorldEvents.partyScale(2)))
+			.append(", 3명 ").append(ClassDocProvider.num(WorldEvents.partyScale(3))).append(", ").append(WorldEvents.INVASION_PARTY_CAP).append("명 이상 ")
+			.append(ClassDocProvider.num(WorldEvents.partyScale(WorldEvents.INVASION_PARTY_CAP))).append("). 침공군은 약화되어 주는 피해 ×").append(ClassDocProvider.num(WorldEvents.INVADER_DAMAGE))
+			.append(", 침공 군주 ×").append(ClassDocProvider.num(WorldEvents.WARLORD_DAMAGE)).append(". 웨이브당 ").append(WorldEvents.invaderCount(1, 1)).append("–")
+			.append(WorldEvents.invaderCount(WorldEvents.WAVES, WorldEvents.INVASION_PARTY_CAP)).append("마리.\n");
 
 		md.append("\n## 메인 스토리\n\n");
 		md.append("- 광장의 **왕실 전령 엘릭**에게서 장을 받고, 목표를 이루면 돌아가 보상을 받습니다. 도감(J)의 스토리 탭과 `/story`.\n\n");

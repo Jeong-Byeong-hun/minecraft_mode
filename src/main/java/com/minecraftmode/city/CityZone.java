@@ -43,9 +43,12 @@ public final class CityZone {
 		return level instanceof ServerLevel server && isCityGenerator(server.getChunkSource().getGenerator(), level);
 	}
 
-	/** Outside the walls but within {@link #OUTSKIRTS} of the centre. */
+	/** How far around the homestead plains still counts as outskirts. */
+	public static final int HOMESTEAD_MARGIN = 16;
+
+	/** Outside the walls but within {@link #OUTSKIRTS} of the centre, or on (or near) the homestead plains ({@link Homestead}). */
 	public static boolean outskirts(final int x, final int z) {
-		return !inside(x, z) && Math.abs(x) <= OUTSKIRTS && Math.abs(z) <= OUTSKIRTS;
+		return !inside(x, z) && (Math.abs(x) <= OUTSKIRTS && Math.abs(z) <= OUTSKIRTS || Homestead.distance(x, z) <= HOMESTEAD_MARGIN);
 	}
 
 	public static boolean inside(final int x, final int z) {
@@ -117,6 +120,7 @@ public final class CityZone {
 			case GUIDE -> new BlockPos(-5, base, 11);
 			case QUARTERMASTER -> new BlockPos(-5, base, 15);
 			case BAKER -> new BlockPos(5, base, 15);
+			case HUNT_MASTER -> new BlockPos(9, base, 13);
 		};
 	}
 

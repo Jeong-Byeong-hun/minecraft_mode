@@ -1,5 +1,6 @@
 package com.minecraftmode.network;
 
+import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
@@ -48,6 +49,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenBountyPayload.TYPE, OpenBountyPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -55,6 +58,9 @@ public final class ModNetworking {
 		));
 		ServerPlayNetworking.registerGlobalReceiver(InnateAbilityPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> ClassAbilities.use(context.player())
+		));
+		ServerPlayNetworking.registerGlobalReceiver(TrashPayload.TYPE, (payload, context) -> context.server().execute(
+			() -> Trash.click(context.player())
 		));
 		ServerPlayNetworking.registerGlobalReceiver(DungeonEnterPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			DungeonDef def = Dungeons.def(payload.dungeon());

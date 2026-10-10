@@ -5,6 +5,7 @@ import com.minecraftmode.enchantment.EnchantLevels;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
+import com.minecraftmode.bag.Trash;
 import com.minecraftmode.job.skill.CombatState;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.progress.Contribution;
@@ -63,8 +64,14 @@ public final class JobEvents {
 			JobProgression.set(newPlayer, JobProgression.get(newPlayer).withMana(JobStats.maxMana(newPlayer)));
 		});
 		ServerPlayerEvents.JOIN.register(JobStats::refresh);
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> CombatState.forget(handler.player));
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> CombatState.clear());
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			CombatState.forget(handler.player);
+			Trash.forget(handler.player);
+		});
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			CombatState.clear();
+			Trash.clear();
+		});
 		// players never drop their items on death (the job exp penalty still applies outside raids)
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> server.overworld().getGameRules().set(GameRules.KEEP_INVENTORY, true, server));
 		// Summons are temporary; drop any that were saved with a chunk.

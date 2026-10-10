@@ -4,6 +4,7 @@ import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.enhance.EnhanceMenu;
+import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.OpenBountyPayload;
@@ -77,7 +78,10 @@ public class CityNpc extends PathfinderMob {
 			"모험가라면 누구나 철 장비 한 벌과 방패는 내게서 받아 가지. 밖에서 잃어버리지 말게!"),
 		BAKER("baker", 0xE8A050, "Baker Hanna", "제빵사 한나",
 			"Fresh from the oven! A stack of bread for every adventurer, every day. Come back tomorrow for more!",
-			"오븐에서 갓 나왔어요! 모험가마다 하루에 빵 한 묶음씩 드려요. 내일 또 오세요!");
+			"오븐에서 갓 나왔어요! 모험가마다 하루에 빵 한 묶음씩 드려요. 내일 또 오세요!"),
+		HUNT_MASTER("hunt_master", 0x6E8B3D, "Huntmaster Garrick", "사냥터지기 개릭",
+			"On a trial? I keep pens of every beast the trainers ask for. Step through and hunt only what you need.",
+			"시련 중인가? 교관들이 요구하는 짐승은 내 사냥터에 다 있지. 들어가서 필요한 놈들만 사냥하게.");
 
 		private final String id;
 		private final int color;
@@ -166,6 +170,7 @@ public class CityNpc extends PathfinderMob {
 			case GUIDE -> Items.BOOK;
 			case QUARTERMASTER -> Items.IRON_SWORD;
 			case BAKER -> Items.BREAD;
+			case HUNT_MASTER -> Items.CROSSBOW;
 		}));
 	}
 
@@ -218,6 +223,7 @@ public class CityNpc extends PathfinderMob {
 				}
 				case QUARTERMASTER -> StarterKit.give(serverPlayer);
 				case BAKER -> DailyBread.give(serverPlayer);
+				case HUNT_MASTER -> TrialHunts.enter(serverPlayer);
 			}
 		}
 		return InteractionResult.SUCCESS;

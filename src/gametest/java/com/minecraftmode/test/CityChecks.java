@@ -1,8 +1,10 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.city.CityFixtures;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.city.Homestead;
 import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.client.map.MapScreen;
@@ -65,6 +67,7 @@ final class CityChecks {
 		checkProtection(context, server, connection, base);
 		checkNoHostiles(context, server, base);
 		checkTrainingGrounds(context, server, connection, base);
+		checkFixtures(context, server, connection, base);
 		screenshots(context, server, connection, base);
 		checkInvasion(context, server, base);
 	}
@@ -618,6 +621,9 @@ final class CityChecks {
 		view(context, server, "city_archer_park", new BlockPos(-38, base + 12, 58), new BlockPos(-64, base + 2, 86));
 		view(context, server, "city_urahara_shop", new BlockPos(-80, base + 6, 36), new BlockPos(-83, base + 2, 55));
 		view(context, server, "city_hunter_association", new BlockPos(82, base + 7, -34), new BlockPos(85, base + 4, -53));
+		view(context, server, "city_courtyard_portals", new BlockPos(0, base + 4, -50), new BlockPos(0, base + 1, -60));
+		view(context, server, "city_plaza_waystone", new BlockPos(0, base + 3, 24), new BlockPos(0, base, 17));
+		view(context, server, "homestead_plains", new BlockPos(Homestead.CENTER_X - 30, base + 14, 0), new BlockPos(Homestead.CENTER_X, base, 0));
 		BlockPos stairs = TrainingGrounds.entrance(base);
 		view(context, server, "city_training_entrance", stairs.offset(-6, 4, -7), stairs.offset(0, 1, 2));
 
@@ -643,7 +649,7 @@ final class CityChecks {
 		}
 
 		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
-			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER}) {
+			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER, CityNpc.Role.HUNT_MASTER}) {
 			BlockPos home = CityZone.npcHome(role, base);
 			BlockPos camera = server.computeOnServer(s -> {
 				ServerLevel level = s.overworld();
@@ -674,6 +680,77 @@ final class CityChecks {
 		context.runOnClient(minecraft -> minecraft.options.renderDistance().set(5));
 		server.runOnServer(s -> s.getPlayerList().setViewDistance(5));
 		server.runCommand("gamemode creative @p");
+	}
+
+	/**
+	 * The town comforts: a lit Nether portal and an active End portal in the keep courtyard, every ender chest, the plaza travel
+	 * circle, Huntmaster Garrick, and the homestead plains east of the walls (flat at the city floor, its circle, the outskirts rule);
+	 * the circles take a player there and back. A fixture that goes missing comes back.
+	 */
+	private static void checkFixtures(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final int base) {
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			CityFixtures.ensure(level);
+			for (int x = CityFixtures.NETHER_X0 + 1; x < CityFixtures.NETHER_X1; x++) {
+				for (int dy = 1; dy <= 3; dy++) {
+					require(level.getBlockState(new BlockPos(x, base + dy, CityFixtures.NETHER_Z)).is(Blocks.NETHER_PORTAL), "the Nether portal is lit at " + x + ", " + dy);
+				}
+			}
+			for (int x = CityFixtures.END_X0; x <= CityFixtures.END_X1; x++) {
+				for (int z = CityFixtures.END_Z0; z <= CityFixtures.END_Z1; z++) {
+					require(level.getBlockState(new BlockPos(x, base, z)).is(Blocks.END_PORTAL), "the End portal is active at " + x + ", " + z);
+				}
+			}
+			for (BlockPos chest : CityFixtures.enderChests(base)) {
+				require(level.getBlockState(chest).is(Blocks.ENDER_CHEST), "an ender chest stands at " + chest);
+				require(level.getBlockState(chest.above()).isAir(), "nothing sits on the ender chest at " + chest);
+			}
+			require(level.getBlockState(CityFixtures.waystone(base)).is(Blocks.LODESTONE), "the plaza travel circle is there");
+			require(!level.getEntitiesOfClass(CityNpc.class, new AABB(CityZone.npcHome(CityNpc.Role.HUNT_MASTER, base)).inflate(4),
+				n -> n.role() == CityNpc.Role.HUNT_MASTER).isEmpty(), "Huntmaster Garrick stands on the plaza");
+			// a broken ender chest comes back
+			BlockPos first = CityFixtures.enderChests(base).getFirst();
+			level.removeBlock(first, false);
+			CityFixtures.ensure(level);
+			require(level.getBlockState(first).is(Blocks.ENDER_CHEST), "a missing ender chest is put back");
+			// the homestead plains: flat at the city floor, no trees
+			int bumps = 0;
+			List<String> where = new ArrayList<>();
+			for (int x = Homestead.X0 + 8; x <= Homestead.X1 - 8; x += 16) {
+				for (int z = -Homestead.HALF_Z + 8; z <= Homestead.HALF_Z - 8; z += 16) {
+					level.getChunk(x >> 4, z >> 4);
+					int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+					if (top != base && !(Math.abs(x - Homestead.CENTER_X) <= 4 && Math.abs(z - Homestead.CENTER_Z) <= 4) && Math.abs(z) > 2) {
+						bumps++;
+						if (where.size() < 8) {
+							where.add(x + "," + z + "@" + top);
+						}
+					}
+				}
+			}
+			require(bumps == 0, "the homestead plains are flat at the city floor, bumps at " + where);
+			require(level.getBlockState(Homestead.waystone(base)).is(Blocks.LODESTONE), "the homestead travel circle is there");
+			require(CityZone.outskirts(Homestead.CENTER_X, Homestead.CENTER_Z) && CityZone.outskirts(Homestead.X1, Homestead.HALF_Z),
+				"the homestead plains count as outskirts");
+			require(CityServices.blocksSpawn(level, new BlockPos(Homestead.CENTER_X + 20, base, 20), true), "no hostile spawns on the homestead surface");
+			// the travel circles
+			ServerPlayer player = connection.getServerPlayer();
+			player.setGameMode(GameType.SURVIVAL);
+			player.teleportTo(0.5, base, 15.5);
+			CityFixtures.useWaystone(player, level, CityFixtures.waystone(base));
+			require(Homestead.inside(player.getBlockX(), player.getBlockZ()) && player.blockPosition().distManhattan(Homestead.waystone(base)) < 8,
+				"the plaza circle goes to the homestead, got " + player.blockPosition());
+			return bumps + " bumps";
+		});
+		context.waitTicks(80);
+		server.runOnServer(s -> {
+			ServerLevel level = s.overworld();
+			ServerPlayer player = connection.getServerPlayer();
+			CityFixtures.useWaystone(player, level, Homestead.waystone(base));
+			require(player.blockPosition().distManhattan(CityZone.spawn(base)) < 3, "the homestead circle goes back to the plaza, got " + player.blockPosition());
+			player.setGameMode(GameType.CREATIVE);
+		});
+		MinecraftMode.LOGGER.info("[city] fixtures: {}", report);
 	}
 
 	private static void view(final ClientGameTestContext context, final TestServerContext server, final String name, final BlockPos camera, final BlockPos target) {

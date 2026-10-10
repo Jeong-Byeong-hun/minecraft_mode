@@ -8,6 +8,9 @@ import com.minecraftmode.client.creature.CreatureRenderer;
 import com.minecraftmode.client.dungeon.DungeonClient;
 import com.minecraftmode.client.endgame.EndgameClient;
 import com.minecraftmode.client.endgame.EnhanceScreen;
+import com.minecraftmode.client.hud.BagTooltips;
+import com.minecraftmode.client.hud.TargetHealthHud;
+import com.minecraftmode.client.hud.TrashButton;
 import com.minecraftmode.client.entity.CityNpcRenderer;
 import com.minecraftmode.client.entity.ClassTrainerRenderer;
 import com.minecraftmode.client.entity.MineRaiderRenderer;
@@ -92,6 +95,9 @@ public class MinecraftModeClient implements ClientModInitializer {
 		EndgameClient.init();
 		DungeonClient.init();
 		WalletDisplay.init();
+		TargetHealthHud.init();
+		TrashButton.init();
+		BagTooltips.init();
 		ConsumableTooltips.init();
 	}
 

@@ -1,6 +1,8 @@
 package com.minecraftmode.client.guide;
 
+import com.minecraftmode.city.CityFixtures;
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.city.Homestead;
 import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
@@ -38,7 +40,7 @@ public class GuideScreen extends Screen {
 	private static final int PLACE_ROW = 8;
 
 	public enum Topic {
-		START, LEVELING, CLASSES, KEYS, PLACES, MONEY, GEAR, NAMED, DUNGEONS, BOUNTIES, COMPANIONS, EVENTS;
+		START, LEVELING, CLASSES, KEYS, PLACES, MONEY, GEAR, NAMED, DUNGEONS, BOUNTIES, COMPANIONS, EVENTS, TOWN;
 
 		public String key() {
 			return "guide.minecraft_mode." + this.name().toLowerCase(Locale.ROOT);
@@ -126,6 +128,8 @@ public class GuideScreen extends Screen {
 		BlockPos spawn = CityZone.spawn(0);
 		out.add(line(Component.translatable("screen.minecraft_mode.guide.plaza"), spawn));
 		out.add(line(Component.translatable("screen.minecraft_mode.guide.training"), TrainingGrounds.entrance(0)));
+		out.add(line(Component.translatable("screen.minecraft_mode.guide.portals"), CityFixtures.netherPortal(0)));
+		out.add(line(Component.translatable("screen.minecraft_mode.guide.homestead"), Homestead.waystone(0)));
 		for (CityNpc.Role role : CityNpc.Role.values()) {
 			out.add(line(Component.translatable(role.nameKey()), CityZone.npcHome(role, 0)));
 		}

@@ -116,6 +116,26 @@ public enum JobClass implements StringRepresentable {
 		return "job.minecraft_mode." + this.id;
 	}
 
+	/** Max health each tier adds for the melee classes (the front line takes the hits); 0 for the ranged ones. */
+	public int vitalityHealth() {
+		return switch (this) {
+			case WARRIOR -> 4;
+			case PIRATE, SHINIGAMI, HUNTER -> 3;
+			case ROGUE -> 2;
+			default -> 0;
+		};
+	}
+
+	/** Armor each tier adds for the melee classes; 0 for the ranged ones. */
+	public double vitalityArmor() {
+		return switch (this) {
+			case WARRIOR -> 2.0;
+			case PIRATE, SHINIGAMI, HUNTER -> 1.5;
+			case ROGUE -> 1.0;
+			default -> 0.0;
+		};
+	}
+
 	/** Title for tier 1..4; tier 0 uses {@link #nameKey()}. */
 	public String tierKey(final int tier) {
 		return tier <= 0 ? this.nameKey() : this.nameKey() + ".tier" + tier;

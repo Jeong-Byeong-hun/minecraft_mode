@@ -163,6 +163,45 @@ public final class Actions {
 		};
 	}
 
+	/** A step that can hurt enemies. */
+	private static SkillAction attack(final Consumer<SkillContext> run, final Component description) {
+		return tagged(run, description, false, true);
+	}
+
+	/** A step that takes the caster somewhere, hurting what it passes or lands on when {@code damages}. */
+	private static SkillAction move(final Consumer<SkillContext> run, final Component description, final boolean damages) {
+		return tagged(run, description, true, damages);
+	}
+
+	private static SkillAction tagged(final Consumer<SkillContext> run, final Component description, final boolean moves, final boolean damages) {
+		return new SkillAction() {
+			@Override
+			public void run(final SkillContext ctx) {
+				run.accept(ctx);
+			}
+
+			@Override
+			public Component describe() {
+				return description;
+			}
+
+			@Override
+			public boolean moves() {
+				return moves;
+			}
+
+			@Override
+			public boolean damages() {
+				return damages;
+			}
+		};
+	}
+
+	/** Same flags as {@code inner} (for repeat and delay). */
+	private static SkillAction wrap(final SkillAction inner, final Consumer<SkillContext> run, final Component description) {
+		return tagged(run, description, inner.moves(), inner.damages());
+	}
+
 	private static SkillAction modifier(final Consumer<SkillContext> run, final Component description) {
 		return new SkillAction() {
 			@Override
@@ -206,7 +245,7 @@ public final class Actions {
 
 	/** Cone in front of the caster. */
 	public static SkillAction slash(final double range, final double arc, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			double r = ctx.area(range);
 			for (LivingEntity e : ctx.enemiesInCone(r, arc)) {
 				ctx.hit(e, mult);
@@ -218,7 +257,7 @@ public final class Actions {
 
 	/** Everything around the caster. */
 	public static SkillAction nova(final double radius, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			double r = ctx.area(radius);
 			Vec3 c = ctx.caster.position().add(0, 0.2, 0);
 			for (LivingEntity e : ctx.enemiesNear(c, r)) {
@@ -234,7 +273,7 @@ public final class Actions {
 	/** Dashes over a few ticks, hitting each enemy in the path once ({@code mult} 0 = no damage). */
 	public static SkillAction dash(final double distance, final double mult) {
 		Component text = mult > 0 ? Component.translatable(DASH_HIT, num(distance), pct(mult)) : Component.translatable(DASH, num(distance));
-		return action(ctx -> {
+		return move(ctx -> {
 			// follow the path itself (2 blocks a tick) so steps never cut through slopes
 			List<Vec3> path = new ArrayList<>();
 			path.add(ctx.caster.position());
@@ -247,6 +286,7 @@ public final class Actions {
 				stops.add(path.getLast());
 			}
 			Set<UUID> hit = new HashSet<>();
+			ctx.guard(stops.size() + Engage.GUARD_TICKS);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, 1.5F);
 			for (int i = 0; i < stops.size(); i++) {
 				final Vec3 from = i == 0 ? path.getFirst() : stops.get(i - 1);
@@ -266,16 +306,18 @@ public final class Actions {
 					}
 				});
 			}
-		}, text);
+		}, text, mult > 0);
 	}
 
 	/** Jump, then slam on landing. */
 	public static SkillAction leap(final double height, final double radius, final double mult) {
-		return action(ctx -> {
+		return move(ctx -> {
 			Vec3 dir = ctx.flatLook();
 			impulse(ctx.caster, new Vec3(dir.x * 0.9, 0.5 + height * 0.12, dir.z * 0.9));
 			sound(ctx, SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 0.6F);
+			ctx.guard(Engage.AIR_TICKS);
 			Movement.guardFall(ctx.caster, () -> {
+				ctx.guard(Engage.GUARD_TICKS);
 				double r = ctx.area(radius);
 				Vec3 c = ctx.caster.position();
 				for (LivingEntity e : ctx.enemiesNear(c, r)) {
@@ -286,12 +328,12 @@ public final class Actions {
 				ctx.level.sendParticles(ParticleTypes.EXPLOSION, c.x, c.y + 0.5, c.z, 1, 0, 0, 0, 0);
 				soundAt(ctx, c, SoundEvents.GENERIC_EXPLODE.value(), 0.8F, 0.8F);
 			});
-		}, Component.translatable(LEAP, num(radius), pct(mult)));
+		}, Component.translatable(LEAP, num(radius), pct(mult)), mult > 0);
 	}
 
 	/** Instant line through every enemy. */
 	public static SkillAction beam(final double length, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			Vec3 from = ctx.eye().add(0, -0.2, 0);
 			Vec3 to = ctx.lookPoint(length);
 			for (LivingEntity e : ctx.enemiesAlong(from, to, 0.9)) {
@@ -304,18 +346,19 @@ public final class Actions {
 	}
 
 	public static SkillAction blink(final double distance) {
-		return action(ctx -> {
+		return move(ctx -> {
 			Vec3 start = ctx.caster.position();
 			Vec3 end = Movement.end(ctx.caster, ctx.look(), distance, Movement.rise(ctx.caster, distance));
 			ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, start.add(0, 1, 0), 15, 0.4, 0.02);
 			Movement.teleport(ctx.caster, end);
+			ctx.guard(Engage.GUARD_TICKS);
 			ctx.fx.burst(ctx.level, end.add(0, 1, 0), 15, 0.4, 0.05);
 			sound(ctx, SoundEvents.ENDERMAN_TELEPORT, 0.8F, 1.3F);
-		}, Component.translatable(BLINK, num(distance)));
+		}, Component.translatable(BLINK, num(distance)), false);
 	}
 
 	public static SkillAction shadowstep(final double range, final double mult) {
-		return action(ctx -> {
+		return move(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -326,14 +369,15 @@ public final class Actions {
 				Movement.teleport(ctx.caster, behind);
 				ctx.caster.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
 			}
+			ctx.guard(Engage.GUARD_TICKS);
 			ctx.hit(target, mult);
 			ctx.fx.burst(ctx.level, Fx.Kind.SLASH, target.position().add(0, target.getBbHeight() / 2, 0), 4, 0.3, 0.0);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 1.2F);
-		}, Component.translatable(SHADOWSTEP, num(range), pct(mult)));
+		}, Component.translatable(SHADOWSTEP, num(range), pct(mult)), true);
 	}
 
 	public static SkillAction execute(final double range, final double mult, final double thresholdPct, final double factor) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -350,7 +394,7 @@ public final class Actions {
 	}
 
 	public static SkillAction chain(final double range, final int jumps, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			LivingEntity current = ctx.lookTarget(range);
 			if (current == null) {
 				current = ctx.enemiesNear(ctx.caster.position(), range).stream().min((a, b) -> Double.compare(a.distanceToSqr(ctx.caster), b.distanceToSqr(ctx.caster))).orElse(null);
@@ -394,6 +438,11 @@ public final class Actions {
 			this.style = style;
 			this.mult = mult;
 			this.speed = style.speed();
+		}
+
+		@Override
+		public boolean damages() {
+			return this.mult > 0;
 		}
 
 		public ProjectileAction count(final int count) {
@@ -528,7 +577,7 @@ public final class Actions {
 		if (explode > 0) {
 			text.append(Component.translatable(EXPLODE, num(explode)));
 		}
-		return action(ctx -> {
+		return attack(ctx -> {
 			Vec3 center = ctx.groundPoint(range);
 			double r = ctx.area(radius);
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, center.add(0, 0.1, 0), r);
@@ -551,7 +600,7 @@ public final class Actions {
 
 	/** Projectiles launched from glowing portals behind the caster toward the crosshair. */
 	public static SkillAction barrage(final ProjectileStyle style, final int count, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			for (int i = 0; i < count; i++) {
 				SkillScheduler.schedule(1 + i * 2, () -> {
 					if (!ctx.valid()) {
@@ -577,7 +626,7 @@ public final class Actions {
 
 	/** Delayed strikes from the sky (meteors, cannon fire, falling swords...). */
 	public static SkillAction strike(final double range, final double radius, final int count, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			Vec3 center = ctx.groundPoint(range);
 			double r = ctx.area(radius);
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, center.add(0, 0.1, 0), r);
@@ -601,7 +650,7 @@ public final class Actions {
 	}
 
 	public static SkillAction lightning(final double range, final double radius, final double mult) {
-		return action(ctx -> {
+		return attack(ctx -> {
 			Vec3 at = ctx.groundPoint(range);
 			LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(ctx.level, EntitySpawnReason.TRIGGERED);
 			if (bolt != null) {
@@ -643,6 +692,11 @@ public final class Actions {
 			this.seconds = seconds;
 			this.mult = mult;
 			this.heal = heal;
+		}
+
+		@Override
+		public boolean damages() {
+			return this.mult > 0;
 		}
 
 		/** Place it where the caster looks instead of at their feet. */
@@ -947,7 +1001,7 @@ public final class Actions {
 	}
 
 	public static SkillAction grapple(final double range) {
-		return action(ctx -> {
+		return move(ctx -> {
 			Vec3 eye = ctx.eye();
 			BlockHitResult hit = ctx.level.clip(new ClipContext(eye, eye.add(ctx.look().scale(range)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, ctx.caster));
 			if (hit.getType() == HitResult.Type.MISS) {
@@ -957,9 +1011,9 @@ public final class Actions {
 			impulse(ctx.caster, to.normalize().scale(Math.min(3.0, 0.6 + to.length() * 0.18)).add(0, 0.35, 0));
 			ctx.fx.line(ctx.level, eye, hit.getLocation(), 0.5);
 			sound(ctx, SoundEvents.FISHING_BOBBER_THROW, 1.0F, 0.6F);
-			Movement.guardFall(ctx.caster, () -> {
-			});
-		}, Component.translatable(GRAPPLE, num(range)));
+			ctx.guard(Engage.AIR_TICKS);
+			Movement.guardFall(ctx.caster, () -> ctx.guard(Engage.GUARD_TICKS));
+		}, Component.translatable(GRAPPLE, num(range)), false);
 	}
 
 	public static SkillAction restoreMana(final int amount) {
@@ -1071,7 +1125,7 @@ public final class Actions {
 
 	/** Runs {@code action} {@code times} times, {@code intervalTicks} apart (the first right away). */
 	public static SkillAction repeat(final int times, final int intervalTicks, final SkillAction action) {
-		return action(ctx -> {
+		return wrap(action, ctx -> {
 			action.run(ctx);
 			for (int i = 1; i < times; i++) {
 				SkillScheduler.schedule(i * intervalTicks, () -> {
@@ -1084,7 +1138,7 @@ public final class Actions {
 	}
 
 	public static SkillAction delay(final double seconds, final SkillAction action) {
-		return action(ctx -> SkillScheduler.schedule((int)(seconds * 20), () -> {
+		return wrap(action, ctx -> SkillScheduler.schedule((int)(seconds * 20), () -> {
 			if (ctx.valid()) {
 				action.run(ctx);
 			}

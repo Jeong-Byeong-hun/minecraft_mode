@@ -1,0 +1,125 @@
+package com.minecraftmode.bag;
+
+import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModItems;
+import java.util.List;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
+import net.minecraft.util.Prediction;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemContainerContents;
+
+/**
+ * Bag contents and the automatic pickup: an item a carried bag of the right kind ({@link BagKind#accepts}) has room for goes into
+ * that bag instead of the inventory. Quartermaster Bram hands every adventurer one bag of each kind ({@link #giveStarter}); more are
+ * sold at the general store.
+ */
+public final class Bags {
+	public static final int SIZE = 27;
+
+	public static List<Item> items() {
+		return List.of(ModItems.GEAR_BAG, ModItems.SUPPLY_BAG, ModItems.ORE_BAG);
+	}
+
+	public static NonNullList<ItemStack> contents(final ItemStack bag) {
+		NonNullList<ItemStack> items = NonNullList.withSize(SIZE, ItemStack.EMPTY);
+		bag.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY).copyInto(items);
+		return items;
+	}
+
+	public static void store(final ItemStack bag, final List<ItemStack> items) {
+		bag.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(items));
+	}
+
+	/**
+	 * Moves as much of {@code stack} into {@code bag} as fits (topping up partial stacks first) and returns how many went in; the
+	 * stack shrinks by that much. Anything a bag may not hold stays out.
+	 */
+	public static int insert(final ItemStack bag, final ItemStack stack) {
+		if (stack.isEmpty() || !stack.getItem().canFitInsideContainerItems()) {
+			return 0;
+		}
+		NonNullList<ItemStack> items = contents(bag);
+		int before = stack.getCount();
+		for (ItemStack held : items) {
+			if (stack.isEmpty()) {
+				break;
+			}
+			if (!held.isEmpty() && ItemStack.isSameItemSameComponents(held, stack) && held.getCount() < held.getMaxStackSize()) {
+				int move = Math.min(stack.getCount(), held.getMaxStackSize() - held.getCount());
+				held.grow(move);
+				stack.shrink(move);
+			}
+		}
+		for (int i = 0; i < items.size() && !stack.isEmpty(); i++) {
+			if (items.get(i).isEmpty()) {
+				items.set(i, stack.split(Math.min(stack.getCount(), stack.getMaxStackSize())));
+			}
+		}
+		int moved = before - stack.getCount();
+		if (moved > 0) {
+			store(bag, items);
+		}
+		return moved;
+	}
+
+	/** Puts what it can of a picked-up {@code stack} into the player's bags that take it; returns how many went in. */
+	public static int absorb(final Player player, final ItemStack stack) {
+		Inventory inventory = player.getInventory();
+		int moved = 0;
+		for (int i = 0; i < inventory.getContainerSize() && !stack.isEmpty(); i++) {
+			ItemStack bag = inventory.getItem(i);
+			// a bag open on screen is written back from its menu, so it takes nothing meanwhile
+			boolean open = player.containerMenu instanceof BagMenu menu && menu.bag() == bag;
+			if (!open && bag.getItem() instanceof BagItem item && item.kind().accepts(stack)) {
+				moved += insert(bag, stack);
+			}
+		}
+		return moved;
+	}
+
+	/** Called by {@code ItemEntityMixin} before vanilla picks {@code entity} up: what fits goes into the bags. */
+	public static void pickup(final ItemEntity entity, final ServerPlayer player) {
+		ItemStack stack = entity.getItem();
+		Item item = stack.getItem();
+		int moved = absorb(player, stack);
+		if (moved <= 0) {
+			return;
+		}
+		player.take(entity, moved);
+		player.awardStat(Stats.ITEM_PICKED_UP.get(item), moved);
+		if (stack.isEmpty()) {
+			entity.discard();
+		} else {
+			entity.setItem(stack);
+		}
+	}
+
+	public static boolean starterTaken(final Player player) {
+		return player.getAttachedOrElse(ModAttachments.STARTER_BAGS, false);
+	}
+
+	/** One bag of each kind, once per player. Returns false when the player already had them. */
+	public static boolean giveStarter(final ServerPlayer player) {
+		if (starterTaken(player)) {
+			return false;
+		}
+		player.setAttached(ModAttachments.STARTER_BAGS, true);
+		for (Item item : items()) {
+			player.getInventory().placeItemBackInInventory(new ItemStack(item), Prediction.SERVER_ONLY);
+		}
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.bags.given").withStyle(ChatFormatting.GREEN));
+		return true;
+	}
+
+	private Bags() {
+	}
+}

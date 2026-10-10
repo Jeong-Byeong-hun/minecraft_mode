@@ -1,6 +1,8 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.BagItem;
+import com.minecraftmode.bag.BagKind;
 import com.minecraftmode.consumable.ReturnScrollItem;
 import com.minecraftmode.dungeon.KeystoneItem;
 import com.minecraftmode.item.ClassResetScrollItem;
@@ -69,6 +71,9 @@ public final class ModItems {
 
 	public static final Item EVOLUTION_ETHER = register("evolution_ether", EvolutionEtherItem::new, new Item.Properties().rarity(Rarity.EPIC));
 	/** Five seconds of reading, then back to the capital (general store). */
+	public static final Item GEAR_BAG = register("gear_bag", p -> new BagItem(BagKind.GEAR, p), new Item.Properties().stacksTo(1));
+	public static final Item SUPPLY_BAG = register("supply_bag", p -> new BagItem(BagKind.SUPPLY, p), new Item.Properties().stacksTo(1));
+	public static final Item ORE_BAG = register("ore_bag", p -> new BagItem(BagKind.ORE, p), new Item.Properties().stacksTo(1));
 	public static final Item RETURN_SCROLL = register("return_scroll", ReturnScrollItem::new, new Item.Properties().stacksTo(16));
 	/** Needed to enhance gear from +6 (lairs, raids, bounties, named monsters). */
 	public static final Item ENHANCEMENT_STONE = register("enhancement_stone", new Item.Properties().rarity(Rarity.UNCOMMON));

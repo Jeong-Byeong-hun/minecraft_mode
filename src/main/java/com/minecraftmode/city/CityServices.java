@@ -45,6 +45,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.PotionItem;
 import net.minecraft.world.item.ShearsItem;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Items;
@@ -75,6 +76,10 @@ public final class CityServices {
 			}
 			return InteractionResult.PASS;
 		});
+		// the travel circles (plaza <-> homestead plains) answer a right-click, and nobody breaks them
+		UseBlockCallback.EVENT.register((player, level, hand, hit) -> CityFixtures.isWaystone(level, hit.getBlockPos())
+			? CityFixtures.useWaystone(player, level, hit.getBlockPos()) : InteractionResult.PASS);
+		PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> !CityFixtures.isWaystone(level, pos));
 		ServerPlayerEvents.JOIN.register(CityServices::welcome);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			feedResidents(server.overworld());
@@ -82,6 +87,7 @@ public final class CityServices {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());
 				keepAnvils(server.overworld());
+				CityFixtures.ensure(server.overworld());
 				TrainingGrounds.ensureBuilt(server.overworld());
 			}
 			if (server.getTickCount() % 20 == 0) {

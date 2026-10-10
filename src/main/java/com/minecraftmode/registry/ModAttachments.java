@@ -12,6 +12,7 @@ import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
 import com.mojang.serialization.Codec;
+import java.util.List;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -110,6 +111,18 @@ public final class ModAttachments {
 	/** Whether Bram's shield was handed out (it joined the kit later, so earlier kit owners collect it on their next visit). Kept through death. */
 	public static final AttachmentType<Boolean> STARTER_SHIELD = AttachmentRegistry.create(
 		MinecraftMode.id("starter_shield"),
+		builder -> builder.persistent(Codec.BOOL).copyOnDeath()
+	);
+
+	/** Advancement kits already handed out ({@code <class>_<tier>}, see {@code AdvanceKit}), so a class reset cannot farm them. Kept through death. */
+	public static final AttachmentType<List<String>> ADVANCE_KITS = AttachmentRegistry.create(
+		MinecraftMode.id("advance_kits"),
+		builder -> builder.persistent(Codec.STRING.listOf()).copyOnDeath()
+	);
+
+	/** Starter bags already handed out by Quartermaster Bram (see {@code Bags}). Kept through death. */
+	public static final AttachmentType<Boolean> STARTER_BAGS = AttachmentRegistry.create(
+		MinecraftMode.id("starter_bags"),
 		builder -> builder.persistent(Codec.BOOL).copyOnDeath()
 	);
 

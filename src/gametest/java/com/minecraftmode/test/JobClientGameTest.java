@@ -276,7 +276,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 			require(QuestService.active(player) == null, "the first class needs no trial");
 			JobStats.refresh(player);
 			double maxHealth = player.getAttributeValue(Attributes.MAX_HEALTH);
-			require(maxHealth == 25.0, "warrior tier 1 at level 10 should have 20 + 4 (Iron Body) + 1 (level) health, got " + maxHealth);
+			require(maxHealth == 20.0 + 4 + 1 + JobClass.WARRIOR.vitalityHealth(),
+				"warrior tier 1 at level 10 should have 20 + 4 (Iron Body) + 1 (level) + 4 (melee vitality) health, got " + maxHealth);
 			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.OTHER_CLASS, "other trainers should turn a warrior away");
 
 			// tier 2: level gate, abandon, kills and tokens, then the materials

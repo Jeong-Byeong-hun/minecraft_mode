@@ -75,6 +75,9 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 					output.accept(ModItems.RETURN_SCROLL);
+					output.accept(ModItems.GEAR_BAG);
+					output.accept(ModItems.SUPPLY_BAG);
+					output.accept(ModItems.ORE_BAG);
 					output.accept(ModItems.LAIR_MAP);
 					output.accept(ModItems.KITCHEN_STATION);
 					output.accept(ModItems.ALCHEMY_STATION);

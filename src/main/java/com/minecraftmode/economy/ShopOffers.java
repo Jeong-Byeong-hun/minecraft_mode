@@ -1,5 +1,6 @@
 package com.minecraftmode.economy;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.job.JobData;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.Fireworks;
@@ -34,6 +36,8 @@ import org.jspecify.annotations.Nullable;
  */
 public final class ShopOffers {
 	private static final int UNLIMITED = Integer.MAX_VALUE;
+	/** A bag at the general store (copper): 4 silver. */
+	public static final int BAG_PRICE = 4 * Coins.SILVER;
 
 	/**
 	 * One line of a price list: pay {@code costCount} x {@code cost} (plus {@code extraCount} x
@@ -90,6 +94,9 @@ public final class ShopOffers {
 		}
 		if (type == ShopType.GENERAL) {
 			list.add(priced(3 * 9, ModItems.RETURN_SCROLL));
+			for (Item bag : Bags.items()) {
+				list.add(priced(BAG_PRICE, bag));
+			}
 			list.add(priced(5 * 9, ModItems.LAIR_MAP));
 		}
 		return list;
@@ -142,6 +149,34 @@ public final class ShopOffers {
 				sell(Items.LEATHER, 6, ModItems.COPPER_COIN, 1),
 				sell(Items.FEATHER, 16, ModItems.COPPER_COIN, 1),
 				sell(Items.SLIME_BALL, 4, ModItems.COPPER_COIN, 1),
+				// odds and ends that pile up while adventuring: a little copper so they are worth bringing back
+				sell(Items.STICK, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.WHEAT_SEEDS, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.BEETROOT_SEEDS, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.PUMPKIN_SEEDS, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.MELON_SEEDS, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.POISONOUS_POTATO, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.EGG, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.INK_SAC, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.GLOW_INK_SAC, 4, ModItems.COPPER_COIN, 1),
+				sell(Items.KELP, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.BAMBOO, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.CACTUS, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.SUGAR_CANE, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.OAK_SAPLING, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.SPRUCE_SAPLING, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.BIRCH_SAPLING, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.CLAY_BALL, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.NETHERRACK, 64, ModItems.COPPER_COIN, 1),
+				sell(Items.RABBIT_HIDE, 6, ModItems.COPPER_COIN, 1),
+				sell(Items.PRISMARINE_SHARD, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.PRISMARINE_CRYSTALS, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.MAGMA_CREAM, 4, ModItems.COPPER_COIN, 1),
+				sell(Items.GLOWSTONE_DUST, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.REDSTONE, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.LAPIS_LAZULI, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.QUARTZ, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.CHORUS_FRUIT, 8, ModItems.COPPER_COIN, 1),
 				sell(Items.ENDER_PEARL, 2, ModItems.COPPER_COIN, 2),
 				sell(Items.COAL, 16, ModItems.COPPER_COIN, 2),
 				sell(ModItems.ALUMINUM_INGOT, 4, ModItems.COPPER_COIN, 3),

@@ -36,6 +36,8 @@ import net.minecraft.world.item.ItemStack;
 public final class JobHud {
 	/** Bottom of the top-left panels drawn this frame (other HUD parts stay below it). */
 	private static int leftBottom = 44;
+	/** Right edge of the class panel drawn last (the target health bar stays right of it). */
+	private static int panelRight = 128;
 
 	public static void init() {
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, MinecraftMode.id("job_hud"), JobHud::extract);
@@ -62,6 +64,7 @@ public final class JobHud {
 		String level = "Lv " + data.level() + (data.level() >= JobProgression.MAX_LEVEL && paragon.level() > 0 ? " ✦" + paragon.level() : "");
 		int w = Math.max(124, font.width(title) + font.width(level) + 18);
 		int color = 0xFF000000 | data.job().color();
+		panelRight = x + w;
 		g.fill(x, y, x + w, y + 40, 0x90000000);
 		g.fill(x, y, x + 2, y + 40, color);
 		g.text(font, title, x + 6, y + 3, 0xFFFFFFFF, true);
@@ -121,6 +124,10 @@ public final class JobHud {
 
 	public static int leftBottom() {
 		return leftBottom;
+	}
+
+	public static int panelRight() {
+		return panelRight;
 	}
 
 	private static void bar(final GuiGraphicsExtractor g, final int x, final int y, final int w, final int h, final float fraction, final int color) {

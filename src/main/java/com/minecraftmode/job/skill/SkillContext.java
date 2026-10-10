@@ -53,6 +53,16 @@ public final class SkillContext {
 		this.areaScale = 1.0 + mods.fraction(EngraveStat.SKILL_AREA);
 	}
 
+	/**
+	 * Guards the caster for {@code ticks} when this skill closes in on enemies ({@link Skill#engages}); movement steps call it when
+	 * they start and when they arrive.
+	 */
+	public void guard(final int ticks) {
+		if (this.skill.engages()) {
+			Engage.guard(this.caster, ticks);
+		}
+	}
+
 	public boolean valid() {
 		return this.caster.isAlive() && !this.caster.isRemoved() && this.caster.level() == this.level;
 	}
@@ -191,6 +201,9 @@ public final class SkillContext {
 	private void applyOnHit(final LivingEntity target) {
 		if (!target.isAlive()) {
 			return;
+		}
+		if (this.skill.engages()) {
+			Engage.stagger(target, this.caster);
 		}
 		for (BiConsumer<SkillContext, LivingEntity> effect : this.onHit) {
 			effect.accept(this, target);

@@ -82,6 +82,9 @@ public class ModModelProvider extends FabricModelProvider {
 			generators.generateFlatItem(Consumables.item(def), ModelTemplates.FLAT_ITEM);
 		}
 		generators.generateFlatItem(ModItems.RETURN_SCROLL, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.GEAR_BAG, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.SUPPLY_BAG, ModelTemplates.FLAT_ITEM);
+		generators.generateFlatItem(ModItems.ORE_BAG, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.ENHANCEMENT_STONE, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.PROTECTION_SCROLL, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);

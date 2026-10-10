@@ -171,6 +171,7 @@ final class JobLang {
 		EndgameLang.add(b, ko);
 		ContentLang.add(b, ko);
 		MapLang.add(b, ko);
+		TownLang.add(b, ko);
 	}
 
 	private JobLang() {

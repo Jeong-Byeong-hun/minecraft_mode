@@ -8,6 +8,7 @@ import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.job.skill.Engage;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.skill.SkillCaster;
@@ -107,6 +108,10 @@ public final class JobTooltips {
 			if (detail) {
 				for (SkillAction action : skill.actions()) {
 					lines.add(Component.literal("    - ").withStyle(ChatFormatting.DARK_GRAY).append(action.describe().copy().withStyle(ChatFormatting.GRAY)));
+				}
+				if (skill.engages()) {
+					lines.add(Component.literal("    - ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable("tooltip.minecraft_mode.skill.engage",
+						Engage.seconds(Engage.GUARD_TICKS), Engage.seconds(Engage.STAGGER_TICKS), Engage.seconds(Engage.BOSS_STAGGER_TICKS)).withStyle(ChatFormatting.DARK_AQUA)));
 				}
 			}
 		}

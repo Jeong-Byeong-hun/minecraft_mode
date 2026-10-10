@@ -128,6 +128,7 @@ public final class JobProgression {
 		JobClass job = data.tier() == 0 ? choice : data.job();
 		set(player, data.withJob(job, next));
 		JobStats.refresh(player);
+		AdvanceKit.give(player, job, next);
 
 		ServerLevel level = player.level();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 1.0F);

@@ -7,15 +7,6 @@
       "bounding_box": "full",
       "spawns": [
         {
-          "type": "minecraft:creeper",
-          "count": {
-            "type": "minecraft:uniform",
-            "max_inclusive": 2,
-            "min_inclusive": 1
-          },
-          "weight": 60
-        },
-        {
           "type": "minecraft:husk",
           "count": {
             "type": "minecraft:uniform",
@@ -45,7 +36,7 @@
         {
           "type": "minecraft_mode:dune_scorpion",
           "count": 1,
-          "weight": 70
+          "weight": 57
         }
       ]
     }

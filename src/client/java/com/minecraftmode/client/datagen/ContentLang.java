@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonAffix;
@@ -26,22 +27,46 @@ final class ContentLang {
 		story(b, ko);
 	}
 
-	/** Guide Nella's topics and Quartermaster Bram's starter kit. */
+	/** Guide Nella's topics, Quartermaster Bram's starter kit, Baker Hanna's bread and the Training Grounds. */
 	private static void guide(final TranslationBuilder b, final boolean ko) {
 		b.add("screen.minecraft_mode.guide.title", ko ? "안내원 넬라 — 무엇이든 물어보세요" : "Guide Nella - ask me anything");
 		b.add("screen.minecraft_mode.guide.plaza", ko ? "광장 (시작 지점)" : "Plaza (spawn)");
+		b.add("screen.minecraft_mode.guide.training", ko ? "수련장 입구 (지하 계단)" : "Training Grounds (stairs down)");
 		b.add("screen.minecraft_mode.guide.leveling_left", ko ? "지금 Lv %s · 레벨 %3$s까지 경험치 %2$s 남음" : "Now Lv %s · %s EXP to level %s");
 		b.add("screen.minecraft_mode.guide.leveling_done", ko ? "레벨 10 달성! 원하는 직업의 교관을 찾아가세요 (길 안내)." : "Level 10 reached! Visit the trainer of your class (see Directions).");
-		b.add("message.minecraft_mode.starter_kit.given", ko ? "보급관 브람에게서 철 갑옷 한 벌과 철 검·곡괭이·도끼를 받았습니다!"
-			: "Quartermaster Bram hands you a set of iron armor and an iron sword, pickaxe and axe!");
+		b.add("message.minecraft_mode.starter_kit.given", ko ? "보급관 브람에게서 보급관의 갑옷 한 벌과 검·곡괭이·도끼, 방패를 받았습니다! 모두 닳지 않습니다."
+			: "Quartermaster Bram hands you the Quartermaster's armor, sword, pickaxe, axe and shield - none of it ever wears out!");
+		String[][] kit = {
+			{"iron_helmet", "Quartermaster's Helmet", "보급관의 투구"},
+			{"iron_chestplate", "Quartermaster's Chestplate", "보급관의 흉갑"},
+			{"iron_leggings", "Quartermaster's Leggings", "보급관의 각반"},
+			{"iron_boots", "Quartermaster's Boots", "보급관의 부츠"},
+			{"iron_sword", "Quartermaster's Sword", "보급관의 검"},
+			{"iron_pickaxe", "Quartermaster's Pickaxe", "보급관의 곡괭이"},
+			{"iron_axe", "Quartermaster's Axe", "보급관의 도끼"},
+			{"shield", "Quartermaster's Shield", "보급관의 방패"}};
+		if (kit.length != StarterKit.ITEMS.size()) {
+			throw new IllegalStateException("every starter kit item needs a name");
+		}
+		for (String[] item : kit) {
+			b.add("item.minecraft_mode.starter." + item[0], ko ? item[2] : item[1]);
+		}
+		b.add("message.minecraft_mode.starter_kit.shield", ko ? "브람: 참, 방패도 하나 가져가게. 왼손에 들고 우클릭하면 공격을 막을 수 있지."
+			: "Bram: Oh, and take a shield too. Hold it in your off hand and right-click to block.");
+		b.add("message.minecraft_mode.daily_bread.given", ko ? "제빵사 한나에게서 빵 %s개를 받았습니다!" : "Baker Hanna hands you %s loaves of bread!");
+		b.add("message.minecraft_mode.daily_bread.taken", ko ? "오늘 몫은 이미 받으셨어요. 다음 빵은 %s 뒤에 나와요!" : "You already had today's bread. The next batch is ready in %s!");
+		b.add("message.minecraft_mode.training.enter", ko ? "수련장: 직업을 고르기 전까지 몬스터가 계속 나오고 직업 경험치를 %s배로 얻습니다. 힘들면 계단으로 올라가세요!"
+			: "Training Grounds: until you choose a class, monsters keep coming and give %sx class EXP. Head up the stairs if it gets too hot!");
+		b.add("message.minecraft_mode.training.classed", ko ? "수련장: 직업을 고르기 전의 모험가를 위한 곳이라, 직업이 있으면 몬스터가 나오지 않습니다."
+			: "Training Grounds: this hall is for adventurers without a class - monsters only come for them.");
 		b.add("message.minecraft_mode.starter_kit.taken", ko ? "보급품은 모험가마다 한 번만 받을 수 있네." : "The kit is one per adventurer - you already have yours.");
 		String[][] topics = {
 			{"start", "Getting started", "처음 시작",
-				"Defeat monsters and mine iron or better ores to gain class experience (see Leveling to 10). At level 10, take the trial of the trainer whose class you want.\n\nFirst pick up a set of iron gear from Quartermaster Bram here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
-				"몬스터를 처치하고 철 이상의 광석을 캐면 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게서 시련을 받아 직업을 고르세요.\n\n먼저 바로 옆 보급관 브람에게서 철 장비 한 벌을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
+				"Defeat monsters and mine ores (the rarer, the more) to gain class experience (see Leveling to 10). At level 10, take the trial of the trainer whose class you want.\n\nFirst pick up the unbreakable Quartermaster's gear and shield from Bram and today's bread from Baker Hanna here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
+				"몬스터를 처치하고 광석을 캐면(희귀할수록 많이) 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게서 시련을 받아 직업을 고르세요.\n\n먼저 바로 옆 보급관 브람에게서 닳지 않는 보급관의 장비와 방패를, 제빵사 한나에게서 오늘의 빵을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
 			{"leveling", "Leveling to 10", "빠른 성장 (Lv 10)",
-				"Level 10 takes %s EXP. Hunting is fastest: a monster gives EXP equal to its max health (zombie or skeleton 20, enderman 40, named 40-60), so about %s zombies. Ores are slow (iron 2, diamond 8).\n\n· Wear Bram's iron gear and hunt outside the walls at night\n· A monster spawner room is the best spot\n· Scholar's Coffee from the alchemist in the market (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP",
-				"레벨 10까지 경험치 %s. 사냥이 가장 빠릅니다: 몬스터 경험치는 최대 체력과 같아서 좀비·스켈레톤 20, 엔더맨 40, 네임드 40~60이니 좀비 약 %s마리면 됩니다. 광석은 철 2, 다이아 8로 느립니다.\n\n· 브람의 철 장비를 입고 밤에 성벽 밖에서 사냥\n· 몬스터 스포너가 있는 방이 최고의 사냥터\n· 시장 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다"},
+				"Level 10 takes %s EXP. A monster gives EXP equal to its max health (zombie or skeleton 20, spider 16), so about %s zombies; ores are slow.\n\n· Fastest: the Training Grounds under the city (stairs in the park south-east of the fountain). Monsters keep coming and give double EXP until you choose a class: about %s zombies\n· Take Bram's unbreakable gear and shield and Hanna's bread\n· Scholar's Coffee from the alchemist (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP",
+				"레벨 10까지 경험치 %s. 몬스터 경험치는 최대 체력과 같아서(좀비·스켈레톤 20, 거미 16) 좀비 약 %s마리면 됩니다. 광석은 느립니다.\n\n· 가장 빠른 곳: 도시 지하 수련장(분수 남동쪽 공원의 계단). 몬스터가 계속 나오고 직업을 고르기 전까지 경험치 2배라 좀비 약 %s마리\n· 브람의 닳지 않는 장비·방패와 한나의 빵을 챙기기\n· 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다"},
 			{"classes", "Classes", "직업과 전직",
 				"Seven classes: Warrior, Rogue, Mage, Archer, Pirate, Soul Reaper and Hunter. Every advancement is a trial from the class trainer: defeat the listed monsters, collect their trial tokens and hand them in with essence. Tiers open at levels 10, 25, 45 and 70.\n\nThe class screen (K) shows your next trial and where its trainer stands. Past level 100 you gain paragon levels.",
 				"직업은 전사·도적·법사·궁수·해적·사신·헌터 7가지입니다. 모든 전직은 교관의 시련입니다: 목표 몬스터를 처치해 시련 증표를 모으고 정수와 함께 제출하세요. 레벨 10·25·45·70에 1~4차가 열립니다.\n\n직업 창(K)에서 다음 시련과 교관 위치를 볼 수 있습니다. 레벨 100 이후에는 초월 레벨이 쌓입니다."},

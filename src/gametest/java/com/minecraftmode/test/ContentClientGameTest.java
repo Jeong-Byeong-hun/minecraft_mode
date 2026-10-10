@@ -1,6 +1,7 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.client.companion.CompanionScreen;
 import com.minecraftmode.client.craft.CraftScreen;
@@ -69,6 +70,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -493,6 +495,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 
 	/** Right-clicking the quartermaster gives the plain iron kit once; right-clicking the guide opens her topics. */
 	private static void checkPlazaNpcs(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		int[] bakerId = new int[1];
 		String report = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			ServerLevel level = player.level();
@@ -513,13 +516,36 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			for (ItemStack stack : player.getInventory()) {
 				if (StarterKit.ITEMS.contains(stack.getItem())) {
 					require(!stack.isEnchanted(), "kit items come without enchantments: " + stack);
+					require(stack.has(DataComponents.UNBREAKABLE), "kit items never wear out: " + stack);
+					require(stack.getHoverName().getString().startsWith("Quartermaster's"), "kit items carry the quartermaster name: " + stack.getHoverName().getString());
 				}
 			}
 			require(StarterKit.taken(player), "the kit is remembered");
 			player.interactOn(bram, InteractionHand.MAIN_HAND, bram.position().add(0, 1, 0));
 			require(JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.IRON_SWORD) == before.get(net.minecraft.world.item.Items.IRON_SWORD) + 1,
 				"the kit is given only once");
+			// the shield joined the kit later: someone who took the kit before collects only the shield on the next visit
+			require(StarterKit.shieldTaken(player), "a new kit includes the shield");
+			player.setAttached(ModAttachments.STARTER_SHIELD, false);
+			int shields = JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.SHIELD);
+			int swords = JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.IRON_SWORD);
+			player.interactOn(bram, InteractionHand.MAIN_HAND, bram.position().add(0, 1, 0));
+			require(JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.SHIELD) == shields + 1
+				&& JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.IRON_SWORD) == swords, "an earlier kit owner gets only the shield");
+			player.interactOn(bram, InteractionHand.MAIN_HAND, bram.position().add(0, 1, 0));
+			require(JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.SHIELD) == shields + 1, "the shield is given once too");
 			bram.discard();
+			// Baker Hanna: a stack of bread once per Minecraft day
+			CityNpc hanna = ModEntities.CITY_NPC.create(level, EntitySpawnReason.COMMAND);
+			hanna.setRole(CityNpc.Role.BAKER);
+			hanna.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
+			level.addFreshEntity(hanna);
+			bakerId[0] = hanna.getId();
+			int bread = bread(player);
+			player.interactOn(hanna, InteractionHand.MAIN_HAND, hanna.position().add(0, 1, 0));
+			require(bread(player) == bread + DailyBread.COUNT && DailyBread.takenToday(player), "Hanna hands out " + DailyBread.COUNT + " bread, got " + (bread(player) - bread));
+			player.interactOn(hanna, InteractionHand.MAIN_HAND, hanna.position().add(0, 1, 0));
+			require(bread(player) == bread + DailyBread.COUNT, "the bread is once a day");
 			CityNpc nella = ModEntities.CITY_NPC.create(level, EntitySpawnReason.COMMAND);
 			nella.setRole(CityNpc.Role.GUIDE);
 			nella.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
@@ -546,7 +572,29 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		shot(context, "content_guide_places");
 		GuideScreen.showTopic(GuideScreen.Topic.START);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
-		MinecraftMode.LOGGER.info("[content] plaza npcs: starter kit {}, guide screen opened", report);
+		// the next day there is bread again
+		server.runCommand("time add " + ResetCycle.DAY_TICKS);
+		int fresh = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Entity hanna = player.level().getEntity(bakerId[0]);
+			require(hanna != null && !DailyBread.takenToday(player), "a new day resets the bread");
+			int bread = bread(player);
+			player.interactOn(hanna, InteractionHand.MAIN_HAND, hanna.position().add(0, 1, 0));
+			hanna.discard();
+			return bread(player) - bread;
+		});
+		require(fresh == DailyBread.COUNT, "Hanna should hand out bread again the next day, got " + fresh);
+		MinecraftMode.LOGGER.info("[content] plaza npcs: starter kit {} with the shield, daily bread, guide screen opened", report);
+	}
+
+	/** Bread in the inventory plus loaves dropped next to the player (a full inventory drops the rest). */
+	private static int bread(final ServerPlayer player) {
+		int dropped = 0;
+		for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+			player.getBoundingBox().inflate(4.0), e -> e.getItem().is(net.minecraft.world.item.Items.BREAD))) {
+			dropped += item.getItem().getCount();
+		}
+		return JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.BREAD) + dropped;
 	}
 
 	// ------------------------------------------------------------------ screens

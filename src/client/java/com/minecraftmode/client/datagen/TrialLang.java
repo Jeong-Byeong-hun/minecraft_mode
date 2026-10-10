@@ -72,8 +72,8 @@ final class TrialLang {
 		b.add("message.minecraft_mode.quest.progress", "%s %s/%s");
 		b.add("message.minecraft_mode.quest.token", ko ? "시련 증표: %s (%s/%s)" : "Trial token: %s (%s/%s)");
 		b.add("message.minecraft_mode.city.welcome", ko
-			? "스톰홀드에 오신 것을 환영합니다! 광장의 안내원 넬라에게 궁금한 것을 물어보고, 보급관 브람에게서 철 장비 한 벌을 받아 가세요."
-			: "Welcome to Stormhold! Ask Guide Nella on the plaza anything, and pick up a set of iron gear from Quartermaster Bram.");
+			? "스톰홀드에 오신 것을 환영합니다! 광장의 안내원 넬라에게 궁금한 것을 물어보고, 보급관 브람에게서 닳지 않는 장비와 방패를, 제빵사 한나에게서 매일 빵을 받아 가세요."
+			: "Welcome to Stormhold! Ask Guide Nella on the plaza anything, pick up unbreakable gear and a shield from Quartermaster Bram, and bread from Baker Hanna every day.");
 
 		b.add("commands.minecraft_mode.job.trainer", ko ? "%s을(를) 소환했습니다" : "Summoned %s");
 		b.add("commands.minecraft_mode.job.unknown_class", ko ? "알 수 없는 직업입니다" : "Unknown class");

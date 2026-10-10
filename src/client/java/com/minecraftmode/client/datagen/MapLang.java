@@ -19,9 +19,12 @@ final class MapLang {
 		b.add("screen.minecraft_mode.map.size", ko ? "크기 %s" : "Size %s");
 		b.add("screen.minecraft_mode.map.zoom", ko ? "배율 x%s" : "Zoom x%s");
 		b.add("screen.minecraft_mode.map.scale", ko ? "1칸 = %s px" : "%s px / block");
-		b.add("screen.minecraft_mode.map.hint", ko ? "드래그: 이동 · 휠: 확대/축소 · 우클릭: 웨이포인트 추가" : "Drag to pan - wheel to zoom - right-click to add a waypoint");
+		b.add("screen.minecraft_mode.map.hint", ko ? "드래그: 이동 · 휠: 확대/축소 · 클릭: NPC 선택 · 우클릭: 웨이포인트 추가"
+			: "Drag to pan - wheel to zoom - click an NPC to pick it - right-click to add a waypoint");
 		b.add("screen.minecraft_mode.map.waypoints", ko ? "웨이포인트" : "Waypoints");
 		b.add("screen.minecraft_mode.map.none", ko ? "아직 없습니다. 지도를 우클릭하거나 + 웨이포인트를 누르세요." : "None yet - right-click the map or press + Waypoint.");
+		b.add("screen.minecraft_mode.map.npcs", ko ? "NPC" : "NPCs");
+		b.add("screen.minecraft_mode.map.no_city", ko ? "NPC는 스톰홀드가 있는 오버월드 지도에만 표시됩니다." : "NPCs are shown on the overworld map, where Stormhold stands.");
 		b.add("screen.minecraft_mode.map.new_waypoint", ko ? "새 웨이포인트" : "New waypoint");
 		b.add("screen.minecraft_mode.map.edit_waypoint", ko ? "웨이포인트 편집" : "Edit waypoint");
 		b.add("screen.minecraft_mode.map.name", ko ? "이름" : "Name");

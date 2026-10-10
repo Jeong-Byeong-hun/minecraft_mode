@@ -43,7 +43,7 @@ public final class Quests {
 	private static final Set<EntityType<?>> ILLAGERS = Set.of(EntityTypes.PILLAGER, EntityTypes.VINDICATOR, EntityTypes.EVOKER, EntityTypes.RAVAGER);
 	private static final Set<EntityType<?>> HOSTILES = Set.of(
 		EntityTypes.ZOMBIE, EntityTypes.HUSK, EntityTypes.DROWNED, EntityTypes.SKELETON, EntityTypes.STRAY, EntityTypes.BOGGED, EntityTypes.SPIDER,
-		EntityTypes.CAVE_SPIDER, EntityTypes.CREEPER, EntityTypes.WITCH, EntityTypes.ENDERMAN, EntityTypes.PHANTOM, EntityTypes.PILLAGER,
+		EntityTypes.CAVE_SPIDER, EntityTypes.WITCH, EntityTypes.ENDERMAN, EntityTypes.PHANTOM, EntityTypes.PILLAGER,
 		EntityTypes.VINDICATOR, EntityTypes.BLAZE, EntityTypes.GHAST, EntityTypes.WITHER_SKELETON, EntityTypes.MAGMA_CUBE, EntityTypes.HOGLIN,
 		EntityTypes.PIGLIN_BRUTE, EntityTypes.GUARDIAN, EntityTypes.SHULKER, ModEntities.MINE_RAIDER
 	);
@@ -121,10 +121,10 @@ public final class Quests {
 			THIEVES_TOKEN, 6, List.of(source(SPIDERS, 0.4F, 1)),
 			List.of(mat(ModItems.ESSENCE, 4)));
 		add("rogue_2", JobClass.ROGUE, 2, "The Way of the Ninja", "닌자의 길",
-			"A ninja strikes before the fuse is lit. Hunt creepers and recover the stolen scrolls.",
-			"닌자는 도화선에 불이 붙기 전에 벤다. 크리퍼를 사냥하고 빼앗긴 두루마리를 되찾아라.",
-			List.of(kill("Creepers", "크리퍼", Set.of(EntityTypes.CREEPER), 12), kill("Witches", "마녀", Set.of(EntityTypes.WITCH), 3)),
-			NINJA_SCROLL, 8, List.of(source(Set.of(EntityTypes.CREEPER), 0.5F, 1), source(Set.of(EntityTypes.WITCH), 1.0F, 2)),
+			"A ninja strikes before the bowstring is drawn. Hunt skeletons and recover the stolen scrolls.",
+			"닌자는 시위가 당겨지기 전에 벤다. 스켈레톤을 사냥하고 빼앗긴 두루마리를 되찾아라.",
+			List.of(kill("Skeletons", "스켈레톤", SKELETONS, 12), kill("Witches", "마녀", Set.of(EntityTypes.WITCH), 3)),
+			NINJA_SCROLL, 8, List.of(source(SKELETONS, 0.5F, 1), source(Set.of(EntityTypes.WITCH), 1.0F, 2)),
 			List.of(mat(ModItems.ESSENCE, 16)));
 		add("rogue_3", JobClass.ROGUE, 3, "Creed of Assassins", "어쌔신의 신조",
 			"Nothing is true, everything is permitted. Bring down a golem and the endermen who watch from the dark.",
@@ -229,8 +229,8 @@ public final class Quests {
 		add("shinigami_2", JobClass.SHINIGAMI, 2, "The Name of Your Blade", "참백도의 이름",
 			"Your zanpakuto will only tell you its name in the dark between worlds. Hunt the endermen and follow the hell butterflies.",
 			"참백도는 세계 사이의 어둠 속에서만 이름을 알려 준다. 엔더맨을 사냥하고 지옥나비를 따라가라.",
-			List.of(kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 8), kill("Creepers", "크리퍼", Set.of(EntityTypes.CREEPER), 8)),
-			HELL_BUTTERFLY, 8, List.of(source(Set.of(EntityTypes.ENDERMAN), 0.6F, 1), source(Set.of(EntityTypes.CREEPER), 0.2F, 1)),
+			List.of(kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 8), kill("Spiders", "거미", SPIDERS, 10)),
+			HELL_BUTTERFLY, 8, List.of(source(Set.of(EntityTypes.ENDERMAN), 0.6F, 1), source(SPIDERS, 0.2F, 1)),
 			List.of(mat(ModItems.ESSENCE, 16)));
 		add("shinigami_3", JobClass.SHINIGAMI, 3, "Bankai Training", "만해 수행",
 			"Bankai takes ten years - or three days with a Tenshintai. Break a golem and the frozen dead to earn one.",
@@ -255,8 +255,8 @@ public final class Quests {
 		add("hunter_2", JobClass.HUNTER, 2, "Water Divination", "수견식",
 			"A glass of water and a leaf will tell what kind of Nen you have. Train hard enough to make it move.",
 			"물이 든 유리잔과 잎 한 장이 네 념의 계통을 알려 줄 거야. 잎이 움직일 만큼 수련해.",
-			List.of(kill("Skeletons", "스켈레톤", SKELETONS, 12), kill("Creepers", "크리퍼", Set.of(EntityTypes.CREEPER), 10)),
-			DIVINATION_GLASS, 8, List.of(source(SKELETONS, 0.4F, 1), source(Set.of(EntityTypes.CREEPER), 0.4F, 1)),
+			List.of(kill("Skeletons", "스켈레톤", SKELETONS, 12), kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 6)),
+			DIVINATION_GLASS, 8, List.of(source(SKELETONS, 0.4F, 1), source(Set.of(EntityTypes.ENDERMAN), 0.4F, 1)),
 			List.of(mat(ModItems.ESSENCE, 16)));
 		add("hunter_3", JobClass.HUNTER, 3, "Chimera Ant Extermination", "키메라 앤트 토벌",
 			"The Chimera Ants are spreading. Break their golem guard and wipe out the nests.",

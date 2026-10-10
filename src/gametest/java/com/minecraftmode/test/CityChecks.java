@@ -3,11 +3,15 @@ package com.minecraftmode.test;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.job.TrainerScreen;
+import com.minecraftmode.client.map.MapScreen;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.JobData;
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.registry.ModBlocks;
 import java.util.ArrayList;
@@ -48,7 +52,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * The capital in a normal world: spawn on the plaza, landmark blocks, every trainer at their
  * posts, the safe-zone rules (no building for non-ops, no PvP, no explosion damage, no hostile
- * spawns), and screenshots of the districts and trainers.
+ * spawns), the Training Grounds under the city, and screenshots of the districts and trainers.
  */
 final class CityChecks {
 	private static final int SAFE_SOAK_TICKS = 400;
@@ -60,6 +64,7 @@ final class CityChecks {
 		map(server, base);
 		checkProtection(context, server, connection, base);
 		checkNoHostiles(context, server, base);
+		checkTrainingGrounds(context, server, connection, base);
 		screenshots(context, server, connection, base);
 		checkInvasion(context, server, base);
 	}
@@ -422,6 +427,18 @@ final class CityChecks {
 		recording = false;
 		require(FRESH_INSIDE.isEmpty(), "hostile mobs spawned inside the city: " + FRESH_INSIDE);
 
+		// the outskirts: no hostile spawns on the surface within 96 blocks of the walls, caves below and the wild beyond still spawn
+		server.runOnServer(s -> {
+			ServerLevel level = s.overworld();
+			level.getChunk(150 >> 4, 0);
+			level.getChunk(300 >> 4, 0);
+			BlockPos near = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(150, 0, 0));
+			BlockPos far = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(300, 0, 0));
+			require(CityServices.blocksSpawn(level, near, true), "hostiles may spawn on the outskirts' surface at " + near);
+			require(!CityServices.blocksSpawn(level, near, false), "the outskirts keep their animals");
+			require(!CityServices.blocksSpawn(level, near.below(30), true), "caves under the outskirts still spawn at " + near.below(30));
+			require(!CityServices.blocksSpawn(level, far, true), "the wild beyond the outskirts still spawns at " + far);
+		});
 		// the guards: an intruder on the plaza is gone within a second, a NoAI decoration stays
 		int[] ids = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
@@ -450,6 +467,102 @@ final class CityChecks {
 		MinecraftMode.LOGGER.info("[city] hostile mobs during a {} tick night: {}", SAFE_SOAK_TICKS, report);
 	}
 
+	// ------------------------------------------------------------ training grounds
+
+	/**
+	 * The hall under the city: the stairs are walkable down to the door, every alcove is open, a classless player inside gets monsters
+	 * up to the cap that the guards leave alone (but not on the stairs), a kill gives double class experience, and the monsters vanish
+	 * when the player leaves.
+	 */
+	private static void checkTrainingGrounds(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final int base) {
+		String layout = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			BlockPos entrance = TrainingGrounds.entrance(base);
+			require(!level.getBlockState(entrance.below()).isAir() && level.getBlockState(entrance).isAir(), "the pavilion threshold should be open at " + entrance);
+			int steps = 0;
+			for (int z = entrance.getZ() + 1; ; z++) {
+				int dy = -(z - entrance.getZ());
+				BlockState step = level.getBlockState(new BlockPos(entrance.getX(), base + dy, z));
+				if (!step.is(Blocks.STONE_BRICK_STAIRS)) {
+					break;
+				}
+				require(level.getBlockState(new BlockPos(entrance.getX(), base + dy + 1, z)).isAir() && level.getBlockState(new BlockPos(entrance.getX(), base + dy + 2, z)).isAir(),
+					"no headroom on the stairs at z " + z);
+				steps++;
+			}
+			BlockPos door = new BlockPos(entrance.getX(), base + TrainingGrounds.FLOOR, entrance.getZ() + steps + 1);
+			require(steps >= 10 && level.getBlockState(door).isAir() && level.getBlockState(door.above()).isAir() && !level.getBlockState(door.below()).isAir(),
+				"the stairs (" + steps + " steps) should lead to the hall door at " + door);
+			BlockPos center = TrainingGrounds.center(base);
+			require(level.getBlockState(center).isAir() && !level.getBlockState(center.below()).isAir(), "the hall floor is missing at " + center);
+			// a capital generated before the hall existed gets it built in place
+			level.setBlockAndUpdate(center.below(), Blocks.STONE.defaultBlockState());
+			level.setBlockAndUpdate(door, Blocks.STONE.defaultBlockState());
+			TrainingGrounds.ensureBuilt(level);
+			require(level.getBlockState(center.below()).is(Blocks.CHISELED_STONE_BRICKS) && level.getBlockState(door).isAir(), "ensureBuilt should rebuild a missing hall");
+			for (int[] spawn : TrainingGrounds.SPAWNS) {
+				BlockPos at = new BlockPos(spawn[0], base + TrainingGrounds.FLOOR, spawn[1]);
+				require(level.getBlockState(at).isAir() && level.getBlockState(at.above()).isAir() && !level.getBlockState(at.below()).isAir(), "alcove not open at " + at);
+				require(TrainingGrounds.area(base).contains(Vec3.atBottomCenterOf(at)), "alcove outside the hall area: " + at);
+			}
+			return steps + " steps down to the door, " + TrainingGrounds.SPAWNS.size() + " alcoves";
+		});
+		BlockPos center = TrainingGrounds.center(base);
+		server.runCommand("tp @p " + (center.getX() + 0.5) + " " + center.getY() + " " + (center.getZ() - 10.5) + " 0 0");
+		int cap = TrainingGrounds.cap(1);
+		for (int i = 0; i < 30 && server.computeOnServer(s -> trainingMobs(s.overworld(), base).size()) < cap; i++) {
+			context.waitTicks(20);
+		}
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			ServerPlayer player = connection.getServerPlayer();
+			List<Mob> mobs = trainingMobs(level, base);
+			require(mobs.size() == cap, "a classless player should get " + cap + " monsters, got " + mobs.size());
+			CityServices.driveOffHostiles(level);
+			require(trainingMobs(level, base).size() == cap, "the guards must leave the training monsters alone");
+			List<String> types = new ArrayList<>();
+			for (Mob mob : mobs) {
+				require(TrainingGrounds.holds(mob), "a training monster is outside the hall at " + mob.blockPosition());
+				require(!mob.isBaby() && !mob.isPassenger() && !mob.isVehicle(), "training monsters are plain adults: " + mob);
+				types.add(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).getPath());
+			}
+			// double class experience for a classless killer
+			Mob target = mobs.getFirst();
+			int expected = Math.max(3, Math.round(target.getMaxHealth())) * TrainingGrounds.EXP_MULTIPLIER;
+			int before = totalExp(JobProgression.get(player));
+			target.hurtServer(level, player.damageSources().playerAttack(player), 1000.0F);
+			int gained = totalExp(JobProgression.get(player)) - before;
+			require(!target.isAlive() && gained == expected, "a training kill should give " + expected + " class EXP, got " + gained);
+			// one that follows a player up the stairs is driven off
+			Mob stray = mobs.get(1);
+			BlockPos stairs = TrainingGrounds.entrance(base).offset(0, -7, 8);
+			stray.teleportTo(stairs.getX() + 0.5, stairs.getY(), stairs.getZ() + 0.5);
+			CityServices.driveOffHostiles(level);
+			require(stray.isRemoved(), "a training monster on the stairs should be driven off");
+			return mobs.size() + " monsters (" + String.join(", ", types) + "), kill +" + gained + " EXP";
+		});
+		context.waitTicks(40);
+		context.getInput().lookAt(new BlockPos(center.getX(), center.getY() + 1, center.getZ() + 12));
+		context.waitTicks(20);
+		context.takeScreenshot("city_training_grounds");
+		server.runCommand("tp @p 0.5 " + base + " 13.5");
+		context.waitTicks(30);
+		require(server.computeOnServer(s -> trainingMobs(s.overworld(), base).isEmpty()), "the training monsters should vanish when nobody trains");
+		MinecraftMode.LOGGER.info("[city] training grounds: {}; {}; all gone after leaving", layout, report);
+	}
+
+	private static List<Mob> trainingMobs(final ServerLevel level, final int base) {
+		return level.getEntitiesOfClass(Mob.class, TrainingGrounds.area(base).inflate(32.0), m -> m.entityTags().contains(TrainingGrounds.TAG) && m.isAlive());
+	}
+
+	private static int totalExp(final JobData data) {
+		int total = data.exp();
+		for (int level = 1; level < data.level(); level++) {
+			total += JobProgression.expToNext(level);
+		}
+		return total;
+	}
+
 	// ------------------------------------------------------------ screenshots
 
 	private static void screenshots(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final int base) {
@@ -469,6 +582,16 @@ final class CityChecks {
 		int[] seen = context.computeOnClient(minecraft -> new int[] {minecraft.options.getEffectiveRenderDistance(), minecraft.level.getChunkSource().getLoadedChunksCount()});
 		context.takeScreenshot("city_aerial");
 		MinecraftMode.LOGGER.info("[city] aerial at render distance {} with {} client chunks", seen[0], seen[1]);
+		// the world map knows the capital (the server tells the client on join) and marks every NPC, trainer and the stairs
+		require(context.computeOnClient(minecraft -> MapScreen.focus(CityNpc.Role.QUARTERMASTER.nameKey(), 2.0F)), "the map shows the capital's NPCs");
+		context.setScreen(MapScreen::new);
+		context.waitTicks(10);
+		context.takeScreenshot("city_map_npcs");
+		require(context.computeOnClient(minecraft -> MapScreen.focus(CityNpc.Role.QUARTERMASTER.nameKey(), 8.0F)), "the map can pick Bram");
+		context.setScreen(MapScreen::new);
+		context.waitTicks(10);
+		context.takeScreenshot("city_map_plaza");
+		context.setScreen(() -> null);
 		view(context, server, "city_plaza", new BlockPos(0, base + 4, 30), new BlockPos(0, base + 4, -20));
 		view(context, server, "city_keep", new BlockPos(0, base + 8, -22), new BlockPos(0, base + 12, -75));
 		view(context, server, "city_mage_quarter", new BlockPos(-35, base + 14, -30), new BlockPos(-66, base + 18, -62));
@@ -480,6 +603,8 @@ final class CityChecks {
 		view(context, server, "city_archer_park", new BlockPos(-38, base + 12, 58), new BlockPos(-64, base + 2, 86));
 		view(context, server, "city_urahara_shop", new BlockPos(-80, base + 6, 36), new BlockPos(-83, base + 2, 55));
 		view(context, server, "city_hunter_association", new BlockPos(82, base + 7, -34), new BlockPos(85, base + 4, -53));
+		BlockPos stairs = TrainingGrounds.entrance(base);
+		view(context, server, "city_training_entrance", stairs.offset(-6, 4, -7), stairs.offset(0, 1, 2));
 
 		for (JobClass job : JobClass.PLAYABLE) {
 			BlockPos home = CityZone.trainerHome(job, base);
@@ -503,7 +628,7 @@ final class CityChecks {
 		}
 
 		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
-			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER}) {
+			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER}) {
 			BlockPos home = CityZone.npcHome(role, base);
 			BlockPos camera = server.computeOnServer(s -> {
 				ServerLevel level = s.overworld();

@@ -44,13 +44,13 @@ public final class Bounties {
 
 	private static final List<Target> KILL_TYPES = List.of(
 		new Target("minecraft:zombie", 15, 0), new Target("minecraft:skeleton", 15, 0), new Target("minecraft:spider", 12, 0),
-		new Target("minecraft:creeper", 10, 0), new Target("minecraft:drowned", 8, 10), new Target("minecraft:husk", 8, 10),
+		new Target("minecraft:drowned", 8, 10), new Target("minecraft:husk", 8, 10),
 		new Target("minecraft:enderman", 5, 15), new Target("minecraft:stray", 6, 15), new Target("minecraft:witch", 2, 20),
 		new Target("minecraft:blaze", 6, 40), new Target("minecraft:magma_cube", 6, 40), new Target("minecraft:wither_skeleton", 5, 55));
 	private static final List<Target> DELIVERIES = List.of(
 		new Target("minecraft:iron_ingot", 16, 0), new Target("minecraft:wheat", 32, 0), new Target("minecraft:cooked_beef", 16, 0),
 		new Target("minecraft:leather", 12, 0), new Target("minecraft:string", 16, 0), new Target("minecraft:gold_ingot", 8, 10),
-		new Target("minecraft:gunpowder", 12, 10), new Target("minecraft:redstone", 32, 10), new Target("minecraft_mode:essence", 8, 10),
+		new Target("minecraft:bone", 24, 10), new Target("minecraft:redstone", 32, 10), new Target("minecraft_mode:essence", 8, 10),
 		new Target("minecraft:lapis_lazuli", 16, 15), new Target("minecraft_mode:mythril_ingot", 4, 25), new Target("minecraft:diamond", 2, 35),
 		new Target("minecraft:quartz", 16, 40), new Target("minecraft:blaze_rod", 6, 45));
 

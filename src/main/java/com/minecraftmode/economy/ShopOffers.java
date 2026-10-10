@@ -14,10 +14,13 @@ import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.ItemLike;
@@ -35,9 +38,19 @@ public final class ShopOffers {
 	 * {@code extra} when set), receive {@code resultCount} x {@code result}. Market pressure only
 	 * raises the coin part.
 	 */
-	public record Trade(ItemLike cost, int costCount, ItemLike result, int resultCount, @Nullable ItemLike extra, int extraCount) {
+	public record Trade(ItemLike cost, int costCount, ItemLike result, int resultCount, @Nullable ItemLike extra, int extraCount,
+		@Nullable Consumer<ItemStack> finish) {
 		public Trade(final ItemLike cost, final int costCount, final ItemLike result, final int resultCount) {
 			this(cost, costCount, result, resultCount, null, 0);
+		}
+
+		public Trade(final ItemLike cost, final int costCount, final ItemLike result, final int resultCount, final @Nullable ItemLike extra, final int extraCount) {
+			this(cost, costCount, result, resultCount, extra, extraCount, null);
+		}
+
+		/** The same trade with components set on the result (e.g. a rocket's flight duration); the market key stays the item ids. */
+		public Trade finishing(final Consumer<ItemStack> finish) {
+			return new Trade(this.cost, this.costCount, this.result, this.resultCount, this.extra, this.extraCount, finish);
 		}
 
 		/** Stable id used for market pressure. */
@@ -47,7 +60,11 @@ public final class ShopOffers {
 
 		public MerchantOffer toOffer() {
 			Optional<ItemCost> second = this.extra == null ? Optional.empty() : Optional.of(new ItemCost(this.extra, this.extraCount));
-			return new MerchantOffer(new ItemCost(this.cost, this.costCount), second, new ItemStack(this.result, this.resultCount), UNLIMITED, 0, 0.0F);
+			ItemStack out = new ItemStack(this.result, this.resultCount);
+			if (this.finish != null) {
+				this.finish.accept(out);
+			}
+			return new MerchantOffer(new ItemCost(this.cost, this.costCount), second, out, UNLIMITED, 0, 0.0F);
 		}
 	}
 
@@ -100,8 +117,30 @@ public final class ShopOffers {
 				sell(Items.GHAST_TEAR, 1, ModItems.SILVER_COIN, 1), sell(Items.PHANTOM_MEMBRANE, 2, ModItems.COPPER_COIN, 5));
 			case GUILD -> guild(null);
 			case GENERAL -> List.of(
+				// cobblestone stays first: the shop test trades the first offer
 				sell(Items.COBBLESTONE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.COBBLED_DEEPSLATE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.ANDESITE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.DIORITE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.GRANITE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.TUFF, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.DIRT, 64, ModItems.COPPER_COIN, 1),
+				sell(Items.SAND, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.GRAVEL, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.FLINT, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.OAK_LOG, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.SPRUCE_LOG, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.BIRCH_LOG, 24, ModItems.COPPER_COIN, 1),
 				sell(Items.ROTTEN_FLESH, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.BONE, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.STRING, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.SPIDER_EYE, 6, ModItems.COPPER_COIN, 1),
+				sell(Items.ARROW, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.GUNPOWDER, 4, ModItems.COPPER_COIN, 1),
+				sell(Items.LEATHER, 6, ModItems.COPPER_COIN, 1),
+				sell(Items.FEATHER, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.SLIME_BALL, 4, ModItems.COPPER_COIN, 1),
+				sell(Items.ENDER_PEARL, 2, ModItems.COPPER_COIN, 2),
 				sell(Items.COAL, 16, ModItems.COPPER_COIN, 2),
 				sell(ModItems.ALUMINUM_INGOT, 4, ModItems.COPPER_COIN, 3),
 				sell(Items.IRON_INGOT, 4, ModItems.COPPER_COIN, 3),
@@ -110,7 +149,15 @@ public final class ShopOffers {
 				sell(Items.EMERALD, 1, ModItems.SILVER_COIN, 1),
 				sell(ModItems.MYTHRIL_INGOT, 1, ModItems.SILVER_COIN, 1),
 				sell(Items.DIAMOND, 1, ModItems.SILVER_COIN, 2),
+				// the best rockets (flight 3, no stars, so they never hurt) for elytra, cheap
+				buy(ModItems.COPPER_COIN, 2, Items.FIREWORK_ROCKET, 16).finishing(stack -> stack.set(DataComponents.FIREWORKS, new Fireworks(3, List.of()))),
 				buy(ModItems.COPPER_COIN, 2, Items.TORCH, 16),
+				// creepers are gone, so gunpowder (splash potions, TNT) comes from the shop
+				buy(ModItems.COPPER_COIN, 3, Items.GUNPOWDER, 4),
+				buy(ModItems.COPPER_COIN, 2, Items.GLASS, 16),
+				buy(ModItems.COPPER_COIN, 2, Items.OAK_LOG, 16),
+				buy(ModItems.COPPER_COIN, 3, Items.BED.white(), 1),
+				buy(ModItems.COPPER_COIN, 4, Items.BUCKET, 1),
 				buy(ModItems.COPPER_COIN, 3, Items.BREAD, 6),
 				buy(ModItems.COPPER_COIN, 5, Items.COOKED_BEEF, 8),
 				buy(ModItems.SILVER_COIN, 1, Items.ENDER_PEARL, 2),
@@ -123,10 +170,21 @@ public final class ShopOffers {
 				sell(Items.IRON_INGOT, 4, ModItems.COPPER_COIN, 3),
 				sell(ModItems.ALUMINUM_INGOT, 4, ModItems.COPPER_COIN, 3),
 				sell(Items.COAL, 16, ModItems.COPPER_COIN, 2),
+				sell(Items.RAW_IRON, 5, ModItems.COPPER_COIN, 3),
+				sell(Items.RAW_COPPER, 16, ModItems.COPPER_COIN, 2),
+				sell(Items.COPPER_INGOT, 12, ModItems.COPPER_COIN, 2),
+				sell(Items.RAW_GOLD, 2, ModItems.COPPER_COIN, 3),
+				sell(Items.IRON_NUGGET, 36, ModItems.COPPER_COIN, 3),
+				sell(Items.CHARCOAL, 16, ModItems.COPPER_COIN, 2),
 				sell(ModItems.RAW_MYTHRIL, 2, ModItems.SILVER_COIN, 1),
 				sell(ModItems.MYTHRIL_INGOT, 1, ModItems.SILVER_COIN, 1),
 				buy(ModItems.COPPER_COIN, 3, Items.ARROW, 16),
+				buy(ModItems.COPPER_COIN, 3, Items.COAL, 16),
+				buy(ModItems.COPPER_COIN, 6, Items.IRON_INGOT, 4),
 				buy(ModItems.COPPER_COIN, 6, Items.SHIELD, 1),
+				buy(ModItems.COPPER_COIN, 8, Items.IRON_AXE, 1),
+				buy(ModItems.COPPER_COIN, 8, Items.IRON_SHOVEL, 1),
+				buy(ModItems.SILVER_COIN, 1, Items.ANVIL, 1),
 				buy(ModItems.COPPER_COIN, 8, Items.IRON_PICKAXE, 1),
 				buy(ModItems.COPPER_COIN, 8, Items.IRON_SWORD, 1),
 				buy(ModItems.SILVER_COIN, 2, Items.IRON_CHESTPLATE, 1),
@@ -142,6 +200,21 @@ public final class ShopOffers {
 				sell(Items.MELON_SLICE, 32, ModItems.COPPER_COIN, 1),
 				sell(Items.PUMPKIN, 6, ModItems.COPPER_COIN, 1),
 				sell(Items.SUGAR_CANE, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.APPLE, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.SWEET_BERRIES, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.COCOA_BEANS, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.EGG, 16, ModItems.COPPER_COIN, 1),
+				sell(Items.KELP, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.CACTUS, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.BAMBOO, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.BEEF, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.PORKCHOP, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.CHICKEN, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.MUTTON, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.COD, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.SALMON, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.WOOL.white(), 12, ModItems.COPPER_COIN, 1),
+				buy(ModItems.COPPER_COIN, 2, Items.WHEAT_SEEDS, 16),
 				buy(ModItems.COPPER_COIN, 3, Items.BREAD, 6),
 				buy(ModItems.COPPER_COIN, 3, Items.BAKED_POTATO, 8),
 				buy(ModItems.COPPER_COIN, 5, Items.COOKED_BEEF, 8),
@@ -155,6 +228,12 @@ public final class ShopOffers {
 				sell(Items.QUARTZ, 16, ModItems.COPPER_COIN, 2),
 				sell(Items.REDSTONE, 32, ModItems.COPPER_COIN, 2),
 				sell(Items.AMETHYST_SHARD, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.RAW_GOLD, 2, ModItems.COPPER_COIN, 3),
+				sell(Items.GOLD_NUGGET, 18, ModItems.COPPER_COIN, 3),
+				sell(Items.COPPER_INGOT, 12, ModItems.COPPER_COIN, 2),
+				sell(Items.GLOWSTONE_DUST, 16, ModItems.COPPER_COIN, 2),
+				sell(Items.PRISMARINE_SHARD, 8, ModItems.COPPER_COIN, 1),
+				sell(Items.ECHO_SHARD, 1, ModItems.COPPER_COIN, 4),
 				sell(Items.EMERALD, 1, ModItems.SILVER_COIN, 1),
 				sell(Items.DIAMOND, 1, ModItems.SILVER_COIN, 2),
 				buy(ModItems.SILVER_COIN, 2, Items.EMERALD, 1),

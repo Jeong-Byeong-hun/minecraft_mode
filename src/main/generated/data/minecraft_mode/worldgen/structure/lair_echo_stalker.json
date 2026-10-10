@@ -16,15 +16,6 @@
           "weight": 40
         },
         {
-          "type": "minecraft:creeper",
-          "count": {
-            "type": "minecraft:uniform",
-            "max_inclusive": 2,
-            "min_inclusive": 1
-          },
-          "weight": 50
-        },
-        {
           "type": "minecraft:skeleton",
           "count": {
             "type": "minecraft:uniform",
@@ -45,7 +36,7 @@
         {
           "type": "minecraft_mode:echo_stalker",
           "count": 1,
-          "weight": 17
+          "weight": 14
         }
       ]
     }

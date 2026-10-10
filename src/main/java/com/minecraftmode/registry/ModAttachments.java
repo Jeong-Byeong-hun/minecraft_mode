@@ -107,6 +107,18 @@ public final class ModAttachments {
 			.syncWith(ByteBufCodecs.BOOL, AttachmentSyncPredicate.targetOnly())
 	);
 
+	/** Whether Bram's shield was handed out (it joined the kit later, so earlier kit owners collect it on their next visit). Kept through death. */
+	public static final AttachmentType<Boolean> STARTER_SHIELD = AttachmentRegistry.create(
+		MinecraftMode.id("starter_shield"),
+		builder -> builder.persistent(Codec.BOOL).copyOnDeath()
+	);
+
+	/** The Minecraft day ({@code ResetCycle.day}) Baker Hanna last handed this player bread. Kept through death. */
+	public static final AttachmentType<Long> DAILY_BREAD = AttachmentRegistry.create(
+		MinecraftMode.id("daily_bread"),
+		builder -> builder.persistent(Codec.LONG).copyOnDeath()
+	);
+
 	/** Dungeon clears and best timed keystones. Kept through death; synced to the owner. */
 	public static final AttachmentType<DungeonData> DUNGEON = AttachmentRegistry.create(
 		MinecraftMode.id("dungeon"),

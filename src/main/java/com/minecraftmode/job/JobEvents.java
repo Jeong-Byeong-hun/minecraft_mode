@@ -1,5 +1,6 @@
 package com.minecraftmode.job;
 
+import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.enchantment.EnchantLevels;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.skill.Actions;
@@ -94,7 +95,7 @@ public final class JobEvents {
 		}
 		float maxHealth = entity.getMaxHealth();
 		boolean boss = maxHealth >= BOSS_HEALTH;
-		gainExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))));
+		gainExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))) * TrainingGrounds.expMultiplier(entity, killer));
 		onKill(killer);
 
 		// Essence: monsters drop it at random, bosses always drop condensed essence
@@ -197,28 +198,44 @@ public final class JobEvents {
 	private record OreReward(int exp, float essenceChance) {
 	}
 
-	/** Iron and better ores give job experience and sometimes essence. */
+	/** Every ore gives job experience and sometimes essence; the rarer the ore, the more. */
 	private static OreReward oreReward(final BlockState state) {
+		if (state.is(BlockItemTags.COAL_ORES.block())) {
+			return new OreReward(2, 0.02F);
+		}
+		if (state.is(BlockItemTags.COPPER_ORES.block())) {
+			return new OreReward(3, 0.03F);
+		}
+		// nether gold is common and only drops nuggets, so it sits below the other gold ores
+		if (state.is(Blocks.NETHER_GOLD_ORE)) {
+			return new OreReward(3, 0.03F);
+		}
+		if (state.is(Blocks.NETHER_QUARTZ_ORE)) {
+			return new OreReward(4, 0.04F);
+		}
+		if (state.is(ModBlocks.ALUMINUM_ORE) || state.is(ModBlocks.DEEPSLATE_ALUMINUM_ORE)) {
+			return new OreReward(5, 0.06F);
+		}
 		if (state.is(BlockItemTags.IRON_ORES.block())) {
-			return new OreReward(2, 0.06F);
+			return new OreReward(5, 0.06F);
 		}
 		if (state.is(BlockItemTags.GOLD_ORES.block())) {
-			return new OreReward(3, 0.08F);
+			return new OreReward(8, 0.08F);
 		}
 		if (state.is(BlockItemTags.REDSTONE_ORES.block())) {
-			return new OreReward(2, 0.06F);
+			return new OreReward(5, 0.06F);
 		}
 		if (state.is(BlockItemTags.LAPIS_ORES.block())) {
-			return new OreReward(3, 0.08F);
+			return new OreReward(8, 0.08F);
 		}
 		if (state.is(ModBlocks.MYTHRIL_ORE) || state.is(ModBlocks.DEEPSLATE_MYTHRIL_ORE)) {
-			return new OreReward(6, 0.15F);
+			return new OreReward(15, 0.15F);
 		}
 		if (state.is(BlockItemTags.DIAMOND_ORES.block()) || state.is(BlockItemTags.EMERALD_ORES.block())) {
-			return new OreReward(8, 0.30F);
+			return new OreReward(20, 0.30F);
 		}
 		if (state.is(Blocks.ANCIENT_DEBRIS)) {
-			return new OreReward(15, 0.50F);
+			return new OreReward(40, 0.50F);
 		}
 		return null;
 	}

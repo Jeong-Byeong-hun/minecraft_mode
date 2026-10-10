@@ -42,14 +42,17 @@ public final class JobStats {
 		return JobProgression.BASE_MANA + 2 * data.level() + bonus + (int)JobWeapons.activeTotals(player).get(EngraveStat.MAX_MANA);
 	}
 
-	/** MP regenerated per second (rounded for display; the tick pays fractions out over time). */
-	public static int manaRegen(final Player player) {
-		return Math.round(manaRegenExact(player));
+	/** Base MP per second: 1 plus this much per level (level 10: 2, level 50: 6, level 100: 11). */
+	public static final float MANA_REGEN_PER_LEVEL = 0.1F;
+
+	/** MP regenerated per second, to one decimal for display (the tick pays fractions out over time). */
+	public static String manaRegen(final Player player) {
+		return String.format(java.util.Locale.ROOT, "%.1f", manaRegenExact(player));
 	}
 
 	public static float manaRegenExact(final Player player) {
 		JobData data = JobProgression.get(player);
-		int regen = 1 + data.level() / 25;
+		float regen = 1.0F + data.level() * MANA_REGEN_PER_LEVEL;
 		if (CombatHooks.has(data, JobClass.MAGE, 2)) {
 			regen *= 2;
 		}

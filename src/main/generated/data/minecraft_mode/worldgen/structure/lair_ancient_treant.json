@@ -13,15 +13,6 @@
       "bounding_box": "full",
       "spawns": [
         {
-          "type": "minecraft:creeper",
-          "count": {
-            "type": "minecraft:uniform",
-            "max_inclusive": 2,
-            "min_inclusive": 1
-          },
-          "weight": 70
-        },
-        {
           "type": "minecraft:skeleton",
           "count": {
             "type": "minecraft:uniform",
@@ -51,7 +42,7 @@
         {
           "type": "minecraft_mode:ancient_treant",
           "count": 1,
-          "weight": 41
+          "weight": 33
         }
       ]
     }

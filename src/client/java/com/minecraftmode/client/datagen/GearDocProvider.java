@@ -2,7 +2,9 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
+import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.map.MapSettings;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
@@ -74,6 +76,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
@@ -466,10 +469,24 @@ public class GearDocProvider implements DataProvider {
 		md.append("# 성장 이후 콘텐츠 (초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·메인 스토리)\n\n");
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
 
-		md.append("## 광장의 안내원과 보급관\n\n");
-		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 명령어, 길 안내(모든 NPC·교관 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
-		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없는 ").append(StarterKit.ITEMS.size())
-			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼.\n\n");
+		md.append("## 광장의 안내원·보급관·제빵사와 수련장\n\n");
+		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 명령어, 길 안내(모든 NPC·교관과 수련장 입구 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
+		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없이 내구도가 닳지 않는 \"보급관의\" 장비 ").append(StarterKit.ITEMS.size())
+			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼, 방패(왼손이 비어 있으면 바로 들려 줌). 방패가 생기기 전에 보급품을 받은 모험가는 다시 찾아가면 방패만 받습니다.\n");
+		md.append("- **제빵사 한나**(브람 맞은편): 모험가마다 마인크래프트 하루(낮과 밤 한 바퀴, 잠자면 넘어감)에 한 번 빵 ").append(DailyBread.COUNT).append("개.\n");
+		BlockPos stairs = TrainingGrounds.entrance(0);
+		int toTen = 0;
+		for (int level = 1; level < 10; level++) {
+			toTen += JobProgression.expToNext(level);
+		}
+		md.append("- **수련장**(도시 지하, 분수 남동쪽 공원의 정자 계단 x ").append(stairs.getX()).append(", z ").append(stairs.getZ())
+			.append("): 직업을 고르기 전의 모험가가 홀 안에 있으면 벽의 감실 ").append(TrainingGrounds.SPAWNS.size())
+			.append("곳에서 좀비·스켈레톤·거미·드라운드가 계속 나옵니다(동시에 ").append(TrainingGrounds.cap(1)).append("마리, 수련생이 한 명 늘 때마다 +")
+			.append(TrainingGrounds.PER_TRAINEE).append(", 최대 ").append(TrainingGrounds.MAX_CAP)
+			.append("마리, 플레이어 바로 옆 감실에서는 나오지 않음; 전직 시련을 진행 중이면 절반은 그 시련의 몬스터). 직업이 없는 모험가는 수련장 몬스터에게서 직업 경험치를 ")
+			.append(TrainingGrounds.EXP_MULTIPLIER).append("배로 얻어, 레벨 10까지(경험치 ").append(toTen).append(") 좀비 약 ")
+			.append((toTen + 20 * TrainingGrounds.EXP_MULTIPLIER - 1) / (20 * TrainingGrounds.EXP_MULTIPLIER))
+			.append("마리면 됩니다. 아무도 수련하지 않으면 몬스터는 사라지고, 계단으로 따라 올라온 몬스터는 경비병이 쫓아냅니다. 직업이 있는 플레이어만 있으면 몬스터가 나오지 않습니다.\n\n");
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
 			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");

@@ -11,14 +11,14 @@ import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
- * World-wide market pressure per trade. Every completed trade adds 1 pressure (max 20); pressure
- * fades by 1 per minute. Each point raises that trade's cost by 10% of its base cost: selling a lot
+ * World-wide market pressure per trade. Every completed trade adds 1 pressure (max 25); pressure
+ * fades by 1 every 30 seconds. Each point raises that trade's cost by 4% of its base cost (at most +100%): selling a lot
  * means more goods per coin, buying a lot means more coins per item.
  */
 public class MarketData extends SavedData {
-	public static final long DECAY_INTERVAL_TICKS = 1200;
-	public static final float PRICE_STEP = 0.1F;
-	public static final int MAX_PRESSURE = 20;
+	public static final long DECAY_INTERVAL_TICKS = 600;
+	public static final float PRICE_STEP = 0.04F;
+	public static final int MAX_PRESSURE = 25;
 
 	private static final Codec<MarketData> CODEC = RecordCodecBuilder.create(
 		instance -> instance.group(

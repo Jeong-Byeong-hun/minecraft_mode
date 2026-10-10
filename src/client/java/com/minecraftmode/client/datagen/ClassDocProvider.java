@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.quest.QuestDef;
@@ -78,8 +79,8 @@ public class ClassDocProvider implements DataProvider {
 		for (int tier = 1; tier <= 4; tier++) {
 			md.append("| ").append(tier).append("차 | ").append(JobProgression.levelForTier(tier)).append(" |\n");
 		}
-		md.append("\n- 경험치: 적대적 몹 처치(최대 체력만큼, 보스는 2배), 철 이상 광석 채굴. 최대 레벨 ").append(JobProgression.MAX_LEVEL).append(".\n");
-		md.append("- 레벨 10마다 최대 체력 +1. 최대 MP = 30 + 2 × 레벨. 사망 시 현재 레벨 진행도의 10%를 잃습니다(레벨은 유지).\n");
+		md.append("\n- 경험치: 적대적 몹 처치(최대 체력만큼, 보스는 2배), 광석 채굴(석탄·구리부터, 희귀할수록 많이). 최대 레벨 ").append(JobProgression.MAX_LEVEL).append(".\n");
+		md.append("- 레벨 10마다 최대 체력 +1. 최대 MP = 30 + 2 × 레벨. MP 회복 = 초당 1 + " + JobStats.MANA_REGEN_PER_LEVEL + " × 레벨(캐스터 2배). 사망 시 현재 레벨 진행도의 10%를 잃습니다(레벨은 유지).\n");
 		md.append("- 직업 초기화 주문서(모험가 길드, 금화 4)로 직업을 다시 고를 수 있습니다. 레벨은 유지됩니다.\n\n");
 
 		md.append("## 전직 시련\n\n");

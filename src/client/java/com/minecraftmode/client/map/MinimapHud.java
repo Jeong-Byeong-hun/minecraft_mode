@@ -31,7 +31,7 @@ final class MinimapHud {
 		g.fill(x, y, x + size, y + size, 0xFF1A1A1A);
 		g.enableScissor(x, y, x + size, y + size);
 		MapClient.NEAR.draw(g, x, y, size, size, player.getX(), player.getZ(), zoom);
-		Markers.draw(g, font, player, x, y, size, size, player.getX(), player.getZ(), zoom, false);
+		Markers.draw(g, font, player, x, y, size, size, player.getX(), player.getZ(), zoom, false, null);
 		g.disableScissor();
 		g.outline(x - 2, y - 2, size + 4, size + 4, 0xFF6A6A6A);
 		g.centeredText(font, "N", x + size / 2, y - 1, 0xFFFFFFFF);
@@ -45,7 +45,7 @@ final class MinimapHud {
 
 	/** A short name for where the player is (the capital, a dimension), null in the open overworld. */
 	private static String place(final Player player) {
-		if (CityZone.isCityLevel(player.level()) && CityZone.inside(player.blockPosition())) {
+		if (CityPlaces.shown(player.level()) && CityZone.inside(player.blockPosition())) {
 			return Component.translatable("screen.minecraft_mode.map.capital").getString();
 		}
 		return null;

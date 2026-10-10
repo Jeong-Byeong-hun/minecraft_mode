@@ -19,15 +19,6 @@
           "weight": 70
         },
         {
-          "type": "minecraft:creeper",
-          "count": {
-            "type": "minecraft:uniform",
-            "max_inclusive": 2,
-            "min_inclusive": 1
-          },
-          "weight": 60
-        },
-        {
           "type": "minecraft:skeleton",
           "count": {
             "type": "minecraft:uniform",
@@ -48,7 +39,7 @@
         {
           "type": "minecraft_mode:amethyst_sentinel",
           "count": 1,
-          "weight": 44
+          "weight": 35
         }
       ]
     }

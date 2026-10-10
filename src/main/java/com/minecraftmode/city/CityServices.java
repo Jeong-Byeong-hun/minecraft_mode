@@ -53,6 +53,7 @@ import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
 
@@ -79,8 +80,10 @@ public final class CityServices {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());
 				keepAnvils(server.overworld());
+				TrainingGrounds.ensureBuilt(server.overworld());
 			}
 			if (server.getTickCount() % 20 == 0) {
+				TrainingGrounds.tick(server.overworld());
 				driveOffHostiles(server.overworld());
 			}
 		});
@@ -230,8 +233,8 @@ public final class CityServices {
 
 	/**
 	 * City guards: hostile mobs that get inside the walls anyway (spiders climbing them, mobs walking
-	 * in through caves or the gates, eggs and summons) are driven off. Skill summons and NoAI
-	 * decorations are left alone.
+	 * in through caves or the gates, eggs and summons) are driven off. Skill summons, NoAI
+	 * decorations, invaders and the monsters of the Training Grounds (inside the hall) are left alone.
 	 */
 	public static void driveOffHostiles(final ServerLevel level) {
 		if (!CityZone.isCityLevel(level)) {
@@ -241,7 +244,8 @@ public final class CityServices {
 		AABB city = new AABB(-w, level.getMinY(), -w, w + 1, level.getMaxY(), w + 1);
 		for (Mob mob : level.getEntitiesOfClass(Mob.class, city,
 			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG)
-				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && !m.getUUID().equals(WorldEvents.titan()) && CityZone.inside(m.blockPosition()))) {
+				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && !m.getUUID().equals(WorldEvents.titan()) && CityZone.inside(m.blockPosition())
+				&& !TrainingGrounds.holds(m))) {
 			level.sendParticles(ParticleTypes.POOF, mob.getX(), mob.getY() + mob.getBbHeight() / 2.0, mob.getZ(), 12, 0.3, 0.4, 0.3, 0.02);
 			mob.discard();
 		}
@@ -263,9 +267,19 @@ public final class CityServices {
 			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()) || DungeonDimension.is(player.level()));
 	}
 
-	/** Hostile natural spawns are refused inside the city. */
+	/**
+	 * Hostile natural spawns are refused inside the city, and on the surface of the outskirts around it (as if the countryside
+	 * were kept lit); caves under the outskirts still spawn.
+	 */
 	public static boolean blocksSpawn(final ServerLevel level, final BlockPos pos, final boolean monster) {
-		return monster && CityZone.protectedAt(level, pos);
+		if (!monster) {
+			return false;
+		}
+		if (CityZone.protectedAt(level, pos)) {
+			return true;
+		}
+		return CityZone.outskirts(pos.getX(), pos.getZ()) && CityZone.isCityLevel(level)
+			&& pos.getY() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - CityZone.OUTSKIRTS_SURFACE_DEPTH;
 	}
 
 	/** No player-versus-player damage inside the city, in raid arenas or in dungeons. */

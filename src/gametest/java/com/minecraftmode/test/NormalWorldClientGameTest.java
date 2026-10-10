@@ -175,6 +175,13 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 				.getMobsToSpawn(MobCategory.MONSTER).unwrap().stream()
 				.anyMatch(entry -> entry.value().type() == ModEntities.MINE_RAIDER);
 			require(inSpawnList, "mine_raider is not in the natural monster spawn list at " + caves.getFirst());
+			// no creepers: removed from every biome's list, on the surface as in the caves
+			for (BlockPos at : List.of(caves.getFirst(), level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, caves.getFirst()))) {
+				boolean creeper = level.environmentAttributes().getValue(EnvironmentAttributes.NATURAL_MOB_SPAWNS, at)
+					.getMobsToSpawn(MobCategory.MONSTER).unwrap().stream()
+					.anyMatch(entry -> entry.value().type() == EntityTypes.CREEPER);
+				require(!creeper, "creepers are still in the natural monster spawn list at " + at);
+			}
 			int raiderOk = 0, zombieOk = 0;
 			for (BlockPos cave : caves) {
 				if (SpawnPlacements.checkSpawnRules(ModEntities.MINE_RAIDER, level, EntitySpawnReason.NATURAL, cave, level.getRandom())) {

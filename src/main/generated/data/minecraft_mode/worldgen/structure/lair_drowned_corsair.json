@@ -12,15 +12,6 @@
       "bounding_box": "full",
       "spawns": [
         {
-          "type": "minecraft:creeper",
-          "count": {
-            "type": "minecraft:uniform",
-            "max_inclusive": 2,
-            "min_inclusive": 1
-          },
-          "weight": 50
-        },
-        {
           "type": "minecraft:drowned",
           "count": {
             "type": "minecraft:uniform",
@@ -50,7 +41,7 @@
         {
           "type": "minecraft_mode:drowned_corsair",
           "count": 1,
-          "weight": 50
+          "weight": 42
         }
       ]
     }

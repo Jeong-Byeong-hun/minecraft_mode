@@ -11,12 +11,14 @@ import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.job.skill.SkillProjectile;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
+import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
@@ -115,6 +117,11 @@ public final class ModEntities {
 		// Spawn checks reject Y >= 40, so in practice they only appear in caves. The weight is zombie-level
 		// because most spawn attempts land above Y=40; at weight 40 only ~1.4% of monsters were raiders.
 		BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(), MobCategory.MONSTER, MINE_RAIDER, 100, 1, 2);
+
+		// No creepers in this mod: out of every biome's spawn list (the other monsters take their share), and
+		// NaturalSpawnerMixin refuses any that still come from elsewhere (structure spawn overrides, datapacks).
+		BiomeModifications.create(MinecraftMode.id("no_creepers"))
+			.add(ModificationPhase.REMOVALS, BiomeSelectors.all(), context -> context.getMobSpawnSettings().removeSpawnsOfEntityType(EntityTypes.CREEPER));
 
 		NamedMobs.init();
 		RaidBosses.init();

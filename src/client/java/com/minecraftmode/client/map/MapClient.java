@@ -2,6 +2,7 @@ package com.minecraftmode.client.map;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
+import com.minecraftmode.network.CityInfoPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.nio.file.Path;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.Locale;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
@@ -49,7 +51,11 @@ public final class MapClient {
 		MapSettings.load();
 		HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, MinecraftMode.id("minimap"), MinimapHud::extract);
 		ClientTickEvents.END_CLIENT_TICK.register(MapClient::tick);
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(MapClient::leave));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
+			CityPlaces.cityWorld = false;
+			leave();
+		}));
+		ClientPlayNetworking.registerGlobalReceiver(CityInfoPayload.TYPE, (payload, context) -> context.client().execute(() -> CityPlaces.cityWorld = payload.city()));
 	}
 
 	public static MapData data() {

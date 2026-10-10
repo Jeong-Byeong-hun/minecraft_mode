@@ -24,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -363,15 +364,15 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 			return new int[] {Coins.total(player) - before, player.getInventory().countItem(Items.COBBLESTONE), newPrice};
 		});
 		require(result[0] == 1 && result[1] == 32, "expected 1 copper more and 32 cobblestone left, got " + result[0] + " / " + result[1]);
-		// Market pressure 1: 32 + floor(32 * 0.1) = 35 cobblestone per coin
-		require(result[2] == 35, "selling should raise the cobblestone price from 32 to 35, got " + result[2]);
+		// Market pressure 1: 32 + floor(32 * 0.04) = 33 cobblestone per coin
+		require(result[2] == 33, "selling should raise the cobblestone price from 32 to 33, got " + result[2]);
 
 		// A fresh shop screen still sees the raised price (shared, persistent market).
 		int reopenedPrice = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			return new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL).getOffers().getFirst().getCostA().getCount();
 		});
-		require(reopenedPrice == 35, "reopened shop should keep the market price 35, got " + reopenedPrice);
+		require(reopenedPrice == 33, "reopened shop should keep the market price 33, got " + reopenedPrice);
 		MinecraftMode.LOGGER.info("[test] shop shift-click trade OK; cobblestone price 32 -> {} after one sale", result[2]);
 
 		for (ShopType type : ShopType.values()) {
@@ -391,6 +392,16 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		context.takeScreenshot("blacksmith_screen");
 		context.setScreen(() -> null);
+
+		// the general store sells the best rockets (flight 3) for a couple of copper
+		boolean rockets = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			return new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL).getOffers().stream()
+				.map(offer -> offer.getResult())
+				.anyMatch(stack -> stack.is(Items.FIREWORK_ROCKET) && stack.get(DataComponents.FIREWORKS) != null
+					&& stack.get(DataComponents.FIREWORKS).flightDuration() == 3 && stack.get(DataComponents.FIREWORKS).explosions().isEmpty());
+		});
+		require(rockets, "the general store should sell flight-3 rockets without stars");
 	}
 
 	private static void require(final boolean condition, final String message) {

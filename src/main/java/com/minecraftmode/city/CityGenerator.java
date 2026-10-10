@@ -68,6 +68,7 @@ public final class CityGenerator {
 		CityNorth.build(build);
 		CityMiddle.build(build);
 		CitySouth.build(build);
+		TrainingGrounds.build(build);
 		CityCore.lamps(build);
 	}
 

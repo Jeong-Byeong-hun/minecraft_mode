@@ -1,6 +1,7 @@
 package com.minecraftmode.entity;
 
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.loot.UpgradeMenu;
@@ -72,8 +73,11 @@ public class CityNpc extends PathfinderMob {
 			"New to Stormhold? Ask me anything: pick a topic and I will explain.",
 			"스톰홀드는 처음이세요? 궁금한 게 있으면 뭐든 물어보세요. 주제를 고르면 알려 드릴게요."),
 		QUARTERMASTER("quartermaster", 0xA88A5A, "Quartermaster Bram", "보급관 브람",
-			"Every adventurer gets one set of iron gear from me. Do not lose it out there!",
-			"모험가라면 누구나 철 장비 한 벌은 내게서 받아 가지. 밖에서 잃어버리지 말게!");
+			"Every adventurer gets one set of iron gear and a shield from me. Do not lose them out there!",
+			"모험가라면 누구나 철 장비 한 벌과 방패는 내게서 받아 가지. 밖에서 잃어버리지 말게!"),
+		BAKER("baker", 0xE8A050, "Baker Hanna", "제빵사 한나",
+			"Fresh from the oven! A stack of bread for every adventurer, every day. Come back tomorrow for more!",
+			"오븐에서 갓 나왔어요! 모험가마다 하루에 빵 한 묶음씩 드려요. 내일 또 오세요!");
 
 		private final String id;
 		private final int color;
@@ -161,6 +165,7 @@ public class CityNpc extends PathfinderMob {
 			case HERALD -> Items.GOAT_HORN;
 			case GUIDE -> Items.BOOK;
 			case QUARTERMASTER -> Items.IRON_SWORD;
+			case BAKER -> Items.BREAD;
 		}));
 	}
 
@@ -212,6 +217,7 @@ public class CityNpc extends PathfinderMob {
 					}
 				}
 				case QUARTERMASTER -> StarterKit.give(serverPlayer);
+				case BAKER -> DailyBread.give(serverPlayer);
 			}
 		}
 		return InteractionResult.SUCCESS;

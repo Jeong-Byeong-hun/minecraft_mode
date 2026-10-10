@@ -55,6 +55,7 @@ final class QuestArt {
 		TextureGen.write("entity/npc/herald", elric());
 		TextureGen.write("entity/npc/guide", nella());
 		TextureGen.write("entity/npc/quartermaster", bram());
+		TextureGen.write("entity/npc/baker", hanna());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1258,6 +1259,60 @@ final class QuestArt {
 		legs(0x4A4A50);
 		fill(0, 26, 16, 6, dark);
 		fill(8, 16, 4, 4, dark);
+		return img;
+	}
+
+	/** Baker Hanna: long auburn hair under a white kerchief, rosy cheeks, a mustard dress with a flour-dusted apron and rolled sleeves. */
+	static BufferedImage hanna() {
+		BufferedImage img = newSkin(116);
+		int skin = 0xF4D2B8, hair = 0xA0482A, scarf = 0xF6F2EA, dot = 0xD84A4A, dress = 0xD8A040, dark = 0xA87828, apron = 0xFAF8F2,
+			flour = 0xE2DCCC, cheek = 0xF0A090, shoe = 0x5A3A22;
+		head(skin, hair);
+		hair(hair, 2, 7, 8);                 // long hair down the sides and the back
+		fill(8, 10, 1, 4, hair);             // locks framing the face
+		fill(15, 10, 1, 4, hair);
+		eyes(12, 0xFFFFFF, 0x5A8A4A);
+		px(9, 11, 0x3A2018);                 // lashes
+		px(14, 11, 0x3A2018);
+		px(9, 13, cheek);                    // rosy cheeks and a smile
+		px(14, 13, cheek);
+		px(11, 14, 0xD87070);
+		px(12, 14, 0xD87070);
+		fill(40, 0, 8, 8, scarf);            // kerchief on the hat layer, red dots on the band
+		fill(40, 8, 8, 2, scarf);
+		px(41, 9, dot);
+		px(44, 8, dot);
+		px(46, 9, dot);
+		fill(32, 8, 8, 3, scarf);
+		fill(48, 8, 8, 3, scarf);
+		fill(56, 8, 8, 3, scarf);
+		fill(59, 11, 2, 2, scarf);           // the knot at the back
+
+		body(dress);
+		fill(21, 20, 6, 12, apron);          // apron with a pocket and flour dust
+		fill(20, 20, 1, 2, apron);
+		fill(27, 20, 1, 2, apron);
+		fill(16, 26, 4, 1, apron);           // apron strings round the waist
+		fill(28, 26, 12, 1, apron);
+		fill(22, 27, 4, 2, flour);
+		px(22, 23, flour);
+		px(25, 25, flour);
+		px(24, 30, flour);
+		fill(20, 31, 8, 1, dark);
+
+		arms(dress);
+		fill(40, 23, 16, 1, dark);           // rolled sleeves, floury hands
+		fill(40, 24, 16, 8, skin);
+		fill(48, 16, 4, 4, skin);
+		px(44, 30, flour);
+		px(46, 31, flour);
+
+		legs(dress);
+		fill(4, 20, 4, 6, apron);            // skirt with the apron over it, stockings and shoes
+		fill(0, 25, 16, 1, dark);
+		fill(0, 26, 16, 3, 0xF0EAE0);
+		fill(0, 29, 16, 3, shoe);
+		fill(8, 16, 4, 4, shoe);
 		return img;
 	}
 

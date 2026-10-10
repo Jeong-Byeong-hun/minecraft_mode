@@ -1,6 +1,7 @@
 package com.minecraftmode.network;
 
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.Dungeons;
@@ -18,6 +19,7 @@ import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.talent.Talents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,6 +47,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(LootStatePayload.TYPE, LootStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenBountyPayload.TYPE, OpenBountyPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);
+		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> SkillCaster.tryCast(context.player(), payload.slot())

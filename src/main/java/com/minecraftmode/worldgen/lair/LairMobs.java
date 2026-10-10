@@ -16,15 +16,15 @@ import net.minecraft.world.level.biome.MobSpawnSettings;
  * region plus the lair's named monster at several times its usual rate.
  */
 public enum LairMobs {
-	PLAINS(Map.of(EntityTypes.ZOMBIE, 100, EntityTypes.SKELETON, 100, EntityTypes.SPIDER, 100, EntityTypes.CREEPER, 70)),
-	DESERT(Map.of(EntityTypes.HUSK, 110, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 70, EntityTypes.CREEPER, 60)),
-	SNOW(Map.of(EntityTypes.STRAY, 100, EntityTypes.ZOMBIE, 90, EntityTypes.SPIDER, 60, EntityTypes.CREEPER, 60)),
+	PLAINS(Map.of(EntityTypes.ZOMBIE, 100, EntityTypes.SKELETON, 100, EntityTypes.SPIDER, 100)),
+	DESERT(Map.of(EntityTypes.HUSK, 110, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 70)),
+	SNOW(Map.of(EntityTypes.STRAY, 100, EntityTypes.ZOMBIE, 90, EntityTypes.SPIDER, 60)),
 	SWAMP(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.BOGGED, 70, EntityTypes.SLIME, 60, EntityTypes.WITCH, 25, EntityTypes.SPIDER, 60)),
-	JUNGLE(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 110, EntityTypes.CAVE_SPIDER, 40, EntityTypes.CREEPER, 60)),
-	COAST(Map.of(EntityTypes.DROWNED, 110, EntityTypes.ZOMBIE, 70, EntityTypes.SKELETON, 80, EntityTypes.CREEPER, 50)),
-	GLOOM(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 80, EntityTypes.WITCH, 20, EntityTypes.CREEPER, 60)),
-	CAVE(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 100, EntityTypes.CAVE_SPIDER, 70, EntityTypes.CREEPER, 60)),
-	DEEP_DARK(Map.of(EntityTypes.ZOMBIE, 80, EntityTypes.SKELETON, 100, EntityTypes.CREEPER, 50, EntityTypes.CAVE_SPIDER, 40)),
+	JUNGLE(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 110, EntityTypes.CAVE_SPIDER, 40)),
+	COAST(Map.of(EntityTypes.DROWNED, 110, EntityTypes.ZOMBIE, 70, EntityTypes.SKELETON, 80)),
+	GLOOM(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 80, EntityTypes.SPIDER, 80, EntityTypes.WITCH, 20)),
+	CAVE(Map.of(EntityTypes.ZOMBIE, 90, EntityTypes.SKELETON, 100, EntityTypes.CAVE_SPIDER, 70)),
+	DEEP_DARK(Map.of(EntityTypes.ZOMBIE, 80, EntityTypes.SKELETON, 100, EntityTypes.CAVE_SPIDER, 40)),
 	NETHER(Map.of(EntityTypes.ZOMBIFIED_PIGLIN, 80, EntityTypes.MAGMA_CUBE, 70, EntityTypes.BLAZE, 50, EntityTypes.WITHER_SKELETON, 40)),
 	SOUL(Map.of(EntityTypes.SKELETON, 110, EntityTypes.WITHER_SKELETON, 50, EntityTypes.ENDERMAN, 20, EntityTypes.BLAZE, 30)),
 	CRIMSON(Map.of(EntityTypes.HOGLIN, 70, EntityTypes.ZOMBIFIED_PIGLIN, 60, EntityTypes.WITHER_SKELETON, 80, EntityTypes.MAGMA_CUBE, 30)),

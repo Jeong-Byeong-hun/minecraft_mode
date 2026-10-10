@@ -28,6 +28,10 @@ public final class CityZone {
 	public static final int CORE = 112;
 	/** Terrain blends from the city floor back to natural height over this many blocks. */
 	public static final int BLEND = 24;
+	/** The outskirts reach this far from the centre (96 blocks past the walls): no hostile spawns on their surface. */
+	public static final int OUTSKIRTS = 196;
+	/** "Surface" in the outskirts: down to this many blocks below the top block (hillsides, ditches), not the caves. */
+	public static final int OUTSKIRTS_SURFACE_DEPTH = 6;
 
 	private static final Map<Long, Integer> BASE = new ConcurrentHashMap<>();
 
@@ -37,6 +41,11 @@ public final class CityZone {
 
 	public static boolean isCityLevel(final Level level) {
 		return level instanceof ServerLevel server && isCityGenerator(server.getChunkSource().getGenerator(), level);
+	}
+
+	/** Outside the walls but within {@link #OUTSKIRTS} of the centre. */
+	public static boolean outskirts(final int x, final int z) {
+		return !inside(x, z) && Math.abs(x) <= OUTSKIRTS && Math.abs(z) <= OUTSKIRTS;
 	}
 
 	public static boolean inside(final int x, final int z) {
@@ -94,7 +103,7 @@ public final class CityZone {
 	/**
 	 * Where the city service NPCs stand: the blacksmith and the enhancer at the forge, the raid marshal by the raid gate, the
 	 * guild clerk between the guild shops, the broker in the market stall with the lectern, the dungeon warden by the dungeon gate
-	 * and the royal herald, the guide and the quartermaster on the plaza by the spawn.
+	 * and the royal herald, the guide, the quartermaster and the baker on the plaza by the spawn.
 	 */
 	public static BlockPos npcHome(final CityNpc.Role role, final int base) {
 		return switch (role) {
@@ -107,6 +116,7 @@ public final class CityZone {
 			case HERALD -> new BlockPos(5, base, 11);
 			case GUIDE -> new BlockPos(-5, base, 11);
 			case QUARTERMASTER -> new BlockPos(-5, base, 15);
+			case BAKER -> new BlockPos(5, base, 15);
 		};
 	}
 

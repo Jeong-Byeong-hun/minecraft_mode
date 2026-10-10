@@ -1,6 +1,7 @@
 package com.minecraftmode.client.guide;
 
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
@@ -20,8 +21,8 @@ import net.minecraft.network.chat.Component;
 /**
  * Guide Nella's screen: topics on the left (getting started, leveling to 10, classes, keys, directions, money, gear, named monsters,
  * raids and dungeons, bounties and the story, companions and crafts, events), the answer on the right. Directions list every service
- * NPC and trainer with its coordinates, read from {@link CityZone}; leveling shows the experience the curve asks for and how much
- * the player still needs.
+ * NPC and trainer (and the Training Grounds stairs) with its coordinates, read from {@link CityZone}; leveling shows the experience the
+ * curve asks for and how much the player still needs.
  */
 public class GuideScreen extends Screen {
 	private static final int W = 340;
@@ -33,6 +34,8 @@ public class GuideScreen extends Screen {
 	/** Experience of a zombie (= its max health), the leveling topic's yardstick. */
 	private static final int ZOMBIE_EXP = 20;
 	private static final int TEXT_X = LIST_W + 16;
+	/** Line height of the directions list (one line per NPC, trainer and landmark). */
+	private static final int PLACE_ROW = 8;
 
 	public enum Topic {
 		START, LEVELING, CLASSES, KEYS, PLACES, MONEY, GEAR, NAMED, DUNGEONS, BOUNTIES, COMPANIONS, EVENTS;
@@ -87,11 +90,13 @@ public class GuideScreen extends Screen {
 			int ly = y + 41;
 			for (Component line : places()) {
 				g.text(this.font, this.font.plainSubstrByWidth(line.getString(), width), tx, ly, 0xFFDDDDDD, false);
-				ly += 9;
+				ly += PLACE_ROW;
 			}
 		} else if (topic == Topic.LEVELING) {
 			int total = expBetween(1, CLASS_LEVEL);
-			g.textWithWordWrap(this.font, Component.translatable(topic.key() + ".text", total, (total + ZOMBIE_EXP - 1) / ZOMBIE_EXP), tx, y + 41, width, 0xFFDDDDDD);
+			int trainingExp = ZOMBIE_EXP * TrainingGrounds.EXP_MULTIPLIER;
+			g.textWithWordWrap(this.font, Component.translatable(topic.key() + ".text", total, (total + ZOMBIE_EXP - 1) / ZOMBIE_EXP, (total + trainingExp - 1) / trainingExp),
+				tx, y + 41, width, 0xFFDDDDDD);
 			LocalPlayer player = this.minecraft.player;
 			if (player != null) {
 				JobData data = JobProgression.get(player);
@@ -115,11 +120,12 @@ public class GuideScreen extends Screen {
 		return total;
 	}
 
-	/** "Name: x, z" for the plaza, every service NPC and every trainer. */
+	/** "Name: x, z" for the plaza, the Training Grounds stairs, every service NPC and every trainer. */
 	private static List<Component> places() {
 		List<Component> out = new ArrayList<>();
 		BlockPos spawn = CityZone.spawn(0);
 		out.add(line(Component.translatable("screen.minecraft_mode.guide.plaza"), spawn));
+		out.add(line(Component.translatable("screen.minecraft_mode.guide.training"), TrainingGrounds.entrance(0)));
 		for (CityNpc.Role role : CityNpc.Role.values()) {
 			out.add(line(Component.translatable(role.nameKey()), CityZone.npcHome(role, 0)));
 		}

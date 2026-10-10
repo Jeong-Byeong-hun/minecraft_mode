@@ -473,16 +473,20 @@ final class CityChecks {
 			return new int[] {intruder.getId(), statue.getId()};
 		});
 		context.waitTicks(25);
-		String report = server.computeOnServer(s -> {
+		List<Integer> seen = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
 			require(level.getEntity(ids[0]) == null, "the city guards should drive off a zombie on the plaza");
 			require(level.getEntity(ids[1]) != null, "NoAI decorations should stay");
 			level.getEntity(ids[1]).discard();
-			List<Mob> inside = level.getEntitiesOfClass(Mob.class, new AABB(-CityZone.WALL, level.getMinY(), -CityZone.WALL, CityZone.WALL + 1, level.getMaxY(), CityZone.WALL + 1),
-				m -> m.getType().getCategory() == MobCategory.MONSTER && CityZone.inside(m.blockPosition()));
-			require(inside.isEmpty(), inside.size() + " hostile mobs are still inside the walls: "
-				+ inside.stream().map(m -> m.getType().toShortString() + "@" + m.blockPosition().toShortString() + (m.isNoAi() ? " (NoAI)" : "") + " " + m.entityTags()).toList());
-			return "0 spawned inside (" + FRESH_OUTSIDE.get() + " outside), intruder driven off, none left inside";
+			return hostilesInside(level).stream().map(Mob::getId).toList();
+		});
+		// a cave mob from the outskirts can walk in between two sweeps (every second); the next sweep must take it
+		context.waitTicks(25);
+		String report = server.computeOnServer(s -> {
+			List<Mob> stayed = hostilesInside(s.overworld()).stream().filter(m -> seen.contains(m.getId())).toList();
+			require(stayed.isEmpty(), stayed.size() + " hostile mobs are still inside the walls: "
+				+ stayed.stream().map(m -> m.getType().toShortString() + "@" + m.blockPosition().toShortString() + (m.isNoAi() ? " (NoAI)" : "") + " " + m.entityTags()).toList());
+			return "0 spawned inside (" + FRESH_OUTSIDE.get() + " outside), intruder driven off, " + (seen.isEmpty() ? "none left inside" : seen.size() + " walk-in(s) driven off");
 		});
 		server.runCommand("time set noon");
 		MinecraftMode.LOGGER.info("[city] hostile mobs during a {} tick night: {}", SAFE_SOAK_TICKS, report);
@@ -570,6 +574,11 @@ final class CityChecks {
 		context.waitTicks(30);
 		require(server.computeOnServer(s -> trainingMobs(s.overworld(), base).isEmpty()), "the training monsters should vanish when nobody trains");
 		MinecraftMode.LOGGER.info("[city] training grounds: {}; {}; all gone after leaving", layout, report);
+	}
+
+	private static List<Mob> hostilesInside(final ServerLevel level) {
+		return level.getEntitiesOfClass(Mob.class, new AABB(-CityZone.WALL, level.getMinY(), -CityZone.WALL, CityZone.WALL + 1, level.getMaxY(), CityZone.WALL + 1),
+			m -> m.getType().getCategory() == MobCategory.MONSTER && CityZone.inside(m.blockPosition()));
 	}
 
 	private static List<Mob> trainingMobs(final ServerLevel level, final int base) {

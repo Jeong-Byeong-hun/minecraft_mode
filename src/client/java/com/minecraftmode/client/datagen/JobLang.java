@@ -163,6 +163,7 @@ final class JobLang {
 		ConsumableLang.add(b, ko);
 		EndgameLang.add(b, ko);
 		ContentLang.add(b, ko);
+		MapLang.add(b, ko);
 	}
 
 	private JobLang() {

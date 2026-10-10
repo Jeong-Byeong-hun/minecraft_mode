@@ -3,6 +3,7 @@ package com.minecraftmode.client.datagen;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.StarterKit;
+import com.minecraftmode.client.map.MapSettings;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -160,7 +161,7 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 모험가 길드는 직업마다 구간당 **무기 1개 + 방어구 1부위**만 팝니다(자기 레벨 구간 + 10까지). 나머지는 네임드·보스 드롭 전용입니다.\n");
 		md.append("- 방어구는 해당 직업만, 차수·레벨이 맞아야 입을 수 있습니다. 각인은 무기 3줄, 방어구 4줄.\n");
 		md.append("- 강화: 도시 대장장이 \"명장 볼룬드\"가 장비를 같은 직업·종류의 다음 단계로 바꿔 줍니다(목표 구간 등급의 진화의 에테르 ")
-			.append(GearUpgrades.ETHER_COST).append("개).\n\n");
+			.append(GearUpgrades.ETHER_COST).append("개 + 목표 구간 길드 가격의 절반). 강화를 이어받을 때는 **재담금 수수료**가 붙습니다: 그 +N을 목표 구간에서 올렸다면 더 들었을 동전의 절반(낮은 구간에서 싸게 +15를 만들어 올리는 우회 방지).\n\n");
 
 		md.append("## 드롭 확률 (네임드 1마리당)\n\n| 레벨 | 장비 드롭 | 진화의 에테르 |\n|---|---|---|\n");
 		for (int level = 10; level <= 100; level += 10) {
@@ -469,6 +470,12 @@ public class GearDocProvider implements DataProvider {
 		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 명령어, 길 안내(모든 NPC·교관 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
 		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없는 ").append(StarterKit.ITEMS.size())
 			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼.\n\n");
+		md.append("## 지도·미니맵과 손에 든 광원\n\n");
+		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
+			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");
+		md.append("- **월드 지도**(M): 이 차원에서 본 모든 지형. 드래그로 이동, 휠로 확대/축소, 우클릭으로 그 자리에 웨이포인트(이름·색상). 오른쪽 목록은 거리순이 아닌 추가순이며 클릭하면 그곳을 보여 주고 우클릭하면 편집·삭제합니다. 죽은 자리는 \"마지막 사망 지점\"으로 자동 표시됩니다.\n");
+		md.append("- 지형과 웨이포인트는 클라이언트의 `minecraft_mode/map/<월드>/<차원>.bin`, `minecraft_mode/waypoints/<월드>.json`에 저장됩니다(싱글은 월드 이름, 서버는 주소 기준).\n");
+		md.append("- **손에 든 광원**: 횃불·영혼 횃불·랜턴·발광석·바다 랜턴·슈룸라이트·개구리불·용암 양동이처럼 빛나는 블록 아이템을 어느 손에든 들면 그 블록의 밝기로 주변이 밝아집니다. 서버가 머리(또는 발) 위치의 공기·물 칸에 보이지 않는 광원 블록을 두고 따라 옮기며, 내려놓거나 죽거나 접속을 끊으면 사라집니다.\n\n");
 		md.append("## 칭호 이름표\n\n");
 		md.append("- 착용한 칭호는 스코어보드 팀을 쓰지 않고 모드가 직접 이름 앞에 붙입니다(머리 위 이름·채팅·탭 목록). 다른 플러그인·데이터팩의 팀 설정과 충돌하지 않습니다.\n\n");
 

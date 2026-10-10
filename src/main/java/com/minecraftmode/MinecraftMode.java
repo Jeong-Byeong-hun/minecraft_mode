@@ -17,6 +17,7 @@ import com.minecraftmode.enchantment.CombatEnchantmentHandlers;
 import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobEvents;
+import com.minecraftmode.light.HeldLight;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
@@ -92,6 +93,7 @@ public class MinecraftMode implements ModInitializer {
 		Dungeons.init();
 		WorldEvents.init();
 		Story.init();
+		HeldLight.init();
 		LootSessions.init();
 		ModNetworking.init();
 		JobCommand.init();

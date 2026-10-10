@@ -9,6 +9,11 @@ import com.minecraftmode.client.endgame.CodexScreen;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.endgame.TalentScreen;
 import com.minecraftmode.client.guide.GuideScreen;
+import com.minecraftmode.client.map.MapClient;
+import com.minecraftmode.client.map.MapScreen;
+import com.minecraftmode.client.map.MapSettings;
+import com.minecraftmode.client.map.WaypointScreen;
+import com.minecraftmode.client.map.Waypoints;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
@@ -118,6 +123,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			checkStory(context, server, connection);
 			checkPlazaNpcs(context, server, connection);
 			screens(context, server, connection);
+			checkMapAndLight(context, server, connection);
 		}
 	}
 
@@ -603,6 +609,56 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		requireFits(context, "story", 320);
 		CodexScreen.showTab("codex");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+	}
+
+	// ------------------------------------------------------------------ map, minimap and held light
+
+	private static void checkMapAndLight(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// a torch in the off hand lights the block at the player's head; putting it away removes the light again
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(net.minecraft.world.item.Items.TORCH));
+		});
+		context.waitTicks(10);
+		String light = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			BlockPos head = BlockPos.containing(player.getX(), player.getEyeY(), player.getZ());
+			int level = player.level().getBrightness(net.minecraft.world.level.LightLayer.BLOCK, head);
+			require(level >= 13, "a held torch lights the player's surroundings, block light at the head is " + level);
+			require(player.level().getBlockState(head).is(net.minecraft.world.level.block.Blocks.LIGHT), "the light is an invisible light block");
+			player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
+			return "held torch light " + level;
+		});
+		context.waitTicks(10);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			BlockPos head = BlockPos.containing(player.getX(), player.getEyeY(), player.getZ());
+			require(!player.level().getBlockState(head).is(net.minecraft.world.level.block.Blocks.LIGHT), "the light block goes away with the torch");
+		});
+		// the minimap has scanned the chunks around the player; the big map opens, shows a waypoint and fits any screen
+		context.waitTicks(40);
+		context.runOnClient(minecraft -> {
+			require(MapClient.data().size() > 0, "the map scanner has coloured chunks around the player");
+			MapSettings.minimap = true;
+			MapClient.waypoints().add(MapClient.dimensionKey(), new Waypoints.Waypoint("Test camp", 12, -60, -8, Waypoints.COLORS[1]));
+		});
+		context.waitTicks(15);
+		shot(context, "content_minimap");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new MapScreen()));
+		context.waitForScreen(MapScreen.class);
+		context.waitTicks(25);
+		shot(context, "content_map");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new WaypointScreen((MapScreen)minecraft.gui.screen(), null, 30, -60, 30)));
+		context.waitForScreen(WaypointScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_map_waypoint");
+		context.runOnClient(minecraft -> {
+			List<Waypoints.Waypoint> list = MapClient.currentWaypoints();
+			list.clear();
+			MapClient.waypoints().touch();
+			minecraft.gui.setScreen(null);
+		});
+		MinecraftMode.LOGGER.info("[content] {}, map chunks {}", light, context.computeOnClient(minecraft -> MapClient.data().size()));
 	}
 
 	// ------------------------------------------------------------------ helpers

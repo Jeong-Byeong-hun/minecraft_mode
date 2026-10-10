@@ -46,8 +46,8 @@ final class ContentLang {
 				"Seven classes: Warrior, Rogue, Mage, Archer, Pirate, Soul Reaper and Hunter. Every advancement is a trial from the class trainer: defeat the listed monsters, collect their trial tokens and hand them in with essence. Tiers open at levels 10, 25, 45 and 70.\n\nThe class screen (K) shows your next trial and where its trainer stands. Past level 100 you gain paragon levels.",
 				"직업은 전사·도적·법사·궁수·해적·사신·헌터 7가지입니다. 모든 전직은 교관의 시련입니다: 목표 몬스터를 처치해 시련 증표를 모으고 정수와 함께 제출하세요. 레벨 10·25·45·70에 1~4차가 열립니다.\n\n직업 창(K)에서 다음 시련과 교관 위치를 볼 수 있습니다. 레벨 100 이후에는 초월 레벨이 쌓입니다."},
 			{"keys", "Keys and commands", "키와 명령어",
-				"K class screen\nN talents and paragon\nJ codex, achievements, titles, story\nR / G / V / Z skills\nB innate ability (level 20)\nP pets and mounts\nH call or dismiss your mount\nL raid loot\n\n/wallet, /party, /raid leave, /dungeon leave, /story",
-				"K 직업 창\nN 특성·초월\nJ 도감·업적·칭호·스토리\nR / G / V / Z 스킬\nB 고유 기술 (레벨 20)\nP 펫·탈것\nH 탈것 호출/내리기\nL 레이드 전리품\n\n/wallet, /party, /raid leave, /dungeon leave, /story"},
+				"K class screen\nN talents and paragon\nJ codex, achievements, titles, story\nR / X / V / Z skills\nB innate ability (level 20)\nU pets and mounts\nH call or dismiss your mount\nY raid loot\nM world map, comma (,) minimap on/off\n\n/wallet, /party, /raid leave, /dungeon leave, /story",
+				"K 직업 창\nN 특성·초월\nJ 도감·업적·칭호·스토리\nR / X / V / Z 스킬\nB 고유 기술 (레벨 20)\nU 펫·탈것\nH 탈것 호출/내리기\nY 레이드 전리품\nM 월드 지도, 쉼표(,) 미니맵 켜기/끄기\n\n/wallet, /party, /raid leave, /dungeon leave, /story"},
 			{"places", "Directions (x, z)", "길 안내 (x, z)", "", ""},
 			{"money", "Money and shops", "돈·상점·거래소",
 				"9 copper = 1 silver, 9 silver = 1 gold. Monsters and named monsters drop coins.\n\nThe south market has the general store, blacksmith, grocer, jeweler and alchemist, the Adventurers' Guild (class gear) and Broker Morgan's market where players trade with each other. Prices rise for a while as an item is traded a lot.",
@@ -65,8 +65,8 @@ final class ContentLang {
 				"Guild Clerk Lina hands out three daily bounties and one three-day bounty; they pay merit for the merit shop.\n\nAchievements give merit and titles; wear titles from the codex (J). Royal Herald Elric here on the plaza tells the main story.",
 				"길드 접수원 리나가 일일 의뢰 3개와 사흘 의뢰 1개를 줍니다. 보상으로 받는 공적은 공적 상점에서 씁니다.\n\n업적은 공적과 칭호를 주고, 칭호는 도감(J)에서 착용합니다. 이 광장의 왕실 전령 엘릭이 메인 스토리를 들려줍니다."},
 			{"companions", "Pets, mounts and crafts", "펫·탈것·생활 기술",
-				"Pet charms and mount whistles come from the merit shop, named monsters, lairs, dungeons, raids and the story. P opens your collection, H calls your mount.\n\nCook and brew at the stations in the market and smith at the forge; herbs drop from grass and flowers.",
-				"펫 부적과 탈것 호루라기는 공적 상점, 네임드, 소굴, 던전, 레이드, 스토리에서 얻습니다. P로 수집 창, H로 탈것을 부릅니다.\n\n시장의 작업대에서 요리와 연금술, 대장간에서 대장 기술을 익히세요. 약초는 풀과 꽃을 부수면 나옵니다."},
+				"Pet charms and mount whistles come from the merit shop, named monsters, lairs, dungeons, raids and the story. U opens your collection, H calls your mount.\n\nCook and brew at the stations in the market and smith at the forge; herbs drop from grass and flowers.",
+				"펫 부적과 탈것 호루라기는 공적 상점, 네임드, 소굴, 던전, 레이드, 스토리에서 얻습니다. U로 수집 창, H로 탈것을 부릅니다.\n\n시장의 작업대에서 요리와 연금술, 대장간에서 대장 기술을 익히세요. 약초는 풀과 꽃을 부수면 나옵니다."},
 			{"events", "World events and resets", "월드 이벤트와 초기화",
 				"Every day at dusk a titan rises in the wilds (two days of three) or the capital is invaded (the third). Everyone who fights is rewarded.\n\nLair treasure, raid rewards and the three-day bounty renew every three Minecraft days.",
 				"매일 해 질 녘에 황야에 거신이 나타나거나(사흘 중 이틀), 수도가 침공당합니다(셋째 날). 함께 싸운 모두가 보상을 받습니다.\n\n소굴 보물·레이드 보상·사흘 의뢰는 마인크래프트 날짜로 3일마다 초기화됩니다."},
@@ -143,7 +143,7 @@ final class ContentLang {
 		b.add("tooltip.minecraft_mode.mount.speed", ko ? "속도 %s블록/초" : "Speed %s blocks/s");
 		b.add("tooltip.minecraft_mode.mount.flying", ko ? "비행 · 속도 %s블록/초" : "Flies · speed %s blocks/s");
 		b.add("tooltip.minecraft_mode.companion.use", ko ? "사용: 수집품에 추가 (P로 소환)" : "Use: add it to your collection (summon with P)");
-		b.add("message.minecraft_mode.pet.learned", ko ? "새 펫: %s! 수집품(P)에서 소환할 수 있습니다." : "New pet: %s! Summon it from your collection (P).");
+		b.add("message.minecraft_mode.pet.learned", ko ? "새 펫: %s! 수집품(U)에서 소환할 수 있습니다." : "New pet: %s! Summon it from your collection (U).");
 		b.add("message.minecraft_mode.mount.learned", ko ? "새 탈것: %s! H를 누르면 탑니다." : "New mount: %s! Press H to ride.");
 		b.add("message.minecraft_mode.companion.known", ko ? "이미 가지고 있습니다." : "You already have it.");
 		b.add("message.minecraft_mode.companion.found", ko ? "희귀한 발견: %s!" : "A rare find: %s!");

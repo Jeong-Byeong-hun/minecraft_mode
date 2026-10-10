@@ -138,7 +138,7 @@ public final class MageContent extends ClassContent {
 
 		weapon("megumin_staff", 4, 78, STAFF, "Megumin's Staff", "메구밍의 지팡이",
 			art(0xD4AF37, 0x4A2E1A, 0xE0213B), fx(Fx.Kind.SPARK, 0xFF3A2A),
-			skill("explosion", "EXPLOSION!", "익스플로전!", ULTIMATE, 60, 40, strike(24, 8, 1, 4.5), burn(6), buff(SLOWNESS, 5, 2)),
+			skill("explosion", "EXPLOSION!", "익스플로전!", ULTIMATE, 60, 40, strike(24, 8, 1, 10.0), burn(6), buff(SLOWNESS, 5, 2)),
 			skill("drain_touch", "Drain Touch", "드레인 터치", ATTACK, 10, 16, nova(3.5, 1.8), lifesteal(40), restoreMana(12)),
 			skill("crimson_demon_pose", "Crimson Demon Pose", "홍마족의 포즈", UTILITY, 18, 16, empower(4, 70, 10), buff(SPEED, 8, 1)),
 			skill("manatite", "Manatite Crystal", "마나타이트", UTILITY, 30, 16, restoreMana(40), refresh(25)));
@@ -168,15 +168,15 @@ public final class MageContent extends ClassContent {
 
 		weapon("frieren_staff", 4, 95, STAFF, "Frieren's Staff", "프리렌의 지팡이",
 			art(0xD4AF37, 0xEDEAE0, 0xD9304A), fx(Fx.Kind.BOLT, 0xE8F0FF),
-			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40, barrage(ProjectileStyle.ORB, 30, 1.0)),
+			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40, barrage(ProjectileStyle.ORB, 30, 0.4)),
 			skill("judradjim", "Judradjim", "쥬드라질름", ATTACK, 10, 26, lightning(22, 4.5, 2.6), stun(0.8)),
 			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, stance(GUARD, 6, 55), shield(12, 6)),
 			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24, sanctuary(7, 8, 4), cleanse()));
 
 		weapon("lemegeton", 4, 100, GRIMOIRE, "Lemegeton", "레메게톤",
 			art(0xD4AF37, 0x24203A, 0xFF4A3A), fx(Fx.Kind.RUNE, 0xFFC94A),
-			skill("ars_almadel_salomonis", "Ars Almadel Salomonis", "아르스 알마델 살로모니스", ULTIMATE, 60, 40, strike(24, 7, 12, 1.5), inflict(VULNERABLE, 8, 1)),
-			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5), nova(6, 2.6)),
+			skill("ars_almadel_salomonis", "Ars Almadel Salomonis", "아르스 알마델 살로모니스", ULTIMATE, 60, 40, strike(24, 7, 12, 1.9), inflict(VULNERABLE, 8, 1)),
+			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5), nova(6, 3.4)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, mark(24, 12, 50), debuff(14, GLOWING, 10, 0)),
 			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, stance(COUNTER, 6, 50), shield(12, 10)));
 	}

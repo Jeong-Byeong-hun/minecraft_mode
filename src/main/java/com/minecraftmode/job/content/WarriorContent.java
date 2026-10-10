@@ -30,13 +30,13 @@ public final class WarriorContent extends ClassContent {
 			skill("iron_wall", "Iron Wall", "철벽", DEFENSE, 14, 12, stance(GUARD, 5, 40)),
 			skill("charging_step", "Charging Step", "돌격 보법", MOVEMENT, 10, 8, dash(5, 0.8)));
 
-		weapon("soldier_spear", 1, 12, SPEAR, "Soldier's Spear", "병사의 창",
+		weapon("soldier_spear", 1, 15, SPEAR, "Soldier's Spear", "병사의 창",
 			art(0xC9CED6, 0x8C6940, 0x2E6DB4), fx(Fx.Kind.SPARK, 0xCFE8FF),
 			skill("piercing_thrust", "Piercing Thrust", "꿰뚫는 찌르기", ATTACK, 5, 8, beam(6, 1.5)),
 			skill("sweeping_arc", "Sweeping Arc", "휩쓸기", ATTACK, 9, 12, slash(4.5, 240, 1.2), push(4, 1.0)),
 			skill("pole_vault", "Pole Vault", "장대 도약", MOVEMENT, 12, 8, leap(4, 3, 1.0)));
 
-		weapon("ronin_katana", 1, 15, KATANA, "Ronin's Katana", "낭인의 태도",
+		weapon("ronin_katana", 1, 20, KATANA, "Ronin's Katana", "낭인의 태도",
 			art(0xDDE3EA, 0x2B2B3A, 0xC0392B), fx(Fx.Kind.PETAL, 0xFFB7C5),
 			skill("iaido", "Iaido", "발도술", ATTACK, 6, 10, dash(4, 1.8)),
 			skill("petal_storm", "Petal Storm", "꽃잎 폭풍", ATTACK, 10, 14, repeat(3, 6, nova(3.5, 0.7))),
@@ -119,7 +119,7 @@ public final class WarriorContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 4: King of Knights
 		weapon("excalibur", 4, 70, LONGSWORD, "Excalibur", "엑스칼리버",
 			art(0xF0F4FF, 0x1F3A93, 0xFFD700), fx(Fx.Kind.SLASH, 0xFFE680),
-			skill("promised_victory", "Sword of Promised Victory", "약속된 승리의 검", ULTIMATE, 45, 40, beam(24, 4.5)),
+			skill("promised_victory", "Sword of Promised Victory", "약속된 승리의 검", ULTIMATE, 45, 40, beam(24, 9.0)),
 			skill("strike_air", "Strike Air", "풍왕철추", ATTACK, 16, 18, push(5, 2.0), shoot(ProjectileStyle.WAVE, 2.0).pierce(10)),
 			skill("mana_burst", "Mana Burst", "마력 방출", MOVEMENT, 10, 16, dash(8, 1.6)),
 			skill("avalon_guard", "Avalon's Protection", "아발론의 가호", DEFENSE, 30, 25, stance(GUARD, 6, 60), heal(25)));
@@ -131,42 +131,42 @@ public final class WarriorContent extends ClassContent {
 			skill("tyrants_charge", "Tyrant's Charge", "폭군의 돌진", MOVEMENT, 12, 16, stun(1.0), dash(9, 2.0)),
 			skill("black_armor", "Black Armor", "흑기사의 갑주", DEFENSE, 25, 24, stance(COUNTER, 6, 60), buff(RESISTANCE, 6, 1)));
 
-		weapon("rhongomyniad", 4, 76, SPEAR, "Rhongomyniad", "롱고미니아드",
+		weapon("rhongomyniad", 4, 78, SPEAR, "Rhongomyniad", "롱고미니아드",
 			art(0xEAF2FF, 0xD4AF37, 0x00BFFF), fx(Fx.Kind.BOLT, 0xBFEFFF),
 			skill("pillar_of_light", "Pillar of Light", "최후의 탑", ULTIMATE, 50, 40, lightning(20, 5, 3.5), strike(20, 4, 3, 1.8)),
 			skill("storm_thrust", "Storm Thrust", "폭풍 찌르기", ATTACK, 7, 18, beam(12, 2.4)),
 			skill("lion_kings_charge", "Lion King's Charge", "사자왕의 돌격", MOVEMENT, 12, 18, dash(10, 1.8)),
 			skill("holy_lance_ward", "Holy Lance Ward", "성창의 가호", DEFENSE, 24, 22, allyBuff(8, RESISTANCE, 8, 1), allyHeal(8, 20)));
 
-		weapon("arondight", 4, 80, LONGSWORD, "Arondight", "아론다이트",
+		weapon("arondight", 4, 82, LONGSWORD, "Arondight", "아론다이트",
 			art(0xBFC9D9, 0x16213E, 0x4169E1), fx(Fx.Kind.SLASH, 0x7FA7FF),
 			skill("overload", "Arondight Overload", "무궁의 무련", ULTIMATE, 40, 36, lifesteal(10), repeat(5, 4, slash(5, 200, 1.4))),
 			skill("knight_of_the_lake", "Knight of the Lake", "호수의 기사", DEFENSE, 20, 20, stance(EVADE, 6, 40), buff(SPEED, 6, 1)),
 			skill("lake_slash", "Lake Slash", "호수 베기", ATTACK, 7, 18, shoot(ProjectileStyle.WAVE, 2.2).count(3).spread(30).pierce(4)),
 			skill("unblemished", "Unblemished", "무결", UTILITY, 26, 18, cleanse(), heal(20), buff(REGENERATION, 6, 1)));
 
-		weapon("clarent", 4, 84, GREATSWORD, "Clarent", "클래런트",
+		weapon("clarent", 4, 86, GREATSWORD, "Clarent", "클래런트",
 			art(0xD9D9D9, 0x8B0000, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF4040),
 			skill("blood_arthur", "Clarent Blood Arthur", "아버지에게 바치는 반역", ULTIMATE, 45, 40, lightning(16, 5, 3.0), beam(18, 3.0)),
 			skill("red_lightning", "Red Lightning", "적뢰", ATTACK, 9, 20, chain(12, 5, 1.8)),
 			skill("rebels_charge", "Rebel's Charge", "반역의 돌진", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)),
 			skill("secret_of_pedigree", "Secret of Pedigree", "불명의 투구", UTILITY, 25, 20, stealth(4, 80), buff(SPEED, 4, 2)));
 
-		weapon("galatine", 4, 88, LONGSWORD, "Galatine", "갈라틴",
+		weapon("galatine", 4, 90, LONGSWORD, "Galatine", "갈라틴",
 			art(0xFFF2CC, 0x8B5A2B, 0xFF8C00), fx(Fx.Kind.ORB, 0xFFB347),
 			skill("excalibur_galatine", "Excalibur Galatine", "전승의 태양검", ULTIMATE, 45, 40, burn(6), strike(16, 5, 1, 4.5)),
 			skill("sunlight_blessing", "Sunlight Blessing", "태양의 축복", UTILITY, 28, 22, allyBuff(10, STRENGTH, 12, 1), allyBuff(10, REGENERATION, 6, 0)),
 			skill("solar_flare", "Solar Flare", "태양 폭발", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
 			skill("noon_strike", "Noon Strike", "정오의 일격", ATTACK, 7, 16, slash(5, 150, 2.4)));
 
-		weapon("ascalon", 4, 92, SPEAR, "Ascalon", "아스칼론",
+		weapon("ascalon", 4, 95, SPEAR, "Ascalon", "아스칼론",
 			art(0xE6E6E6, 0x4B3621, 0x2ECC71), fx(Fx.Kind.RING, 0x7DFFB0),
 			skill("abyssus_draconis", "Abyssus Draconis", "역성의 용", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 3.5)),
 			skill("dragonbane_thrust", "Dragonbane Thrust", "용살 찌르기", ATTACK, 7, 18, inflict(VULNERABLE, 6, 1), beam(10, 2.6)),
 			skill("martyrs_shield", "Martyr's Shield", "순교자의 방패", DEFENSE, 26, 24, shield(16, 10), taunt(10)),
 			skill("saints_ward", "Saint's Ward", "성자의 수호", UTILITY, 30, 26, allyHeal(10, 30), cleanse()));
 
-		weapon("kusanagi", 4, 96, KATANA, "Kusanagi no Tsurugi", "쿠사나기노츠루기",
+		weapon("kusanagi", 4, 100, KATANA, "Kusanagi no Tsurugi", "쿠사나기노츠루기",
 			art(0xF5F5F5, 0x0B3D2E, 0x40E0D0), fx(Fx.Kind.PETAL, 0x9EFFE6),
 			skill("ame_no_murakumo", "Ame-no-Murakumo", "천총운검", ULTIMATE, 50, 40, pull(8, 1.0), repeat(4, 6, nova(6, 1.6))),
 			skill("grass_cutter", "Grass Cutter", "풀베기", ATTACK, 6, 16, slash(6, 300, 1.8)),

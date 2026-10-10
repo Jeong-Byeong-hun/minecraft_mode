@@ -598,6 +598,17 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			return copies == 1 && pages == CityServices.GUIDE_PAGES ? "" : copies + " handbooks, " + pages + " pages";
 		});
 		require(handbook.isEmpty(), "reissued handbook: " + handbook);
+		// every townsperson has a skin (Garrick shipped without one and rendered as the missing texture)
+		String skins = context.computeOnClient(minecraft -> {
+			List<String> missing = new ArrayList<>();
+			for (CityNpc.Role role : CityNpc.Role.values()) {
+				if (minecraft.getResourceManager().getResource(MinecraftMode.id("textures/entity/npc/" + role.id() + ".png")).isEmpty()) {
+					missing.add(role.id());
+				}
+			}
+			return String.join(", ", missing);
+		});
+		require(skins.isEmpty(), "city NPCs without a skin: " + skins);
 		// the next day there is bread again
 		server.runCommand("time add " + ResetCycle.DAY_TICKS);
 		int fresh = server.computeOnServer(s -> {

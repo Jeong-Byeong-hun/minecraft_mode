@@ -2,6 +2,7 @@ package com.minecraftmode.worldgen.lair;
 
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.job.JobData;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearShop;
@@ -10,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * What a lair holds. The goal chest always has coins and at least one item from the lair monster's
@@ -21,15 +23,16 @@ public final class LairLoot {
 	/** Chance that a reward item is gear rather than a consumable. */
 	public static final float GEAR_SHARE = 0.45F;
 
-	public static List<ItemStack> goal(final NamedDef def, final RandomSource random) {
+	/** {@code data}: the opener's class, so gear leans toward it like other drops do ({@link GearDrops#pick}). */
+	public static List<ItemStack> goal(final NamedDef def, final @Nullable JobData data, final RandomSource random) {
 		List<ItemStack> out = new ArrayList<>();
 		int copper = Math.max(6, Math.round(GearShop.bracketPrice(def.hi()) * (0.5F + random.nextFloat() * 0.5F)));
 		out.addAll(Coins.asItems(copper));
-		out.add(item(def, random));
+		out.add(item(def, data, random));
 		if (random.nextFloat() < 0.60F) {
-			out.add(item(def, random));
+			out.add(item(def, data, random));
 			if (random.nextFloat() < 0.25F) {
-				out.add(item(def, random));
+				out.add(item(def, data, random));
 			}
 		}
 		out.add(GearDrops.ether(def.lo(), def.hi(), random));
@@ -42,9 +45,9 @@ public final class LairLoot {
 	}
 
 	/** One reward: gear of the monster's range or a consumable of its level (never empty). */
-	public static ItemStack item(final NamedDef def, final RandomSource random) {
+	public static ItemStack item(final NamedDef def, final @Nullable JobData data, final RandomSource random) {
 		if (random.nextFloat() < GEAR_SHARE) {
-			ItemStack gear = GearDrops.pick(null, def.lo(), def.hi(), random);
+			ItemStack gear = GearDrops.pick(data, def.lo(), def.hi(), random);
 			if (!gear.isEmpty()) {
 				return gear;
 			}

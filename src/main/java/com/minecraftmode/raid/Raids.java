@@ -48,6 +48,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -543,7 +544,8 @@ public final class Raids {
 			Progress.raidCleared(p, def, difficulty, cycle);
 			Companions.rollDrop(p, Companions.raidDrop(difficulty), Rarity.EPIC);
 		}
-		int lots = participants.isEmpty() ? 0 : 3 + participants.size() / 2 + difficulty.extraLots;
+		// about two lots a head (solo 3, six players 13), so bringing friends does not thin everyone's share
+		int lots = participants.isEmpty() ? 0 : 1 + 2 * participants.size() + difficulty.extraLots;
 		List<ItemStack> items = new ArrayList<>();
 		for (int i = 0; i < lots; i++) {
 			JobData bias = classes.isEmpty() ? null : classes.get(random.nextInt(classes.size()));
@@ -574,11 +576,11 @@ public final class Raids {
 	}
 
 	/**
-	 * Everyone's share: Evolution Ether (5-8, more on harder difficulties), condensed essence (2-4), consumables, enhancement
-	 * stones, sometimes a protection scroll, and job experience.
+	 * Everyone's share: Evolution Ether of the player's own bracket within the boss's range (5-8, more on harder difficulties),
+	 * condensed essence (2-4), consumables, enhancement stones, sometimes a protection scroll, and job experience.
 	 */
 	private static void reward(final ServerPlayer player, final BossDef def, final RaidDifficulty difficulty, final RandomSource random) {
-		int grade = def.lo() + random.nextInt(def.hi() - def.lo() + 1);
+		int grade = Mth.clamp(JobProgression.get(player).level(), def.lo(), def.hi());
 		give(player, EvolutionEtherItem.of(grade, Math.round((5 + random.nextInt(4)) * difficulty.ether)));
 		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, difficulty.stones));
 		if (random.nextFloat() < difficulty.scrollChance) {

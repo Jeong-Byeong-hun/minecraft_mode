@@ -28,7 +28,7 @@ final class TownLang {
 		// travel circles, portals and the homestead
 		b.add("message.minecraft_mode.waystone.homestead", ko ? "건축 평야로 이동했습니다. 돌아갈 때는 가운데의 마법진을 우클릭하세요." : "You arrive at the homestead plains. Right-click the circle in the middle to go back.");
 		b.add("message.minecraft_mode.waystone.plaza", ko ? "수도 광장으로 돌아왔습니다." : "You are back on the plaza.");
-		b.add("screen.minecraft_mode.guide.portals", ko ? "네더·엔드 차원문 (성 안뜰)" : "Nether and End portals (keep courtyard)");
+		b.add("screen.minecraft_mode.guide.portals", ko ? "네더·엔드 차원문 (성 안뜰)" : "Nether & End portals (keep)");
 		b.add("screen.minecraft_mode.guide.nether_portal", ko ? "네더 차원문" : "Nether Portal");
 		b.add("screen.minecraft_mode.guide.end_portal", ko ? "엔드 차원문" : "End Portal");
 		b.add("screen.minecraft_mode.guide.waystone", ko ? "이동 마법진 (건축 평야행)" : "Travel circle (to the homestead)");

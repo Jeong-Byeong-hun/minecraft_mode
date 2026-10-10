@@ -130,7 +130,7 @@ public final class PirateContent extends ClassContent {
 
 		weapon("el_draque", 4, 73, PISTOL, "El Draque", "엘 드라케",
 			art(0xD4AF37, 0x5B1A1A, 0xFFF2A8), fx(Fx.Kind.COIN, 0xFFD700),
-			skill("golden_wild_hunt", "Golden Wild Hunt", "황금 사슴과 폭풍의 밤", ULTIMATE, 50, 40, barrage(ProjectileStyle.CANNONBALL, 14, 1.3),
+			skill("golden_wild_hunt", "Golden Wild Hunt", "황금 사슴과 폭풍의 밤", ULTIMATE, 50, 40, barrage(ProjectileStyle.CANNONBALL, 14, 0.6),
 				delay(1.5, strike(22, 5, 1, 3.5)), loot(25)),
 			skill("golden_rule", "Golden Rule", "황금률", ATTACK, 9, 20, shoot(ProjectileStyle.COIN, 1.6).count(5).spread(40).pierce(1), loot(30)),
 			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, allyBuff(10, STRENGTH, 10, 1), allyBuff(10, DOLPHINS_GRACE, 10, 0)),
@@ -175,8 +175,8 @@ public final class PirateContent extends ClassContent {
 
 		weapon("pirate_kings_sabre", 4, 100, CUTLASS, "Pirate King's Sabre", "해적왕의 검",
 			art(0xF2F2F2, 0x8B0000, 0xFFD700), fx(Fx.Kind.BOLT, 0xD01E2E),
-			skill("divine_departure", "Divine Departure", "신피", ULTIMATE, 55, 40, slash(6, 180, 3.0), shoot(ProjectileStyle.WAVE, 3.5).pierce(15), stun(1.0)),
-			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, nova(6, 2.6), push(8, 2.5)),
+			skill("divine_departure", "Divine Departure", "신피", ULTIMATE, 55, 40, slash(6, 180, 4.0), shoot(ProjectileStyle.WAVE, 5.0).pierce(15), stun(1.0)),
+			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, nova(6, 3.4), push(8, 3.0)),
 			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), heal(20), stance(GUARD, 6, 50)),
 			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, allyBuff(12, STRENGTH, 12, 2), allyBuff(12, LUCK, 15, 1)));
 	}

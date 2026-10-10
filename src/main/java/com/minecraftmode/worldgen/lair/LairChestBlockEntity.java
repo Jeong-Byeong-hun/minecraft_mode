@@ -2,6 +2,8 @@ package com.minecraftmode.worldgen.lair;
 
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.job.JobData;
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModBlockEntities;
 import com.mojang.serialization.Codec;
@@ -211,7 +213,7 @@ public class LairChestBlockEntity extends BlockEntity {
 		if (p == null || p.cycle() != cycle) {
 			// what was left in earlier cycles is gone anyway; keep only this cycle's rolls
 			this.personal.values().removeIf(old -> old.cycle() < cycle);
-			p = new Personal(cycle, this.roll(player.getUUID(), cycle));
+			p = new Personal(cycle, this.roll(player.getUUID(), JobProgression.get(player), cycle));
 			this.personal.put(key, p);
 			this.setChanged();
 		}
@@ -235,14 +237,14 @@ public class LairChestBlockEntity extends BlockEntity {
 		return container;
 	}
 
-	private List<ItemStack> roll(final UUID player, final long cycle) {
+	private List<ItemStack> roll(final UUID player, final JobData job, final long cycle) {
 		LairDef def = this.def();
 		NonNullList<ItemStack> slots = NonNullList.withSize(SIZE, ItemStack.EMPTY);
 		if (def == null) {
 			return slots;
 		}
 		RandomSource random = RandomSource.create(this.seed ^ player.getMostSignificantBits() ^ player.getLeastSignificantBits() * 31L ^ cycle * 0x9E3779B97F4A7C15L);
-		List<ItemStack> loot = this.cache ? LairLoot.cache(def.named(), random) : LairLoot.goal(def.named(), random);
+		List<ItemStack> loot = this.cache ? LairLoot.cache(def.named(), random) : LairLoot.goal(def.named(), job, random);
 		for (ItemStack stack : loot) {
 			for (int tries = 0; tries < 40; tries++) {
 				int slot = random.nextInt(SIZE);

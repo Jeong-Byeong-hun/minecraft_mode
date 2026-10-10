@@ -47,7 +47,7 @@ public final class HunterContent extends ClassContent {
 			skill("assassin_step", "Assassin's Step", "암살자의 걸음", MOVEMENT, 14, 10, stealth(2, 40), dash(6, 1.0)));
 
 		// ---------------------------------------------------------------- tier 2: Nen User
-		weapon("jajanken", 2, 26, KNUCKLE, "Jajanken", "가위바위보",
+		weapon("jajanken", 2, 25, KNUCKLE, "Jajanken", "가위바위보",
 			art(0x3A8A3A, 0xE8E0D0, 0xF5D040), fx(Fx.Kind.ORB, 0xF5D040),
 			skill("rock", "Jajanken: Rock", "가위바위보: 바위", ATTACK, 8, 16, empower(1, 120, 6), slash(3, 80, 2.4)),
 			skill("scissors", "Jajanken: Scissors", "가위바위보: 가위", ATTACK, 9, 16, beam(8, 1.8), inflict(BLEEDING, 4, 0)),
@@ -84,7 +84,7 @@ public final class HunterContent extends ClassContent {
 			skill("spider_tattoo", "Spider Tattoo", "거미 문신", UTILITY, 20, 14, buff(STRENGTH, 8, 0), empower(3, 40, 8)));
 
 		// ---------------------------------------------------------------- tier 3: Pro Hunter
-		weapon("feitan_umbrella", 3, 46, RAPIER, "Feitan's Umbrella", "페이탄의 우산",
+		weapon("feitan_umbrella", 3, 45, RAPIER, "Feitan's Umbrella", "페이탄의 우산",
 			art(0x2A2A30, 0x1A1A1A, 0xC82020), fx(Fx.Kind.SPARK, 0xFF4A2A),
 			skill("hidden_blade", "Hidden Blade", "우산 속 칼날", ATTACK, 7, 18, repeat(4, 3, beam(6, 0.7))),
 			skill("pain_packer", "Pain Packer", "페인 패커", DEFENSE, 20, 20, stance(COUNTER, 4, 80), shield(10, 4)),
@@ -121,7 +121,7 @@ public final class HunterContent extends ClassContent {
 			skill("smoke_screen", "Smoke Screen", "연막", UTILITY, 18, 16, stealth(4, 50), debuff(6, BLINDNESS, 4, 0)));
 
 		// ---------------------------------------------------------------- tier 4: Triple-Star Hunter
-		weapon("godspeed", 4, 72, CLAW, "Godspeed", "신속",
+		weapon("godspeed", 4, 70, CLAW, "Godspeed", "신속",
 			art(0xE8F4FF, 0xD8E8FF, 0x3AA0FF), fx(Fx.Kind.BOLT, 0x8AD0FF),
 			skill("speed_of_lightning", "Speed of Lightning", "전광석화", MOVEMENT, 8, 18, shadowstep(12, 2.2), buff(SPEED, 4, 2)),
 			skill("whirlwind", "Whirlwind", "질풍신뢰", DEFENSE, 20, 22, stance(COUNTER, 6, 100), stance(EVADE, 6, 30)),
@@ -147,14 +147,14 @@ public final class HunterContent extends ClassContent {
 			skill("sun_and_moon", "Sun and Moon", "태양과 달", ATTACK, 12, 24, mark(18, 8, 40), delay(1.5, chain(14, 4, 2.2))),
 			skill("indoor_fish", "Indoor Fish", "실내 물고기", ATTACK, 14, 24, shoot(ProjectileStyle.ORB, 1.6).count(3).spread(30).homing(), inflict(BLEEDING, 6, 1)),
 			skill("fun_fun_cloth", "Fun Fun Cloth", "펀펀 클로스", DEFENSE, 20, 22, shield(16, 8), stealth(2, 30)),
-			skill("bandits_secret", "Bandit's Secret", "도적의 비법", ULTIMATE, 55, 50, barrage(ProjectileStyle.ORB, 14, 1.4), restoreMana(30)));
+			skill("bandits_secret", "Bandit's Secret", "도적의 비법", ULTIMATE, 55, 50, barrage(ProjectileStyle.ORB, 14, 0.7), restoreMana(30)));
 
 		weapon("zeno_dragon", 4, 85, SCEPTER, "Zeno's Dragon Head", "제노의 용두",
 			art(0xE8E0C0, 0x5A3A2A, 0x4AC8FF), fx(Fx.Kind.ORB, 0x8AE0FF),
 			skill("dragon_head", "Dragon Head", "용두", ATTACK, 12, 26, shoot(ProjectileStyle.WAVE, 2.4).pierce(10).explode(2.5F)),
 			skill("dragon_lance", "Dragon Lance", "용두쌍", ATTACK, 14, 26, beam(20, 2.6), stun(1.0)),
 			skill("zoldyck_patience", "Zoldyck Patience", "조르딕가의 인내", DEFENSE, 20, 18, stance(GUARD, 6, 50), buff(RESISTANCE, 6, 1)),
-			skill("dragon_dive", "Dragon Dive", "용성군", ULTIMATE, 60, 50, rain(ProjectileStyle.ORB, 24, 7, 30, 1.6, 1.5F)));
+			skill("dragon_dive", "Dragon Dive", "용성군", ULTIMATE, 60, 50, rain(ProjectileStyle.ORB, 24, 7, 30, 1.0, 1.5F)));
 
 		weapon("silva_orbs", 4, 88, ORB, "Silva's Nen Orbs", "실바의 념구",
 			art(0xE8E8F0, 0x5A5A6A, 0xF5862B), fx(Fx.Kind.ORB, 0xFFB060),

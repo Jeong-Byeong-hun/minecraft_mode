@@ -8,6 +8,8 @@ import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.job.skill.CombatState;
 import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
 import java.util.List;
@@ -131,14 +133,24 @@ public final class JobEvents {
 			drop(level, entity, new ItemStack(ModItems.ESSENCE));
 		}
 
-		// Coins: pirate passive and the Plunder engraving
+		// Coins: pirate passive and the Plunder engraving; the purse grows with the hunter's level like guild prices do
 		JobData data = JobProgression.get(mvp);
 		float coinChance = (CombatHooks.has(data, JobClass.PIRATE, 1) ? 0.15F : 0.0F) + JobWeapons.activeTotals(mvp).fraction(EngraveStat.GOLD_FIND);
 		if (coinChance > 0.0F && mvp.getRandom().nextFloat() < coinChance) {
-			int copper = 1 + (int)(maxHealth / 20.0F);
-			drop(level, entity, copper >= 9 ? new ItemStack(ModItems.SILVER_COIN, copper / 9) : new ItemStack(ModItems.COPPER_COIN, copper));
+			for (ItemStack coins : Coins.asItems(goldFindCopper(maxHealth, data.level()))) {
+				drop(level, entity, coins);
+			}
 			level.sendParticles(ParticleTypes.WAX_ON, entity.getX(), entity.getY(0.5), entity.getZ(), 8, 0.3, 0.3, 0.3, 0.1);
 		}
+	}
+
+	/**
+	 * Copper of a gold-find proc: 1 + max health / 20 at level 10 (a zombie: 2), scaled by the guild price curve of the killer's
+	 * level ({@link GearShop#bracketPrice}), so it stays worth having at every level (a zombie at level 100: about 100).
+	 */
+	public static int goldFindCopper(final float maxHealth, final int level) {
+		float scale = GearShop.bracketPrice(Math.max(10, level)) / (float)GearShop.bracketPrice(10);
+		return Math.max(1, Math.round((1 + (int)(maxHealth / 20.0F)) * scale));
 	}
 
 	/** Class EXP with the EXP bonus of the player's gear. */

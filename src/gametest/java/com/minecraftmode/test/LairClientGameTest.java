@@ -89,7 +89,7 @@ public class LairClientGameTest implements FabricClientGameTest {
 			shapes.merge(def.shape(), 1, Integer::sum);
 			// loot: coins always and at least one reward, for many rolls
 			for (int seed = 0; seed < 40; seed++) {
-				List<ItemStack> loot = LairLoot.goal(named, RandomSource.create(seed * 7919L + def.id().hashCode()));
+				List<ItemStack> loot = LairLoot.goal(named, null, RandomSource.create(seed * 7919L + def.id().hashCode()));
 				require(loot.stream().anyMatch(LairClientGameTest::isCoin), def.id() + " goal without coins");
 				require(loot.stream().anyMatch(LairClientGameTest::isReward), def.id() + " goal without a reward");
 				require(loot.stream().anyMatch(s -> s.getItem() instanceof EvolutionEtherItem), def.id() + " goal without ether");

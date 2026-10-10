@@ -50,7 +50,7 @@ public final class ShinigamiContent extends ClassContent {
 			skill("reiatsu_flare", "Spiritual Pressure", "영압 해방", DEFENSE, 18, 12, push(5, 1.4), buff(RESISTANCE, 5, 0)));
 
 		// ---------------------------------------------------------------- tier 2: Lieutenant (Shikai)
-		weapon("zabimaru", 2, 26, KUSARIGAMA, "Zabimaru", "사미환",
+		weapon("zabimaru", 2, 25, KUSARIGAMA, "Zabimaru", "사미환",
 			art(0xC8C0B0, 0x8A1A1A, 0xE04040), fx(Fx.Kind.SLASH, 0xFF6060),
 			skill("howl_zabimaru", "Howl, Zabimaru", "짖어라, 사미환", ATTACK, 7, 14, beam(9, 1.8), inflict(BLEEDING, 4, 0)),
 			skill("whip_blade_sweep", "Whip-Blade Sweep", "사절 휘두르기", ATTACK, 10, 16, slash(6.5, 240, 1.4)),
@@ -88,10 +88,10 @@ public final class ShinigamiContent extends ClassContent {
 			skill("shibari_benihime", "Shibari Benihime", "묶어라, 홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
 
 		// ---------------------------------------------------------------- tier 3: Captain
-		weapon("senbonzakura", 3, 46, KATANA, "Senbonzakura", "천본앵",
+		weapon("senbonzakura", 3, 45, KATANA, "Senbonzakura", "천본앵",
 			art(0xF0E8F0, 0x2A2A3A, 0xFFB7C5), fx(Fx.Kind.PETAL, 0xFFB7C5),
 			skill("scatter_senbonzakura", "Scatter, Senbonzakura", "흩날려라, 천본앵", ATTACK, 9, 20, repeat(5, 4, nova(5, 0.6)), inflict(BLEEDING, 4, 1)),
-			skill("petal_volley", "Petal Volley", "꽃잎 연격", ATTACK, 10, 20, barrage(ProjectileStyle.BLADE, 10, 0.7)),
+			skill("petal_volley", "Petal Volley", "꽃잎 연격", ATTACK, 10, 20, barrage(ProjectileStyle.BLADE, 10, 0.4)),
 			skill("senka", "Senka", "섬화", MOVEMENT, 12, 16, shadowstep(10, 2.2)));
 
 		weapon("hyorinmaru", 3, 50, KATANA, "Hyorinmaru", "빙륜환",
@@ -126,7 +126,7 @@ public final class ShinigamiContent extends ClassContent {
 			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, buff(STRENGTH, 10, 2), empower(6, 50, 10), taunt(10)));
 
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
-		weapon("tensa_zangetsu", 4, 72, KATANA, "Tensa Zangetsu", "천쇄참월",
+		weapon("tensa_zangetsu", 4, 70, KATANA, "Tensa Zangetsu", "천쇄참월",
 			art(0x1A1A1A, 0x2A1A1A, 0xC8202A), fx(Fx.Kind.SLASH, 0x1A1A1A),
 			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 2.6).pierce(10)),
 			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, blink(12), dash(6, 1.8)),

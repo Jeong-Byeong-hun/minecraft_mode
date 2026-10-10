@@ -56,6 +56,9 @@ final class QuestArt {
 		TextureGen.write("entity/npc/guide", nella());
 		TextureGen.write("entity/npc/quartermaster", bram());
 		TextureGen.write("entity/npc/baker", hanna());
+		TextureGen.write("entity/npc/hunt_master", garrick());
+		TextureGen.write("entity/npc/crier", odo());
+		TextureGen.write("entity/npc/stylist", celeste());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1259,6 +1262,140 @@ final class QuestArt {
 		legs(0x4A4A50);
 		fill(0, 26, 16, 6, dark);
 		fill(8, 16, 4, 4, dark);
+		return img;
+	}
+
+	/** Huntmaster Garrick: a weathered hunter with a short brown beard under an olive hood, a leather jerkin crossed by a quiver strap, bracers and muddy boots. */
+	static BufferedImage garrick() {
+		BufferedImage img = newSkin(117);
+		int skin = 0xC89068, hair = 0x5A3A22, hood = 0x5E7A34, hoodDark = 0x3E5222, leather = 0x7A5230, dark = 0x3A2616, strap = 0x2E1E10,
+			quiver = 0x6A3A1A, fletch = 0xE8E0D0, trousers = 0x4A4A32;
+		head(skin, hair);
+		hair(hair, 1, 3, 4);
+		eyes(12, 0xFFFFFF, 0x3A5A2A);
+		fill(9, 11, 2, 1, dark);             // heavy brows
+		fill(13, 11, 2, 1, dark);
+		fill(9, 14, 6, 2, hair);             // short beard round the jaw
+		fill(8, 13, 1, 3, hair);
+		fill(15, 13, 1, 3, hair);
+		fill(0, 13, 8, 3, hair);
+		fill(16, 13, 8, 3, hair);
+		px(11, 14, 0x8A4A3A);                // mouth in the beard
+		px(12, 14, 0x8A4A3A);
+		fill(40, 0, 8, 8, hood);             // hood on the hat layer: top, sides and back, open in front
+		fill(48, 0, 8, 8, hoodDark);
+		fill(32, 8, 8, 8, hood);
+		fill(48, 8, 8, 8, hood);
+		fill(56, 8, 8, 8, hoodDark);
+		fill(40, 8, 8, 2, hood);             // brim over the brow and the edges framing the face
+		fill(40, 10, 1, 4, hood);
+		fill(47, 10, 1, 4, hood);
+
+		body(leather);
+		for (int i = 0; i < 8; i++) {        // quiver strap from the right shoulder to the left hip
+			px(27 - i, 20 + i, strap);
+			px(26 - i, 20 + i, strap);
+		}
+		fill(34, 21, 3, 9, quiver);          // quiver on the back with fletchings over the shoulder
+		fill(34, 20, 3, 1, fletch);
+		px(35, 20, 0xC03A2A);
+		fill(16, 29, 24, 1, dark);           // belt with a brass buckle
+		px(24, 29, 0xC8A040);
+
+		arms(hood);
+		fill(40, 27, 16, 3, leather);        // bracers and bare hands
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 26, 16, 6, dark);            // muddy boots
+		fill(0, 31, 16, 1, 0x5A4A30);
+		fill(8, 16, 4, 4, dark);
+		return img;
+	}
+
+	/** Town Crier Odo: a round-faced man with a ginger moustache under a feathered tricorne, a red coat with brass buttons and a sash of notices. */
+	static BufferedImage odo() {
+		BufferedImage img = newSkin(118);
+		int skin = 0xE8B890, hair = 0xC0602A, hat = 0x2A2A3A, feather = 0xF0F0F0, coat = 0xB02A2A, coatDark = 0x7A1A1A, brass = 0xE0B040,
+			sash = 0xF2E6C0, ink = 0x3A3A3A, trousers = 0x2A2A3A, shoe = 0x1A1A1A;
+		head(skin, hair);
+		hair(hair, 1, 2, 3);
+		eyes(12, 0xFFFFFF, 0x4A6A9A);
+		fill(9, 14, 6, 1, hair);             // curled moustache
+		px(8, 13, hair);
+		px(15, 13, hair);
+		px(11, 15, 0xA05040);                // open mouth, calling out
+		px(12, 15, 0xA05040);
+		fill(40, 0, 8, 8, hat);              // tricorne on the hat layer with a white plume
+		fill(48, 0, 8, 8, hat);
+		fill(32, 8, 32, 2, hat);
+		fill(40, 10, 8, 1, brass);
+		px(46, 8, feather);
+		px(47, 8, feather);
+		px(45, 0, feather);
+
+		body(coat);
+		fill(23, 20, 2, 12, coatDark);       // coat front with brass buttons
+		px(22, 22, brass);
+		px(22, 25, brass);
+		px(22, 28, brass);
+		for (int i = 0; i < 8; i++) {        // sash of notices from shoulder to hip
+			px(20 + i, 20 + i, sash);
+			px(21 + i, 20 + i, sash);
+		}
+		px(24, 24, ink);
+		px(26, 26, ink);
+		fill(16, 29, 24, 1, coatDark);
+
+		arms(coat);
+		fill(40, 28, 16, 2, sash);           // white cuffs and hands
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 28, 16, 4, shoe);
+		fill(8, 16, 4, 4, shoe);
+		return img;
+	}
+
+	/** Stylist Celeste: silver-lilac hair in a high bun, a tape measure round the neck, a violet dress with a pincushion on the wrist. */
+	static BufferedImage celeste() {
+		BufferedImage img = newSkin(119);
+		int skin = 0xF2D4C0, hair = 0xC8B8E0, dress = 0x7A4AA8, dressDark = 0x5A3480, tape = 0xF0D040, lace = 0xF6F0FA, pin = 0xE04A6A,
+			shoe = 0x3A2A4A, lip = 0xC85A7A;
+		head(skin, hair);
+		hair(hair, 2, 4, 6);
+		eyes(12, 0xFFFFFF, 0x8A4AB0);
+		px(9, 11, 0x3A2A3A);                 // lashes
+		px(14, 11, 0x3A2A3A);
+		px(11, 14, lip);
+		px(12, 14, lip);
+		fill(42, 0, 4, 4, hair);             // high bun on the hat layer, a pin through it
+		fill(40, 8, 8, 1, hair);
+		px(44, 1, pin);
+		px(45, 2, pin);
+
+		body(dress);
+		fill(20, 20, 8, 1, tape);            // tape measure round the neck, hanging down the front
+		fill(21, 21, 1, 6, tape);
+		fill(26, 21, 1, 5, tape);
+		px(21, 23, 0x3A3A3A);
+		px(26, 23, 0x3A3A3A);
+		fill(20, 27, 8, 1, lace);            // lace waist and a darker skirt
+		fill(16, 28, 24, 4, dressDark);
+
+		arms(dress);
+		fill(40, 28, 16, 1, lace);           // lace cuffs, a pincushion on the wrist, hands
+		fill(44, 29, 2, 1, pin);
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(dressDark);
+		fill(0, 20, 16, 6, dressDark);
+		fill(0, 26, 16, 3, lace);
+		fill(0, 29, 16, 3, shoe);
+		fill(8, 16, 4, 4, shoe);
 		return img;
 	}
 

@@ -52,13 +52,13 @@ public final class RogueContent extends ClassContent {
 		weapon("leaf_kunai", 2, 25, KUNAI, "Hidden Leaf Kunai", "나뭇잎 마을 쿠나이",
 			art(0x5E6670, 0x2F3A4A, 0xF28C28), fx(Fx.Kind.SMOKE, 0xE6E6E6),
 			skill("explosive_tag", "Explosive Tag Kunai", "기폭찰 쿠나이", ATTACK, 9, 14, shoot(ProjectileStyle.KUNAI, 1.6).explode(2.5F), burn(3)),
-			skill("shadow_clone", "Shadow Clone Jutsu", "그림자 분신술", UTILITY, 24, 18, summon(Summon.WOLF, 2, 10), barrage(ProjectileStyle.KUNAI, 6, 1.0)),
+			skill("shadow_clone", "Shadow Clone Jutsu", "그림자 분신술", UTILITY, 24, 18, summon(Summon.WOLF, 2, 10), barrage(ProjectileStyle.KUNAI, 6, 0.5)),
 			skill("substitution", "Substitution Jutsu", "바꿔치기술", DEFENSE, 15, 12, cleanse(), blink(8), stance(EVADE, 4, 40)));
 
 		weapon("fuma_shuriken", 2, 28, SHURIKEN, "Fuma Shuriken", "풍마수리검",
 			art(0x7F8C8D, 0x34495E, 0xC0392B), fx(Fx.Kind.SPARK, 0xC8D0D8),
 			skill("shadow_windmill", "Shadow Windmill", "영풍차", ATTACK, 8, 14, shoot(ProjectileStyle.SHURIKEN, 1.4).count(2).interval(4).pierce(4)),
-			skill("shuriken_shadow_clone", "Shuriken Shadow Clone", "수리검 그림자 분신술", ATTACK, 14, 18, barrage(ProjectileStyle.SHURIKEN, 10, 0.8)),
+			skill("shuriken_shadow_clone", "Shuriken Shadow Clone", "수리검 그림자 분신술", ATTACK, 14, 18, barrage(ProjectileStyle.SHURIKEN, 10, 0.4)),
 			skill("gale_step", "Gale Step", "질풍보", MOVEMENT, 10, 12, dash(8, 1.0), buff(SPEED, 5, 1)));
 
 		weapon("chakra_blades", 2, 31, CLAW, "Chakra Blades", "차크라 칼날",
@@ -96,7 +96,7 @@ public final class RogueContent extends ClassContent {
 		weapon("hassan_dirks", 3, 49, KUNAI, "Hassan's Dirks", "하산의 단검",
 			art(0x3A3A40, 0x1A1A1A, 0xEDEDED), fx(Fx.Kind.SMOKE, 0x3B2A4D),
 			skill("delusional_heartbeat", "Zabaniya: Delusional Heartbeat", "자바니야: 망상심음", ATTACK, 16, 26, execute(14, 2.2, 50, 2.0), inflict(WITHER, 5, 1)),
-			skill("delusional_illusion", "Zabaniya: Delusional Illusion", "자바니야: 망상환상", ATTACK, 14, 24, barrage(ProjectileStyle.KNIFE, 12, 0.7), inflict(POISON, 4, 1)),
+			skill("delusional_illusion", "Zabaniya: Delusional Illusion", "자바니야: 망상환상", ATTACK, 14, 24, barrage(ProjectileStyle.KNIFE, 12, 0.4), inflict(POISON, 4, 1)),
 			skill("presence_concealment", "Presence Concealment", "기척 차단", DEFENSE, 20, 18, stealth(6, 70), buff(SPEED, 6, 1)));
 
 		weapon("monohoshizao", 3, 53, NINJATO, "Monohoshizao", "모노호시자오",
@@ -179,7 +179,7 @@ public final class RogueContent extends ClassContent {
 			skill("arise", "Arise", "일어나라", ULTIMATE, 60, 40, nova(7, 3.0), summon(Summon.IRON_GOLEM, 2, 20), summon(Summon.WOLF, 4, 20)),
 			skill("dragons_fear", "Dragon's Fear", "용의 공포", UTILITY, 22, 26, debuff(10, STUN, 2, 0), debuff(10, WEAKNESS, 6, 1)),
 			skill("dragon_fang_volley", "Dragon Fang Volley", "용아 투척", ATTACK, 9, 28,
-				shoot(ProjectileStyle.BLADE, 1.6).count(8).spread(60).pierce(3), inflict(VULNERABLE, 6, 1)),
+				shoot(ProjectileStyle.BLADE, 1.0).count(8).spread(60).pierce(3), inflict(VULNERABLE, 6, 1)),
 			skill("shadow_exchange", "Shadow Exchange", "그림자 교환", MOVEMENT, 12, 20, cleanse(), blink(14), stealth(2, 40)));
 	}
 }

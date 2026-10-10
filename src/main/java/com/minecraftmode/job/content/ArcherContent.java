@@ -100,7 +100,7 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("arash_greatbow", 3, 53, GREATBOW, "Arash's Greatbow", "아라쉬의 대궁",
 			art(0xB8864B, 0x4A2C14, 0x6EC6FF), fx(Fx.Kind.BOLT, 0xBDE9FF),
-			skill("stella", "Stella", "유성일조", ATTACK, 30, 28, strike(24, 5.5, 1, 2.8), stun(1.0)),
+			skill("stella", "Stella", "유성일조", ATTACK, 30, 28, strike(24, 5.5, 1, 6.0), stun(1.0)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 18, debuff(18, GLOWING, 10, 0), mark(24, 10, 35)),
 			skill("toughness", "Toughness", "강인함", DEFENSE, 22, 18, buff(RESISTANCE, 8, 1), heal(20), cleanse()));
 
@@ -172,15 +172,15 @@ public final class ArcherContent extends ClassContent {
 		weapon("gate_of_babylon", 4, 92, CROSSBOW, "Gate of Babylon", "왕의 재보",
 			art(0xFFD700, 0x5A0A0A, 0x40E0D0), fx(Fx.Kind.RUNE, 0xFFE066),
 			skill("full_open", "Gate of Babylon: Full Open", "왕의 재보: 전면 개방", ULTIMATE, 50, 38,
-				barrage(ProjectileStyle.BLADE, 24, 0.9), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.8))),
-			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 1.4)),
+				barrage(ProjectileStyle.BLADE, 24, 0.4), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.8))),
+			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.6)),
 			skill("enkidu", "Enkidu: Chains of Heaven", "천의 사슬 (엔키두)", UTILITY, 18, 26, pull(10, 1.8), debuff(10, STUN, 1.5, 0), debuff(10, VULNERABLE, 6, 1)),
 			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, shield(20, 10), stance(GUARD, 5, 50)));
 
 		weapon("ea_and_merodach", 4, 100, TWIN_BLADES, "Ea & Merodach", "에아 & 메로닥",
 			art(0x8B1010, 0xFFD700, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF3030),
-			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, pull(10, 1.4), delay(0.6, beam(32, 4.5)), inflict(VULNERABLE, 8, 2)),
-			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, slash(5, 200, 2.2), shoot(ProjectileStyle.WAVE, 2.0).pierce(6)),
+			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, pull(10, 1.4), delay(0.6, beam(32, 8.0)), inflict(VULNERABLE, 8, 2)),
+			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, slash(5, 200, 2.8), shoot(ProjectileStyle.WAVE, 2.6).pierce(6)),
 			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, debuff(16, GLOWING, 12, 0), mark(24, 12, 45), restoreMana(25)),
 			skill("golden_rule_body", "Golden Rule (Body)", "황금률(체)", DEFENSE, 28, 26, buff(RESISTANCE, 8, 1), buff(REGENERATION, 8, 1), heal(20)));
 	}

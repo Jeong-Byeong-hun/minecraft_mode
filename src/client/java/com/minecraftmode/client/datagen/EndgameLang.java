@@ -39,6 +39,9 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.lair.sealed", ko ? "보물이 봉인되어 있다. 소굴의 군주 %s을(를) 쓰러뜨린 사람만 열 수 있다!" : "The treasure is sealed: only those who defeat the lair lord %s may open it!");
 		b.add("message.minecraft_mode.lair.lord_defeated", ko ? "소굴의 군주 %s이(가) 쓰러졌다! 이번 주기 동안 보물 상자가 당신에게 열립니다." : "The lair lord %s falls! The treasure opens for you this cycle.");
 		b.add("message.minecraft_mode.lair.personal", ko ? "이 보물은 당신만의 몫입니다. %s 뒤에 다시 채워집니다." : "This treasure is yours alone. It refills for you in %s.");
+		b.add("message.minecraft_mode.lair.discovered", ko ? "새 소굴 발견: %s! 직업 경험치 +%s" : "Lair discovered: %s! +%s class experience");
+		b.add("message.minecraft_mode.lair.first_clear", ko ? "%s 첫 공략! 직업 경험치 +%s" : "First clear of %s! +%s class experience");
+		b.add("message.minecraft_mode.lair.chest_exp", ko ? "%s의 보물: 직업 경험치 +%s" : "Treasure of %s: +%s class experience");
 		b.add("message.minecraft_mode.lair.lord_awakens", ko ? "%2$s의 군주 %1$s이(가) 깨어났다!" : "%s, lord of %s, awakens!");
 		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는 소굴이 근처에 없습니다." : "There is no lair within reach of this map.");
 	}

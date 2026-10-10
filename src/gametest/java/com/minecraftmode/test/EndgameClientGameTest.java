@@ -214,12 +214,27 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			FakePlayer alice = FakePlayer.get(level, ALICE);
 			require(!goal.victor(alice, cycle), "a player far from the fight is not a victor");
 			int before = Progress.get(player).lairClears("dune_scorpion");
+			com.minecraftmode.worldgen.lair.LairDef lairDef = com.minecraftmode.worldgen.lair.NamedLairs.def("dune_scorpion");
+			int firstClear = JobProgression.levelExp(player, lairDef.named().hi(), com.minecraftmode.worldgen.lair.LairExp.CHEST
+				+ (before == 0 ? com.minecraftmode.worldgen.lair.LairExp.FIRST_CLEAR : 0.0F));
+			int expBefore = classExp(player);
 			require(LairChestBlock.open(player, goal), "the chest should open after the lord falls");
 			player.closeContainer();
+			int chestExp = classExp(player) - expBefore;
+			require(chestExp >= firstClear, "the first fresh open should pay at least " + firstClear + " class exp (treasure + first clear), got " + chestExp);
 			require(Progress.get(player).lairClears("dune_scorpion") == before + 1, "opening the treasure should count as a lair clear");
+			expBefore = classExp(player);
 			require(LairChestBlock.open(player, goal), "it can be opened again this cycle");
 			player.closeContainer();
+			require(classExp(player) == expBefore, "opening it again this cycle pays nothing more");
 			require(Progress.get(player).lairClears("dune_scorpion") == before + 1, "only the first open of a cycle counts");
+			// walking into a lair the first time pays once
+			player.setAttached(com.minecraftmode.registry.ModAttachments.LAIRS_FOUND, java.util.List.of());
+			expBefore = classExp(player);
+			com.minecraftmode.worldgen.lair.LairExp.entered(player, lairDef);
+			int found = classExp(player) - expBefore;
+			com.minecraftmode.worldgen.lair.LairExp.entered(player, lairDef);
+			require(found > 0 && classExp(player) == expBefore + found, "discovering a lair pays once, got " + found + " then " + (classExp(player) - expBefore - found));
 			require(Progress.get(player).has("first_lair"), "the first lair clear unlocks an achievement");
 			// someone who missed the fight finds it sealed, and a lord rises for them; victors still open it
 			require(!LairChestBlock.open(alice, goal), "the treasure stays sealed for someone who did not fight");
@@ -864,6 +879,21 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 		int after = server.computeOnServer(s -> Talents.rank(connection.getServerPlayer(), node));
 		require(after == before + 1, "clicking " + node + " should spend a point, rank " + before + " -> " + after);
 		require(context.computeOnClient(minecraft -> Talents.rank(minecraft.player, node)) == after, "the client should see the new rank");
+	}
+
+	/** Every bit of class experience the player has earned: the levels, then the paragon levels past the cap. */
+	private static int classExp(final ServerPlayer player) {
+		com.minecraftmode.job.JobData data = JobProgression.get(player);
+		int total = data.exp();
+		for (int level = 1; level < data.level(); level++) {
+			total += JobProgression.expToNext(level);
+		}
+		com.minecraftmode.job.Paragon.ParagonData paragon = com.minecraftmode.job.Paragon.get(player);
+		total += paragon.exp();
+		for (int level = 0; level < paragon.level(); level++) {
+			total += com.minecraftmode.job.Paragon.expToNext(level);
+		}
+		return total;
 	}
 
 	private static void shot(final ClientGameTestContext context, final String name) {

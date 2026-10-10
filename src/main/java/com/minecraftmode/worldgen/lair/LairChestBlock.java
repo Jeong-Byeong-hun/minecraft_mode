@@ -121,8 +121,12 @@ public class LairChestBlock extends BaseEntityBlock {
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.lair.personal", ResetCycle.remaining(ResetCycle.ticksToNextCycle(level)))
 				.withStyle(ChatFormatting.GOLD));
 			if (!chest.isCache() && def != null) {
+				boolean firstClear = Progress.get(player).lairClears(def.id()) == 0;
 				Progress.lairCleared(player, def);
+				LairExp.chestOpened(player, def, false, firstClear);
 				Companions.rollDrop(player, Companions.LAIR_DROP, Rarity.RARE);
+			} else if (def != null) {
+				LairExp.chestOpened(player, def, true, false);
 			}
 		}
 		return true;

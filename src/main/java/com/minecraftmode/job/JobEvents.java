@@ -1,8 +1,12 @@
 package com.minecraftmode.job;
 
 import com.minecraftmode.city.TrainingGrounds;
+import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.enchantment.EnchantLevels;
+import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.bag.Trash;
@@ -36,6 +40,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
@@ -45,14 +51,16 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Wires classes into the game: job experience and essence from kills and ores, MP regeneration,
  * stat refresh, death penalty, Avalon, and cleanup of summons.
  */
 public final class JobEvents {
-	/** Bosses (this much max health or more) drop condensed essence and give double experience. */
-	private static final float BOSS_HEALTH = 100.0F;
+	/** A named monster's kill is worth this share of a level to each of its killers (lords, titans and warlords: {@link #LORD_SHARE}). */
+	public static final float NAMED_SHARE = 0.25F;
+	public static final float LORD_SHARE = 0.5F;
 	/** Cooldown key of Avalon in {@link JobData#cooldowns()}. */
 	public static final String AVALON_COOLDOWN = "passive.avalon";
 
@@ -110,11 +118,15 @@ public final class JobEvents {
 			return;
 		}
 		ServerPlayer mvp = shares.getFirst().player();
-		float maxHealth = entity.getMaxHealth();
-		boolean boss = maxHealth >= BOSS_HEALTH;
-		int solo = Math.max(3, Math.round(maxHealth * (boss ? 2 : 1)));
-		for (int i = 0; i < shares.size(); i++) {
+		float health = baseHealth(entity);
+		boolean boss = isBoss(entity);
+		// dungeon runs and raids pay at the end, so their monsters (made tough by keystones and party size) pay nothing per kill
+		boolean event = Dungeons.isRunMob(entity) || entity instanceof RaidBoss;
+		for (int i = 0; i < shares.size() && !event; i++) {
 			Contribution.Share share = shares.get(i);
+			int solo = entity instanceof NamedMob named
+				? JobProgression.levelExp(share.player(), named.namedLevel(), named.isLord() || named.isChampion() ? LORD_SHARE : NAMED_SHARE)
+				: Math.max(3, Math.round(health * (boss ? 2 : 1)));
 			int exp = Contribution.portion(solo, share, shares.size()) * TrainingGrounds.expMultiplier(entity, share.player());
 			gainExp(share.player(), exp);
 			if (shares.size() > 1) {
@@ -126,10 +138,10 @@ public final class JobEvents {
 			onKill(killer);
 		}
 
-		// Essence: monsters drop it at random, bosses always drop condensed essence
-		if (boss) {
-			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + (int)(maxHealth / 150.0F)));
-		} else if (mvp.getRandom().nextFloat() < Math.min(0.6F, 0.06F + maxHealth * 0.0025F)) {
+		// Essence: monsters drop it at random, bosses always drop condensed essence (dungeon runs pay theirs at the end)
+		if (boss && !event) {
+			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + (int)(health / 150.0F)));
+		} else if (!event && mvp.getRandom().nextFloat() < Math.min(0.6F, 0.06F + health * 0.0025F)) {
 			drop(level, entity, new ItemStack(ModItems.ESSENCE));
 		}
 
@@ -137,7 +149,7 @@ public final class JobEvents {
 		JobData data = JobProgression.get(mvp);
 		float coinChance = (CombatHooks.has(data, JobClass.PIRATE, 1) ? 0.15F : 0.0F) + JobWeapons.activeTotals(mvp).fraction(EngraveStat.GOLD_FIND);
 		if (coinChance > 0.0F && mvp.getRandom().nextFloat() < coinChance) {
-			for (ItemStack coins : Coins.asItems(goldFindCopper(maxHealth, data.level()))) {
+			for (ItemStack coins : Coins.asItems(goldFindCopper(health, data.level()))) {
 				drop(level, entity, coins);
 			}
 			level.sendParticles(ParticleTypes.WAX_ON, entity.getX(), entity.getY(0.5), entity.getZ(), 8, 0.3, 0.3, 0.3, 0.1);
@@ -145,12 +157,28 @@ public final class JobEvents {
 	}
 
 	/**
-	 * Copper of a gold-find proc: 1 + max health / 20 at level 10 (a zombie: 2), scaled by the guild price curve of the killer's
-	 * level ({@link GearShop#bracketPrice}), so it stays worth having at every level (a zombie at level 100: about 100).
+	 * A monster's own health, without what events, keystones, party size or a lord's title add on top: experience, essence and gold
+	 * find come from it, so a dungeon zombie made tough by a keystone pays like a zombie (it paid like a boss at 400 health before).
+	 */
+	public static float baseHealth(final LivingEntity entity) {
+		AttributeInstance attr = entity.getAttribute(Attributes.MAX_HEALTH);
+		return attr == null ? entity.getMaxHealth() : (float)attr.getBaseValue();
+	}
+
+	/** Bosses (double experience, always condensed essence): named monsters, raid bosses and the trial bosses (Wither, Warden, golem...). */
+	public static boolean isBoss(final LivingEntity entity) {
+		return entity instanceof NamedMob || entity instanceof RaidBoss || Quests.BOSSES.contains(entity.getType());
+	}
+
+	/**
+	 * Copper of a gold-find proc: 1 + base health / 20 at level 10 (a zombie: 2), scaled by the guild price curve of the killer's level
+	 * ({@link GearShop#bracketPrice}), so it stays worth having at every level (a zombie at level 100: about 100); at most one bracket price,
+	 * so a raid boss no longer pays a fortune per proc.
 	 */
 	public static int goldFindCopper(final float maxHealth, final int level) {
-		float scale = GearShop.bracketPrice(Math.max(10, level)) / (float)GearShop.bracketPrice(10);
-		return Math.max(1, Math.round((1 + (int)(maxHealth / 20.0F)) * scale));
+		int price = GearShop.bracketPrice(Math.max(10, level));
+		float scale = price / (float)GearShop.bracketPrice(10);
+		return Math.max(1, Math.min(price, Math.round((1 + (int)(maxHealth / 20.0F)) * scale)));
 	}
 
 	/** Class EXP with the EXP bonus of the player's gear. */
@@ -223,7 +251,8 @@ public final class JobEvents {
 		if (EnchantLevels.get(level, Enchantments.SILK_TOUCH, tool) > 0) {
 			return;
 		}
-		gainExp(serverPlayer, reward.exp);
+		// a share of the miner's level (the flat amount is the floor at low levels), so mining stays worth a little at every level
+		gainExp(serverPlayer, Math.max(reward.exp, JobProgression.levelExp(serverPlayer, JobProgression.MAX_LEVEL, reward.share)));
 		Progress.oreMined(serverPlayer);
 		if (player.getRandom().nextFloat() < reward.essenceChance) {
 			ItemEntity item = new ItemEntity(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, new ItemStack(ModItems.ESSENCE));
@@ -233,47 +262,70 @@ public final class JobEvents {
 		}
 	}
 
-	private record OreReward(int exp, float essenceChance) {
+	/** Class experience of mining {@code state} at {@code level} (0 for anything that is not an ore), for tests. */
+	public static int oreExp(final BlockState state, final int level) {
+		OreReward reward = oreReward(state);
+		return reward == null ? 0 : reward.exp(level);
 	}
 
+	/** {@code exp} at low levels, {@code share} of the miner's level once that is more; sometimes essence. */
+	public record OreReward(int exp, float share, float essenceChance) {
+		public int exp(final int level) {
+			return Math.max(this.exp, JobProgression.levelExp(level, this.share));
+		}
+	}
+
+	public static final OreReward COAL = new OreReward(2, 0.003F, 0.02F);
+	public static final OreReward COPPER = new OreReward(3, 0.0035F, 0.03F);
+	/** Nether gold is common and only drops nuggets, so it sits below the other gold ores. */
+	public static final OreReward NETHER_GOLD = new OreReward(3, 0.003F, 0.03F);
+	public static final OreReward QUARTZ = new OreReward(4, 0.0035F, 0.04F);
+	public static final OreReward ALUMINUM = new OreReward(5, 0.006F, 0.06F);
+	public static final OreReward IRON = new OreReward(5, 0.006F, 0.06F);
+	public static final OreReward GOLD = new OreReward(8, 0.009F, 0.08F);
+	public static final OreReward REDSTONE = new OreReward(5, 0.005F, 0.06F);
+	public static final OreReward LAPIS = new OreReward(8, 0.009F, 0.08F);
+	public static final OreReward MYTHRIL = new OreReward(15, 0.018F, 0.15F);
+	public static final OreReward DIAMOND = new OreReward(20, 0.022F, 0.30F);
+	public static final OreReward ANCIENT_DEBRIS = new OreReward(40, 0.045F, 0.50F);
+
 	/** Every ore gives job experience and sometimes essence; the rarer the ore, the more. */
-	private static OreReward oreReward(final BlockState state) {
+	private static @Nullable OreReward oreReward(final BlockState state) {
 		if (state.is(BlockItemTags.COAL_ORES.block())) {
-			return new OreReward(2, 0.02F);
+			return COAL;
 		}
 		if (state.is(BlockItemTags.COPPER_ORES.block())) {
-			return new OreReward(3, 0.03F);
+			return COPPER;
 		}
-		// nether gold is common and only drops nuggets, so it sits below the other gold ores
 		if (state.is(Blocks.NETHER_GOLD_ORE)) {
-			return new OreReward(3, 0.03F);
+			return NETHER_GOLD;
 		}
 		if (state.is(Blocks.NETHER_QUARTZ_ORE)) {
-			return new OreReward(4, 0.04F);
+			return QUARTZ;
 		}
 		if (state.is(ModBlocks.ALUMINUM_ORE) || state.is(ModBlocks.DEEPSLATE_ALUMINUM_ORE)) {
-			return new OreReward(5, 0.06F);
+			return ALUMINUM;
 		}
 		if (state.is(BlockItemTags.IRON_ORES.block())) {
-			return new OreReward(5, 0.06F);
+			return IRON;
 		}
 		if (state.is(BlockItemTags.GOLD_ORES.block())) {
-			return new OreReward(8, 0.08F);
+			return GOLD;
 		}
 		if (state.is(BlockItemTags.REDSTONE_ORES.block())) {
-			return new OreReward(5, 0.06F);
+			return REDSTONE;
 		}
 		if (state.is(BlockItemTags.LAPIS_ORES.block())) {
-			return new OreReward(8, 0.08F);
+			return LAPIS;
 		}
 		if (state.is(ModBlocks.MYTHRIL_ORE) || state.is(ModBlocks.DEEPSLATE_MYTHRIL_ORE)) {
-			return new OreReward(15, 0.15F);
+			return MYTHRIL;
 		}
 		if (state.is(BlockItemTags.DIAMOND_ORES.block()) || state.is(BlockItemTags.EMERALD_ORES.block())) {
-			return new OreReward(20, 0.30F);
+			return DIAMOND;
 		}
 		if (state.is(Blocks.ANCIENT_DEBRIS)) {
-			return new OreReward(40, 0.50F);
+			return ANCIENT_DEBRIS;
 		}
 		return null;
 	}

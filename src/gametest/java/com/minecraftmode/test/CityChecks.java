@@ -553,7 +553,7 @@ final class CityChecks {
 			}
 			// double class experience for a classless killer
 			Mob target = mobs.getFirst();
-			int expected = Math.max(3, Math.round(target.getMaxHealth())) * TrainingGrounds.EXP_MULTIPLIER;
+			int expected = Math.max(3, Math.round(com.minecraftmode.job.JobEvents.baseHealth(target))) * TrainingGrounds.EXP_MULTIPLIER;
 			int before = totalExp(JobProgression.get(player));
 			target.hurtServer(level, player.damageSources().playerAttack(player), 1000.0F);
 			int gained = totalExp(JobProgression.get(player)) - before;

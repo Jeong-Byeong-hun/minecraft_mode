@@ -66,6 +66,26 @@ public final class DungeonLayout {
 		return x > r.x0() + 1 && x < r.x1() && Math.abs(z) < r.halfZ() && pos.y > origin.getY() - 2 && pos.y < origin.getY() + r.height();
 	}
 
+	/**
+	 * True when {@code pos} is inside a room or a corridor: not in or behind a wall, not on a roof or under the floor. Monsters that end
+	 * up elsewhere (pushed through a wall, a teleport, a summon next to the wall) cannot be reached.
+	 */
+	public static boolean interior(final BlockPos origin, final Vec3 pos) {
+		double x = pos.x - origin.getX();
+		double y = pos.y - origin.getY();
+		double z = pos.z - origin.getZ();
+		for (int i = 0; i < ROOMS.size(); i++) {
+			Room r = ROOMS.get(i);
+			if (x >= r.x0() + 1 && x < r.x1() && z >= -r.halfZ() + 1 && z < r.halfZ() && y >= -0.5 && y < r.height()) {
+				return true;
+			}
+			if (i + 1 < ROOMS.size() && x >= r.x1() && x < ROOMS.get(i + 1).x0() + 1 && z >= -1 && z < 2 && y >= -0.5 && y < CORRIDOR_HEIGHT) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** True when {@code pos} is anywhere in the run (rooms and corridors), with a margin. */
 	public static boolean inside(final BlockPos origin, final Vec3 pos, final double margin) {
 		return bounds(origin).inflate(margin).contains(pos);

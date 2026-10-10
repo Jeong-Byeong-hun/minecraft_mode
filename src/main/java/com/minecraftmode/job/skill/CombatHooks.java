@@ -176,6 +176,8 @@ public final class CombatHooks {
 		if (source.getEntity() instanceof ServerPlayer attacker && attacker != victim) {
 			result = outgoing(attacker, victim, source, result, kind, now);
 		}
+		// event monsters meant to have more than vanilla's 1024 health take damage divided by the rest (MobPower)
+		result /= MobPower.toughness(victim);
 		MobEffectInstance vulnerable = victim.getEffect(ModEffects.VULNERABLE);
 		if (vulnerable != null) {
 			result *= 1.0F + 0.15F * (vulnerable.getAmplifier() + 1);

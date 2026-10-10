@@ -2,6 +2,7 @@ package com.minecraftmode.entity.named;
 
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.combat.Attacks;
@@ -50,6 +51,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.FlyingMoveControl;
@@ -256,6 +258,7 @@ public class NamedMob extends CreatureMob {
 		this.lordHome = home;
 		this.applyLevel(this.def().hi());
 		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * health);
+		this.capHealth();
 		this.getAttribute(Attributes.SCALE).setBaseValue(scale);
 		this.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
 		Component name = Component.translatable(titleKey, Component.literal("[Lv." + this.namedLevel + "] ").withStyle(ChatFormatting.GRAY)
@@ -267,6 +270,19 @@ public class NamedMob extends CreatureMob {
 		this.setHealth(this.getMaxHealth());
 	}
 
+	/**
+	 * Vanilla stops max health at 1024: a lord or champion meant to have more keeps {@link MobPower#HEALTH_CAP} and takes damage divided
+	 * by the rest (a +10 dungeon boss of four players had exactly 1024 at any keystone). Lords set it again when they load.
+	 */
+	private void capHealth() {
+		AttributeInstance attr = this.getAttribute(Attributes.MAX_HEALTH);
+		double wanted = attr.getBaseValue();
+		if (wanted > MobPower.HEALTH_CAP) {
+			attr.setBaseValue(MobPower.HEALTH_CAP);
+			MobPower.setToughness(this.getUUID(), (float)(wanted / MobPower.HEALTH_CAP));
+		}
+	}
+
 	public boolean isChampion() {
 		return this.champion;
 	}
@@ -274,6 +290,7 @@ public class NamedMob extends CreatureMob {
 	private void applyLord() {
 		NamedDef def = this.def();
 		this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(this.getAttribute(Attributes.MAX_HEALTH).getBaseValue() * LORD_HEALTH);
+		this.capHealth();
 		this.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(this.getAttribute(Attributes.ATTACK_DAMAGE).getBaseValue() * LORD_DAMAGE);
 		this.getAttribute(Attributes.SCALE).setBaseValue(LORD_SCALE);
 		Component name = Component.translatable("entity.minecraft_mode.lair_lord", Component.literal("[Lv." + this.namedLevel + "] ").withStyle(ChatFormatting.GRAY)
@@ -530,6 +547,7 @@ public class NamedMob extends CreatureMob {
 		if (this.lordBar != null) {
 			this.lordBar.removeAllPlayers();
 		}
+		MobPower.setToughness(this.getUUID(), 1.0F);
 		super.remove(reason);
 	}
 

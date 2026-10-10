@@ -120,6 +120,15 @@ public final class ModAttachments {
 		builder -> builder.persistent(Codec.STRING.listOf()).copyOnDeath()
 	);
 
+	/** Lairs the player has walked into (ids, see {@code LairExp}): the first visit pays experience once. Kept through death; synced for the codex. */
+	public static final AttachmentType<List<String>> LAIRS_FOUND = AttachmentRegistry.create(
+		MinecraftMode.id("lairs_found"),
+		builder -> builder.persistent(Codec.STRING.listOf())
+			.copyOnDeath()
+			.initializer(List::of)
+			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
+	);
+
 	/** Starter bags already handed out by Quartermaster Bram (see {@code Bags}). Kept through death. */
 	public static final AttachmentType<Boolean> STARTER_BAGS = AttachmentRegistry.create(
 		MinecraftMode.id("starter_bags"),

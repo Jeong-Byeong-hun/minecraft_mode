@@ -11,6 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.Merchant;
+import net.minecraft.world.item.trading.MerchantOffer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -73,7 +74,16 @@ public abstract class MerchantMenuMixin {
 		}
 		Item coin = cost.item().value();
 		if (Essence.is(coin)) {
-			this.minecraftMode$essenceChange(player, paymentSlot, coin, cost.count());
+			// what the trade asks now: market pressure can raise the base count (6 essence -> 7 and up)
+			int need = cost.count();
+			for (MerchantOffer offer : this.trader.getOffers()) {
+				if (offer.getItemCostA() == cost) {
+					need = offer.getCostA().getCount();
+				} else if (offer.getItemCostB().orElse(null) == cost) {
+					need = offer.getCostB().getCount();
+				}
+			}
+			this.minecraftMode$essenceChange(player, paymentSlot, coin, need);
 			return;
 		}
 		int each = Wallet.value(coin);

@@ -10,8 +10,11 @@ import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.entity.named.NamedMob;
+import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
+import com.minecraftmode.job.JobEvents;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -75,8 +78,10 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
@@ -799,8 +804,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 			starterItems += GearIndex.shopItems(job, 10).size();
 		}
 		require(warriorItems == 6 && starterItems == 2 * JobClass.PLAYABLE.size(), "expected 2 shop items per class and bracket, got " + warriorItems + " / " + starterItems);
-		require(offers[0] == warriorItems + 2, "a Lv 25 warrior should see " + warriorItems + " gear offers + 2 extras, got " + offers[0]);
-		require(offers[1] == starterItems + 2, "players without a class should see " + starterItems + " starter offers + 2 extras, got " + offers[1]);
+		require(offers[0] == warriorItems + 3, "a Lv 25 warrior should see " + warriorItems + " gear offers + 3 extras (essence, condensed essence, reset scroll), got " + offers[0]);
+		require(offers[1] == starterItems + 3, "players without a class should see " + starterItems + " starter offers + 3 extras, got " + offers[1]);
 
 		// a boss kill: condensed essence, golem core, double experience
 		server.runCommand("summon minecraft_mode:mythril_golem 0.5 -60 -6.5 {NoAI:1b}");
@@ -831,6 +836,37 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(drops[0] == 300, "a 150 health boss should give 300 class exp, got " + drops[0]);
 		require(items[0] >= 2 && items[1] == 1, "mythril golem drops: condensed essence " + items[0] + ", golem core " + items[1]);
 		server.runCommand("kill @e[type=minecraft:item]");
+
+		// experience comes from a monster's own health: a zombie made ten times tougher (a keystone, an event) still pays 20 and is no boss;
+		// a named monster pays a share of a level; ores pay a share of the miner's level past the low levels
+		String growth = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			Zombie zombie = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			zombie.snapTo(player.getX() + 3, player.getY(), player.getZ(), 0, 0);
+			zombie.getAttribute(Attributes.MAX_HEALTH).addPermanentModifier(new AttributeModifier(MinecraftMode.id("test_scale"), 9.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+			zombie.setHealth(zombie.getMaxHealth());
+			level.addFreshEntity(zombie);
+			int before = JobProgression.get(player).exp() + totalExp(JobProgression.get(player));
+			zombie.hurtServer(level, player.damageSources().playerAttack(player), 10000.0F);
+			int zombieExp = JobProgression.get(player).exp() + totalExp(JobProgression.get(player)) - before;
+			require(zombieExp == 20, "a zombie with 10x health should pay its own 20 class exp, got " + zombieExp);
+			NamedMob named = NamedMobs.type(NamedMobs.byId("bandit_captain")).create(level, EntitySpawnReason.COMMAND);
+			named.snapTo(player.getX() - 3, player.getY(), player.getZ(), 0, 0);
+			named.applyLevel(15);
+			level.addFreshEntity(named);
+			int expected = JobProgression.levelExp(player, 15, JobEvents.NAMED_SHARE);
+			before = JobProgression.get(player).exp() + totalExp(JobProgression.get(player));
+			named.hurtServer(level, player.damageSources().playerAttack(player), 10000.0F);
+			int namedExp = JobProgression.get(player).exp() + totalExp(JobProgression.get(player)) - before;
+			require(namedExp == expected, "a Lv 15 named monster should pay " + expected + " (a quarter of a Lv 15 level), got " + namedExp);
+			int lowIron = JobEvents.oreExp(net.minecraft.world.level.block.Blocks.IRON_ORE.defaultBlockState(), 10);
+			int highIron = JobEvents.oreExp(net.minecraft.world.level.block.Blocks.IRON_ORE.defaultBlockState(), 90);
+			require(lowIron == 5 && highIron > lowIron * 2, "iron ore should pay 5 at Lv 10 and grow with the level, " + lowIron + " / " + highIron);
+			return "zombie x10 health " + zombieExp + ", Lv 15 named " + namedExp + ", iron Lv 10/90 " + lowIron + "/" + highIron;
+		});
+		server.runCommand("kill @e[type=minecraft:item]");
+		MinecraftMode.LOGGER.info("[job] growth: {}", growth);
 		MinecraftMode.LOGGER.info("[job] guild offers follow class/tier; golem kill: 300 exp, {} condensed essence, golem core", items[0]);
 	}
 

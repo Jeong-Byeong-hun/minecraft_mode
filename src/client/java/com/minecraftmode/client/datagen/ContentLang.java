@@ -65,8 +65,8 @@ final class ContentLang {
 				"Defeat monsters and mine ores (the rarer, the more) to gain class experience (see Leveling to 10). At level 10, talk to the trainer whose class you want and take it on the spot.\n\nFirst pick up the unbreakable Quartermaster's gear and shield from Bram and today's bread from Baker Hanna here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
 				"몬스터를 처치하고 광석을 캐면(희귀할수록 많이) 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게 가서 바로 전직하세요.\n\n먼저 바로 옆 보급관 브람에게서 닳지 않는 보급관의 장비와 방패를, 제빵사 한나에게서 오늘의 빵을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
 			{"leveling", "Leveling to 10", "빠른 성장 (Lv 10)",
-				"Level 10 takes %s EXP. A monster gives EXP equal to its max health (zombie or skeleton 20, spider 16), so about %s zombies; ores are slow.\n\n· Fastest: the Training Grounds under the city (stairs in the park south-east of the fountain). Monsters keep coming and give double EXP until you choose a class: about %s zombies\n· Take Bram's unbreakable gear and shield and Hanna's bread\n· Scholar's Coffee from the alchemist (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP",
-				"레벨 10까지 경험치 %s. 몬스터 경험치는 최대 체력과 같아서(좀비·스켈레톤 20, 거미 16) 좀비 약 %s마리면 됩니다. 광석은 느립니다.\n\n· 가장 빠른 곳: 도시 지하 수련장(분수 남동쪽 공원의 계단). 몬스터가 계속 나오고 직업을 고르기 전까지 경험치 2배라 좀비 약 %s마리\n· 브람의 닳지 않는 장비·방패와 한나의 빵을 챙기기\n· 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다"},
+				"Level 10 takes %s EXP. A monster gives EXP equal to its max health (zombie or skeleton 20, spider 16), so about %s zombies; ores are slow.\n\n· Fastest: the Training Grounds under the city (stairs in the park south-east of the fountain). Monsters keep coming and give double EXP until you choose a class: about %s zombies\n· Take Bram's unbreakable gear and shield and Hanna's bread\n· Scholar's Coffee from the alchemist (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP\n\nPast level 10 the main road is the lairs (see Named & lairs): the first walk into each lair, its first clear and every cycle's treasure pay a large share of a level.",
+				"레벨 10까지 경험치 %s. 몬스터 경험치는 최대 체력과 같아서(좀비·스켈레톤 20, 거미 16) 좀비 약 %s마리면 됩니다. 광석은 느립니다.\n\n· 가장 빠른 곳: 도시 지하 수련장(분수 남동쪽 공원의 계단). 몬스터가 계속 나오고 직업을 고르기 전까지 경험치 2배라 좀비 약 %s마리\n· 브람의 닳지 않는 장비·방패와 한나의 빵을 챙기기\n· 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다\n\n레벨 10 이후 성장의 중심은 소굴입니다(네임드와 소굴 참고): 소굴마다 첫 발견·첫 공략, 그리고 주기마다 보물 상자가 레벨의 큰 몫을 줍니다."},
 			{"classes", "Classes", "직업과 전직",
 				"Seven classes: Warrior, Rogue, Mage, Archer, Pirate, Soul Reaper and Hunter. The first class is free: at level 10 the trainer makes you one on the spot. From tier 2 on, every advancement is a trial from the class trainer: defeat the listed monsters, collect their trial tokens and hand them in with essence. Tiers open at levels 10, 25, 45 and 70.\n\nThe class screen (K) shows your next trial and where its trainer stands. Past level 100 you gain paragon levels.",
 				"직업은 전사·도적·법사·궁수·해적·사신·헌터 7가지입니다. 1차 전직은 레벨 10에 교관에게 가면 바로 됩니다. 2차부터는 교관의 시련입니다: 목표 몬스터를 처치해 시련 증표를 모으고 정수와 함께 제출하세요. 레벨 10·25·45·70에 1~4차가 열립니다.\n\n직업 창(K)에서 다음 시련과 교관 위치를 볼 수 있습니다. 레벨 100 이후에는 초월 레벨이 쌓입니다."},
@@ -81,11 +81,11 @@ final class ContentLang {
 				"The Guild sells one class weapon and one armor piece per 10 levels; the rest drops. Engrave gear with essence at the engraving tables, evolve it with Master Smith Volund (Evolution Ether), and enhance it to +15 and awaken it to ✦5 with Artisan Brokk.\n\nWeapon skills only work when your class, tier and level match the weapon. The Guild buys class gear you carry for 30% of its price (enhancement and engravings are not paid for).",
 				"길드는 10레벨마다 직업 무기와 방어구를 한 종씩 팔고, 나머지는 드롭으로 얻습니다. 정수 각인대에서 각인, 명장 볼룬드에게서 진화(진화의 에테르), 강화 장인 브로크에게서 +15 강화와 ✦5 각성을 합니다.\n\n무기 스킬은 직업·차수·레벨이 맞아야 작동합니다. 가지고 있는 직업 장비는 길드가 가격의 30%에 사 줍니다(강화·각인은 값에 들어가지 않음)."},
 			{"named", "Named & lairs", "네임드와 소굴",
-				"Named monsters ([Lv.N] name tags) appear now and then in their biomes and drop gear, Evolution Ether and coins. Each has a lair: defeat its lair lord and the treasure is yours again every three days. A lair map points to the nearest one.",
-				"네임드 몬스터([Lv.N] 이름표)는 서식 바이옴에 가끔 나타나 장비·진화의 에테르·동전을 줍니다. 네임드마다 소굴이 있어서, 소굴의 군주를 쓰러뜨리면 보물 상자를 사흘마다 개인 보상으로 엽니다. 소굴 지도로 가장 가까운 소굴을 찾으세요."},
+				"Named monsters ([Lv.N] name tags) appear now and then in their biomes and drop gear, Evolution Ether and coins. Each has a lair: defeat its lair lord and the treasure is yours again every three days. A lair map points to the nearest one.\n\nLairs are the main way to level: walking into a lair for the first time pays 30%% of a level, its lord 50%%, the treasure 30%% every cycle and the first clear another 100%% (measured at the lair's top level).",
+				"네임드 몬스터([Lv.N] 이름표)는 서식 바이옴에 가끔 나타나 장비·진화의 에테르·동전을 줍니다. 네임드마다 소굴이 있어서, 소굴의 군주를 쓰러뜨리면 보물 상자를 사흘마다 개인 보상으로 엽니다. 소굴 지도로 가장 가까운 소굴을 찾으세요.\n\n소굴은 성장의 중심입니다: 처음 들어가면 레벨의 30%%, 군주 50%%, 보물 상자 주기마다 30%%, 첫 공략은 100%%를 더 받습니다(소굴 최고 레벨 기준)."},
 			{"dungeons", "Raids & dungeons", "레이드와 던전",
-				"Raids: Raid Marshal Aldric by the keep, parties of up to 6, six bosses on Normal, Heroic and Nightmare; rewards once every three days.\n\nDungeons: Dungeon Warden Kael in the keep courtyard, 2-4 players, nine dungeons from level 10 to 90. Your first clear gives a keystone for harder, timed runs. You lose nothing when you fall in a raid or dungeon.\n\nHunting together (/party create, /party invite <name>): everyone with at least 5% of the contribution shares the class EXP by contribution, with a bonus for each extra hunter. Damage counts, and so do healing allies, buffing them and debuffing the monster. The top contributor rolls the gear and pet drops.",
-				"레이드: 왕성 앞 토벌 사령관 알드릭, 파티 최대 6명, 보스 6종, 일반·영웅·악몽. 보상은 사흘에 한 번.\n\n던전: 성 안뜰의 던전 관리인 카엘, 2~4명, 레벨 10~90의 9곳. 처음 깨면 쐐기돌을 받아 더 어렵고 시간 제한이 있는 도전을 합니다. 레이드·던전에서는 쓰러져도 잃는 것이 없습니다.\n\n함께 사냥(/party create, /party invite <이름>): 기여도 5% 이상인 사람은 모두 기여한 만큼 직업 경험치를 나눠 받고, 사람이 늘수록 보너스가 붙습니다. 피해뿐 아니라 아군 치유·강화와 적 약화도 기여로 칩니다. 장비·펫 드롭 판정은 가장 많이 기여한 사람에게 갑니다."},
+				"Raids: Raid Marshal Aldric by the keep, parties of up to 6, six bosses on Normal, Heroic and Nightmare; rewards once every three days.\n\nDungeons: Dungeon Warden Kael in the keep courtyard, 2-4 players, nine dungeons from level 10 to 90. Your first clear gives a keystone for harder, timed runs. You lose nothing when you fall in a raid or dungeon. Dungeons are for gear and currency: a run gives 12%% of a level and its monsters give no class EXP; a raid clear gives 60-120%% of a level by difficulty.\n\nHunting together (/party create, /party invite <name>): everyone with at least 5% of the contribution shares the class EXP by contribution, with a bonus for each extra hunter. Damage counts, and so do healing allies, buffing them and debuffing the monster. The top contributor rolls the gear and pet drops.",
+				"레이드: 왕성 앞 토벌 사령관 알드릭, 파티 최대 6명, 보스 6종, 일반·영웅·악몽. 보상은 사흘에 한 번.\n\n던전: 성 안뜰의 던전 관리인 카엘, 2~4명, 레벨 10~90의 9곳. 처음 깨면 쐐기돌을 받아 더 어렵고 시간 제한이 있는 도전을 합니다. 레이드·던전에서는 쓰러져도 잃는 것이 없습니다. 던전은 장비·재화용이라 한 판에 레벨의 12%%만 주고 던전 몬스터는 경험치가 없습니다. 레이드 클리어는 난이도에 따라 레벨의 60~120%%.\n\n함께 사냥(/party create, /party invite <이름>): 기여도 5% 이상인 사람은 모두 기여한 만큼 직업 경험치를 나눠 받고, 사람이 늘수록 보너스가 붙습니다. 피해뿐 아니라 아군 치유·강화와 적 약화도 기여로 칩니다. 장비·펫 드롭 판정은 가장 많이 기여한 사람에게 갑니다."},
 			{"bounties", "Bounties & story", "의뢰·업적·스토리",
 				"Guild Clerk Lina hands out three daily bounties and one three-day bounty; they pay merit for the merit shop.\n\nAchievements give merit and titles; wear titles from the codex (J). Royal Herald Elric here on the plaza tells the main story.",
 				"길드 접수원 리나가 일일 의뢰 3개와 사흘 의뢰 1개를 줍니다. 보상으로 받는 공적은 공적 상점에서 씁니다.\n\n업적은 공적과 칭호를 주고, 칭호는 도감(J)에서 착용합니다. 이 광장의 왕실 전령 엘릭이 메인 스토리를 들려줍니다."},
@@ -207,7 +207,8 @@ final class ContentLang {
 			String[] t = switch (a) {
 				case FORTIFIED -> new String[] {"Fortified", "견고", "Hall monsters have 25%% more health and hit 15%% harder.", "홀 몬스터의 체력이 25%%, 피해가 15%% 늘어납니다."};
 				case TYRANNICAL -> new String[] {"Tyrannical", "폭군", "The boss has 40%% more health and hits 15%% harder.", "보스의 체력이 40%%, 피해가 15%% 늘어납니다."};
-				case BOLSTERING -> new String[] {"Bolstering", "강화", "When a hall monster dies, those near it grow stronger.", "홀 몬스터가 죽으면 근처의 몬스터가 강해집니다."};
+				case BOLSTERING -> new String[] {"Bolstering", "강화", "When a hall monster dies, those near it gain 15%% health and damage (up to 5 times each).",
+					"홀 몬스터가 죽으면 근처 몬스터의 체력과 피해가 15%%씩 늘어납니다 (몬스터마다 최대 5번)."};
 				case RAGING -> new String[] {"Raging", "분노", "Hall monsters enrage below 30%% health.", "홀 몬스터가 체력 30%% 이하에서 격노합니다."};
 				case VOLCANIC -> new String[] {"Volcanic", "화산", "Fire erupts under a player every few seconds (telegraphed).", "몇 초마다 플레이어 발밑에서 불이 솟습니다 (예고 있음)."};
 			};
@@ -259,10 +260,12 @@ final class ContentLang {
 		b.add(m + "fallen", ko ? "%s님이 쓰러져 입구에서 깨어납니다 (-%s초)." : "%s fell and wakes at the entrance (-%s s).");
 		b.add(m + "failed", ko ? "%s 공략에 실패했습니다." : "The run through %s failed.");
 		b.add(m + "hall_cleared", ko ? "홀 %s/%s 정리! 다음 문이 열립니다." : "Hall %s/%s cleared! The next door opens.");
+		b.add(m + "monsters_left", ko ? "남은 몬스터 %s" : "%s left");
+		b.add(m + "stuck", ko ? "한동안 아무도 맞지 않아, 남은 몬스터를 홀 안으로 불러냅니다." : "Nothing was hit for a while: the remaining monsters are brought back into the hall.");
 		b.add(m + "returning", ko ? "%s초 뒤 귀환합니다 (/dungeon leave)" : "Returning in %s s (/dungeon leave)");
 		b.add(m + "victory", ko ? "%s 클리어! 시간 %s" : "%s cleared in %s!");
 		b.add(m + "timed", ko ? "제한 시간(%s) 안에 돌파했습니다!" : "Beaten within the limit (%s)!");
-		b.add(m + "late", ko ? "제한 시간(%s)을 넘겼습니다." : "Over the limit (%s).");
+		b.add(m + "late", ko ? "제한 시간(%s)을 넘겼습니다. 보상은 60%%만 받습니다." : "Over the limit (%s): rewards are 60%%.");
 		b.add(m + "keystone_new", ko ? "새 쐐기돌: %s" : "New keystone: %s");
 		b.add(m + "keystone_up", ko ? "쐐기돌이 강해졌습니다: %s" : "Your keystone grew: %s");
 		b.add(m + "keystone_down", ko ? "쐐기돌이 약해졌습니다: %s" : "Your keystone weakened: %s");

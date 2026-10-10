@@ -85,6 +85,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -331,6 +332,18 @@ public class ContentClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ dungeons
 
 	private static void checkDungeon(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// past vanilla's 1024 health a champion keeps 1000 and takes damage divided by the rest
+		server.runOnServer(s -> {
+			ServerLevel level = connection.getServerPlayer().level();
+			NamedMob champion = NamedMobs.type(NamedMobs.byId("astral_knight")).create(level, EntitySpawnReason.COMMAND);
+			champion.makeChampion(10.0F, 1.0F, "entity.minecraft_mode.dungeon_boss", connection.getServerPlayer().blockPosition(), 18.0);
+			float wanted = (float)(NamedMobs.byId("astral_knight").health() * 1.3 * 10.0);
+			require(champion.getMaxHealth() == MobPower.HEALTH_CAP && Math.abs(MobPower.toughness(champion) * MobPower.HEALTH_CAP - wanted) < 1.0F,
+				"a champion wanting " + wanted + " health should keep " + MobPower.HEALTH_CAP + " with toughness, has " + champion.getMaxHealth() + " / " + MobPower.toughness(champion));
+			champion.discard();
+			require(MobPower.toughness(champion) == 1.0F, "a removed champion forgets its toughness");
+			require(Dungeons.rewardLevel(20) == 20 && Dungeons.rewardLevel(30) == 25, "rewards grow at half speed past +20");
+		});
 		DungeonDef def = Dungeons.def("fungal_depths");
 		server.runOnServer(s -> Dungeons.start(s, List.of(connection.getServerPlayer()), def, connection.getServerPlayer().getUUID(), 4,
 			connection.getServerPlayer().getUUID()));
@@ -351,6 +364,15 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			require(!server.computeOnServer(s -> DungeonDimension.level(s).getBlockState(origin.offset(DungeonLayout.doorX(hall), 0, 0)).isAir()),
 				"the next door stays shut while monsters live");
 			if (room == 1) {
+				// a hall monster pushed out through the wall comes back into the hall (it would block the door forever)
+				UUID escaped = server.computeOnServer(s -> {
+					Mob mob = (Mob)DungeonDimension.level(s).getEntity(instance.roomMobs().iterator().next());
+					mob.teleportTo(origin.getX() + r.centerX() + 0.5, origin.getY(), origin.getZ() + r.halfZ() + 3.5);
+					return mob.getUUID();
+				});
+				context.waitTicks(30);
+				require(server.computeOnServer(s -> DungeonLayout.interior(origin, DungeonDimension.level(s).getEntity(escaped).position())),
+					"a hall monster outside the walls should be brought back in");
 				context.getInput().lookAt(new BlockPos(origin.getX() + r.centerX() + 3, origin.getY() + 1, origin.getZ()));
 				context.waitTicks(20);
 				shot(context, "content_dungeon_hall");

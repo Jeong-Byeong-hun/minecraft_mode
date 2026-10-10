@@ -111,6 +111,7 @@ public final class NamedLairs {
 		}
 		LAST_LAIR.put(player, id);
 		if (lair != null) {
+			LairExp.entered(player, lair);
 			player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 50, 20));
 			player.connection.send(new ClientboundSetTitleTextPacket(Component.translatable(lair.nameKey()).withStyle(ChatFormatting.GOLD)));
 			player.connection.send(new ClientboundSetSubtitleTextPacket(Component.translatable("message.minecraft_mode.lair.enter",

@@ -4,6 +4,8 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
+import com.minecraftmode.companion.MountEntity;
+import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
@@ -15,6 +17,7 @@ import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
@@ -99,11 +102,25 @@ public final class Dungeons {
 	/** A new keystone goes to a dungeon opened at most this many levels below the holder's level. */
 	public static final int KEYSTONE_REACH = 20;
 	/** The boss: health and damage on top of its top-level stats. */
-	public static final float CHAMPION_HEALTH = 2.5F;
-	public static final float CHAMPION_DAMAGE = 1.2F;
+	public static final float CHAMPION_HEALTH = 3.0F;
+	public static final float CHAMPION_DAMAGE = 1.4F;
+	/** The boss is pulled back home when lured this far from the boss room's middle (the room's corners are about 16 away). */
+	public static final double BOSS_LEASH = 18.0;
 	/** One monster of every hall is an elite. */
-	public static final float ELITE_HEALTH = 2.5F;
+	public static final float ELITE_HEALTH = 2.0F;
 	public static final float ELITE_DAMAGE = 1.3F;
+	/** A late keystone run (past the timer) pays this share of the rewards. */
+	public static final float LATE_SHARE = 0.6F;
+	/** Rewards grow at half speed past this keystone level. */
+	public static final int REWARD_SOFT_CAP = 20;
+	/** Class experience of a clear, as a share of a level (levels come from lairs; dungeons are for gear and currency). */
+	public static final float RUN_EXP = 0.12F;
+	/** Past the level cap keystones raise the share by 2% a level, up to this. */
+	public static final float PARAGON_EXP_MAX = 0.6F;
+	/** Hall monsters nobody has hurt for this long are brought out where the players are (stuck behind a wall, out of reach). */
+	public static final int STUCK_TICKS = 20 * 20;
+	/** A hall with this few monsters left makes them glow. */
+	public static final int GLOW_LEFT = 3;
 	private static final int SLOT_SPACING = 512;
 	private static final int MAX_SLOTS = 32;
 	/** Marks a mob the Raging affix already enraged. */
@@ -153,12 +170,12 @@ public final class Dungeons {
 			"chorus_wraith", 90,
 			new DungeonDef.Theme(List.of(Blocks.END_STONE_BRICKS, Blocks.PURPUR_BLOCK, Blocks.END_STONE, Blocks.OBSIDIAN), Blocks.OBSIDIAN, Blocks.PURPUR_PILLAR,
 				Blocks.PURPUR_PILLAR, Blocks.PEARLESCENT_FROGLIGHT, Blocks.IRON_BARS),
-			List.of(EntityTypes.PHANTOM, EntityTypes.WITHER_SKELETON, EntityTypes.SKELETON), 720);
+			List.of(EntityTypes.ENDERMAN, EntityTypes.WITHER_SKELETON, EntityTypes.SKELETON), 720);
 		def("starfall_observatory", "Starfall Observatory", "별이 떨어진 천문대", "Where the astral knight's star fell, the sky still hums.",
 			"성운 기사의 별이 떨어진 곳, 하늘이 아직도 울립니다.", 90, "astral_knight", 100,
 			new DungeonDef.Theme(List.of(Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_BRICKS, Blocks.CALCITE, Blocks.POLISHED_DIORITE), Blocks.LAPIS_BLOCK, Blocks.QUARTZ_PILLAR,
 				Blocks.QUARTZ_PILLAR, Blocks.SEA_LANTERN, Blocks.IRON_BARS),
-			List.of(EntityTypes.STRAY, EntityTypes.PHANTOM, EntityTypes.EVOKER, EntityTypes.WITHER_SKELETON), 720);
+			List.of(EntityTypes.STRAY, EntityTypes.BREEZE, EntityTypes.EVOKER, EntityTypes.WITHER_SKELETON), 720);
 	}
 
 	private static void def(final String id, final String en, final String ko, final String descEn, final String descKo, final int minLevel, final String boss,
@@ -171,6 +188,7 @@ public final class Dungeons {
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> !(entity instanceof ServerPlayer player) || !fall(player));
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity instanceof ServerPlayer player && PENDING.containsKey(player.getUUID())));
 		ServerLivingEntityEvents.AFTER_DEATH.register(Dungeons::afterDeath);
+		ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, baseDamage, damage, blocked) -> afterDamage(entity));
 		ServerPlayerEvents.JOIN.register(Dungeons::onJoin);
 		// monsters saved with a dungeon chunk (server stopped mid-run) must not haunt the next run there
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
@@ -211,17 +229,37 @@ public final class Dungeons {
 		return DEFS.get(id);
 	}
 
-	/** Monster health multiplier of a keystone level (0 = no keystone). */
+	/**
+	 * Hall monster health multiplier of a keystone level (0 = no keystone). Halls grow slower than the boss: a run is won at the boss,
+	 * and hall monsters also come in larger packs with more players.
+	 */
 	public static float healthScale(final int level) {
-		return 1.0F + 0.12F * level;
+		return 1.0F + 0.08F * level;
 	}
 
 	public static float damageScale(final int level) {
 		return 1.0F + 0.08F * level;
 	}
 
-	/** Monster health multiplier for a party of {@code players}: 0.7 solo, 1.0 for two, up to 1.6 for four. */
+	/** The boss's health and damage multipliers of a keystone level. */
+	public static float bossHealthScale(final int level) {
+		return 1.0F + 0.15F * level;
+	}
+
+	public static float bossDamageScale(final int level) {
+		return 1.0F + 0.10F * level;
+	}
+
+	/**
+	 * Hall monster health for a party of {@code players}: 0.7 solo up to 1.0 for four. A hall also gets two more monsters per extra
+	 * player, so each player's share of the hall stays about the same.
+	 */
 	public static float partyScale(final int players) {
+		return 0.6F + 0.1F * Mth.clamp(players, 1, MAX_PARTY);
+	}
+
+	/** The boss's health for a party of {@code players}: 0.7 solo, 1.0 for two, up to 1.6 for four (one boss for everyone). */
+	public static float bossPartyScale(final int players) {
 		return 0.4F + 0.3F * Mth.clamp(players, 1, MAX_PARTY);
 	}
 
@@ -252,6 +290,11 @@ public final class Dungeons {
 		}
 		DungeonInstance.Member member = instance.member(player.getUUID());
 		return member != null && member.active ? instance : null;
+	}
+
+	/** A monster of a dungeon run (hall monster, boss, a minion): runs pay their experience at the end, not per kill. */
+	public static boolean isRunMob(final Entity entity) {
+		return DungeonDimension.is(entity.level()) && insideRunning(entity.position());
 	}
 
 	private static boolean insideRunning(final Vec3 pos) {
@@ -625,7 +668,12 @@ public final class Dungeons {
 				instance.room++;
 				instance.roomAwake = false;
 				updateBar(instance);
+			} else if (instance.timer % 20 == 0) {
+				containHall(server, level, instance, players);
 			}
+		}
+		if (instance.timer % 20 == 10) {
+			containRun(level, instance);
 		}
 		if (instance.has(DungeonAffix.RAGING) && instance.timer % 20 == 5) {
 			for (UUID id : instance.roomMobs) {
@@ -662,6 +710,7 @@ public final class Dungeons {
 		RandomSource random = level.getRandom();
 		DungeonDef def = instance.def;
 		float health = healthScale(instance.level) * partyScale(instance.partySize);
+		float bossHealth = bossHealthScale(instance.level) * bossPartyScale(instance.partySize);
 		float damage = damageScale(instance.level);
 		if (instance.room == DungeonLayout.BOSS_ROOM) {
 			NamedDef named = NamedMobs.byId(def.boss());
@@ -673,10 +722,10 @@ public final class Dungeons {
 			Vec3 at = DungeonLayout.bossSpawn(instance.origin);
 			boss.snapTo(at.x, at.y, at.z, 90.0F, 0.0F);
 			boolean tyrant = instance.has(DungeonAffix.TYRANNICAL);
-			boss.makeChampion(CHAMPION_HEALTH * health * (tyrant ? DungeonAffix.TYRANNICAL_HEALTH : 1.0F), 1.3F, "entity.minecraft_mode.dungeon_boss",
-				instance.origin.offset(DungeonLayout.ROOMS.get(DungeonLayout.BOSS_ROOM).centerX(), 0, 0), 14.0);
+			boss.makeChampion(CHAMPION_HEALTH * bossHealth * (tyrant ? DungeonAffix.TYRANNICAL_HEALTH : 1.0F), 1.3F, "entity.minecraft_mode.dungeon_boss",
+				instance.origin.offset(DungeonLayout.ROOMS.get(DungeonLayout.BOSS_ROOM).centerX(), 0, 0), BOSS_LEASH);
 			instance.bossId = boss.getUUID();
-			MobPower.set(boss.getUUID(), CHAMPION_DAMAGE * damage * (tyrant ? DungeonAffix.TYRANNICAL_DAMAGE : 1.0F));
+			MobPower.set(boss.getUUID(), CHAMPION_DAMAGE * bossDamageScale(instance.level) * (tyrant ? DungeonAffix.TYRANNICAL_DAMAGE : 1.0F));
 			level.addFreshEntity(boss);
 			level.playSound(null, at.x, at.y, at.z, SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 3.0F, 0.6F);
 			for (ServerPlayer p : players) {
@@ -684,6 +733,7 @@ public final class Dungeons {
 			}
 			return;
 		}
+		instance.lastHit = instance.elapsed;
 		int count = 4 + instance.room + (instance.partySize - 1) * 2;
 		boolean fortified = instance.has(DungeonAffix.FORTIFIED);
 		for (int i = 0; i < count; i++) {
@@ -715,14 +765,94 @@ public final class Dungeons {
 		}
 		level.playSound(null, instance.origin.getX() + DungeonLayout.ROOMS.get(instance.room).centerX(), instance.origin.getY(), instance.origin.getZ(),
 			SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 2.0F, 1.2F);
+		updateBar(instance);
 	}
 
-	private static void scaleHealth(final LivingEntity mob, final float multiplier) {
-		AttributeInstance attr = mob.getAttribute(Attributes.MAX_HEALTH);
-		if (attr != null) {
-			attr.addOrReplacePermanentModifier(new AttributeModifier(SCALE_ID, multiplier - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-			mob.setHealth(mob.getMaxHealth());
+	/**
+	 * Keeps the hall winnable: its monsters that ended up outside the halls and corridors (pushed through a wall, teleported, a phantom
+	 * on the roof) come back to the hall, a hall nobody has hurt anything in for {@link #STUCK_TICKS} brings all of its rest out, and the
+	 * last {@link #GLOW_LEFT} glow so they are easy to find.
+	 */
+	private static void containHall(final MinecraftServer server, final ServerLevel level, final DungeonInstance instance, final List<ServerPlayer> players) {
+		boolean stuck = instance.elapsed - instance.lastHit > STUCK_TICKS;
+		RandomSource random = level.getRandom();
+		for (UUID id : instance.roomMobs) {
+			if (!(level.getEntity(id) instanceof Mob mob)) {
+				continue;
+			}
+			if (stuck || !DungeonLayout.interior(instance.origin, mob.position())) {
+				Vec3 at = DungeonLayout.spawnPoint(instance.origin, instance.room, random);
+				mob.teleportTo(at.x, at.y, at.z);
+				mob.setDeltaMovement(Vec3.ZERO);
+				ServerPlayer target = nearest(players, at);
+				if (target != null) {
+					mob.setTarget(target);
+				}
+			}
+			if (instance.roomMobs.size() <= GLOW_LEFT) {
+				mob.setGlowingTag(true);
+			}
 		}
+		if (stuck) {
+			instance.lastHit = instance.elapsed;
+			tell(server, instance, msg("stuck").withStyle(ChatFormatting.YELLOW));
+		}
+	}
+
+	/**
+	 * Everything else in the run: the boss comes back home when it left the rooms, and monsters nobody tracks (boss minions, zombie
+	 * reinforcements, vexes) are removed once they are outside the rooms and corridors, where they could only get in the way.
+	 */
+	private static void containRun(final ServerLevel level, final DungeonInstance instance) {
+		if (instance.bossId != null && level.getEntity(instance.bossId) instanceof Mob boss && boss.isAlive()
+			&& !DungeonLayout.interior(instance.origin, boss.position())) {
+			Vec3 at = DungeonLayout.bossSpawn(instance.origin);
+			boss.teleportTo(at.x, at.y, at.z);
+			boss.setDeltaMovement(Vec3.ZERO);
+		}
+		for (Mob mob : level.getEntitiesOfClass(Mob.class, DungeonLayout.bounds(instance.origin).inflate(16.0), m -> !instance.roomMobs.contains(m.getUUID())
+			&& !m.getUUID().equals(instance.bossId) && Actions.summoner(m) == null && !(m instanceof PetEntity) && !(m instanceof MountEntity))) {
+			if (!DungeonLayout.interior(instance.origin, mob.position())) {
+				mob.discard();
+			}
+		}
+	}
+
+	/** A hall monster was hurt: the hall is not stuck. */
+	private static void afterDamage(final LivingEntity entity) {
+		if (!MobPower.has(entity.getUUID())) {
+			return;
+		}
+		for (DungeonInstance instance : INSTANCES.values()) {
+			if (instance.roomMobs.contains(entity.getUUID())) {
+				instance.lastHit = instance.elapsed;
+				return;
+			}
+		}
+	}
+
+	/**
+	 * Multiplies a hall monster's health. Past {@link MobPower#HEALTH_CAP} (vanilla stops at 1024) it keeps the cap and the rest becomes
+	 * toughness, so a +20 elite really has the health the keystone asks for. Zombies lose their reinforcement call: the helpers would
+	 * appear on dark roofs outside the walls.
+	 */
+	private static void scaleHealth(final LivingEntity mob, final float multiplier) {
+		AttributeInstance reinforcements = mob.getAttribute(Attributes.SPAWN_REINFORCEMENTS_CHANCE);
+		if (reinforcements != null) {
+			reinforcements.removeModifiers();
+			reinforcements.setBaseValue(0.0);
+		}
+		AttributeInstance attr = mob.getAttribute(Attributes.MAX_HEALTH);
+		if (attr == null) {
+			return;
+		}
+		attr.removeModifier(SCALE_ID);
+		double base = attr.getValue();
+		double wanted = base * multiplier;
+		double kept = Math.min(wanted, MobPower.HEALTH_CAP);
+		attr.addOrReplacePermanentModifier(new AttributeModifier(SCALE_ID, kept / base - 1.0, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+		MobPower.setToughness(mob.getUUID(), (float)(wanted / kept));
+		mob.setHealth(mob.getMaxHealth());
 	}
 
 	private static @Nullable ServerPlayer nearest(final List<ServerPlayer> players, final Vec3 at) {
@@ -748,16 +878,11 @@ public final class Dungeons {
 			if (instance.roomMobs.contains(entity.getUUID()) && instance.has(DungeonAffix.BOLSTERING)) {
 				for (UUID id : instance.roomMobs) {
 					if (!id.equals(entity.getUUID()) && level.getEntity(id) instanceof Mob mob && mob.isAlive()
-						&& mob.distanceToSqr(entity) <= DungeonAffix.BOLSTER_RANGE * DungeonAffix.BOLSTER_RANGE) {
-						AttributeInstance attr = mob.getAttribute(Attributes.MAX_HEALTH);
-						AttributeModifier current = attr == null ? null : attr.getModifier(SCALE_ID);
-						if (current != null) {
-							float ratio = mob.getHealth() / mob.getMaxHealth();
-							attr.addOrReplacePermanentModifier(new AttributeModifier(SCALE_ID, (current.amount() + 1.0) * (1.0 + DungeonAffix.BOLSTER) - 1.0,
-								AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-							mob.setHealth(mob.getMaxHealth() * ratio);
-						}
-						MobPower.scale(id, (1.0F + DungeonAffix.BOLSTER));
+						&& mob.distanceToSqr(entity) <= DungeonAffix.BOLSTER_RANGE * DungeonAffix.BOLSTER_RANGE
+						&& instance.bolsters.merge(id, 1, Integer::sum) <= DungeonAffix.BOLSTER_MAX) {
+						// more effective health without touching the attribute: what is left of it lasts 15% longer
+						MobPower.setToughness(id, MobPower.toughness(mob) * (1.0F + DungeonAffix.BOLSTER));
+						MobPower.scale(id, 1.0F + DungeonAffix.BOLSTER);
 						level.sendParticles(ParticleTypes.HAPPY_VILLAGER, mob.getX(), mob.getY() + mob.getBbHeight(), mob.getZ(), 5, 0.3, 0.3, 0.3, 0.0);
 					}
 				}
@@ -799,6 +924,9 @@ public final class Dungeons {
 		}
 		String room = instance.room >= DungeonLayout.BOSS_ROOM ? "★" : instance.room + "/" + DungeonLayout.HALLS;
 		name.append(Component.literal("  " + room).withStyle(ChatFormatting.WHITE));
+		if (instance.roomAwake && instance.room < DungeonLayout.BOSS_ROOM) {
+			name.append(Component.literal("  ")).append(msg("monsters_left", instance.roomMobs.size()).withStyle(ChatFormatting.YELLOW));
+		}
 		String clock = Raids.clock(instance.elapsed) + (instance.level > 0 ? " / " + Raids.clock(instance.limit()) : "");
 		name.append(Component.literal("  " + clock).withStyle(instance.level > 0 && instance.elapsed > instance.limit() ? ChatFormatting.RED : ChatFormatting.AQUA));
 		return name;
@@ -819,7 +947,7 @@ public final class Dungeons {
 			tell(server, instance, msg(timed ? "timed" : "late", Raids.clock(instance.limit())).withStyle(timed ? ChatFormatting.GREEN : ChatFormatting.RED));
 		}
 		for (ServerPlayer p : activePlayers(server, instance)) {
-			reward(p, instance, random);
+			reward(p, instance, instance.level > 0 && !timed, random);
 			p.setAttached(ModAttachments.DUNGEON, data(p).withClear(def.id(), timed ? instance.level : 0));
 			Progress.dungeonCleared(p);
 			if (instance.level == 0 && mayGetFreeKeystone(p)) {
@@ -841,38 +969,59 @@ public final class Dungeons {
 	}
 
 	/**
-	 * Everyone's share: coins, Evolution Ether, enhancement stones, condensed essence and job experience (all growing with the
-	 * keystone), a gear piece by chance (enhanced from +7), awakening crystals from +5, and a rare (epic from +10) pet or mount by chance.
+	 * Everyone's share: coins, Evolution Ether, enhancement stones and condensed essence (all growing with the keystone, at half speed
+	 * past {@link #REWARD_SOFT_CAP}), a gear piece by chance (enhanced from +7), awakening crystals from +5, a rare (epic from +10) pet or
+	 * mount by chance, and a little class experience. A late keystone run pays {@link #LATE_SHARE} of it.
 	 */
-	private static void reward(final ServerPlayer player, final DungeonInstance instance, final RandomSource random) {
+	private static void reward(final ServerPlayer player, final DungeonInstance instance, final boolean late, final RandomSource random) {
 		DungeonDef def = instance.def;
 		int l = instance.level;
+		int rl = rewardLevel(l);
+		float pay = late ? LATE_SHARE : 1.0F;
 		NamedDef boss = NamedMobs.byId(def.boss());
 		int lo = boss == null ? 10 : boss.lo();
 		int hi = boss == null ? 20 : boss.hi();
-		Coins.give(player, Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, def.power())) * (0.6F + 0.15F * l))));
-		give(player, EvolutionEtherItem.of(hi, 2 + l / 2));
-		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, 1 + l / 3));
-		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + l / 4));
-		if (random.nextFloat() < 0.4F + 0.04F * l) {
+		Coins.give(player, Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, def.power())) * (0.6F + 0.15F * rl) * pay)));
+		give(player, EvolutionEtherItem.of(hi, Math.max(1, Math.round((2 + rl / 2) * pay))));
+		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, Math.max(1, Math.round((1 + rl / 3) * pay))));
+		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, Math.max(1, Math.round((1 + rl / 4) * pay))));
+		if (random.nextFloat() < (0.4F + 0.04F * rl) * pay) {
 			JobData job = JobProgression.get(player);
 			ItemStack gear = GearDrops.pick(job, lo, hi, random);
 			if (!gear.isEmpty()) {
 				if (l >= 7) {
-					gear.set(ModDataComponents.ENHANCEMENT, new Enhancement(Math.min(10, 1 + l / 3 + random.nextInt(2)), 0));
+					gear.set(ModDataComponents.ENHANCEMENT, new Enhancement(Math.min(10, 1 + rl / 3 + random.nextInt(2)), 0));
 				}
 				give(player, gear);
 			}
 		}
-		if (l >= 5 && random.nextFloat() < 0.15F + 0.03F * l) {
+		if (l >= 5 && random.nextFloat() < (0.15F + 0.03F * rl) * pay) {
 			give(player, new ItemStack(ModItems.AWAKENING_CRYSTAL, 1 + (l >= 12 ? 1 : 0)));
 		}
-		JobProgression.addExp(player, Math.max(30, JobProgression.expToNext(JobProgression.get(player).level()) / 5));
+		JobProgression.addExp(player, JobProgression.levelExp(player, hi, expShare(player, l, late)));
 		if (l >= 10) {
 			Companions.rollDrop(player, 0.02F + 0.005F * (l - 10), Rarity.EPIC);
 		} else {
 			Companions.rollDrop(player, 0.02F, Rarity.RARE);
 		}
+	}
+
+	/** The keystone level rewards grow with: as is up to {@link #REWARD_SOFT_CAP}, half speed past it. */
+	public static int rewardLevel(final int level) {
+		return level <= REWARD_SOFT_CAP ? level : REWARD_SOFT_CAP + (level - REWARD_SOFT_CAP) / 2;
+	}
+
+	/**
+	 * Class experience of a clear as a share of a level: dungeons are for gear and currency, lairs for levels, so a run pays
+	 * {@link #RUN_EXP} (half when late). Past the level cap, where only one lair is left, keystones pay paragon experience: +2% of a
+	 * level per keystone level, up to {@link #PARAGON_EXP_MAX}.
+	 */
+	public static float expShare(final Player player, final int level, final boolean late) {
+		float share = RUN_EXP;
+		if (JobProgression.get(player).level() >= JobProgression.MAX_LEVEL) {
+			share = Math.min(PARAGON_EXP_MAX, RUN_EXP + 0.02F * level);
+		}
+		return late ? share * 0.5F : share;
 	}
 
 	/** The keystone's owner is offline: it waits in their market mailbox (saved with the world) instead of being lost. */

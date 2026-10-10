@@ -591,8 +591,8 @@ public final class Raids {
 		for (ItemStack supply : Consumables.raidRewards(RaidBosses.index(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);
 		}
-		JobData data = JobProgression.get(player);
-		JobProgression.addExp(player, Math.max(50, JobProgression.expToNext(data.level()) / 3));
+		// a share of a level by difficulty, measured at the boss's top level (the boss kill itself pays nothing: its health is a raid scale)
+		JobProgression.addExp(player, JobProgression.levelExp(player, def.hi(), difficulty.exp));
 		ping(player, BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE), 1.0F);
 	}
 

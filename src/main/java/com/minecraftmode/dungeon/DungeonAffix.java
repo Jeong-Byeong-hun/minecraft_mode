@@ -26,6 +26,8 @@ public enum DungeonAffix {
 	/** Bolstering: each death within this range adds this much health and damage (multiplier) to the survivors. */
 	public static final double BOLSTER_RANGE = 12.0;
 	public static final float BOLSTER = 0.15F;
+	/** A monster bolsters at most this many times (it compounded without end: a 13-monster hall reached ×5 damage). */
+	public static final int BOLSTER_MAX = 5;
 	/** Volcanic: seconds between eruptions, radius and the share of health one takes. */
 	public static final int VOLCANIC_INTERVAL = 9;
 	public static final double VOLCANIC_RADIUS = 2.5;

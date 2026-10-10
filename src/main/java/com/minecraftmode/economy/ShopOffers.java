@@ -307,6 +307,8 @@ public final class ShopOffers {
 			}
 		}
 		list.add(sell(ModItems.ESSENCE, 6, ModItems.COPPER_COIN, 2));
+		// the same price for condensed essence, so a stack of it does not have to be broken first
+		list.add(sell(ModItems.CONDENSED_ESSENCE, 1, ModItems.COPPER_COIN, 3));
 		list.add(buy(ModItems.GOLD_COIN, 4, ModItems.CLASS_RESET_SCROLL, 1));
 		if (player != null) {
 			list.addAll(buybacks(player));

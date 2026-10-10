@@ -1,5 +1,6 @@
 package com.minecraftmode.dungeon;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,6 +83,10 @@ public final class DungeonInstance {
 	/** The boss fell (the keystone is settled by the victory, not by closing). */
 	boolean finished;
 	final Set<UUID> roomMobs = new HashSet<>();
+	/** How often each hall monster bolstered (Bolstering stops at {@link DungeonAffix#BOLSTER_MAX}). */
+	final Map<UUID, Integer> bolsters = new HashMap<>();
+	/** {@link #elapsed} when a hall monster was last hurt (or the hall woke): a long quiet means the rest are stuck somewhere. */
+	int lastHit;
 	@Nullable UUID bossId;
 	@Nullable ServerBossEvent bar;
 

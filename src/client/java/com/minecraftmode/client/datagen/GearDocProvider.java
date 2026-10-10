@@ -31,6 +31,7 @@ import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.JobEvents;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -69,6 +70,7 @@ import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.LairExp;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
 import com.minecraftmode.worldgen.lair.LairStructure;
@@ -652,13 +654,25 @@ public class GearDocProvider implements DataProvider {
 				.append(ClassDocProvider.num((float)def.jump())).append(" | ").append(def.flying() ? "예" : "").append(" |\n");
 		}
 
+		this.growth(md);
+
 		md.append("\n## 던전 (2–4인)\n\n");
 		md.append("- 성 안뜰 서쪽 던전 문의 **던전 관리인 카엘**. 파티장이 입장시키며(").append((int)Dungeons.GATHER_RANGE).append("블록 안의 파티원, 최대 ")
 			.append(Dungeons.MAX_PARTY).append("명) 혼자도 됩니다.\n");
 		md.append("- 구성: 입구 → 홀 ").append(DungeonLayout.HALLS).append("개(들어서면 몬스터가 깨어나고, 모두 쓰러뜨리면 다음 문이 열림, 홀마다 정예 1마리) → 보스 방(네임드의 **챔피언**: 최고 레벨, 체력 ×")
 			.append(ClassDocProvider.num(Dungeons.CHAMPION_HEALTH)).append(", 피해 ×").append(ClassDocProvider.num(Dungeons.CHAMPION_DAMAGE)).append(", 분노 패턴).\n");
 		md.append("- 쓰러지면 죽지 않고 입구에서 깨어나며 ").append(Dungeons.DEATH_PENALTY_SECONDS).append("초를 잃습니다. 건축·PvP 불가. `/dungeon leave`로 나갑니다.\n");
-		md.append("- 몬스터 체력: 기본 × (1 + 던전 힘/10) × 파티(1인 0.7, 2인 1.0, 3인 1.3, 4인 1.6) × 쐐기돌(1 + 0.12 × 단계). 피해: × (1 + 던전 힘/50) × (1 + 0.08 × 단계).\n\n");
+		md.append("- 홀 몬스터 체력: 기본 × (1 + 던전 힘/10) × 파티(1인 ").append(ClassDocProvider.num(Dungeons.partyScale(1))).append(" … 4인 ")
+			.append(ClassDocProvider.num(Dungeons.partyScale(4))).append(", 인원마다 2마리씩 더 나옴) × 쐐기돌(1 + 0.08 × 단계), 정예 ×").append(ClassDocProvider.num(Dungeons.ELITE_HEALTH))
+			.append(". 피해: × (1 + 던전 힘/50) × (1 + 0.08 × 단계).\n");
+		md.append("- 보스 체력: 네임드 최고 레벨 체력 × ").append(ClassDocProvider.num(Dungeons.CHAMPION_HEALTH)).append(" × 파티(1인 ")
+			.append(ClassDocProvider.num(Dungeons.bossPartyScale(1))).append(" … 4인 ").append(ClassDocProvider.num(Dungeons.bossPartyScale(4)))
+			.append(") × 쐐기돌(1 + 0.15 × 단계), 피해 × ").append(ClassDocProvider.num(Dungeons.CHAMPION_DAMAGE)).append(" × (1 + 0.10 × 단계). 방 가운데서 ")
+			.append((int)Dungeons.BOSS_LEASH).append("블록 넘게 끌려 나가면 돌아갑니다.\n");
+		md.append("- 체력이 1024(바닐라 한도)를 넘어야 하는 몬스터는 ").append((int)com.minecraftmode.entity.MobPower.HEALTH_CAP)
+			.append(" 체력에 받는 피해를 나눠(레이드 보스처럼) 실제 체력을 냅니다.\n");
+		md.append("- 홀 밖(벽 속·지붕 위)으로 나간 홀 몬스터는 홀로 돌아오고, ").append(Dungeons.STUCK_TICKS / 20).append("초 동안 아무것도 맞지 않으면 남은 몬스터를 불러냅니다. 남은 수는 보스바에, ")
+			.append(Dungeons.GLOW_LEFT).append("마리 이하가 되면 빛납니다. 홀 밖의 소환수·지원군은 사라집니다.\n\n");
 		md.append("| 던전 | 입장 | 보스 | 몬스터 | 제한 시간 |\n|---|---|---|---|---|\n");
 		for (DungeonDef def : Dungeons.all()) {
 			NamedDef boss = NamedMobs.byId(def.boss());
@@ -675,8 +689,11 @@ public class GearDocProvider implements DataProvider {
 			md.append("| ").append(this.ko(a.nameKey())).append(" | +").append(a.level()).append(" | ").append(this.ko(a.descKey())).append(" |\n");
 		}
 		md.append("\n- 견고/폭군은 주기마다, 강화/분노는 두 주기마다 번갈아 나옵니다.\n");
-		md.append("- 보상(클리어한 사람마다): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계)), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, 직업 경험치, ")
-			.append("장비 (40 + 4 × 단계)% (+7부터 강화된 채), +5부터 각성의 결정 (15 + 3 × 단계)%, 희귀 펫·탈것 2% (+10부터 영웅 2% + 단계당 0.5%).\n");
+		md.append("- 보상(클리어한 사람마다, 단계는 +").append(Dungeons.REWARD_SOFT_CAP).append("부터 절반 속도로 셈): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계)), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, ")
+			.append("장비 (40 + 4 × 단계)% (+7부터 강화된 채), +5부터 각성의 결정 (15 + 3 × 단계)%, 희귀 펫·탈것 2% (+10부터 영웅 2% + 단계당 0.5%). 제한 시간을 넘기면 ")
+			.append(Math.round(Dungeons.LATE_SHARE * 100)).append("%만 받습니다.\n");
+		md.append("- 직업 경험치: 한 판에 레벨의 ").append(Math.round(Dungeons.RUN_EXP * 100)).append("% (늦으면 절반, 단계·인원과 무관). 던전 몬스터는 처치 경험치가 없습니다. 레벨 ")
+			.append(JobProgression.MAX_LEVEL).append(" 이후(파라곤)에는 단계당 2%p씩 늘어 최대 ").append(Math.round(Dungeons.PARAGON_EXP_MAX * 100)).append("%.\n");
 
 		md.append("\n## 월드 이벤트\n\n");
 		md.append("- 오버월드 하루에 한 번, 해 질 녘. 사흘 중 이틀은 **거신**, 하루는 **수도 침공**(몹 스폰 게임 규칙 `spawn_mobs`가 꺼져 있으면 열리지 않음). 관리자: `/worldevent titan [네임드]|invasion|stop`.\n");
@@ -704,6 +721,42 @@ public class GearDocProvider implements DataProvider {
 				.append(c.rewardKo()).append(" |\n");
 		}
 		return md.toString();
+	}
+
+	/** Where class experience comes from at three levels: amount and share of that level's requirement. */
+	private void growth(final StringBuilder md) {
+		int[] levels = {15, 45, 90};
+		md.append("\n## 성장 경험치\n\n");
+		md.append("- 레벨을 올리는 주된 길은 **소굴 탐험**입니다. 소굴·레이드·던전·네임드는 \"레벨분\"(다음 레벨까지 필요한 경험치의 비율)으로 주므로 레벨이 올라도 비중이 같고, ")
+			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다. 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음), 보스는 두 배입니다.\n");
+		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후에는 경험치가 파라곤 레벨로 들어갑니다.\n\n");
+		md.append("| 활동 | Lv ").append(levels[0]).append(" | Lv ").append(levels[1]).append(" | Lv ").append(levels[2]).append(" |\n|---|---|---|---|\n");
+		this.growthRow(md, "다음 레벨까지", levels, l -> String.valueOf(JobProgression.expToNext(l)));
+		this.growthRow(md, "좀비 (체력 20)", levels, l -> exp(20, l));
+		this.growthRow(md, "철광석 / 다이아몬드 광석", levels, l -> exp(JobEvents.IRON.exp(l), l) + " / " + exp(JobEvents.DIAMOND.exp(l), l));
+		this.growthRow(md, "네임드 처치", levels, l -> exp(JobProgression.levelExp(l, JobEvents.NAMED_SHARE), l));
+		this.growthRow(md, "소굴 첫 발견 (소굴마다 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.DISCOVER), l));
+		this.growthRow(md, "소굴 군주 처치", levels, l -> exp(JobProgression.levelExp(l, JobEvents.LORD_SHARE), l));
+		this.growthRow(md, "소굴 보물 상자 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CHEST), l));
+		this.growthRow(md, "소굴 첫 공략 (상자에 더해, 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.FIRST_CLEAR), l));
+		this.growthRow(md, "막다른 길 보물함 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CACHE), l));
+		for (RaidDifficulty d : RaidDifficulty.values()) {
+			this.growthRow(md, "레이드 클리어 (" + this.ko(d.nameKey()) + ")", levels, l -> exp(JobProgression.levelExp(l, d.exp), l));
+		}
+		this.growthRow(md, "던전 한 판 (시간 안)", levels, l -> exp(JobProgression.levelExp(l, Dungeons.RUN_EXP), l));
+	}
+
+	private void growthRow(final StringBuilder md, final String label, final int[] levels, final java.util.function.IntFunction<String> cell) {
+		md.append("| ").append(label);
+		for (int level : levels) {
+			md.append(" | ").append(cell.apply(level));
+		}
+		md.append(" |\n");
+	}
+
+	/** "{@code exp} (n%)": an amount and its share of the level's requirement. */
+	private static String exp(final int exp, final int level) {
+		return exp + " (" + Math.round(exp * 100.0F / JobProgression.expToNext(level)) + "%)";
 	}
 
 	private static String rarity(final net.minecraft.world.item.Rarity rarity) {

@@ -37,6 +37,23 @@ public final class JobProgression {
 		return 25 + 10 * level + level * level / 4;
 	}
 
+	/**
+	 * Experience worth {@code fraction} of a level to {@code player}, measured at {@code contentLevel} or the player's own level, whichever
+	 * is lower: easy content pays at its own level, so it is worth little to a high level. At the level cap, top-bracket content is
+	 * measured against the next paragon level. Lairs, raids, dungeons and named monsters pay this way, so their share of a level stays
+	 * the same at every level.
+	 */
+	public static int levelExp(final Player player, final int contentLevel, final float fraction) {
+		int at = Math.min(get(player).level(), Math.max(1, contentLevel));
+		int need = at >= MAX_LEVEL ? Paragon.expToNext(Paragon.get(player).level()) : expToNext(at);
+		return Math.max(1, Math.round(need * fraction));
+	}
+
+	/** {@code fraction} of the experience from {@code level} to the next (no paragon), for tables and tests. */
+	public static int levelExp(final int level, final float fraction) {
+		return Math.max(1, Math.round(expToNext(level) * fraction));
+	}
+
 	public static int levelForTier(final int tier) {
 		return TIER_LEVEL[Math.max(0, Math.min(4, tier))];
 	}

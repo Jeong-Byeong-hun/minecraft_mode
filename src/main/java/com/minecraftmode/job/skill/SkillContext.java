@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
@@ -26,6 +28,11 @@ import org.jspecify.annotations.Nullable;
  * {@link #valid()} must be checked before acting later.
  */
 public final class SkillContext {
+	/** Extra reach around a hitbox when aiming at it (vanilla projectiles end up with the same margin). */
+	private static final double AIM_MARGIN = 0.3;
+	/** How far the crosshair is searched for the enemy a skill locks on when it starts (the longest target-area range). */
+	private static final double CAST_AIM_RANGE = 32.0;
+
 	public final ServerPlayer caster;
 	public final ServerLevel level;
 	public final WeaponDef weapon;
@@ -38,6 +45,10 @@ public final class SkillContext {
 	private final double areaScale;
 	private final List<BiConsumer<SkillContext, LivingEntity>> onHit = new ArrayList<>();
 	private double lifesteal;
+	/** Where the caster aimed when the skill started; target-area steps keep to it (see {@link #aimedEnemy}). */
+	private final Vec3 castEye;
+	private final Vec3 castLook;
+	private final @Nullable LivingEntity castTarget;
 
 	public SkillContext(final ServerPlayer caster, final WeaponDef weapon, final Skill skill, final ItemStack stack, final EngraveTotals mods, final double powerBonus) {
 		this.caster = caster;
@@ -51,6 +62,9 @@ public final class SkillContext {
 		this.fx = own == null ? base : own.color() < 0 ? new Fx(own.kind(), base.color()) : own;
 		this.power = weapon.power() * (1.0 + mods.fraction(EngraveStat.SKILL_DAMAGE) + powerBonus);
 		this.areaScale = 1.0 + mods.fraction(EngraveStat.SKILL_AREA);
+		this.castEye = caster.getEyePosition();
+		this.castLook = caster.getLookAngle();
+		this.castTarget = aimed(caster, this.castEye, this.castLook, CAST_AIM_RANGE, e -> CombatHooks.isEnemy(caster, e));
 	}
 
 	/**
@@ -98,17 +112,95 @@ public final class SkillContext {
 		return flat.lengthSqr() < 1.0E-4 ? Vec3.directionFromRotation(0.0F, this.caster.getYRot()) : flat.normalize();
 	}
 
-	/** Where the caster looks, up to {@code range}: the block hit, or the end of the ray. */
+	/** Where the caster looks, up to {@code range}: the block hit, or the end of the ray. Passes through monsters (beams use it). */
 	public Vec3 lookPoint(final double range) {
-		Vec3 eye = this.eye();
-		Vec3 end = eye.add(this.look().scale(range));
-		BlockHitResult hit = this.level.clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.caster));
+		return lookPoint(this.caster, range);
+	}
+
+	public static Vec3 lookPoint(final Player player, final double range) {
+		return lookPoint(player, player.getEyePosition(), player.getLookAngle(), range);
+	}
+
+	private static Vec3 lookPoint(final Player player, final Vec3 eye, final Vec3 look, final double range) {
+		Vec3 end = eye.add(look.scale(range));
+		BlockHitResult hit = player.level().clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
 		return hit.getType() == HitResult.Type.MISS ? end : hit.getLocation();
 	}
 
-	/** {@link #lookPoint} dropped onto the ground below it (up to 12 blocks). */
+	/**
+	 * {@code want}, or the last open spot on the way to it from the player's eyes: portals and blades launched beside the player
+	 * must not start inside a wall or a low ceiling, where they would stop at once.
+	 */
+	public static Vec3 openPoint(final Player player, final Vec3 want) {
+		Vec3 eye = player.getEyePosition();
+		BlockHitResult hit = player.level().clip(new ClipContext(eye, want, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+		if (hit.getType() == HitResult.Type.MISS) {
+			return want;
+		}
+		Vec3 back = eye.subtract(hit.getLocation());
+		double length = back.length();
+		return length <= 0.4 ? eye : hit.getLocation().add(back.scale(0.4 / length));
+	}
+
+	/**
+	 * The first target whose hitbox the crosshair meets within {@code range}, before any block. {@link #lookPoint} only stops at
+	 * blocks, so a skill aimed at a monster right in front would land on the ground behind it.
+	 */
+	public static @Nullable LivingEntity aimed(final Player player, final double range, final Predicate<LivingEntity> filter) {
+		return aimed(player, player.getEyePosition(), player.getLookAngle(), range, filter);
+	}
+
+	private static @Nullable LivingEntity aimed(final Player player, final Vec3 eye, final Vec3 look, final double range, final Predicate<LivingEntity> filter) {
+		Vec3 end = lookPoint(player, eye, look, range);
+		LivingEntity best = null;
+		double nearest = Double.MAX_VALUE;
+		for (LivingEntity e : player.level().getEntitiesOfClass(LivingEntity.class, new AABB(eye, end).inflate(1.0), filter)) {
+			AABB body = e.getBoundingBox();
+			double d;
+			if (body.contains(eye)) {
+				// pressed into the caster: only the one they face
+				d = look.dot(body.getCenter().subtract(eye)) > 0.0 ? 0.0 : Double.MAX_VALUE;
+			} else {
+				d = body.inflate(AIM_MARGIN).clip(eye, end).or(() -> body.clip(eye, end)).map(eye::distanceToSqr).orElse(Double.MAX_VALUE);
+			}
+			if (d < nearest) {
+				nearest = d;
+				best = e;
+			}
+		}
+		return best;
+	}
+
+	/**
+	 * The enemy in the crosshair when the skill started, when it is within {@code range}. Delayed and repeated steps (the bombardment
+	 * after a barrage, repeated bolts) stay on it wherever it walks, and land on its last spot when it died meanwhile.
+	 */
+	public @Nullable LivingEntity aimedEnemy(final double range) {
+		return this.castTarget != null && this.castTarget.level() == this.level
+			&& this.castTarget.getBoundingBox().distanceToSqr(this.castEye) <= range * range ? this.castTarget : null;
+	}
+
+	/** {@link #lookPoint} as it was when the skill started. */
+	private Vec3 castLookPoint(final double range) {
+		return lookPoint(this.caster, this.castEye, this.castLook, range);
+	}
+
+	/** The centre of the enemy aimed at (see {@link #aimedEnemy}), otherwise where the crosshair pointed when the skill started. */
+	public Vec3 aimPoint(final double range) {
+		LivingEntity target = this.aimedEnemy(range);
+		return target != null ? target.getBoundingBox().getCenter() : this.castLookPoint(range);
+	}
+
+	/**
+	 * The feet of the enemy aimed at (see {@link #aimedEnemy}), otherwise where the crosshair pointed when the skill started, dropped
+	 * onto the ground below it (up to 12 blocks).
+	 */
 	public Vec3 groundPoint(final double range) {
-		Vec3 p = this.lookPoint(range);
+		LivingEntity target = this.aimedEnemy(range);
+		if (target != null) {
+			return target.position();
+		}
+		Vec3 p = this.castLookPoint(range);
 		BlockHitResult down = this.level.clip(new ClipContext(p.add(0, 0.5, 0), p.add(0, -12, 0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this.caster));
 		return down.getType() == HitResult.Type.MISS ? p : down.getLocation();
 	}
@@ -135,11 +227,18 @@ public final class SkillContext {
 		return result;
 	}
 
-	/** Enemies within {@code width} of the segment from {@code from} to {@code to}. */
+	/**
+	 * Enemies within {@code width} of the segment from {@code from} to {@code to}: measured from the body's centre, or from the
+	 * hitbox itself so tall bodies are hit at their legs and heads too.
+	 */
 	public List<LivingEntity> enemiesAlong(final Vec3 from, final Vec3 to, final double width) {
 		AABB box = new AABB(from, to).inflate(width + 1.0);
 		return this.level.getEntitiesOfClass(LivingEntity.class, box, e -> CombatHooks.isEnemy(this.caster, e)
-			&& distanceToSegment(e.getBoundingBox().getCenter(), from, to) <= width + e.getBbWidth() / 2);
+			&& (distanceToSegment(e.getBoundingBox().getCenter(), from, to) <= width + e.getBbWidth() / 2 || crosses(e.getBoundingBox().inflate(width), from, to)));
+	}
+
+	private static boolean crosses(final AABB box, final Vec3 from, final Vec3 to) {
+		return box.contains(from) || box.clip(from, to).isPresent();
 	}
 
 	/** The enemy closest to the crosshair within {@code range}, if any is roughly in view. */

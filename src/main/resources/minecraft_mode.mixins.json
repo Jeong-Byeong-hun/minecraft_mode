@@ -3,9 +3,12 @@
 	"package": "com.minecraftmode.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"mixins": [
+		"AbstractArrowMixin",
 		"BlockItemMixin",
 		"BowItemMixin",
 		"ChunkGeneratorMixin",
+		"DragonSittingPhaseMixin",
+		"EndermanMixin",
 		"ItemEntityMixin",
 		"LivingEntityAccessor",
 		"LivingEntityMixin",
@@ -13,8 +16,11 @@
 		"NaturalSpawnerMixin",
 		"PlayerMixin",
 		"PlayerNameMixin",
+		"ProjectileDeflectionMixin",
 		"ServerExplosionMixin",
-		"ServerPlayerTabNameMixin"
+		"ServerPlayerTabNameMixin",
+		"ShulkerMixin",
+		"WitherBossMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

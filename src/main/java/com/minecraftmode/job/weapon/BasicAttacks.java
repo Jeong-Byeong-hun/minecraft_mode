@@ -7,11 +7,13 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillContext;
 import com.minecraftmode.job.skill.SkillProjectile;
 import com.minecraftmode.job.skill.SkillScheduler;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
@@ -50,11 +52,14 @@ public final class BasicAttacks {
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), style.sound(), SoundSource.PLAYERS, 0.6F, 1.0F + player.getRandom().nextFloat() * 0.2F);
 		// King of Heroes: treasure blades join the shot
 		if (CombatHooks.has(data, JobClass.ARCHER, 4) && player.getRandom().nextFloat() < 0.2F) {
+			// they start beside the archer, so they meet on the target in the crosshair (or 30 blocks out)
+			LivingEntity aimed = SkillContext.aimed(player, 30.0, e -> CombatHooks.canHarm(player, e));
+			Vec3 target = aimed != null ? aimed.getBoundingBox().getCenter() : player.getEyePosition().add(player.getLookAngle().scale(30));
 			for (int i = 0; i < 2; i++) {
 				Vec3 back = Vec3.directionFromRotation(0.0F, player.getYRot()).scale(-1.0);
 				Vec3 side = new Vec3(-back.z, 0, back.x).scale(i == 0 ? 1.2 : -1.2);
-				Vec3 from = player.getEyePosition().add(back).add(side).add(0, 0.8, 0);
-				Vec3 dir = player.getEyePosition().add(player.getLookAngle().scale(30)).subtract(from).normalize();
+				Vec3 from = SkillContext.openPoint(player, player.getEyePosition().add(back).add(side).add(0, 0.8, 0));
+				Vec3 dir = target.subtract(from).normalize();
 				SkillProjectile blade = SkillProjectile.forBasicShot(player, JobWeapons.randomWeaponStack(player.getRandom()), 0xFFD700, Fx.Kind.SPARK, 0.0F, damage)
 					.launch(from, dir, 2.6F);
 				level.addFreshEntity(blade);
@@ -81,6 +86,7 @@ public final class BasicAttacks {
 			return;
 		}
 		SkillProjectile projectile = SkillProjectile.forBasicShot(player, style.display(), def.fx().color(), style.trail(), style.gravity(), damage)
+			.sweep(style.hitRadius())
 			.explode(style == ProjectileStyle.CANNONBALL ? 2.0F : 0.0F)
 			.launch(from, dir, speed);
 		level.addFreshEntity(projectile);

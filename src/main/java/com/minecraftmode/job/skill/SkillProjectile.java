@@ -1,10 +1,14 @@
 package com.minecraftmode.job.skill;
 
 import com.minecraftmode.registry.ModEntities;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -17,14 +21,19 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
+import net.minecraft.world.entity.projectile.ProjectileDeflection;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -43,6 +52,7 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private @Nullable ServerPlayer basicOwner;
 	private float basicDamage;
 	private int pierce;
+	private double sweep = ProjectileUtil.DEFAULT_ENTITY_HIT_RESULT_MARGIN;
 	private float explode;
 	private int maxAge = 60;
 	private boolean homing;
@@ -82,6 +92,12 @@ public class SkillProjectile extends ThrowableItemProjectile {
 
 	public SkillProjectile pierce(final int pierce) {
 		this.pierce = pierce;
+		return this;
+	}
+
+	/** How far from its path it hits (see {@link #sweepHits}). */
+	public SkillProjectile sweep(final double radius) {
+		this.sweep = radius;
 		return this;
 	}
 
@@ -132,6 +148,9 @@ public class SkillProjectile extends ThrowableItemProjectile {
 
 	@Override
 	public void tick() {
+		if (!this.level().isClientSide() && this.sweepHits()) {
+			return;
+		}
 		super.tick();
 		if (this.level().isClientSide()) {
 			Fx.Kind trail = Fx.Kind.values()[Math.floorMod(this.entityData.get(DATA_TRAIL), Fx.Kind.values().length)];
@@ -176,34 +195,88 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		return this.ctx != null ? this.ctx.caster : this.basicOwner;
 	}
 
+	/** What a hit on {@code entity} damages: the Ender Dragon is only hit through its parts, which are not living entities. */
+	private static Entity body(final Entity entity) {
+		return entity instanceof EnderDragonPart part ? part.parentMob : entity;
+	}
+
 	@Override
 	protected boolean canHitEntity(final Entity entity) {
-		if (!super.canHitEntity(entity) || this.hits.contains(entity.getUUID())) {
+		Entity target = body(entity);
+		if (!super.canHitEntity(entity) || this.hits.contains(target.getUUID())) {
 			return false;
 		}
 		ServerPlayer owner = this.owner();
 		if (owner == null) {
 			return !this.level().isClientSide() ? false : entity != this.getOwner();
 		}
-		return this.ctx != null ? CombatHooks.isEnemy(owner, entity) : CombatHooks.canHarm(owner, entity);
+		return this.ctx != null ? CombatHooks.isEnemy(owner, target) : CombatHooks.canHarm(owner, target);
+	}
+
+	/** Hits what the coming move passes within {@link #sweep} of, before vanilla's own check. Returns true when the projectile is used up. */
+	private boolean sweepHits() {
+		if (this.ctx == null && this.basicOwner == null) {
+			return false;
+		}
+		Vec3 from = this.position();
+		Vec3 to = from.add(this.getDeltaMovement());
+		BlockHitResult wall = this.level().clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+		if (wall.getType() != HitResult.Type.MISS) {
+			to = wall.getLocation();
+		}
+		for (EntityHitResult hit : reach(this, from, to, this.sweep, e -> this.canHitEntity(e) && e.deflection(this) == ProjectileDeflection.NONE)) {
+			if (this.strike((LivingEntity)hit.getEntity(), hit.getLocation())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Living things within {@code reach} of a projectile's move from {@code from} to {@code to}, nearest first. Vanilla never hits a
+	 * hitbox the projectile starts inside (a monster pressed against the shooter) and widens its reach to 0.3 only after about 8
+	 * ticks. Something the move starts next to counts only when it lies ahead. Class arrows use it too ({@code AbstractArrowMixin}).
+	 */
+	public static List<EntityHitResult> reach(final Entity projectile, final Vec3 from, final Vec3 to, final double reach, final Predicate<LivingEntity> filter) {
+		Vec3 motion = projectile.getDeltaMovement();
+		List<EntityHitResult> hits = new ArrayList<>();
+		for (LivingEntity e : projectile.level().getEntitiesOfClass(LivingEntity.class, new AABB(from, to).inflate(reach + 1.0), filter)) {
+			AABB body = e.getBoundingBox();
+			AABB around = body.inflate(reach);
+			if (around.contains(from)) {
+				if (motion.dot(body.getCenter().subtract(from)) > 0.0) {
+					hits.add(new EntityHitResult(e, from));
+				}
+			} else {
+				around.clip(from, to).ifPresent(at -> hits.add(new EntityHitResult(e, at)));
+			}
+		}
+		hits.sort(Comparator.comparingDouble(hit -> from.distanceToSqr(hit.getLocation())));
+		return hits;
 	}
 
 	@Override
 	protected void onHitEntity(final EntityHitResult hitResult) {
-		if (this.level().isClientSide() || !(hitResult.getEntity() instanceof LivingEntity target)) {
-			return;
+		if (!this.level().isClientSide() && body(hitResult.getEntity()) instanceof LivingEntity target) {
+			this.strike(target, hitResult.getLocation());
 		}
+	}
+
+	/** Damages {@code target} (or explodes at {@code at}); returns true when the projectile is used up. */
+	private boolean strike(final LivingEntity target, final Vec3 at) {
 		if (this.explode > 0.0F) {
-			this.impactAt(hitResult.getLocation());
+			this.impactAt(at);
 			this.discard();
-			return;
+			return true;
 		}
 		this.hits.add(target.getUUID());
 		this.damage(target);
 		if (--this.pierce < 0) {
-			this.impactAt(hitResult.getLocation());
+			this.impactAt(at);
 			this.discard();
+			return true;
 		}
+		return false;
 	}
 
 	@Override

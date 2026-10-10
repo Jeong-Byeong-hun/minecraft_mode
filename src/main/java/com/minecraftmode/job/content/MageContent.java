@@ -110,7 +110,7 @@ public final class MageContent extends ClassContent {
 
 		weapon("laevateinn", 3, 62, WAND, "Laevateinn", "레바테인",
 			art(0x4A2A22, 0x3A2018, 0xFF6A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
-			skill("muspel_fire_rain", "Fire Rain of Muspelheim", "무스펠헤임의 불비", ATTACK, 14, 24, rain(ProjectileStyle.FIREBALL, 18, 5, 12, 0.8, 1.5F), burn(3)),
+			skill("muspel_fire_rain", "Fire Rain of Muspelheim", "무스펠헤임의 불비", ATTACK, 14, 24, rain(ProjectileStyle.FIREBALL, 18, 5, 12, 0.45, 1.5F), burn(3)),
 			skill("twig_of_ruin", "Twig of Ruin", "파멸의 가지", ATTACK, 9, 22, beam(16, 2.6), burn(5)),
 			skill("surtr_mantle", "Surtr's Mantle", "수르트의 외투", DEFENSE, 22, 20, buff(FIRE_RESISTANCE, 12, 0), stance(COUNTER, 6, 45)));
 
@@ -123,7 +123,7 @@ public final class MageContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 4: Grand Caster
 		weapon("colchis_scepter", 4, 70, SCEPTER, "Scepter of Colchis", "콜키스의 홀",
 			art(0x5B3A8C, 0x2A1A3A, 0xC77DFF), fx(Fx.Kind.ORB, 0xD070FF),
-			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 1.0, 2.0F), inflict(SLOWNESS, 3, 1)),
+			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 0.5, 2.0F), inflict(SLOWNESS, 3, 1)),
 			skill("rule_breaker", "Rule Breaker", "룰 브레이커", ATTACK, 14, 24, shadowstep(10, 1.6), inflict(VULNERABLE, 8, 2)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, refresh(50), buff(MANA_FLOW, 10, 0)),
 			skill("argon_coin", "Argon Coin", "아르곤 코인", DEFENSE, 26, 22, heal(25), shield(8, 10)));
@@ -133,7 +133,7 @@ public final class MageContent extends ClassContent {
 			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "수천일광 천조팔야진석", ULTIMATE, 50, 36,
 				allyHeal(12, 35), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)),
 			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, strike(18, 3.5, 3, 1.8), burn(4)),
-			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.9), inflict(SLOWNESS, 4, 2)),
+			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.5), inflict(SLOWNESS, 4, 2)),
 			skill("shapeshift", "Shapeshift", "변화", DEFENSE, 24, 20, stance(GUARD, 7, 50), cleanse()));
 
 		weapon("megumin_staff", 4, 78, STAFF, "Megumin's Staff", "메구밍의 지팡이",

@@ -26,12 +26,15 @@ import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Actions;
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Movement;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
+import com.minecraftmode.job.skill.SkillContext;
 import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.job.weapon.ProjectileStyle;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
@@ -70,12 +73,14 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -113,6 +118,10 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkBasicShot(context, server, connection);
 			checkGuildAndDrops(context, server, connection);
 			jobScreen(context, server);
+			checkPointBlank(context, server, connection);
+			checkVolleys(context, server, connection);
+			checkProjectileImmunities(context, server, connection);
+			checkLockedAim(context, server, connection);
 			castEverySkill(context, server, connection);
 			WorldClose.prepare(context, server);
 		}
@@ -484,6 +493,250 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(health < 400.0F, "the staff's magic bolt did not hit the target");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] staff basic shot hit a target 6 blocks away");
+	}
+
+	/**
+	 * Point-blank hits: a magic bolt fired from inside a monster pressed against the caster, a lightning aimed at a monster right
+	 * in front (used to land on the ground behind it), and a Getsuga Tensho over a spider (the wave is as wide as its slash).
+	 */
+	private static void checkPointBlank(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		LivingEntity[] pressed = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("apprentice_staff"))));
+			pressed[0] = spawnTarget(player.level(), 0.5, -60, 0.35);
+			require(pressed[0].getBoundingBox().contains(player.getEyePosition()), "the pressed husk should hold the caster's eye");
+			BasicAttacks.shoot(player, player.getMainHandItem(), JobWeapons.def(player.getMainHandItem()));
+		});
+		context.waitTicks(5);
+		float bolt = server.computeOnServer(s -> pressed[0].getHealth());
+		require(bolt < 400.0F, "a magic bolt fired from inside a pressed monster went through it");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+
+		LivingEntity[] front = new LivingEntity[1];
+		boolean aimed = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.MAGE, 4).withProgress(100, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("ice_lightning_wand"))));
+			JobStats.refresh(player);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			front[0] = spawnTarget(player.level(), 0.5, -60, -1.0);
+			return SkillContext.aimed(player, 14.0, e -> e == front[0]) == front[0];
+		});
+		require(aimed, "the husk right in front is not the aimed target");
+		context.waitTicks(2);
+		SkillCaster.Result cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 1);
+		});
+		require(cast == SkillCaster.Result.OK, "Thunder Bolt could not be cast: " + cast);
+		context.waitTicks(3);
+		float struck = server.computeOnServer(s -> front[0].getHealth());
+		require(struck < 400.0F, "Thunder Bolt aimed at a husk right in front landed elsewhere");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+
+		LivingEntity[] spider = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.SHINIGAMI, 4).withProgress(100, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("true_zangetsu"))));
+			JobStats.refresh(player);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			var mob = EntityTypes.SPIDER.create(player.level(), EntitySpawnReason.COMMAND);
+			require(mob != null, "could not create a spider");
+			mob.snapTo(0.5, -60, -3.5, 0.0F, 0.0F);
+			mob.setNoAi(true);
+			mob.addTag(TARGET);
+			player.level().addFreshEntity(mob);
+			spider[0] = mob;
+		});
+		context.waitTicks(2);
+		cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 0);
+		});
+		require(cast == SkillCaster.Result.OK, "Getsuga Tensho could not be cast: " + cast);
+		context.waitTicks(8);
+		boolean cut = server.computeOnServer(s -> !spider[0].isAlive() || spider[0].getHealth() < spider[0].getMaxHealth());
+		require(cut, "Getsuga Tensho passed over a spider in its slash");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		MinecraftMode.LOGGER.info("[job] point blank: bolt from inside a husk, lightning on a husk in front and Getsuga over a spider all hit");
+	}
+
+	/**
+	 * Rain and arrows: Unlimited Blade Works under a roof five blocks up drops its blades on the one husk in its circle (they used
+	 * to scatter over the circle and stop at the roof), class arrows land through the damage cooldown (a volley's second arrow
+	 * used to bounce off), and a bow shot from inside a pressed husk hits it.
+	 */
+	private static void checkVolleys(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("fill 14 -55 14 26 -55 26 minecraft:stone");
+		LivingEntity[] roofed = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.ARCHER, 4).withProgress(100, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("emiya_black_bow"))));
+			JobStats.refresh(player);
+			player.snapTo(20.5, -60, 24.5, 180.0F, 0.0F);
+			player.connection.teleport(20.5, -60, 24.5, 180.0F, 0.0F);
+			roofed[0] = spawnTarget(player.level(), 20.5, -60, 18.5);
+		});
+		context.waitTicks(2);
+		SkillCaster.Result cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 2);
+		});
+		require(cast == SkillCaster.Result.OK, "Unlimited Blade Works could not be cast: " + cast);
+		context.waitTicks(50);
+		float[] blades = server.computeOnServer(s -> new float[] {400.0F - roofed[0].getHealth(), JobWeapons.def("emiya_black_bow").power() * 0.35F});
+		require(blades[0] >= 4 * blades[1], "Unlimited Blade Works under a roof took " + blades[0] + " health, less than 4 blades of " + blades[1]);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		server.runCommand("fill 14 -55 14 26 -55 26 minecraft:air");
+
+		float[] drops = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			WeaponDef def = JobWeapons.def("hunter_shortbow");
+			ItemStack bow = new ItemStack(JobWeapons.item(def));
+			player.setItemInHand(InteractionHand.MAIN_HAND, bow);
+			JobStats.refresh(player);
+			LivingEntity husk = spawnTarget(level, 0.5, -60, -3.5);
+			SkillContext ctx = new SkillContext(player, def, def.skills().get(0), bow, EngraveTotals.EMPTY, 0.0);
+			float[] lost = new float[4];
+			for (int i = 0; i < lost.length; i++) {
+				Arrow arrow = new Arrow(level, player, new ItemStack(Items.ARROW), bow);
+				if (i < 2) {
+					CombatHooks.trackSkillArrow(arrow, ctx, 1.0);
+				} else {
+					CombatHooks.trackArrow(arrow, 6.0F);
+				}
+				float before = husk.getHealth();
+				husk.hurtServer(level, player.damageSources().arrow(arrow, player), 1.0F);
+				lost[i] = before - husk.getHealth();
+			}
+			husk.discard();
+			return lost;
+		});
+		for (int i = 0; i < drops.length; i++) {
+			require(drops[i] > 0.0F, (i < 2 ? "skill" : "bow") + " arrow " + (i + 1) + " in the same tick did no damage (damage cooldown)");
+		}
+
+		LivingEntity[] pressed = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			pressed[0] = spawnTarget(player.level(), 0.5, -60, 0.35);
+			BasicAttacks.loose(player, player.getMainHandItem(), JobWeapons.def(player.getMainHandItem()), 1.0F);
+		});
+		context.waitTicks(5);
+		float arrowed = server.computeOnServer(s -> pressed[0].getHealth());
+		require(arrowed < 400.0F, "a bow shot from inside a pressed husk went through it");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		MinecraftMode.LOGGER.info("[job] volleys: {} health from blades under a roof, arrows through the damage cooldown {}, bow shot from inside a husk hit",
+			blades[0], java.util.Arrays.toString(drops));
+	}
+
+	/**
+	 * Aim that holds: a cannonball barrage reaches a husk 20 blocks away (the balls used to drop short), and a strike after the
+	 * caster turned away still lands on the husk aimed at when the skill started (it used to follow the crosshair).
+	 */
+	private static void checkLockedAim(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		SkillContext[] ctx = new SkillContext[1];
+		LivingEntity[] far = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.PIRATE, 4).withProgress(100, 0));
+			WeaponDef def = JobWeapons.def("el_draque");
+			ItemStack pistol = new ItemStack(JobWeapons.item(def));
+			player.setItemInHand(InteractionHand.MAIN_HAND, pistol);
+			JobStats.refresh(player);
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			far[0] = spawnTarget(player.level(), 0.5, -60, -19.5);
+			ctx[0] = new SkillContext(player, def, def.skills().get(0), pistol, EngraveTotals.EMPTY, 0.0);
+			Actions.barrage(ProjectileStyle.CANNONBALL, 6, 1.0).run(ctx[0]);
+		});
+		context.waitTicks(30);
+		float[] balls = server.computeOnServer(s -> new float[] {400.0F - far[0].getHealth(), (float)ctx[0].damageFor(1.0)});
+		require(balls[0] >= 3 * balls[1] * 0.5F, "a cannonball barrage at a husk 20 blocks away took " + balls[0] + ", under 3 balls of " + balls[1]);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+
+		LivingEntity[] aimed = new LivingEntity[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.snapTo(0.5, -60, 0.5, 180.0F, 10.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 10.0F);
+			aimed[0] = spawnTarget(player.level(), 0.5, -60, -7.5);
+			WeaponDef def = JobWeapons.def("el_draque");
+			ctx[0] = new SkillContext(player, def, def.skills().get(0), player.getMainHandItem(), EngraveTotals.EMPTY, 0.0);
+			// turn around before the bombardment comes down
+			player.setYRot(0.0F);
+			Actions.strike(22, 2, 1, 1.0).run(ctx[0]);
+		});
+		context.waitTicks(15);
+		float struck = server.computeOnServer(s -> aimed[0].getHealth());
+		require(struck < 400.0F, "a strike after turning away did not land on the husk aimed at when the skill started");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		MinecraftMode.LOGGER.info("[job] locked aim: barrage cannonballs took {} at 20 blocks, a strike after turning away hit the aimed husk", balls[0]);
+	}
+
+	/**
+	 * Mobs vanilla makes dodge or shrug off projectiles take class shots: an enderman (teleports away), a breeze (reflects) and
+	 * the magic bolt; the armored Wither (below half health) and a closed shulker and a class arrow.
+	 */
+	private static void checkProjectileImmunities(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		require(shotLands(context, server, connection, EntityTypes.ENDERMAN, "apprentice_staff", 0.0F, 0.0F), "a magic bolt did not hit an enderman");
+		require(shotLands(context, server, connection, EntityTypes.BREEZE, "apprentice_staff", 0.0F, 0.0F), "a magic bolt did not hit a breeze");
+		require(shotLands(context, server, connection, EntityTypes.ENDERMAN, "hunter_shortbow", 0.0F, 0.0F), "a class arrow did not hit an enderman");
+		require(shotLands(context, server, connection, EntityTypes.WITHER, "hunter_shortbow", 0.0F, 140.0F), "a class arrow did not hit the armored Wither");
+		require(shotLands(context, server, connection, EntityTypes.SHULKER, "hunter_shortbow", 14.0F, 0.0F), "a class arrow did not hit a closed shulker");
+		MinecraftMode.LOGGER.info("[job] class shots hit an enderman, a breeze, the armored Wither and a closed shulker");
+	}
+
+	/** Fires the weapon's basic shot at a {@code type} 4 blocks ahead (health set when above 0); true when it lost health in place. */
+	private static boolean shotLands(
+		final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final EntityType<? extends Mob> type,
+		final String weapon, final float pitch, final float health
+	) {
+		Mob[] target = new Mob[1];
+		float[] start = new float[1];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, pitch);
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def(weapon))));
+			Mob mob = type.create(player.level(), EntitySpawnReason.COMMAND);
+			require(mob != null, "could not create " + type);
+			mob.snapTo(0.5, -60, -3.5, 0.0F, 0.0F);
+			mob.setNoAi(true);
+			mob.setPersistenceRequired();
+			mob.addTag(TARGET);
+			player.level().addFreshEntity(mob);
+			if (health > 0.0F) {
+				mob.setHealth(health);
+			}
+			target[0] = mob;
+			start[0] = mob.getHealth();
+		});
+		context.waitTicks(2);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setYRot(180.0F);
+			player.setXRot(pitch);
+			ItemStack stack = player.getMainHandItem();
+			WeaponDef def = JobWeapons.def(stack);
+			if (def.archetype().shot() == ProjectileStyle.ARROW) {
+				BasicAttacks.loose(player, stack, def, 1.0F);
+			} else {
+				BasicAttacks.shoot(player, stack, def);
+			}
+		});
+		context.waitTicks(6);
+		boolean landed = server.computeOnServer(s -> target[0].getHealth() < start[0] && target[0].distanceToSqr(0.5, -60, -3.5) < 1.0);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		context.waitTicks(2);
+		return landed;
 	}
 
 	/** Guild lines that sell to the visitor (buyback lines, which take class gear, left out). */

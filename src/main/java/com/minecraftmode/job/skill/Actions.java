@@ -28,6 +28,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -62,6 +63,11 @@ public final class Actions {
 	public static final String SUMMON_TAG = "minecraft_mode_summon";
 	/** Tag prefix naming the player who summoned a helper (golems have no owner of their own). */
 	private static final String SUMMONER_TAG = "minecraft_mode_summoner:";
+	/** Falling projectiles of {@link #rain}: speed and how high above the ground they start. */
+	private static final float RAIN_SPEED = 1.8F;
+	private static final double RAIN_HEIGHT = 14.0;
+	/** Speed of the projectiles {@link #barrage} launches from its portals. */
+	private static final float BARRAGE_SPEED = 2.6F;
 
 	/** The player a skill summon fights for, or null for anything else. */
 	public static @Nullable UUID summoner(final @Nullable Entity entity) {
@@ -129,8 +135,8 @@ public final class Actions {
 	private static final String EXECUTE = key("execute", "Strike a target within %1$s blocks: %2$s%% damage (x%4$s below %3$s%% health)", "%1$s블록 내 대상 일격: 피해 %2$s%% (체력 %3$s%% 미만이면 x%4$s)");
 	private static final String SUMMON = key("summon", "Summon %2$s x%1$s for %3$ss", "%3$s초간 %2$s x%1$s 소환");
 	private static final String CLEANSE = key("cleanse", "Remove harmful effects and fire", "해로운 효과와 불 제거");
-	private static final String RAIN = key("rain", "Rain %3$s x%4$s on the target area (%2$s-block radius, up to %1$s blocks away): %5$s%% damage each",
-		"최대 %1$s블록 앞 지점에 %3$s x%4$s 낙하 (반경 %2$s블록): 각 피해 %5$s%%");
+	private static final String RAIN = key("rain", "Rain %3$s x%4$s on the enemies in the target area (%2$s-block radius, up to %1$s blocks away): %5$s%% damage each",
+		"최대 %1$s블록 앞 지점(반경 %2$s블록)의 적들에게 %3$s x%4$s 낙하: 각 피해 %5$s%%");
 	private static final String BARRAGE = key("barrage", "Launch %1$s x%2$s from portals behind you: %3$s%% damage each", "등 뒤의 문에서 %1$s x%2$s 발사: 각 피해 %3$s%%");
 	private static final String GRAPPLE = key("grapple", "Grapple to a block up to %s blocks away", "최대 %s블록 떨어진 블록으로 갈고리 이동");
 	private static final String MANA = key("mana", "Restore %s MP", "MP %s 회복");
@@ -578,6 +584,7 @@ public final class Actions {
 			default -> style.display();
 		};
 		SkillProjectile projectile = SkillProjectile.forSkill(ctx, display, style.trail(), style.gravity(), mult)
+			.sweep(style.hitRadius())
 			.pierce(pierce)
 			.explode(explode)
 			.homing(homing)
@@ -605,16 +612,45 @@ public final class Actions {
 					if (!ctx.valid()) {
 						return;
 					}
-					double a = ctx.caster.getRandom().nextDouble() * Math.PI * 2;
-					double d = Math.sqrt(ctx.caster.getRandom().nextDouble()) * r;
-					Vec3 ground = center.add(Math.cos(a) * d, 0, Math.sin(a) * d);
-					Vec3 from = ground.add(0.6, 14.0, 0.6);
+					Vec3 ground = rainTarget(ctx, center, r);
+					Vec3 from = sky(ctx, ground);
 					Vec3 dir = ground.subtract(from).normalize();
-					spawn(ctx, style, from, dir, 1.8F, mult, 0, explode, false, null, style == ProjectileStyle.BLADE);
+					spawn(ctx, style, from, dir, RAIN_SPEED, mult, 0, explode, false, null, style == ProjectileStyle.BLADE);
 				});
 			}
 			sound(ctx, SoundEvents.EVOKER_PREPARE_ATTACK, 0.8F, 1.2F);
 		}, text);
+	}
+
+	/**
+	 * Where one falling projectile lands: on a random enemy inside the circle (ahead of where it walks), so a lone target takes the
+	 * whole rain and a crowd shares it; on a random spot when the circle is empty. Scattering them at random used to leave a
+	 * single monster with about one hit in sixty.
+	 */
+	private static Vec3 rainTarget(final SkillContext ctx, final Vec3 center, final double r) {
+		RandomSource random = ctx.caster.getRandom();
+		List<LivingEntity> inside = ctx.enemiesNear(center, r);
+		if (inside.isEmpty()) {
+			double a = random.nextDouble() * Math.PI * 2;
+			double d = Math.sqrt(random.nextDouble()) * r;
+			return center.add(Math.cos(a) * d, 0, Math.sin(a) * d);
+		}
+		LivingEntity target = inside.get(random.nextInt(inside.size()));
+		Vec3 feet = target.position();
+		Vec3 step = new Vec3(target.getX() - target.xo, 0.0, target.getZ() - target.zo);
+		if (step.lengthSqr() > 0.36) {
+			step = step.normalize().scale(0.6);
+		}
+		double fall = sky(ctx, feet).y - feet.y;
+		return feet.add(step.scale(fall / RAIN_SPEED));
+	}
+
+	/** Where a falling projectile starts: {@link #RAIN_HEIGHT} above {@code ground}, or just under the roof (caves, dungeon halls). */
+	private static Vec3 sky(final SkillContext ctx, final Vec3 ground) {
+		BlockHitResult roof = ctx.level.clip(new ClipContext(ground.add(0, 0.1, 0), ground.add(0, RAIN_HEIGHT, 0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, ctx.caster));
+		double h = roof.getType() == HitResult.Type.MISS ? RAIN_HEIGHT : Math.max(0.5, roof.getLocation().y - 0.4 - ground.y);
+		double tilt = 0.6 * h / RAIN_HEIGHT;
+		return ground.add(tilt, h, tilt);
 	}
 
 	/** Projectiles launched from glowing portals behind the caster toward the crosshair. */
@@ -629,16 +665,29 @@ public final class Actions {
 					Vec3 back = ctx.flatLook().scale(-1.2);
 					Vec3 side = new Vec3(-back.z, 0, back.x).normalize();
 					double lateral = (p.getRandom().nextDouble() - 0.5) * 5.0;
-					Vec3 from = p.getEyePosition().add(back).add(side.scale(lateral)).add(0, 0.5 + p.getRandom().nextDouble() * 1.8, 0);
-					Vec3 target = ctx.lookPoint(32.0);
-					Vec3 dir = target.subtract(from).normalize();
+					Vec3 from = SkillContext.openPoint(p, p.getEyePosition().add(back).add(side.scale(lateral)).add(0, 0.5 + p.getRandom().nextDouble() * 1.8, 0));
+					Vec3 dir = lob(from, ctx.aimPoint(32.0), BARRAGE_SPEED, style.gravity());
 					ctx.fx.still(ctx.level, Fx.Kind.RUNE, from);
 					ctx.fx.burst(ctx.level, Fx.Kind.SPARK, from, 4, 0.2, 0.02);
-					spawn(ctx, style, from, dir, 2.6F, mult, 0, 0.0F, false, null, style == ProjectileStyle.BLADE);
+					spawn(ctx, style, from, dir, BARRAGE_SPEED, mult, 0, 0.0F, false, null, style == ProjectileStyle.BLADE);
 				});
 			}
 			sound(ctx, SoundEvents.ILLUSIONER_CAST_SPELL, 0.8F, 1.4F);
 		}, Component.translatable(BARRAGE, style(style), count, pct(mult)));
+	}
+
+	/**
+	 * The direction that brings a projectile with {@code gravity} from {@code from} onto {@code to}: aimed above it by what it drops on
+	 * the way (air drag 0.99 per tick). Cannonballs fired straight at a target 20 blocks off used to land 1.6 blocks short.
+	 */
+	private static Vec3 lob(final Vec3 from, final Vec3 to, final float speed, final float gravity) {
+		Vec3 line = to.subtract(from);
+		if (gravity <= 0.0F) {
+			return line.normalize();
+		}
+		double slowed = 1.0 - line.length() * 0.01 / (speed * 0.99);
+		double ticks = slowed > 0.05 ? Math.log(slowed) / Math.log(0.99) : line.length() / speed * 2.0;
+		return line.add(0.0, gravity * ticks * (ticks + 1.0) / 2.0, 0.0).normalize();
 	}
 
 	// ================================================================== target area

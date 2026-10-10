@@ -5,6 +5,7 @@ import com.minecraftmode.registry.ModItems;
 import java.util.function.Supplier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -86,5 +87,13 @@ public enum ProjectileStyle {
 
 	public SoundEvent sound() {
 		return this.sound;
+	}
+
+	/**
+	 * How far from its path a {@code SkillProjectile} hits: sword waves as far as their slash trail reaches (the largest slash
+	 * particle's half size), everything else vanilla's full margin from the first tick on.
+	 */
+	public double hitRadius() {
+		return this == WAVE ? 0.75 : ProjectileUtil.DEFAULT_ENTITY_HIT_RESULT_MARGIN;
 	}
 }

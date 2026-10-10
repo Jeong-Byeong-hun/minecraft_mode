@@ -154,7 +154,7 @@ public final class HunterContent extends ClassContent {
 			skill("dragon_head", "Dragon Head", "용두", ATTACK, 12, 26, shoot(ProjectileStyle.WAVE, 2.4).pierce(10).explode(2.5F)),
 			skill("dragon_lance", "Dragon Lance", "용두쌍", ATTACK, 14, 26, beam(20, 2.6), stun(1.0)),
 			skill("zoldyck_patience", "Zoldyck Patience", "조르딕가의 인내", DEFENSE, 20, 18, stance(GUARD, 6, 50), buff(RESISTANCE, 6, 1)),
-			skill("dragon_dive", "Dragon Dive", "용성군", ULTIMATE, 60, 50, rain(ProjectileStyle.ORB, 24, 7, 30, 1.0, 1.5F)));
+			skill("dragon_dive", "Dragon Dive", "용성군", ULTIMATE, 60, 50, rain(ProjectileStyle.ORB, 24, 7, 30, 0.35, 1.5F)));
 
 		weapon("silva_orbs", 4, 88, ORB, "Silva's Nen Orbs", "실바의 념구",
 			art(0xE8E8F0, 0x5A5A6A, 0xF5862B), fx(Fx.Kind.ORB, 0xFFB060),

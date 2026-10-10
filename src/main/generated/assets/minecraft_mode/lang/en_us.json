@@ -2866,7 +2866,7 @@
   "skill_action.minecraft_mode.pierce": " (pierces %s)",
   "skill_action.minecraft_mode.pull": "Pull enemies within %s blocks toward you",
   "skill_action.minecraft_mode.push": "Knock back enemies within %s blocks",
-  "skill_action.minecraft_mode.rain": "Rain %3$s x%4$s on the target area (%2$s-block radius, up to %1$s blocks away): %5$s%% damage each",
+  "skill_action.minecraft_mode.rain": "Rain %3$s x%4$s on the enemies in the target area (%2$s-block radius, up to %1$s blocks away): %5$s%% damage each",
   "skill_action.minecraft_mode.refresh": "Reduce this weapon's other cooldowns by %s%%",
   "skill_action.minecraft_mode.repeat": "%1$s (x%2$s)",
   "skill_action.minecraft_mode.shadowstep": "Appear behind a target within %1$s blocks and strike: %2$s%% damage",

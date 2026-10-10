@@ -478,9 +478,10 @@ final class CityChecks {
 			require(level.getEntity(ids[0]) == null, "the city guards should drive off a zombie on the plaza");
 			require(level.getEntity(ids[1]) != null, "NoAI decorations should stay");
 			level.getEntity(ids[1]).discard();
-			int inside = level.getEntitiesOfClass(Mob.class, new AABB(-CityZone.WALL, level.getMinY(), -CityZone.WALL, CityZone.WALL + 1, level.getMaxY(), CityZone.WALL + 1),
-				m -> m.getType().getCategory() == MobCategory.MONSTER && CityZone.inside(m.blockPosition())).size();
-			require(inside == 0, inside + " hostile mobs are still inside the walls");
+			List<Mob> inside = level.getEntitiesOfClass(Mob.class, new AABB(-CityZone.WALL, level.getMinY(), -CityZone.WALL, CityZone.WALL + 1, level.getMaxY(), CityZone.WALL + 1),
+				m -> m.getType().getCategory() == MobCategory.MONSTER && CityZone.inside(m.blockPosition()));
+			require(inside.isEmpty(), inside.size() + " hostile mobs are still inside the walls: "
+				+ inside.stream().map(m -> m.getType().toShortString() + "@" + m.blockPosition().toShortString() + (m.isNoAi() ? " (NoAI)" : "") + " " + m.entityTags()).toList());
 			return "0 spawned inside (" + FRESH_OUTSIDE.get() + " outside), intruder driven off, none left inside";
 		});
 		server.runCommand("time set noon");

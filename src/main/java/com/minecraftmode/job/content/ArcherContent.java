@@ -42,7 +42,7 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("elven_longbow", 1, 20, LONGBOW, "Elven Longbow", "엘프의 장궁",
 			art(0xD8C89A, 0x3E6B3A, 0x7FD6A0), fx(Fx.Kind.FEATHER, 0xB8F0C0),
-			skill("arrow_volley", "Arrow Volley", "화살 세례", ATTACK, 12, 14, rain(ProjectileStyle.ARROW, 18, 3.5, 8, 0.7)),
+			skill("arrow_volley", "Arrow Volley", "화살 세례", ATTACK, 12, 14, rain(ProjectileStyle.ARROW, 18, 3.5, 8, 0.4)),
 			skill("greenleaf_shot", "Greenleaf Shot", "그린리프 샷", ATTACK, 6, 10, shoot(ProjectileStyle.ARROW, 0.9).count(3).spread(10).homing()),
 			skill("leaf_on_the_wind", "Leaf on the Wind", "바람 위의 나뭇잎", MOVEMENT, 11, 10, blink(8), empower(2, 30, 6)));
 
@@ -96,7 +96,7 @@ public final class ArcherContent extends ClassContent {
 			skill("caladbolg_ii", "Caladbolg II", "칼라드볼그 II", ATTACK, 15, 24, shoot(ProjectileStyle.ARROW, 2.6).speed(4.5F).explode(3.5F)),
 			skill("rho_aias", "Rho Aias", "로 아이아스", DEFENSE, 26, 24, stance(GUARD, 6, 60), allyBuff(6, RESISTANCE, 6, 1)),
 			skill("unlimited_blade_works", "Unlimited Blade Works", "무한의 검제", ATTACK, 24, 28,
-				rain(ProjectileStyle.BLADE, 18, 5, 16, 0.7), inflict(BLEEDING, 4, 0)));
+				rain(ProjectileStyle.BLADE, 18, 5, 16, 0.35), inflict(BLEEDING, 4, 0)));
 
 		weapon("arash_greatbow", 3, 53, GREATBOW, "Arash's Greatbow", "아라쉬의 대궁",
 			art(0xB8864B, 0x4A2C14, 0x6EC6FF), fx(Fx.Kind.BOLT, 0xBDE9FF),
@@ -106,7 +106,7 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("tauropolos", 3, 57, SHORTBOW, "Tauropolos", "타우로폴로스",
 			art(0x556B2F, 0x2F1E0E, 0xFFD54A), fx(Fx.Kind.FEATHER, 0xFFE27A),
-			skill("phoebus_catastrophe", "Phoebus Catastrophe", "포이보스 카타스트로페", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.6)),
+			skill("phoebus_catastrophe", "Phoebus Catastrophe", "포이보스 카타스트로페", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
 			skill("calydonian_hunt", "Calydonian Hunt", "칼리돈의 사냥", ATTACK, 10, 20,
 				shoot(ProjectileStyle.ARROW, 1.4).count(3).spread(12).homing(), inflict(VULNERABLE, 6, 0)),
 			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 월주", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
@@ -135,7 +135,7 @@ public final class ArcherContent extends ClassContent {
 		weapon("kanshou_bakuya_alter", 4, 73, TWIN_BLADES, "Kanshou & Bakuya (Alter)", "간장·막야 (얼터)",
 			art(0x3A3A42, 0x151515, 0xE03030), fx(Fx.Kind.SPARK, 0xFF5A5A),
 			skill("unlimited_lost_works", "Unlimited Lost Works", "언리미티드 로스트 웍스", ULTIMATE, 48, 38,
-				shoot(ProjectileStyle.BULLET, 0.9).count(8).spread(40).interval(2), delay(0.8, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.9))),
+				shoot(ProjectileStyle.BULLET, 0.9).count(8).spread(40).interval(2), delay(0.8, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.45))),
 			skill("gun_kata", "Gun Kata", "건 카타", ATTACK, 8, 22, slash(4, 360, 1.4), shoot(ProjectileStyle.BULLET, 1.2).count(5).spread(60)),
 			skill("counter_guardian", "Counter Guardian", "카운터 가디언", DEFENSE, 22, 22, stance(COUNTER, 6, 50), shield(12, 8)),
 			skill("afterimage_shot", "Afterimage Shot", "잔상 사격", MOVEMENT, 10, 16, blink(10), delay(0.2, shoot(ProjectileStyle.BULLET, 1.5).count(3).spread(20))));
@@ -172,7 +172,7 @@ public final class ArcherContent extends ClassContent {
 		weapon("gate_of_babylon", 4, 92, CROSSBOW, "Gate of Babylon", "왕의 재보",
 			art(0xFFD700, 0x5A0A0A, 0x40E0D0), fx(Fx.Kind.RUNE, 0xFFE066),
 			skill("full_open", "Gate of Babylon: Full Open", "왕의 재보: 전면 개방", ULTIMATE, 50, 38,
-				barrage(ProjectileStyle.BLADE, 24, 0.4), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.8))),
+				barrage(ProjectileStyle.BLADE, 24, 0.4), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.15))),
 			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.6)),
 			skill("enkidu", "Enkidu: Chains of Heaven", "천의 사슬 (엔키두)", UTILITY, 18, 26, pull(10, 1.8), debuff(10, STUN, 1.5, 0), debuff(10, VULNERABLE, 6, 1)),
 			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, shield(20, 10), stance(GUARD, 5, 50)));

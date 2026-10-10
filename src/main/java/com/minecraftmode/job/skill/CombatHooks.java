@@ -87,6 +87,19 @@ public final class CombatHooks {
 		SKILL_ARROWS.put(arrow, new SkillArrow(ctx, multiplier));
 	}
 
+	/** A vanilla arrow loosed by a class bow or a skill (see {@code AbstractArrowMixin}). */
+	public static boolean classArrow(final Entity arrow) {
+		return ARROWS.containsKey(arrow) || SKILL_ARROWS.containsKey(arrow);
+	}
+
+	/**
+	 * A projectile of a class weapon or skill: it lands on what vanilla makes dodge or shrug off projectiles (endermen teleport
+	 * away, the armored Wither, a closed shulker and a perched dragon ignore arrows, breezes reflect them) - see the mixins of those mobs.
+	 */
+	public static boolean classProjectile(final @Nullable Entity projectile) {
+		return projectile instanceof SkillProjectile || projectile != null && classArrow(projectile);
+	}
+
 	/** Deals {@code amount} as {@code kind}; resets the target's damage cooldown so multi-hits land. */
 	public static boolean deal(final ServerPlayer attacker, final LivingEntity target, final float amount, final DamageSource source, final DamageKind kind) {
 		DamageKind previous = current;
@@ -139,22 +152,26 @@ public final class CombatHooks {
 		DamageKind kind = current;
 		float result = amount;
 		Entity direct = source.getDirectEntity();
+		Float arrowDamage = direct == null || kind != null ? null : ARROWS.get(direct);
+		SkillArrow skillArrow = direct == null || kind != null ? null : SKILL_ARROWS.get(direct);
+		// class arrows land every time like the other shots and skills (CombatHooks.deal); vanilla's damage cooldown would bounce
+		// every arrow of a volley after the first one off the same target, and any arrow right after someone else's hit
+		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
+			victim.damageCooldownTime = 0;
+		}
 		// Vanilla hits (melee, arrows) that vanilla is about to discard - damage cooldown, invulnerability - must not trigger crit
 		// refunds, consume empower/stealth, drain mana shields or reflect; skills reset the cooldown themselves before dealing.
 		if (kind == null && (victim.isInvulnerableTo(level, source)
 			|| victim.damageCooldownTime > 10 && !source.is(DamageTypeTags.BYPASSES_COOLDOWN) && amount <= ((LivingEntityAccessor)victim).minecraftMode$lastHurt())) {
 			return amount;
 		}
-		Float arrowDamage = direct == null ? null : ARROWS.get(direct);
-		if (arrowDamage != null && kind == null) {
+		if (arrowDamage != null) {
 			result = arrowDamage;
 			kind = DamageKind.SHOT;
 		}
-		SkillArrow skillArrow = direct == null ? null : SKILL_ARROWS.get(direct);
-		if (skillArrow != null && kind == null) {
+		if (skillArrow != null) {
 			result = skillArrow.ctx.damageFor(skillArrow.multiplier);
 			kind = DamageKind.SKILL;
-			victim.damageCooldownTime = 0;
 		}
 		if (source.getEntity() instanceof ServerPlayer attacker && attacker != victim) {
 			result = outgoing(attacker, victim, source, result, kind, now);

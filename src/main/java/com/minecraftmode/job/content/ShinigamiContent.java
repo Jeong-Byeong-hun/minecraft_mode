@@ -143,7 +143,7 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("daiguren_hyorinmaru", 4, 78, KATANA, "Daiguren Hyorinmaru", "대홍련 빙륜환",
 			art(0xD0F0FF, 0x1A3A6A, 0x8AE0FF), fx(Fx.Kind.SHARD, 0xBFEFFF),
 			skill("ryusenka", "Ryusenka", "용산가", ATTACK, 9, 22, shadowstep(10, 2.4), inflict(SLOWNESS, 5, 3)),
-			skill("sennen_hyoro", "Sennen Hyoro", "천년빙뢰", ATTACK, 16, 28, rain(ProjectileStyle.ICICLE, 16, 4, 14, 0.9), inflict(SLOWNESS, 5, 2)),
+			skill("sennen_hyoro", "Sennen Hyoro", "천년빙뢰", ATTACK, 16, 28, rain(ProjectileStyle.ICICLE, 16, 4, 14, 0.45), inflict(SLOWNESS, 5, 2)),
 			skill("ice_wings", "Ice Wings", "얼음 날개", MOVEMENT, 12, 18, leap(8, 3, 1.4), buff(SLOW_FALLING, 6, 0)),
 			skill("hyoten_hyakkaso", "Hyoten Hyakkaso", "빙천백화장", ULTIMATE, 55, 45, zone(7, 6, 1.2).at(14).effect(SLOWNESS, 4), stun(2.0)));
 

@@ -41,7 +41,7 @@ import net.minecraft.world.phys.Vec3;
  */
 public class MythrilGolem extends Monster implements EliteMob {
 	private static final int MAX_SPAWN_Y = 0;
-	private static final double SPAWN_EXCLUSION_RADIUS = 64.0;
+	public static final double SPAWN_EXCLUSION_RADIUS = 64.0;
 	private static final int SLAM_COOLDOWN_TICKS = 160;
 	private static final double SLAM_RADIUS = 4.5;
 	private static final float SLAM_DAMAGE = 8.0F;
@@ -71,16 +71,17 @@ public class MythrilGolem extends Monster implements EliteMob {
 	public static boolean checkMythrilGolemSpawnRules(
 		final EntityType<MythrilGolem> type, final ServerLevelAccessor level, final EntitySpawnReason spawnReason, final BlockPos pos, final RandomSource random
 	) {
-		if (spawnReason == EntitySpawnReason.NATURAL) {
-			if (pos.getY() >= MAX_SPAWN_Y) {
-				return false;
-			}
-			if (!level.getEntitiesOfClass(MythrilGolem.class, new AABB(pos).inflate(SPAWN_EXCLUSION_RADIUS)).isEmpty()) {
-				return false;
-			}
+		if (spawnReason == EntitySpawnReason.NATURAL
+			&& (!fitsHeight(pos) || !level.getEntitiesOfClass(MythrilGolem.class, new AABB(pos).inflate(SPAWN_EXCLUSION_RADIUS)).isEmpty())) {
+			return false;
 		}
 
 		return Monster.checkMonsterSpawnRules(type, level, spawnReason, pos, random);
+	}
+
+	/** Natural spawns stay below Y=0. Also read by {@code SpawnCandidates}. */
+	public static boolean fitsHeight(final BlockPos pos) {
+		return pos.getY() < MAX_SPAWN_Y;
 	}
 
 	@Override

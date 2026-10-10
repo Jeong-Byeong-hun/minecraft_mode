@@ -83,7 +83,7 @@ import org.jspecify.annotations.Nullable;
 public class NamedMob extends CreatureMob {
 	private static final int GLOBAL_COOLDOWN = 30;
 	/** Only one named monster within this many blocks. */
-	private static final double SPAWN_SPACING = 96.0;
+	public static final double SPAWN_SPACING = 96.0;
 	/** Spacing between named monsters inside their own lair. */
 	private static final double LAIR_SPACING = 20.0;
 
@@ -151,20 +151,22 @@ public class NamedMob extends CreatureMob {
 		if (def == null) {
 			return false;
 		}
-		if (reason == EntitySpawnReason.NATURAL || reason == EntitySpawnReason.CHUNK_GENERATION) {
-			// in its own lair a named monster ignores its usual height band and keeps much less distance
-			LairDef lair = NamedLairs.at(level.getLevel(), pos);
-			boolean home = lair != null && lair.id().equals(def.id());
-			if (!home && !def.habitat().allows(pos.getY())) {
-				return false;
-			}
-			if (!level.getEntitiesOfClass(NamedMob.class, new AABB(pos).inflate(home ? LAIR_SPACING : SPAWN_SPACING)).isEmpty()) {
-				return false;
-			}
+		if ((reason == EntitySpawnReason.NATURAL || reason == EntitySpawnReason.CHUNK_GENERATION) && !fits(def, level, pos)) {
+			return false;
 		}
 		return def.daylight()
 			? Monster.checkAnyLightMonsterSpawnRules(type, level, reason, pos, random)
 			: Monster.checkMonsterSpawnRules(type, level, reason, pos, random);
+	}
+
+	/** In its own lair a named monster ignores its usual height band and keeps much less distance. */
+	private static boolean fits(final NamedDef def, final ServerLevelAccessor level, final BlockPos pos) {
+		LairDef lair = NamedLairs.at(level.getLevel(), pos);
+		boolean home = lair != null && lair.id().equals(def.id());
+		if (!home && !def.habitat().allows(pos.getY())) {
+			return false;
+		}
+		return level.getEntitiesOfClass(NamedMob.class, new AABB(pos).inflate(home ? LAIR_SPACING : SPAWN_SPACING)).isEmpty();
 	}
 
 	@Override

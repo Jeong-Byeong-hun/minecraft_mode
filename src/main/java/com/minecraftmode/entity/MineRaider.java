@@ -58,11 +58,16 @@ public class MineRaider extends Monster {
 	public static boolean checkMineRaiderSpawnRules(
 		final EntityType<MineRaider> type, final ServerLevelAccessor level, final EntitySpawnReason spawnReason, final BlockPos pos, final RandomSource random
 	) {
-		if (spawnReason == EntitySpawnReason.NATURAL && pos.getY() >= MAX_SPAWN_Y) {
+		if (spawnReason == EntitySpawnReason.NATURAL && !fits(pos)) {
 			return false;
 		}
 
 		return Monster.checkMonsterSpawnRules(type, level, spawnReason, pos, random);
+	}
+
+	/** Natural spawns stay below Y=40. Also read by {@code SpawnCandidates}. */
+	public static boolean fits(final BlockPos pos) {
+		return pos.getY() < MAX_SPAWN_Y;
 	}
 
 	@Override

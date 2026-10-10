@@ -1,6 +1,7 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.entity.SpawnCandidates;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
@@ -215,6 +216,16 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 				!SpawnPlacements.checkSpawnRules(ModEntities.MYTHRIL_GOLEM, level, EntitySpawnReason.NATURAL, high, level.getRandom()),
 				"mythril_golem may spawn at Y=100"
 			);
+
+			// the spawn group's type is picked only from mobs that fit the spot, so cave-only monsters no longer waste surface picks
+			var highList = SpawnCandidates.filter(level.environmentAttributes().getValue(EnvironmentAttributes.NATURAL_MOB_SPAWNS, high)
+				.getMobsToSpawn(MobCategory.MONSTER), level, high).unwrap();
+			require(highList.stream().anyMatch(entry -> entry.value().type() == EntityTypes.ZOMBIE), "zombies were filtered out at Y=100");
+			require(highList.stream().noneMatch(entry -> entry.value().type() == ModEntities.MINE_RAIDER || entry.value().type() == ModEntities.MYTHRIL_GOLEM),
+				"cave-only monsters are still spawn candidates at Y=100");
+			require(SpawnCandidates.filter(level.environmentAttributes().getValue(EnvironmentAttributes.NATURAL_MOB_SPAWNS, caves.getFirst())
+					.getMobsToSpawn(MobCategory.MONSTER), level, caves.getFirst()).unwrap().stream().anyMatch(entry -> entry.value().type() == ModEntities.MINE_RAIDER),
+				"mine_raider was filtered out on a cave floor at " + caves.getFirst());
 			return caves.size() + " cave floors: raider ok " + raiderOk + ", zombie ok " + zombieOk + ", golem ok " + golemDeepOk
 				+ " (all below Y=0); dark box at Y=100: zombie ok, raider and golem rejected";
 		});

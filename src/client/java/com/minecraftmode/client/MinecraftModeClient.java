@@ -9,6 +9,7 @@ import com.minecraftmode.client.dungeon.DungeonClient;
 import com.minecraftmode.client.endgame.EndgameClient;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
+import com.minecraftmode.client.style.StylistScreen;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TrashButton;
 import com.minecraftmode.client.entity.CityNpcRenderer;
@@ -16,6 +17,7 @@ import com.minecraftmode.client.entity.ClassTrainerRenderer;
 import com.minecraftmode.client.entity.MineRaiderRenderer;
 import com.minecraftmode.client.entity.MythrilGolemRenderer;
 import com.minecraftmode.client.guide.GuideScreen;
+import com.minecraftmode.client.guide.NoticeScreen;
 import com.minecraftmode.client.job.EngravingScreen;
 import com.minecraftmode.client.job.JobHud;
 import com.minecraftmode.client.map.MapClient;
@@ -30,6 +32,7 @@ import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.network.OpenGuidePayload;
+import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
@@ -71,6 +74,9 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenGuidePayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new GuideScreen(payload.entityId()))
 		));
+		ClientPlayNetworking.registerGlobalReceiver(OpenNoticePayload.TYPE, (payload, context) -> context.client().execute(
+			() -> context.client().gui.setScreen(new NoticeScreen(payload))
+		));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTrainerPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TrainerScreen(payload.entityId(), payload.job()))
 		));
@@ -85,6 +91,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.ENGRAVING, EngravingScreen::new);
 		MenuScreens.register(ModMenus.UPGRADE, UpgradeScreen::new);
 		MenuScreens.register(ModMenus.ENHANCE, EnhanceScreen::new);
+		MenuScreens.register(ModMenus.STYLIST, StylistScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_COOKING, CraftScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_ALCHEMY, CraftScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_SMITHING, CraftScreen::new);
@@ -99,6 +106,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		TargetHealthHud.init();
 		TrashButton.init();
 		BagTooltips.init();
+		StylistScreen.registerTooltip();
 		ConsumableTooltips.init();
 	}
 

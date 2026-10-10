@@ -9,6 +9,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
@@ -111,6 +112,49 @@ public final class Story {
 			"남은 것은 한 걸음뿐이오. 힘의 정점에 오르시오. 왕국은 그대의 이름을 기억할 것이오.",
 			"Reach level 100", "레벨 100 달성", 100, p -> JobProgression.get(p).level(),
 			p -> companion(p, false, "storm_griffin"), "Storm Griffin whistle (coins if owned)", "폭풍 그리핀 호루라기(이미 있으면 동전)");
+		// Act II: the darkness of the first chapter is the Void, behind the Void Spire, Malachar and Aethryx
+		chapter("whispers_of_the_void", "Whispers of the Void", "공허의 속삭임",
+			"You are a hero now, but the darkness I spoke of has a name: the Void. Its servants test our walls. When the capital is invaded, stand on them.",
+			"그대는 이제 영웅이오. 허나 처음에 말한 어둠에는 이름이 있소. 바로 공허요. 공허의 하수인들이 우리 성벽을 시험하고 있으니, 수도가 침공당하면 성벽 위에 서시오.",
+			"Defend the capital from an invasion", "수도 침공 방어", 1, p -> Progress.get(p).invasions(),
+			p -> List.of(new ItemStack(ModItems.TITAN_SHARD, 2)), "2 titan shards", "거신의 파편 2개");
+		chapter("keys_to_the_deep", "Keys to the Deep", "심연의 열쇠",
+			"The warden says the deeper keystones lead where the Void has seeped in. Beat a +10 keystone within its time and see for yourself.",
+			"관리인이 말하길 깊은 쐐기돌일수록 공허가 스며든 곳으로 이어진다 하오. +10 쐐기돌을 제한 시간 안에 돌파해 직접 확인하시오.",
+			"Time a +10 keystone", "+10 쐐기돌 시간 내 돌파", 10, p -> Dungeons.data(p).bestOverall(),
+			p -> List.of(new ItemStack(ModItems.AWAKENING_CRYSTAL, 2)), "2 awakening crystals", "각성의 결정 2개");
+		chapter("singing_spire", "The Singing Spire", "노래하는 첨탑",
+			"The chorus wraith's song in the Void Spire grows louder every night, and the Void listens. Silence it, again and again.",
+			"공허의 첨탑에서 들려오는 코러스 망령의 노래가 밤마다 커지고, 공허가 그 노래에 귀를 기울이오. 몇 번이고 그 노래를 멈추시오.",
+			"Clear the Void Spire 3 times", "공허의 첨탑 3회 클리어", 3, p -> Dungeons.data(p).clears("void_spire"),
+			p -> List.of(EvolutionEtherItem.of(Math.max(80, JobProgression.get(p).level() / 10 * 10), 8)), "8 Evolution Ether", "진화의 에테르 8개");
+		chapter("heroic_vanguard", "The Heroic Vanguard", "영웅의 선봉",
+			"The marshal needs veterans for the hard fights ahead. Show him you can win one of his raids on Heroic or harder.",
+			"사령관에게는 앞으로의 험한 싸움을 함께할 노련한 이들이 필요하오. 영웅 이상의 난이도로 레이드를 이겨 보이시오.",
+			"Clear a raid on Heroic or Nightmare", "영웅·악몽 레이드 클리어", 1, Story::hardRaidClears,
+			p -> List.of(new ItemStack(ModItems.PROTECTION_SCROLL, 2), new ItemStack(ModItems.ENHANCEMENT_STONE, 5)),
+			"2 protection scrolls, 5 enhancement stones", "보호 주문서 2장, 강화석 5개");
+		chapter("lich_kings_end", "The Lich King's End", "리치 왕의 최후",
+			"Malachar raised the dead for the Void, and on Nightmare his court stands at full strength. Break it.",
+			"말라카르는 공허를 위해 죽은 자들을 일으켰소. 악몽 난이도에서 온전한 힘을 갖춘 그의 궁정을 무너뜨리시오.",
+			"Defeat Malachar on Nightmare", "악몽 난이도 말라카르 처치", 1, p -> Progress.get(p).raidClears(PlayerRecords.raidKey("malachar", "nightmare")),
+			p -> List.of(new ItemStack(ModItems.AWAKENING_CRYSTAL, 3)), "3 awakening crystals", "각성의 결정 3개");
+		chapter("dragon_of_the_void", "Dragon of the Void", "공허룡",
+			"At last the Void shows its face: Aethryx, the Dragon of the Void. Gather the bravest in the realm and end it on Nightmare. Stormhold will sing of you.",
+			"마침내 공허가 모습을 드러냈소. 공허룡 에테릭스요. 왕국에서 가장 용감한 이들을 모아 악몽 난이도에서 끝장내시오. 스톰홀드가 그대를 노래할 것이오.",
+			"Defeat Aethryx on Nightmare", "악몽 난이도 에테릭스 처치", 1, p -> Progress.get(p).raidClears(PlayerRecords.raidKey("aethryx", "nightmare")),
+			p -> companion(p, true, "baby_dragon"), "Baby Dragon charm (coins if owned)", "아기 용 부적(이미 있으면 동전)");
+	}
+
+	/** Raids cleared on Heroic or Nightmare, any boss. */
+	private static int hardRaidClears(final Player player) {
+		int total = 0;
+		for (var entry : Progress.get(player).raidClears().entrySet()) {
+			if (entry.getKey().endsWith(":heroic") || entry.getKey().endsWith(":nightmare")) {
+				total += entry.getValue();
+			}
+		}
+		return total;
 	}
 
 	private static void chapter(final String id, final String titleEn, final String titleKo, final String textEn, final String textKo, final String goalEn,

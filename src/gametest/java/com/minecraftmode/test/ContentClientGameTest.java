@@ -126,6 +126,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			checkTitan(context, server, connection);
 			checkStory(context, server, connection);
 			checkPlazaNpcs(context, server, connection);
+			checkCrierAndStylist(context, server, connection);
 			screens(context, server, connection);
 			checkMapAndLight(context, server, connection);
 			WorldClose.prepare(context, server);
@@ -491,6 +492,97 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			return "chapter " + expected + " of " + chapters.size() + " (" + chapters.get(expected).id() + ")";
 		});
 		MinecraftMode.LOGGER.info("[content] story: {}", report);
+	}
+
+	// ------------------------------------------------------------------ town crier and stylist
+
+	/** The crier's notice board opens; the stylist's looks keep the stats, match slots and come back for free. */
+	private static void checkCrierAndStylist(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			CityNpc odo = ModEntities.CITY_NPC.create(player.level(), EntitySpawnReason.COMMAND);
+			odo.setRole(CityNpc.Role.CRIER);
+			odo.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
+			player.level().addFreshEntity(odo);
+			player.interactOn(odo, InteractionHand.MAIN_HAND, odo.position().add(0, 1, 0));
+			odo.discard();
+		});
+		context.waitForScreen(com.minecraftmode.client.guide.NoticeScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_notice_board");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		int[] celesteId = new int[1];
+		String looks = server.computeOnServer(s -> {
+			ItemStack sword = new ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+			sword.set(DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal("Old Faithful"));
+			ItemStack diamond = new ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
+			ItemStack helmet = new ItemStack(net.minecraft.world.item.Items.IRON_HELMET);
+			ItemStack golden = new ItemStack(net.minecraft.world.item.Items.GOLDEN_HELMET);
+			if (!com.minecraftmode.style.Looks.compatible(sword, diamond) || !com.minecraftmode.style.Looks.compatible(helmet, golden)) {
+				return "a sword takes a sword's look and a helmet a helmet's";
+			}
+			if (com.minecraftmode.style.Looks.compatible(helmet, diamond) || com.minecraftmode.style.Looks.compatible(helmet, new ItemStack(net.minecraft.world.item.Items.IRON_BOOTS))) {
+				return "a helmet cannot take a sword's or boots' look";
+			}
+			ItemStack styled = com.minecraftmode.style.Looks.apply(sword, diamond);
+			if (!java.util.Objects.equals(styled.get(DataComponents.ITEM_MODEL), diamond.get(DataComponents.ITEM_MODEL)) || !styled.is(net.minecraft.world.item.Items.IRON_SWORD)
+				|| !styled.getHoverName().getString().equals("Old Faithful")) {
+				return "the sword should look like a diamond sword and stay an iron sword named Old Faithful";
+			}
+			ItemStack worn = com.minecraftmode.style.Looks.apply(helmet, golden);
+			if (!worn.get(DataComponents.EQUIPPABLE).assetId().equals(golden.get(DataComponents.EQUIPPABLE).assetId())) {
+				return "the helmet should be worn as a golden helmet";
+			}
+			ItemStack back = com.minecraftmode.style.Looks.restore(worn);
+			if (!back.getComponentsPatch().isEmpty()) {
+				return "restoring should leave a plain iron helmet, got " + back.getComponentsPatch();
+			}
+			ServerPlayer player = connection.getServerPlayer();
+			CityNpc celeste = ModEntities.CITY_NPC.create(player.level(), EntitySpawnReason.COMMAND);
+			celeste.setRole(CityNpc.Role.STYLIST);
+			celeste.snapTo(player.getX() + 1.5, player.getY(), player.getZ(), 90, 0);
+			player.level().addFreshEntity(celeste);
+			celesteId[0] = celeste.getId();
+			// she stays until the end: her table closes when she is gone
+			player.interactOn(celeste, InteractionHand.MAIN_HAND, celeste.position().add(0, 1, 0));
+			if (!(player.containerMenu instanceof com.minecraftmode.style.StylistMenu menu)) {
+				return "Celeste should open her table";
+			}
+			menu.getSlot(0).set(sword.copy());
+			menu.getSlot(1).set(diamond.copy());
+			return "";
+		});
+		require(looks.isEmpty(), "looks: " + looks);
+		context.waitForScreen(com.minecraftmode.client.style.StylistScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_stylist");
+		String applied = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			if (!(player.containerMenu instanceof com.minecraftmode.style.StylistMenu menu)) {
+				return "Celeste's table should still be open";
+			}
+			int wallet = Wallet.balance(player);
+			int price = com.minecraftmode.style.Looks.price(menu.target());
+			if (!menu.clickMenuButton(player, com.minecraftmode.style.StylistMenu.BUTTON_APPLY)) {
+				return "restyling should work";
+			}
+			if (!menu.donor().isEmpty() || !com.minecraftmode.style.Looks.styled(menu.target()) || wallet - Wallet.balance(player) != (player.isCreative() ? 0 : price)) {
+				return "the donor is used up and the price paid";
+			}
+			menu.clickMenuButton(player, com.minecraftmode.style.StylistMenu.BUTTON_RESTORE);
+			if (com.minecraftmode.style.Looks.styled(menu.target())) {
+				return "the original look comes back";
+			}
+			player.closeContainer();
+			if (player.level().getEntity(celesteId[0]) != null) {
+				player.level().getEntity(celesteId[0]).discard();
+			}
+			return "";
+		});
+		require(applied.isEmpty(), "stylist: " + applied);
+		// the server's close packet arrives a moment later and would close whatever screen opens next
+		context.waitFor(minecraft -> minecraft.gui.screen() == null);
+		context.waitTicks(2);
 	}
 
 	// ------------------------------------------------------------------ guide and quartermaster

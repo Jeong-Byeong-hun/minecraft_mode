@@ -106,7 +106,8 @@ public final class CityZone {
 	/**
 	 * Where the city service NPCs stand: the blacksmith and the enhancer at the forge, the raid marshal by the raid gate, the
 	 * guild clerk between the guild shops, the broker in the market stall with the lectern, the dungeon warden by the dungeon gate
-	 * and the royal herald, the guide, the quartermaster and the baker on the plaza by the spawn.
+	 * and the royal herald, the guide, the quartermaster, the baker, the huntmaster and the town crier on the plaza by the spawn; the
+	 * stylist stands in the jeweler's stall, beside the line to its shop block.
 	 */
 	public static BlockPos npcHome(final CityNpc.Role role, final int base) {
 		return switch (role) {
@@ -121,19 +122,21 @@ public final class CityZone {
 			case QUARTERMASTER -> new BlockPos(-5, base, 15);
 			case BAKER -> new BlockPos(5, base, 15);
 			case HUNT_MASTER -> new BlockPos(9, base, 13);
+			case CRIER -> new BlockPos(-9, base, 13);
+			case STYLIST -> new BlockPos(-9, base, 53);
 		};
 	}
 
 	/**
-	 * Shops and work places players look for (x, z of the counter or block, as built by {@code CitySouth} and {@code CityNorth}),
+	 * Shops and work places players look for (x, z of the shop or work block, as built by {@code CitySouth} and {@code CityNorth}),
 	 * named by the block they are: the guide's directions and the world map list them.
 	 */
 	public enum Spot {
-		GENERAL_STORE("block.minecraft_mode.shop_block", -18, 51, 0xD04040),
-		BLACKSMITH_SHOP("block.minecraft_mode.blacksmith_shop", -18, 61, 0xE08030),
-		GROCER("block.minecraft_mode.grocer_shop", -18, 71, 0x50B040),
-		JEWELER("block.minecraft_mode.jeweler_shop", -8, 51, 0xA050D0),
-		ALCHEMIST("block.minecraft_mode.alchemist_shop", -8, 61, 0x40C0C0),
+		GENERAL_STORE("block.minecraft_mode.shop_block", -21, 51, 0xD04040),
+		BLACKSMITH_SHOP("block.minecraft_mode.blacksmith_shop", -21, 61, 0xE08030),
+		GROCER("block.minecraft_mode.grocer_shop", -21, 71, 0x50B040),
+		JEWELER("block.minecraft_mode.jeweler_shop", -11, 51, 0xA050D0),
+		ALCHEMIST("block.minecraft_mode.alchemist_shop", -11, 61, 0x40C0C0),
 		GUILD_SHOP("block.minecraft_mode.guild_shop", 24, 59, 0x4070E0),
 		ENGRAVING_TABLES("block.minecraft_mode.engraving_table", 16, 59, 0x8080FF),
 		KITCHEN_STATION("block.minecraft_mode.kitchen_station", -23, 69, 0xE0A060),

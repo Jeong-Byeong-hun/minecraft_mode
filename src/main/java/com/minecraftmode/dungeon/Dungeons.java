@@ -121,6 +121,11 @@ public final class Dungeons {
 			new DungeonDef.Theme(List.of(Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, Blocks.GRAVEL, Blocks.COARSE_DIRT, Blocks.SPRUCE_PLANKS), Blocks.STONE_BRICKS,
 				Blocks.SPRUCE_PLANKS, Blocks.STRIPPED_SPRUCE_LOG, Blocks.GLOWSTONE, Blocks.IRON_BARS),
 			List.of(EntityTypes.PILLAGER, EntityTypes.VINDICATOR), 600);
+		def("witchs_bog", "Witch's Bog", "마녀의 늪", "Mud and mangrove roots where the bog hag brews her poisons.",
+			"늪지 마녀 할멈이 독을 끓이는 진흙과 맹그로브 뿌리의 늪입니다.", 20, "bog_hag", 30,
+			new DungeonDef.Theme(List.of(Blocks.MUD, Blocks.PACKED_MUD, Blocks.MOSS_BLOCK, Blocks.MUDDY_MANGROVE_ROOTS), Blocks.MUD_BRICKS, Blocks.MANGROVE_PLANKS,
+				Blocks.STRIPPED_MANGROVE_LOG, Blocks.OCHRE_FROGLIGHT, Blocks.IRON_BARS),
+			List.of(EntityTypes.ZOMBIE, EntityTypes.BOGGED, EntityTypes.WITCH, EntityTypes.SPIDER), 600);
 		def("fungal_depths", "Fungal Depths", "균사 심연", "Caverns overgrown by the myconids' spores.", "버섯족의 포자가 뒤덮은 동굴입니다.", 30, "myconid_shaman", 40,
 			new DungeonDef.Theme(List.of(Blocks.MYCELIUM, Blocks.PODZOL, Blocks.MOSS_BLOCK, Blocks.ROOTED_DIRT), Blocks.MUD_BRICKS, Blocks.MUSHROOM_STEM,
 				Blocks.MUSHROOM_STEM, Blocks.SHROOMLIGHT, Blocks.IRON_BARS),
@@ -129,15 +134,30 @@ public final class Dungeons {
 			new DungeonDef.Theme(List.of(Blocks.PRISMARINE, Blocks.PRISMARINE_BRICKS, Blocks.SAND, Blocks.GRAVEL), Blocks.DARK_PRISMARINE, Blocks.PRISMARINE_BRICKS,
 				Blocks.STRIPPED_DARK_OAK_LOG, Blocks.SEA_LANTERN, Blocks.IRON_BARS),
 			List.of(EntityTypes.DROWNED, EntityTypes.SKELETON, EntityTypes.STRAY), 660);
+		def("crystal_hollow", "Crystal Hollow", "수정 동굴", "A geode vault the amethyst sentinel has guarded for ages.",
+			"자수정 파수꾼이 오랜 세월 지켜 온 정동 보물고입니다.", 50, "amethyst_sentinel", 60,
+			new DungeonDef.Theme(List.of(Blocks.CALCITE, Blocks.TUFF, Blocks.AMETHYST_BLOCK, Blocks.SMOOTH_BASALT), Blocks.DEEPSLATE_TILES, Blocks.CHISELED_TUFF,
+				Blocks.POLISHED_DEEPSLATE, Blocks.VERDANT_FROGLIGHT, Blocks.IRON_BARS),
+			List.of(EntityTypes.SKELETON, EntityTypes.CAVE_SPIDER, EntityTypes.ZOMBIE_VILLAGER, EntityTypes.VINDICATOR), 660);
 		def("ember_forge", "Ember Forge", "잿불 용광로", "A forge of the deep nether that never cools.", "결코 식지 않는 네더 깊은 곳의 용광로입니다.", 60, "magma_behemoth", 70,
 			new DungeonDef.Theme(List.of(Blocks.BLACKSTONE, Blocks.POLISHED_BLACKSTONE, Blocks.BASALT, Blocks.CRACKED_POLISHED_BLACKSTONE_BRICKS),
 				Blocks.POLISHED_BLACKSTONE_BRICKS, Blocks.GILDED_BLACKSTONE, Blocks.BASALT, Blocks.SHROOMLIGHT, Blocks.IRON_BARS),
 			List.of(EntityTypes.BLAZE, EntityTypes.MAGMA_CUBE, EntityTypes.WITHER_SKELETON), 720);
+		def("wither_bastion", "Wither Bastion", "위더 보루", "Nether halls held by knights sworn to the Wither.",
+			"위더에게 맹세한 기사들이 지키는 네더의 전당입니다.", 70, "wither_knight", 80,
+			new DungeonDef.Theme(List.of(Blocks.NETHER_BRICKS, Blocks.CRACKED_NETHER_BRICKS, Blocks.SOUL_SOIL, Blocks.RED_NETHER_BRICKS), Blocks.NETHER_BRICKS,
+				Blocks.CRIMSON_PLANKS, Blocks.STRIPPED_CRIMSON_STEM, Blocks.SHROOMLIGHT, Blocks.IRON_BARS),
+			List.of(EntityTypes.WITHER_SKELETON, EntityTypes.BLAZE, EntityTypes.VINDICATOR), 720);
 		def("void_spire", "Void Spire", "공허의 첨탑", "A tower between the worlds where the chorus wraith sings.", "코러스 망령이 노래하는 세계 사이의 탑입니다.", 80,
 			"chorus_wraith", 90,
 			new DungeonDef.Theme(List.of(Blocks.END_STONE_BRICKS, Blocks.PURPUR_BLOCK, Blocks.END_STONE, Blocks.OBSIDIAN), Blocks.OBSIDIAN, Blocks.PURPUR_PILLAR,
 				Blocks.PURPUR_PILLAR, Blocks.PEARLESCENT_FROGLIGHT, Blocks.IRON_BARS),
 			List.of(EntityTypes.PHANTOM, EntityTypes.WITHER_SKELETON, EntityTypes.SKELETON), 720);
+		def("starfall_observatory", "Starfall Observatory", "별이 떨어진 천문대", "Where the astral knight's star fell, the sky still hums.",
+			"성운 기사의 별이 떨어진 곳, 하늘이 아직도 울립니다.", 90, "astral_knight", 100,
+			new DungeonDef.Theme(List.of(Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_BRICKS, Blocks.CALCITE, Blocks.POLISHED_DIORITE), Blocks.LAPIS_BLOCK, Blocks.QUARTZ_PILLAR,
+				Blocks.QUARTZ_PILLAR, Blocks.SEA_LANTERN, Blocks.IRON_BARS),
+			List.of(EntityTypes.STRAY, EntityTypes.PHANTOM, EntityTypes.EVOKER, EntityTypes.WITHER_SKELETON), 720);
 	}
 
 	private static void def(final String id, final String en, final String ko, final String descEn, final String descKo, final int minLevel, final String boss,

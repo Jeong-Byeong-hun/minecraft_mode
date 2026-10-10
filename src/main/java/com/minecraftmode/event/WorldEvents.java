@@ -147,6 +147,29 @@ public final class WorldEvents {
 		return titan;
 	}
 
+	/** The running titan's named monster, or null. */
+	public static @Nullable NamedDef titanDef() {
+		return titan == null ? null : titanDef;
+	}
+
+	/** Where the running titan rose, or null. */
+	public static @Nullable BlockPos titanHome() {
+		return titan == null ? null : titanHome;
+	}
+
+	/** Ticks until the next dusk event of the overworld clock. */
+	public static long ticksToNextEvent(final ServerLevel overworld) {
+		long phase = ResetCycle.ticks(overworld) % ResetCycle.DAY_TICKS;
+		return phase < DUSK ? DUSK - phase : ResetCycle.DAY_TICKS - phase + DUSK;
+	}
+
+	/** Whether the next dusk event is an invasion of the capital (otherwise a titan rises). */
+	public static boolean nextEventIsInvasion(final ServerLevel overworld) {
+		long ticks = ResetCycle.ticks(overworld);
+		long day = ticks / ResetCycle.DAY_TICKS + (ticks % ResetCycle.DAY_TICKS < DUSK ? 0 : 1);
+		return day % 3 == 2 && CityZone.isCityLevel(overworld);
+	}
+
 	public static boolean invasionRunning() {
 		return invasion != null;
 	}

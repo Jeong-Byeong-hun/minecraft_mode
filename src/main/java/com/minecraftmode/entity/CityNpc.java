@@ -4,27 +4,33 @@ import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.enhance.EnhanceMenu;
+import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.OpenBountyPayload;
 import com.minecraftmode.network.OpenDungeonPayload;
 import com.minecraftmode.network.OpenGuidePayload;
+import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.network.OpenRaidPayload;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
+import com.minecraftmode.style.StylistMenu;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -84,7 +90,13 @@ public class CityNpc extends PathfinderMob {
 			"오븐에서 갓 나왔어요! 모험가마다 하루에 빵 한 묶음씩 드려요. 내일 또 오세요!"),
 		HUNT_MASTER("hunt_master", 0x6E8B3D, "Huntmaster Garrick", "사냥터지기 개릭",
 			"On a trial? I keep pens of every beast the trainers ask for. Step through and hunt only what you need.",
-			"시련 중인가? 교관들이 요구하는 짐승은 내 사냥터에 다 있지. 들어가서 필요한 놈들만 사냥하게.");
+			"시련 중인가? 교관들이 요구하는 짐승은 내 사냥터에 다 있지. 들어가서 필요한 놈들만 사냥하게."),
+		CRIER("crier", 0xB02A2A, "Town Crier Odo", "포고관 오도",
+			"Hear ye, hear ye! Resets, tonight's danger, the raid modifiers and the fastest raiders - it is all on my board!",
+			"알립니다, 알립니다! 초기화 시각, 오늘 밤의 위험, 레이드 변이와 최고 기록까지 전부 제 알림판에 있습니다!"),
+		STYLIST("stylist", 0x7A4AA8, "Stylist Celeste", "재단사 셀레스트",
+			"Love the stats but not the look? Bring me the piece and one whose look you like better, and I will make it wear that look.",
+			"능력치는 좋은데 모양이 마음에 안 드세요? 그 장비와 원하는 모양의 장비를 가져오시면 겉모습을 바꿔 드릴게요.");
 
 		private final String id;
 		private final int color;
@@ -178,6 +190,8 @@ public class CityNpc extends PathfinderMob {
 			case QUARTERMASTER -> Items.IRON_SWORD;
 			case BAKER -> Items.BREAD;
 			case HUNT_MASTER -> Items.CROSSBOW;
+			case CRIER -> Items.BELL;
+			case STYLIST -> Items.SHEARS;
 		}));
 	}
 
@@ -187,6 +201,17 @@ public class CityNpc extends PathfinderMob {
 		List<String> affixes = RaidAffix.forCycle(cycle).stream().map(RaidAffix::id).toList();
 		return new OpenRaidPayload(entityId, cycle, ResetCycle.ticksToNextCycle(player.level()), affixes,
 			RaidRecordsData.get(player.level().getServer()).snapshot(5));
+	}
+
+	/** The town crier's board: resets, the next dusk event, a running titan or invasion, this cycle's raid modifiers and records. */
+	public static OpenNoticePayload noticeBoard(final ServerPlayer player, final int entityId) {
+		ServerLevel overworld = player.level().getServer().overworld();
+		long cycle = ResetCycle.cycle(overworld);
+		NamedDef titan = WorldEvents.titanDef();
+		BlockPos home = WorldEvents.titanHome();
+		return new OpenNoticePayload(entityId, ResetCycle.ticksToNextDay(overworld), ResetCycle.ticksToNextCycle(overworld), WorldEvents.ticksToNextEvent(overworld),
+			WorldEvents.nextEventIsInvasion(overworld), titan == null ? "" : titan.id(), home == null ? 0 : home.getX(), home == null ? 0 : home.getZ(),
+			WorldEvents.invasionWave(), RaidAffix.forCycle(cycle).stream().map(RaidAffix::id).toList(), RaidRecordsData.get(player.level().getServer()).snapshot(1));
 	}
 
 	public static OpenBountyPayload bountyBoard(final ServerPlayer player, final int entityId) {
@@ -237,6 +262,13 @@ public class CityNpc extends PathfinderMob {
 				case QUARTERMASTER -> StarterKit.give(serverPlayer);
 				case BAKER -> DailyBread.give(serverPlayer);
 				case HUNT_MASTER -> TrialHunts.enter(serverPlayer);
+				case CRIER -> {
+					if (ServerPlayNetworking.canSend(serverPlayer, OpenNoticePayload.TYPE)) {
+						ServerPlayNetworking.send(serverPlayer, noticeBoard(serverPlayer, this.getId()));
+					}
+				}
+				case STYLIST -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new StylistMenu(id, inventory, this),
+					Component.translatable("container.minecraft_mode.stylist")));
 			}
 		}
 		return InteractionResult.SUCCESS;

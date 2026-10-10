@@ -10,6 +10,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.resources.Identifier;
 
 public final class ModDataComponents {
 	/** Engraving lines on a class weapon. */
@@ -45,6 +46,13 @@ public final class ModDataComponents {
 		BuiltInRegistries.DATA_COMPONENT_TYPE,
 		MinecraftMode.id("keystone"),
 		DataComponentType.<Keystone>builder().persistent(Keystone.CODEC).networkSynchronized(Keystone.STREAM_CODEC).build()
+	);
+
+	/** The item whose look a restyled piece wears (Stylist Celeste, {@code style/Looks}). */
+	public static final DataComponentType<Identifier> LOOK = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("look"),
+		DataComponentType.<Identifier>builder().persistent(Identifier.CODEC).networkSynchronized(Identifier.STREAM_CODEC).build()
 	);
 
 	public static void init() {

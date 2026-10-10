@@ -6,6 +6,7 @@ import com.minecraftmode.craft.Profession;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.loot.UpgradeMenu;
+import com.minecraftmode.style.StylistMenu;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
@@ -22,6 +23,10 @@ public final class ModMenus {
 
 	public static final MenuType<EnhanceMenu> ENHANCE = Registry.register(
 		BuiltInRegistries.MENU, MinecraftMode.id("enhance"), new MenuType<>(EnhanceMenu::new, FeatureFlags.VANILLA_SET)
+	);
+
+	public static final MenuType<StylistMenu> STYLIST = Registry.register(
+		BuiltInRegistries.MENU, MinecraftMode.id("stylist"), new MenuType<>(StylistMenu::new, FeatureFlags.VANILLA_SET)
 	);
 
 	public static final MenuType<CraftMenu> CRAFT_COOKING = Registry.register(

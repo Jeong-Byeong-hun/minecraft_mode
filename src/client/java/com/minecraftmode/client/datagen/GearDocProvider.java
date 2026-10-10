@@ -484,7 +484,8 @@ public class GearDocProvider implements DataProvider {
 		{"entity.minecraft.pillager", "약탈자"}, {"entity.minecraft.vindicator", "변명자"}, {"entity.minecraft.zombie", "좀비"}, {"entity.minecraft.spider", "거미"},
 		{"entity.minecraft.cave_spider", "동굴 거미"}, {"entity.minecraft.witch", "마녀"}, {"entity.minecraft.drowned", "드라운드"},
 		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
-		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"}
+		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"},
+		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"}
 	};
 
 	private String itemName(final Item item) {

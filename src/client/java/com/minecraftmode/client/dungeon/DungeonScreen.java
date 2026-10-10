@@ -25,17 +25,21 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * The dungeon warden's screen: every dungeon with its level, boss, time limit and your records; enter without a keystone, or with
- * your best keystone for it. Shows this cycle's keystone modifiers.
+ * your best keystone for it. Shows this cycle's keystone modifiers. The list shows {@link #VISIBLE} dungeons at a time and scrolls
+ * with the mouse wheel; it opens on the highest dungeon the player may enter.
  */
 public class DungeonScreen extends Screen {
 	private static final int W = 340;
 	private static final int H = 232;
 	private static final int ROW = 32;
 	private static final int ROWS_Y = 24;
+	private static final int VISIBLE = 5;
 
 	private final OpenDungeonPayload payload;
 	private int left;
 	private int top;
+	/** Index of the first dungeon shown, -1 until the screen first opens. */
+	private int first = -1;
 
 	public DungeonScreen(final OpenDungeonPayload payload) {
 		super(Component.translatable("screen.minecraft_mode.dungeon.title"));
@@ -56,9 +60,19 @@ public class DungeonScreen extends Screen {
 		}
 		int level = JobProgression.get(player).level();
 		List<DungeonDef> defs = new ArrayList<>(Dungeons.all());
-		for (int i = 0; i < defs.size(); i++) {
+		if (this.first < 0) {
+			int highest = 0;
+			for (int i = 0; i < defs.size(); i++) {
+				if (level >= defs.get(i).minLevel()) {
+					highest = i;
+				}
+			}
+			this.first = highest - VISIBLE + 2;
+		}
+		this.first = Math.clamp(this.first, 0, Math.max(0, defs.size() - VISIBLE));
+		for (int i = this.first; i < Math.min(defs.size(), this.first + VISIBLE); i++) {
 			DungeonDef def = defs.get(i);
-			int ry = this.top + ROWS_Y + i * ROW;
+			int ry = this.top + ROWS_Y + (i - this.first) * ROW;
 			Button normal = Button.builder(Component.translatable("screen.minecraft_mode.dungeon.enter"), b -> this.enter(def, false))
 				.bounds(this.left + W - 112, ry + 7, 50, 18).build();
 			normal.active = level >= def.minLevel();
@@ -96,9 +110,9 @@ public class DungeonScreen extends Screen {
 		int level = JobProgression.get(player).level();
 		List<Component> tip = null;
 		List<DungeonDef> defs = new ArrayList<>(Dungeons.all());
-		for (int i = 0; i < defs.size(); i++) {
+		for (int i = this.first; i < Math.min(defs.size(), this.first + VISIBLE); i++) {
 			DungeonDef def = defs.get(i);
-			int ry = y + ROWS_Y + i * ROW;
+			int ry = y + ROWS_Y + (i - this.first) * ROW;
 			boolean open = level >= def.minLevel();
 			g.fill(x + 8, ry, x + W - 8, ry + ROW - 2, open ? 0x30FFFFFF : 0x40000000);
 			NamedDef boss = NamedMobs.byId(def.boss());
@@ -122,8 +136,16 @@ public class DungeonScreen extends Screen {
 				tip = lines;
 			}
 		}
+		if (defs.size() > VISIBLE) {
+			// scroll bar beside the rows
+			int track = VISIBLE * ROW - 2;
+			int thumb = Math.max(10, track * VISIBLE / defs.size());
+			int thumbTop = y + ROWS_Y + (track - thumb) * this.first / (defs.size() - VISIBLE);
+			g.fill(x + W - 6, y + ROWS_Y, x + W - 4, y + ROWS_Y + track, 0x40FFFFFF);
+			g.fill(x + W - 6, thumbTop, x + W - 4, thumbTop + thumb, 0xC0FFFFFF);
+		}
 		// this cycle's modifiers
-		int fy = y + ROWS_Y + defs.size() * ROW + 2;
+		int fy = y + ROWS_Y + Math.min(VISIBLE, defs.size()) * ROW + 2;
 		MutableComponent affixes = Component.translatable("screen.minecraft_mode.dungeon.affixes");
 		for (DungeonAffix affix : DungeonAffix.forRun(99, this.payload.cycle())) {
 			affixes.append(Component.literal("  +" + affix.level() + " ")).append(Component.translatable(affix.nameKey()));
@@ -143,6 +165,20 @@ public class DungeonScreen extends Screen {
 		if (tip != null) {
 			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 		}
+	}
+
+	@Override
+	public boolean mouseScrolled(final double mouseX, final double mouseY, final double scrollX, final double scrollY) {
+		int max = Math.max(0, Dungeons.all().size() - VISIBLE);
+		if (max > 0 && scrollY != 0) {
+			int next = Math.clamp(this.first - (int)Math.signum(scrollY), 0, max);
+			if (next != this.first) {
+				this.first = next;
+				this.rebuildWidgets();
+			}
+			return true;
+		}
+		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
 	}
 
 	@Override

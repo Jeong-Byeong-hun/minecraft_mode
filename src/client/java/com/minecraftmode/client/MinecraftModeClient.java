@@ -10,6 +10,7 @@ import com.minecraftmode.client.endgame.EndgameClient;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
 import com.minecraftmode.client.style.StylistScreen;
+import com.minecraftmode.client.hud.DamageNumbers;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
@@ -48,6 +49,7 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.world.entity.EntityType;
@@ -63,6 +65,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		EntityRenderers.register(ModEntities.MYTHRIL_GOLEM, MythrilGolemRenderer::new);
 		EntityRenderers.register(ModEntities.CLASS_TRAINER, ClassTrainerRenderer::new);
 		EntityRenderers.register(ModEntities.CITY_NPC, CityNpcRenderer::new);
+		EntityRenderers.register(ModEntities.TRAINING_DUMMY, ArmorStandRenderer::new);
+		EntityRenderers.register(ModEntities.TRAINING_DUMMY_BOSS, ArmorStandRenderer::new);
 		CreaturePlans.registerLayers();
 		for (NamedDef def : NamedMobs.all()) {
 			EntityRenderers.register(NamedMobs.type(def), context -> new CreatureRenderer<>(context, CreaturePlans.get(def.id()), CreaturePlans.layer(def.id())));
@@ -106,6 +110,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		WalletDisplay.init();
 		TargetHealthHud.init();
 		TrashButton.init();
+		ClientSettings.init();
+		DamageNumbers.init();
 		BagTooltips.init();
 		StylistScreen.registerTooltip();
 		ConsumableTooltips.init();

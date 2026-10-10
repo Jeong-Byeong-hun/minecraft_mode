@@ -5,6 +5,7 @@ import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.entity.MineRaider;
 import com.minecraftmode.entity.MythrilGolem;
+import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.raid.RaidBosses;
@@ -22,6 +23,7 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 public final class ModEntities {
@@ -48,6 +50,30 @@ public final class ModEntities {
 			.clientTrackingRange(10)
 			.notInPeaceful()
 			.build(MYTHRIL_GOLEM_KEY)
+	);
+
+	public static final ResourceKey<EntityType<?>> TRAINING_DUMMY_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("training_dummy"));
+	public static final ResourceKey<EntityType<?>> TRAINING_DUMMY_BOSS_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("training_dummy_boss"));
+
+	/** Damage-meter dummies of the warrior arena (see {@link TrainingDummy}); the boss kind counts as a boss. */
+	public static final EntityType<TrainingDummy> TRAINING_DUMMY = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		TRAINING_DUMMY_KEY,
+		EntityType.Builder.<TrainingDummy>of(TrainingDummy::new, MobCategory.MISC)
+			.sized(0.5F, 1.975F)
+			.eyeHeight(1.7775F)
+			.clientTrackingRange(10)
+			.build(TRAINING_DUMMY_KEY)
+	);
+
+	public static final EntityType<TrainingDummy.Boss> TRAINING_DUMMY_BOSS = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		TRAINING_DUMMY_BOSS_KEY,
+		EntityType.Builder.<TrainingDummy.Boss>of(TrainingDummy.Boss::new, MobCategory.MISC)
+			.sized(0.5F, 1.975F)
+			.eyeHeight(1.7775F)
+			.clientTrackingRange(10)
+			.build(TRAINING_DUMMY_BOSS_KEY)
 	);
 
 	public static final ResourceKey<EntityType<?>> SKILL_PROJECTILE_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("skill_projectile"));
@@ -108,6 +134,8 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(CITY_NPC, CityNpc.createAttributes());
 		FabricDefaultAttributeRegistry.register(CLASS_TRAINER, ClassTrainer.createAttributes());
 		FabricDefaultAttributeRegistry.register(MYTHRIL_GOLEM, MythrilGolem.createAttributes());
+		FabricDefaultAttributeRegistry.register(TRAINING_DUMMY, ArmorStand.createAttributes());
+		FabricDefaultAttributeRegistry.register(TRAINING_DUMMY_BOSS, ArmorStand.createAttributes());
 		SpawnPlacements.register(MYTHRIL_GOLEM, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, MythrilGolem::checkMythrilGolemSpawnRules);
 		// Very rare: below Y=0 only and never two within 64 blocks.
 		BiomeModifications.addSpawn(BiomeSelectors.foundInOverworld(), MobCategory.MONSTER, MYTHRIL_GOLEM, 3, 1, 1);

@@ -54,6 +54,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(DamageNumberPayload.TYPE, DamageNumberPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(

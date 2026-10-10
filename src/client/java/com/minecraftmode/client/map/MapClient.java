@@ -162,7 +162,7 @@ public final class MapClient {
 		return root().resolve("waypoints").resolve(key + ".json");
 	}
 
-	static Path root() {
+	public static Path root() {
 		return FabricLoader.getInstance().getGameDir().resolve("minecraft_mode");
 	}
 

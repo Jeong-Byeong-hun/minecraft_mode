@@ -18,6 +18,11 @@ public record Skill(String id, String en, String ko, SkillKind kind, int cooldow
 		return "skill.minecraft_mode." + this.id;
 	}
 
+	/** Expected damage of one cast on {@code targets} grouped monsters, in multiples of the skill power (see {@link SkillAction#estimate}). */
+	public double estimate(final int targets) {
+		return this.actions.stream().mapToDouble(a -> a.estimate(targets)).sum();
+	}
+
 	public Skill withFx(final Fx.Kind kind, final int color) {
 		return new Skill(this.id, this.en, this.ko, this.kind, this.cooldownTicks, this.manaCost, this.actions, new Fx(kind, color));
 	}

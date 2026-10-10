@@ -41,7 +41,8 @@ public class SkillParticle extends SingleQuadParticle {
 				this.friction = 0.82F;
 			}
 			case SLASH -> {
-				this.lifetime = 6 + this.random.nextInt(3);
+				// short: a sword wave's trail of slashes looked many blocks longer than the wave that hits
+				this.lifetime = 4 + this.random.nextInt(2);
 				this.quadSize = 0.55F + this.random.nextFloat() * 0.2F;
 				this.roll = this.random.nextFloat() * Mth.TWO_PI;
 				spin = 0.0F;

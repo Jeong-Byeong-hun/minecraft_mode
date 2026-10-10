@@ -68,6 +68,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
@@ -130,6 +131,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkMobGear(server, connection);
 			checkTrash(context, server, connection);
 			checkTallTooltip(context, server, connection);
+			checkDamageNumbers(context, server, connection);
 			checkShop();
 			checkTargetHealth(context, server, connection);
 			checkInvasionNumbers();
@@ -545,6 +547,30 @@ public class TownClientGameTest implements FabricClientGameTest {
 	}
 
 	/** A +10 Lv 90 armor piece's tooltip runs past the screen: it starts at the top, and the wheel scrolls it ({@link TooltipLayout}). */
+	/** Hitting a training dummy floats damage numbers over it on the attacker's screen (a crit in gold) and reports the damage per second. */
+	private static void checkDamageNumbers(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			com.minecraftmode.entity.TrainingDummy dummy = ModEntities.TRAINING_DUMMY_BOSS.create(s.overworld(), EntitySpawnReason.COMMAND);
+			dummy.snapTo(0.5, -60, -3.5, 0.0F, 0.0F);
+			dummy.addTag("town_dummy");
+			s.overworld().addFreshEntity(dummy);
+		});
+		context.waitTicks(10);
+		for (int i = 0; i < 6; i++) {
+			server.runOnServer(s -> {
+				ServerPlayer player = connection.getServerPlayer();
+				LivingEntity dummy = s.overworld().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(8), e -> e.entityTags().contains("town_dummy")).getFirst();
+				CombatHooks.deal(player, dummy, 12.0F, player.damageSources().playerAttack(player), CombatHooks.DamageKind.SKILL);
+			});
+			context.waitTicks(2);
+		}
+		require(context.computeOnClient(minecraft -> com.minecraftmode.client.hud.DamageNumbers.count() > 0), "hits on the dummy should float damage numbers");
+		context.takeScreenshot("town_damage_numbers");
+		server.runCommand("kill @e[tag=town_dummy]");
+	}
+
 	private static void checkTallTooltip(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();

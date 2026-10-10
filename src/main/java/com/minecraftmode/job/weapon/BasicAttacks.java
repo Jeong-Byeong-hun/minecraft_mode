@@ -43,9 +43,11 @@ public final class BasicAttacks {
 		}
 		int count = 1 + (int)mods.get(EngraveStat.EXTRA_SHOT);
 		ProjectileStyle style = def.archetype().shot();
-		float spread = count == 1 ? 0.0F : Math.min(30.0F, 8.0F * (count - 1));
+		// one shot always on the aim line, the extra ones fanned out to alternate sides (an even count spread evenly left the middle
+		// empty: two arrows 8° apart passed either side of a monster from a few blocks on)
+		float step = count == 1 ? 0.0F : Math.min(30.0F, 8.0F * (count - 1)) / (count - 1);
 		for (int i = 0; i < count; i++) {
-			float yaw = count == 1 ? 0.0F : -spread / 2 + spread * i / (count - 1);
+			float yaw = (i + 1) / 2 * step * (i % 2 == 1 ? 1 : -1);
 			spawn(player, stack, def, style, damage, yaw, power);
 		}
 		ServerLevel level = player.level();

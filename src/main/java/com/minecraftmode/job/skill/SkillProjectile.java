@@ -46,6 +46,8 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private static final EntityDataAccessor<Integer> DATA_COLOR = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_TRAIL = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> DATA_GRAVITY = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.FLOAT);
+	/** Extra up-and-down reach of {@link #reach} on top of the projectile's own (see there). */
+	public static final double VERTICAL_REACH = 0.4;
 
 	private @Nullable SkillContext ctx;
 	private double multiplier;
@@ -242,7 +244,8 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		List<EntityHitResult> hits = new ArrayList<>();
 		for (LivingEntity e : projectile.level().getEntitiesOfClass(LivingEntity.class, new AABB(from, to).inflate(reach + 1.0), filter)) {
 			AABB body = e.getBoundingBox();
-			AABB around = body.inflate(reach);
+			// a little more reach up and down: shots fly from eye height and passed over spiders, slimes and baby zombies
+			AABB around = body.inflate(reach, reach + VERTICAL_REACH, reach);
 			if (around.contains(from)) {
 				if (motion.dot(body.getCenter().subtract(from)) > 0.0) {
 					hits.add(new EntityHitResult(e, from));
@@ -264,13 +267,17 @@ public class SkillProjectile extends ThrowableItemProjectile {
 
 	/** Damages {@code target} (or explodes at {@code at}); returns true when the projectile is used up. */
 	private boolean strike(final LivingEntity target, final Vec3 at) {
-		if (this.explode > 0.0F) {
-			this.impactAt(at);
-			this.discard();
-			return true;
-		}
 		this.hits.add(target.getUUID());
-		this.damage(target);
+		if (this.explode > 0.0F) {
+			// an exploding projectile that pierces bursts on every target it passes (it used to burst on the first one only)
+			this.impactAt(at);
+			if (--this.pierce < 0) {
+				this.discard();
+				return true;
+			}
+			return false;
+		}
+		this.damage(target, 1.0);
 		if (--this.pierce < 0) {
 			this.impactAt(at);
 			this.discard();
@@ -288,13 +295,14 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		}
 	}
 
-	private void damage(final LivingEntity target) {
+	/** Damages {@code target} with {@code share} of this projectile's hit (less than all of it when an explosion catches a big pack). */
+	private void damage(final LivingEntity target, final double share) {
 		if (this.ctx != null) {
 			if (this.ctx.valid()) {
-				this.ctx.hit(target, this.multiplier, this.damageSources().thrown(this, this.ctx.caster));
+				this.ctx.hit(target, this.multiplier * share, this.damageSources().thrown(this, this.ctx.caster));
 			}
 		} else if (this.basicOwner != null) {
-			CombatHooks.deal(this.basicOwner, target, this.basicDamage, this.damageSources().thrown(this, this.basicOwner), CombatHooks.DamageKind.SHOT);
+			CombatHooks.deal(this.basicOwner, target, (float)(this.basicDamage * share), this.damageSources().thrown(this, this.basicOwner), CombatHooks.DamageKind.SHOT);
 		}
 	}
 
@@ -306,10 +314,11 @@ public class SkillProjectile extends ThrowableItemProjectile {
 			ServerPlayer owner = this.owner();
 			if (owner != null) {
 				AABB box = new AABB(pos, pos).inflate(this.explode);
-				for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, box, e -> e.getBoundingBox().distanceToSqr(pos) <= this.explode * this.explode)) {
-					if (this.ctx != null ? CombatHooks.isEnemy(owner, e) : CombatHooks.canHarm(owner, e)) {
-						this.damage(e);
-					}
+				List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class, box, e -> e.getBoundingBox().distanceToSqr(pos) <= this.explode * this.explode
+					&& (this.ctx != null ? CombatHooks.isEnemy(owner, e) : CombatHooks.canHarm(owner, e)));
+				double share = SkillContext.areaShare(caught.size());
+				for (LivingEntity e : caught) {
+					this.damage(e, share);
 				}
 			}
 			level.sendParticles(ParticleTypes.EXPLOSION, pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0);

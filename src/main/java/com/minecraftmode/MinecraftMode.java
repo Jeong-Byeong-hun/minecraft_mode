@@ -2,6 +2,7 @@ package com.minecraftmode;
 
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.city.DummyMeter;
 import com.minecraftmode.command.EventCommands;
 import com.minecraftmode.command.JobCommand;
 import com.minecraftmode.command.RaidCommands;
@@ -88,6 +89,7 @@ public class MinecraftMode implements ModInitializer {
 		JobEvents.init();
 		QuestService.init();
 		CityServices.init();
+		DummyMeter.init();
 		Consumables.initEvents();
 		Parties.init();
 		Raids.init();

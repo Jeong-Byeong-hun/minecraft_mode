@@ -3,6 +3,7 @@ package com.minecraftmode.city;
 import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.quest.QuestService;
@@ -89,6 +90,7 @@ public final class CityServices {
 			if (server.getTickCount() % 100 == 0) {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());
+				keepDummies(server.overworld());
 				keepAnvils(server.overworld());
 				CityFixtures.ensure(server.overworld());
 				TrainingGrounds.ensureBuilt(server.overworld());
@@ -217,6 +219,31 @@ public final class CityServices {
 			}
 			if (keep.blockPosition().distManhattan(home) > 2) {
 				keep.teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
+			}
+		}
+	}
+
+	/** The warrior arena's training dummies at their posts (put back when missing, extras removed), like the trainers. */
+	public static void keepDummies(final ServerLevel level) {
+		if (!CityZone.isCityLevel(level)) {
+			return;
+		}
+		for (CityZone.DummyPost post : CityZone.dummies(CityZone.baseY(level))) {
+			BlockPos pos = post.pos();
+			if (!level.isLoaded(pos) || !level.shouldTickBlocksAt(pos)) {
+				continue;
+			}
+			List<TrainingDummy> found = level.getEntitiesOfClass(TrainingDummy.class, new AABB(pos).inflate(1.5), d -> d.isBossKind() == post.boss());
+			if (found.isEmpty()) {
+				TrainingDummy dummy = (post.boss() ? ModEntities.TRAINING_DUMMY_BOSS : ModEntities.TRAINING_DUMMY).create(level, EntitySpawnReason.STRUCTURE);
+				if (dummy != null) {
+					dummy.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.0F, 0.0F);
+					level.addFreshEntity(dummy);
+				}
+				continue;
+			}
+			for (int i = 1; i < found.size(); i++) {
+				found.get(i).discard();
 			}
 		}
 	}

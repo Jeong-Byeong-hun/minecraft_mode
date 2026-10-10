@@ -90,10 +90,10 @@ public enum ProjectileStyle {
 	}
 
 	/**
-	 * How far from its path a {@code SkillProjectile} hits: sword waves as far as their slash trail reaches (the largest slash
+	 * How far from its path a {@code SkillProjectile} hits: sword waves a little past their slash trail (the largest slash
 	 * particle's half size), everything else vanilla's full margin from the first tick on.
 	 */
 	public double hitRadius() {
-		return this == WAVE ? 0.75 : ProjectileUtil.DEFAULT_ENTITY_HIT_RESULT_MARGIN;
+		return this == WAVE ? 1.0 : ProjectileUtil.DEFAULT_ENTITY_HIT_RESULT_MARGIN;
 	}
 }

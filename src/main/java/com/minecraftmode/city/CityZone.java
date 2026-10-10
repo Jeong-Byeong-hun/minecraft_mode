@@ -178,6 +178,15 @@ public final class CityZone {
 		return List.of(new BlockPos(-20, base, 86), new BlockPos(-52, base, -70), new BlockPos(-36, base, -70));
 	}
 
+	/** A training dummy's post in the warrior arena (centre 72, -78): three plain ones in the back row, two boss ones in front. */
+	public record DummyPost(BlockPos pos, boolean boss) {
+	}
+
+	public static List<DummyPost> dummies(final int base) {
+		return List.of(new DummyPost(new BlockPos(67, base, -83), false), new DummyPost(new BlockPos(72, base, -83), false),
+			new DummyPost(new BlockPos(77, base, -83), false), new DummyPost(new BlockPos(69, base, -76), true), new DummyPost(new BlockPos(75, base, -76), true));
+	}
+
 	private CityZone() {
 	}
 }

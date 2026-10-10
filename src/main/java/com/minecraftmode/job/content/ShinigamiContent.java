@@ -177,8 +177,9 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("true_zangetsu", 4, 100, GREATSWORD, "True Zangetsu", "진짜 참월",
 			art(0xE8E8F0, 0x1A1A1A, 0x3AA0FF), fx(Fx.Kind.SLASH, 0x6AC8FF),
-			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 3.2).pierce(12)),
-			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28, shoot(ProjectileStyle.WAVE, 3.0).count(2).spread(20).pierce(12), slash(5, 180, 2.0)),
+			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 3.6).speed(2.2F).pierce(12)),
+			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28, shoot(ProjectileStyle.WAVE, 3.0).count(2).parallel(1.8).speed(2.2F).pierce(12),
+				slash(5, 180, 2.0)),
 			skill("final_flash_step", "Final Flash Step", "최후의 순보", MOVEMENT, 10, 18, blink(14), empower(3, 80, 6)),
 			skill("mugetsu", "Mugetsu", "무월", ULTIMATE, 90, 60, zone(8, 4, 2.0).at(12), beam(30, 6.0)));
 	}

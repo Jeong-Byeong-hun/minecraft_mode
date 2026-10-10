@@ -228,11 +228,30 @@ final class CityChecks {
 			ServerLevel level = s.overworld();
 			CityServices.keepTrainers(level);
 			CityServices.keepNpcs(level);
+			CityServices.keepDummies(level);
 			// a second pass must not duplicate anyone
 			CityServices.keepTrainers(level);
 			CityServices.keepNpcs(level);
+			CityServices.keepDummies(level);
 		});
 		context.waitTicks(5);
+		// the warrior arena's training dummies stand at their posts, once each
+		String dummies = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			int checked = 0;
+			for (CityZone.DummyPost post : CityZone.dummies(base)) {
+				if (!level.isLoaded(post.pos()) || !level.shouldTickBlocksAt(post.pos())) {
+					continue;
+				}
+				List<com.minecraftmode.entity.TrainingDummy> found = level.getEntitiesOfClass(com.minecraftmode.entity.TrainingDummy.class, new AABB(post.pos()).inflate(1.5),
+					d -> d.isBossKind() == post.boss());
+				require(found.size() == 1, "the dummy post " + post.pos().toShortString() + " should hold one dummy, found " + found.size());
+				require(!level.getBlockState(post.pos().below()).isAir(), "a dummy stands on air at " + post.pos().toShortString());
+				checked++;
+			}
+			return checked + " dummies";
+		});
+		MinecraftMode.LOGGER.info("[city] training dummies: {}", dummies);
 		String report = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
 			List<String> lines = new ArrayList<>();

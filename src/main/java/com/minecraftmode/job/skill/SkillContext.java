@@ -32,6 +32,13 @@ public final class SkillContext {
 	private static final double AIM_MARGIN = 0.3;
 	/** How far the crosshair is searched for the enemy a skill locks on when it starts (the longest target-area range). */
 	private static final double CAST_AIM_RANGE = 32.0;
+	/** An area hit reaches this many targets in full; see {@link #areaShare}. */
+	public static final int AREA_FULL = 5;
+	/**
+	 * Area hits (cones, novas, fields, strikes, beams, explosions) deal this share of their listed multiplier, already in the tooltips:
+	 * they reach every monster in range, and with skills now critting too they pulled further ahead of single-target skills.
+	 */
+	public static final double AREA_SCALE = 0.85;
 
 	public final ServerPlayer caster;
 	public final ServerLevel level;
@@ -266,6 +273,25 @@ public final class SkillContext {
 
 	public float damageFor(final double multiplier) {
 		return (float)(this.power * multiplier);
+	}
+
+	/**
+	 * One area hit (a cone, a nova, a field pulse, a strike, an explosion) on {@code targets}: each takes {@code multiplier}, scaled by
+	 * {@link #areaShare} when there are more than {@link #AREA_FULL} of them.
+	 */
+	public void hitArea(final List<LivingEntity> targets, final double multiplier) {
+		double each = multiplier * areaShare(targets.size());
+		for (LivingEntity e : targets) {
+			this.hit(e, each);
+		}
+	}
+
+	/**
+	 * Share of an area hit each of {@code targets} takes: all of it up to {@link #AREA_FULL}, then √(AREA_FULL / targets), so a pack of
+	 * twenty takes half each (the whole hit still grows, slower). Area skills outdid single-target ones more with every extra monster.
+	 */
+	public static double areaShare(final int targets) {
+		return targets <= AREA_FULL ? 1.0 : Math.sqrt((double)AREA_FULL / targets);
 	}
 
 	/** Hits with the caster's melee damage source. */

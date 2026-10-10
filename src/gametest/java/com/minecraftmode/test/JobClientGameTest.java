@@ -9,7 +9,9 @@ import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.city.DummyMeter;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobClass;
@@ -128,6 +130,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			jobScreen(context, server);
 			checkPointBlank(context, server, connection);
 			checkVolleys(context, server, connection);
+			checkCritsAndDummy(server, connection);
 			checkProjectileImmunities(context, server, connection);
 			checkLockedAim(context, server, connection);
 			castEverySkill(context, server, connection);
@@ -572,6 +575,22 @@ public class JobClientGameTest implements FabricClientGameTest {
 		boolean cut = server.computeOnServer(s -> !spider[0].isAlive() || spider[0].getHealth() < spider[0].getMaxHealth());
 		require(cut, "Getsuga Tensho passed over a spider in its slash");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
+
+		// Twin Getsuga's waves fly side by side: a monster straight ahead 15 blocks out takes both (they used to fan out 20°, missing it from 7 on)
+		LivingEntity[] far = new LivingEntity[1];
+		server.runOnServer(s -> far[0] = spawnTarget(connection.getServerPlayer().level(), 0.5, -60, -14.5));
+		context.waitTicks(2);
+		float farBefore = server.computeOnServer(s -> far[0].getHealth());
+		cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 1);
+		});
+		require(cast == SkillCaster.Result.OK, "Twin Getsuga could not be cast: " + cast);
+		context.waitTicks(15);
+		float farTaken = farBefore - server.computeOnServer(s -> far[0].getHealth());
+		float wave = server.computeOnServer(s -> (float)(JobWeapons.def("true_zangetsu").power() * 3.0));
+		require(farTaken >= wave * 1.5F, "both Twin Getsuga waves should hit a monster 15 blocks ahead, it took " + farTaken + " of " + wave + " per wave");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] point blank: bolt from inside a husk, lightning on a husk in front and Getsuga over a spider all hit");
 	}
 
@@ -580,6 +599,46 @@ public class JobClientGameTest implements FabricClientGameTest {
 	 * to scatter over the circle and stop at the roof), class arrows land through the damage cooldown (a volley's second arrow
 	 * used to bounce off), and a bow shot from inside a pressed husk hits it.
 	 */
+	/**
+	 * Skills crit now (a tier 4 rogue's 15%), a skill summon bites with its caster's power instead of vanilla's, an area hit on more
+	 * than five shares out, and the training dummy measures it all without dying.
+	 */
+	private static void checkCritsAndDummy(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.ROGUE, 4).withProgress(100, 0));
+			JobStats.refresh(player);
+			TrainingDummy dummy = ModEntities.TRAINING_DUMMY.create(level, EntitySpawnReason.COMMAND);
+			dummy.snapTo(player.getX() + 3, player.getY(), player.getZ(), 0, 0);
+			level.addFreshEntity(dummy);
+			require(CombatHooks.isEnemy(player, dummy), "skills should treat the training dummy as an enemy");
+			for (int i = 0; i < 200; i++) {
+				CombatHooks.deal(player, dummy, 10.0F, player.damageSources().playerAttack(player), CombatHooks.DamageKind.SKILL);
+			}
+			DummyMeter.Session session = DummyMeter.session(player);
+			require(session != null && session.hits() == 200, "the dummy should count 200 skill hits, got " + (session == null ? 0 : session.hits()));
+			require(session.crits() > 0 && session.total() > 2000.0F, "skill hits should crit: " + session.crits() + " crits, " + session.total() + " damage");
+			require(dummy.isAlive() && dummy.getHealth() == dummy.getMaxHealth(), "the dummy never takes damage");
+			// a wolf summoned at power 10 bites for 10 x its share, not vanilla's 4
+			var wolf = EntityTypes.WOLF.create(level, EntitySpawnReason.COMMAND);
+			wolf.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0, 0);
+			level.addFreshEntity(wolf);
+			Actions.markSummon(wolf, player, 10.0);
+			float before = session.total();
+			dummy.hurtServer(level, level.damageSources().mobAttack(wolf), 4.0F);
+			float bite = session.total() - before;
+			float share = (float)(10.0 * Actions.Summon.WOLF.share());
+			require(Math.abs(bite - share) < 0.01F || bite > share * 1.49F && bite < share * 3.0F,
+				"a summoned wolf should bite for " + share + " (or a crit of it), bit " + bite);
+			wolf.discard();
+			dummy.discard();
+			require(SkillContext.areaShare(5) == 1.0 && Math.abs(SkillContext.areaShare(20) - 0.5) < 1.0E-9, "an area hit on 20 should give each half");
+			return session.crits() + " crits in 200 skill hits, wolf bite " + bite;
+		});
+		MinecraftMode.LOGGER.info("[job] crits and dummy: {}", report);
+	}
+
 	private static void checkVolleys(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		server.runCommand("fill 14 -55 14 26 -55 26 minecraft:stone");
 		LivingEntity[] roofed = new LivingEntity[1];

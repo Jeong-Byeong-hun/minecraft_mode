@@ -2,6 +2,8 @@ package com.minecraftmode.job.skill;
 
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.entity.MobPower;
+import com.minecraftmode.entity.TrainingDummy;
+import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.EliteMob;
 import com.minecraftmode.entity.combat.MagicDamage;
 import com.minecraftmode.job.JobClass;
@@ -18,9 +20,12 @@ import com.minecraftmode.registry.ModEffects;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import com.minecraftmode.network.DamageNumberPayload;
 import com.minecraftmode.network.TargetHealthPayload;
+import com.minecraftmode.registry.ModParticles;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -66,6 +71,13 @@ public final class CombatHooks {
 	public static final float VINDICATOR_DAMAGE = 5.0F;
 
 	private static @Nullable DamageKind current;
+	/** The hit being dealt right now was a critical one (set by {@link #outgoing}, read once by {@link #afterDamage}). */
+	private static boolean critHit;
+
+	/** Whether the hit {@link #modifyIncoming} just adjusted was a critical one (for hits that skip vanilla's damage, like training dummies). */
+	public static boolean lastHitWasCrit() {
+		return critHit;
+	}
 	/** Vanilla arrows loosed by class bows -> their damage. */
 	private static final Map<Entity, Float> ARROWS = new WeakHashMap<>();
 	/** Vanilla arrows fired by skills -> the skill that fired them. */
@@ -127,7 +139,7 @@ public final class CombatHooks {
 
 	/** Anything the caster may hurt with a basic shot: not themself, their pets, allies or protected players. */
 	public static boolean canHarm(final Player caster, final Entity entity) {
-		if (!(entity instanceof LivingEntity living) || !living.isAlive() || living == caster || living.isSpectator() || living instanceof ArmorStand) {
+		if (!(entity instanceof LivingEntity living) || !living.isAlive() || living == caster || living.isSpectator() || living instanceof ArmorStand && !(living instanceof TrainingDummy)) {
 			return false;
 		}
 		if (living instanceof OwnableEntity ownable && ownable.getOwner() == caster) {
@@ -173,8 +185,13 @@ public final class CombatHooks {
 			result = skillArrow.ctx.damageFor(skillArrow.multiplier);
 			kind = DamageKind.SKILL;
 		}
+		critHit = false;
 		if (source.getEntity() instanceof ServerPlayer attacker && attacker != victim) {
 			result = outgoing(attacker, victim, source, result, kind, now);
+		} else if (summonOwner(level, source.getEntity()) instanceof ServerPlayer owner && owner != victim) {
+			// a skill summon hits with its caster's power and stats like a skill (vanilla wolves bit for 4 and snow golems for 0 at any level)
+			float hit = Actions.summonDamage(source.getEntity());
+			result = outgoing(owner, victim, source, Float.isNaN(hit) ? result : hit, DamageKind.SKILL, now);
 		}
 		// event monsters meant to have more than vanilla's 1024 health take damage divided by the rest (MobPower)
 		result /= MobPower.toughness(victim);
@@ -204,22 +221,25 @@ public final class CombatHooks {
 		boolean basic = melee || kind == DamageKind.SHOT;
 		float bonus = 0.0F;
 		float crit = 1.0F;
+		// basic hits, shots, skills and skill summons all roll for a critical hit; only basic ones refund cooldowns (a skill
+		// crit doing it would let area skills keep themselves off cooldown)
+		if (basic || kind == DamageKind.SKILL) {
+			float critChance = mods.fraction(EngraveStat.CRIT_CHANCE) + (has(data, JobClass.ROGUE, 2) ? 0.15F : 0.0F);
+			if (critChance > 0.0F && attacker.getRandom().nextFloat() < critChance) {
+				crit = 1.5F + mods.fraction(EngraveStat.CRIT_DAMAGE);
+				critHit = true;
+				critFx(attacker.level(), victim);
+				float refund = mods.get(EngraveStat.CRIT_REFUND);
+				if (basic && refund > 0.0F) {
+					shortenCooldowns(attacker, Math.round(refund * 20.0F));
+				}
+			}
+		}
 		if (basic) {
 			if (melee) {
 				bonus += mods.fraction(EngraveStat.BASIC_DAMAGE);
 				if (has(data, JobClass.WARRIOR, 2)) {
 					bonus += 0.10F;
-				}
-			}
-			float critChance = mods.fraction(EngraveStat.CRIT_CHANCE) + (has(data, JobClass.ROGUE, 2) ? 0.15F : 0.0F);
-			if (critChance > 0.0F && attacker.getRandom().nextFloat() < critChance) {
-				crit = 1.5F + mods.fraction(EngraveStat.CRIT_DAMAGE);
-				ServerLevel level = attacker.level();
-				level.sendParticles(ParticleTypes.CRIT, victim.getX(), victim.getY(0.6), victim.getZ(), 12, 0.3, 0.3, 0.3, 0.3);
-				level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.8F, 1.2F);
-				float refund = mods.get(EngraveStat.CRIT_REFUND);
-				if (refund > 0.0F) {
-					shortenCooldowns(attacker, Math.round(refund * 20.0F));
 				}
 			}
 			if (isBehind(attacker, victim)) {
@@ -347,14 +367,48 @@ public final class CombatHooks {
 		return true;
 	}
 
-	private static void afterDamage(final LivingEntity victim, final DamageSource source, final float baseDamage, final float damageTaken, final boolean blocked) {
-		if (damageTaken <= 0.0F || !(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim) {
+	/**
+	 * The attacker's client shows the target's health bar ({@code TargetHealthHud}) and floats the damage over it ({@code DamageNumbers}),
+	 * as the damage really counted: toughness (dungeons) and raid boss divisors scale the health lost back up. Fake players have no client.
+	 */
+	public static void showHit(final ServerPlayer attacker, final LivingEntity victim, final float damageTaken, final boolean crit) {
+		if (!ServerPlayNetworking.canSend(attacker, TargetHealthPayload.TYPE)) {
 			return;
 		}
-		// the attacker's client shows this target's health bar (TargetHealthHud); fake players have no client
-		if (ServerPlayNetworking.canSend(attacker, TargetHealthPayload.TYPE)) {
-			ServerPlayNetworking.send(attacker, new TargetHealthPayload(victim.getId()));
+		float shown = damageTaken * MobPower.toughness(victim) * (victim instanceof RaidBoss boss ? boss.divisor() : 1.0F);
+		ServerPlayNetworking.send(attacker, new TargetHealthPayload(victim.getId()));
+		ServerPlayNetworking.send(attacker, new DamageNumberPayload(victim.getId(), shown, crit));
+	}
+
+	/** A critical hit: the vanilla crit sparks with a gold burst on top, and a sharper sound everyone nearby hears. */
+	private static void critFx(final ServerLevel level, final LivingEntity victim) {
+		double y = victim.getY(0.6);
+		level.sendParticles(ParticleTypes.CRIT, victim.getX(), y, victim.getZ(), 12, 0.3, 0.3, 0.3, 0.3);
+		level.sendParticles(ColorParticleOption.create(ModParticles.SPARK, 0xFFFFC83A), victim.getX(), y, victim.getZ(), 10, 0.25, 0.35, 0.25, 0.25);
+		level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.9F, 1.15F);
+	}
+
+	/** The player whose skill summoned {@code entity} (online, in this world), or null. */
+	public static @Nullable ServerPlayer summonOwner(final ServerLevel level, final @Nullable Entity entity) {
+		java.util.UUID id = Actions.summoner(entity);
+		return id == null ? null : level.getServer().getPlayerList().getPlayer(id);
+	}
+
+	private static void afterDamage(final LivingEntity victim, final DamageSource source, final float baseDamage, final float damageTaken, final boolean blocked) {
+		boolean crit = critHit;
+		critHit = false;
+		if (damageTaken <= 0.0F || !(victim.level() instanceof ServerLevel level)) {
+			return;
 		}
+		ServerPlayer owner = summonOwner(level, source.getEntity());
+		if (owner != null && owner != victim) {
+			showHit(owner, victim, damageTaken, crit);
+			return;
+		}
+		if (!(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim) {
+			return;
+		}
+		showHit(attacker, victim, damageTaken, crit);
 		DamageKind kind = current;
 		Entity direct = source.getDirectEntity();
 		SkillArrow skillArrow = kind == null && direct != null ? SKILL_ARROWS.get(direct) : null;

@@ -25,4 +25,12 @@ public interface SkillAction {
 	default boolean damages() {
 		return false;
 	}
+
+	/**
+	 * Expected damage of one cast on {@code targets} monsters standing together, in multiples of the skill power (all of them added up;
+	 * crits and bonuses left out). Only the class docs read it, to compare skills; 0 for steps that deal no damage.
+	 */
+	default double estimate(final int targets) {
+		return 0.0;
+	}
 }

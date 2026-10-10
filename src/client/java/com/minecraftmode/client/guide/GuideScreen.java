@@ -137,7 +137,8 @@ public class GuideScreen extends Screen {
 		} else if (topic == Topic.KEYS) {
 			// the keys as bound now, so rebinding shows here too
 			KeyMapping[] keys = {JobKeys.OPEN_SCREEN, EndgameClient.TALENTS, EndgameClient.CODEX, JobKeys.SKILLS[0], JobKeys.SKILLS[1], JobKeys.SKILLS[2],
-				JobKeys.SKILLS[3], JobKeys.INNATE, CompanionClient.COLLECTION, CompanionClient.MOUNT, RaidClient.LOOT, MapClient.OPEN_MAP, MapClient.TOGGLE_MINIMAP};
+				JobKeys.SKILLS[3], JobKeys.INNATE, CompanionClient.COLLECTION, CompanionClient.MOUNT, RaidClient.LOOT, MapClient.OPEN_MAP, MapClient.TOGGLE_MINIMAP,
+				JobKeys.CHARACTER};
 			Object[] args = new Object[keys.length];
 			for (int i = 0; i < keys.length; i++) {
 				args[i] = keys[i].getTranslatedKeyMessage().copy().withStyle(ChatFormatting.YELLOW);

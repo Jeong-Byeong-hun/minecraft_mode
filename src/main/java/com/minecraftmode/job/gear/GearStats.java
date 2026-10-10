@@ -6,7 +6,9 @@ import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.Paragon;
+import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
+import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
@@ -14,9 +16,11 @@ import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.talent.Talents;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.world.entity.player.Player;
@@ -64,18 +68,48 @@ public final class GearStats {
 		(player.level().isClientSide() ? CLIENT_CACHE : SERVER_CACHE).remove(player);
 	}
 
+	/** Where a stat line comes from (the character screen lists totals by source). */
+	public enum Source {
+		WEAPON, ARMOR, ENHANCEMENT, SET, LEVEL, PASSIVE, BUFF, TALENT, COLLECTION, PARAGON, COMPANION;
+
+		public String key() {
+			return "screen.minecraft_mode.character.source." + this.name().toLowerCase(Locale.ROOT);
+		}
+	}
+
+	@FunctionalInterface
+	private interface Sink {
+		void add(Source source, EngraveStat stat, float value);
+	}
+
 	private static EngraveTotals compute(final Player player) {
-		JobData data = JobProgression.get(player);
 		EngraveTotals.Builder builder = EngraveTotals.builder();
+		collect(player, (source, stat, value) -> builder.add(stat, value));
+		return builder.build();
+	}
+
+	/** Every stat's uncapped value per source (only sources that add something); the caps apply to the sum ({@link #of}). */
+	public static Map<EngraveStat, Map<Source, Float>> breakdown(final Player player) {
+		Map<EngraveStat, Map<Source, Float>> out = new EnumMap<>(EngraveStat.class);
+		collect(player, (source, stat, value) -> {
+			if (value != 0.0F) {
+				out.computeIfAbsent(stat, s -> new EnumMap<>(Source.class)).merge(source, value, Float::sum);
+			}
+		});
+		return out;
+	}
+
+	private static void collect(final Player player, final Sink sink) {
+		JobData data = JobProgression.get(player);
 		ItemStack main = player.getMainHandItem();
 		WeaponDef weapon = JobWeapons.def(main);
 		if (weapon != null && JobWeapons.isActive(data, weapon)) {
-			builder.addAll(JobWeapons.engravings(main).resolved());
+			for (Engraving e : JobWeapons.engravings(main).resolved()) {
+				sink.add(Source.WEAPON, e.stat(), e.value());
+			}
 			ClassGear gear = ClassGear.of(main);
 			if (gear != null) {
-				for (StatLine line : Enhancement.lines(gear, Enhancement.level(main), Enhancement.of(main).awaken())) {
-					add(builder, line);
-				}
+				lines(sink, Source.ENHANCEMENT, Enhancement.lines(gear, Enhancement.level(main), Enhancement.of(main).awaken()));
 			}
 		}
 		Map<String, Integer> setCounts = new HashMap<>();
@@ -85,50 +119,34 @@ public final class GearStats {
 			if (piece == null || !GearRules.canUse(data, piece.job(), piece.level())) {
 				continue;
 			}
-			add(builder, piece.baseOption());
-			for (StatLine line : piece.defenseLines()) {
-				add(builder, line);
+			lines(sink, Source.ARMOR, List.of(piece.baseOption()));
+			lines(sink, Source.ARMOR, piece.defenseLines());
+			lines(sink, Source.ARMOR, stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines());
+			for (Engraving e : stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY).resolved()) {
+				sink.add(Source.ARMOR, e.stat(), e.value());
 			}
-			for (StatLine line : stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines()) {
-				add(builder, line);
-			}
-			builder.addAll(stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY).resolved());
 			ClassGear gear = ClassGear.of(stack);
 			if (gear != null) {
-				for (StatLine line : Enhancement.lines(gear, Enhancement.level(stack), Enhancement.of(stack).awaken())) {
-					add(builder, line);
-				}
+				lines(sink, Source.ENHANCEMENT, Enhancement.lines(gear, Enhancement.level(stack), Enhancement.of(stack).awaken()));
 			}
 			setCounts.merge(piece.set().id(), 1, Integer::sum);
 		}
 		for (Map.Entry<String, Integer> entry : setCounts.entrySet()) {
-			ArmorSetDef set = ClassArmor.set(entry.getKey());
-			for (StatLine line : activeSetLines(set, entry.getValue())) {
-				add(builder, line);
-			}
+			lines(sink, Source.SET, activeSetLines(ClassArmor.set(entry.getKey()), entry.getValue()));
 		}
-		for (StatLine line : LevelRewards.of(data)) {
-			add(builder, line);
+		lines(sink, Source.LEVEL, LevelRewards.of(data));
+		lines(sink, Source.PASSIVE, ClassPassives.of(data));
+		lines(sink, Source.BUFF, BuffEffects.active(player));
+		lines(sink, Source.TALENT, Talents.lines(player));
+		lines(sink, Source.COLLECTION, CollectionBonuses.lines(Progress.get(player)));
+		lines(sink, Source.PARAGON, Paragon.lines(player));
+		lines(sink, Source.COMPANION, Companions.lines(player));
+	}
+
+	private static void lines(final Sink sink, final Source source, final Iterable<StatLine> lines) {
+		for (StatLine line : lines) {
+			sink.add(source, line.stat(), line.value());
 		}
-		for (StatLine line : ClassPassives.of(data)) {
-			add(builder, line);
-		}
-		for (StatLine line : BuffEffects.active(player)) {
-			add(builder, line);
-		}
-		for (StatLine line : Talents.lines(player)) {
-			add(builder, line);
-		}
-		for (StatLine line : CollectionBonuses.lines(Progress.get(player))) {
-			add(builder, line);
-		}
-		for (StatLine line : Paragon.lines(player)) {
-			add(builder, line);
-		}
-		for (StatLine line : Companions.lines(player)) {
-			add(builder, line);
-		}
-		return builder.build();
 	}
 
 	/** Bonus lines of {@code set} that {@code worn} pieces unlock. */
@@ -147,10 +165,6 @@ public final class GearStats {
 			}
 		}
 		return counts;
-	}
-
-	private static void add(final EngraveTotals.Builder builder, final StatLine line) {
-		builder.add(line.stat(), line.value());
 	}
 
 	private GearStats() {

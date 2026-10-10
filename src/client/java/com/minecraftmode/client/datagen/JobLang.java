@@ -91,6 +91,39 @@ final class JobLang {
 			b.add("key.minecraft_mode.skill_" + i, ko ? "스킬 " + i : "Skill " + i);
 		}
 		b.add("key.minecraft_mode.job_screen", ko ? "직업 창" : "Class Screen");
+		b.add("key.minecraft_mode.character_screen", ko ? "캐릭터 정보" : "Character Info");
+
+		// character screen
+		String c = "screen.minecraft_mode.character.";
+		b.add(c + "title", ko ? "캐릭터 정보" : "Character");
+		b.add(c + "button", ko ? "캐릭터 (I)" : "Character (I)");
+		b.add(c + "no_class", ko ? "직업 없음" : "No class");
+		b.add(c + "level", ko ? "Lv %s · 경험치 %s / %s" : "Lv %s · EXP %s / %s");
+		b.add(c + "level_paragon", ko ? "Lv %s · 초월 %s레벨" : "Lv %s · Paragon %s");
+		b.add(c + "attributes", ko ? "기본 능력치" : "Attributes");
+		b.add(c + "health", ko ? "최대 체력" : "Max health");
+		b.add(c + "armor", ko ? "방어력" : "Armor");
+		b.add(c + "toughness", ko ? "방어 강도" : "Armor toughness");
+		b.add(c + "attack", ko ? "공격력" : "Attack damage");
+		b.add(c + "attack_speed", ko ? "공격 속도" : "Attack speed");
+		b.add(c + "speed", ko ? "이동 속도 (칸/초)" : "Speed (blocks/s)");
+		b.add(c + "mana", ko ? "최대 MP" : "Max MP");
+		b.add(c + "mana_regen", ko ? "MP 회복" : "MP regen");
+		b.add(c + "combat", ko ? "전투" : "Combat");
+		b.add(c + "crit_chance", ko ? "치명타 확률" : "Critical chance");
+		b.add(c + "crit_damage", ko ? "치명타 피해" : "Critical damage");
+		b.add(c + "stats", ko ? "능력치 합계 (%s개) · 마우스를 올리면 출처" : "Stat totals (%s) · hover for sources");
+		b.add(c + "no_stats", ko ? "아직 장비·레벨·특성에서 오는 능력치가 없습니다." : "No stats from gear, level or talents yet.");
+		b.add(c + "cap", ko ? "최대 %s (합계 %s)" : "Capped at %s (sum %s)");
+		String[][] sources = {
+			{"weapon", "무기 각인", "Weapon engravings"}, {"armor", "방어구 (기본·추가 옵션·각인)", "Armor (base, options, engravings)"},
+			{"enhancement", "강화·각성", "Enhancement"}, {"set", "세트 효과", "Set bonuses"}, {"level", "레벨 보상", "Level rewards"},
+			{"passive", "직업 패시브", "Class passives"}, {"buff", "버프 (소모품)", "Buffs (consumables)"}, {"talent", "특성", "Talents"},
+			{"collection", "도감 수집", "Codex collection"}, {"paragon", "초월", "Paragon"}, {"companion", "펫·탈것", "Pets and mounts"}
+		};
+		for (String[] s : sources) {
+			b.add(c + "source." + s[0], ko ? s[1] : s[2]);
+		}
 
 		// messages
 		b.add("message.minecraft_mode.job.level_up", ko ? "레벨 업! 이제 %s레벨입니다." : "Level up! You are now level %s.");

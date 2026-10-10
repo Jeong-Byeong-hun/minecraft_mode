@@ -27,6 +27,13 @@ public final class ModDataComponents {
 		DataComponentType.<GearRolls>builder().persistent(GearRolls.CODEC).networkSynchronized(GearRolls.STREAM_CODEC).build()
 	);
 
+	/** New extra options rolled at the blacksmith, waiting for the player to keep the old ones or take these ({@code UpgradeMenu}). */
+	public static final DataComponentType<GearRolls> GEAR_ROLLS_PENDING = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("gear_rolls_pending"),
+		DataComponentType.<GearRolls>builder().persistent(GearRolls.CODEC).networkSynchronized(GearRolls.STREAM_CODEC).build()
+	);
+
 	/** Bracket (10..100) of an Evolution Ether stack. */
 	public static final DataComponentType<Integer> ETHER_GRADE = Registry.register(
 		BuiltInRegistries.DATA_COMPONENT_TYPE,

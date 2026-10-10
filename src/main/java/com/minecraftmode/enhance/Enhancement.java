@@ -71,6 +71,19 @@ public record Enhancement(int level, int pity, int awaken) {
 		return of(stack).level();
 	}
 
+	/** From this level enhanced gear shines: the enchantment glint, a coloured slot frame and particles while held or worn. */
+	public static final int GLOW_FROM = 10;
+	public static final int GLOW_BRIGHT = 13;
+
+	/** How brightly {@code stack} shows its enhancement: 0 below +10, 1 from +10, 2 from +13, 3 at +15, 4 once awakened. */
+	public static int glow(final ItemStack stack) {
+		Enhancement e = of(stack);
+		if (e.level < GLOW_FROM) {
+			return 0;
+		}
+		return e.awaken > 0 ? 4 : e.level >= MAX ? 3 : e.level >= GLOW_BRIGHT ? 2 : 1;
+	}
+
 	public static int baseRate(final int target) {
 		return RATE[Math.max(1, Math.min(MAX, target)) - 1];
 	}

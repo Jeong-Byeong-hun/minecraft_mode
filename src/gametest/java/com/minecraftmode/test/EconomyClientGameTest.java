@@ -83,6 +83,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			checkWallet(context, server, connection);
 			checkShop(context, server, connection);
 			checkEssence(context, server, connection);
+			GearCareChecks.run(context, server, connection);
 			checkConsumables(context, server, connection);
 			checkReturnScroll(context, server, connection);
 			checkMechanicSmoke(context, server, connection);

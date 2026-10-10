@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.bounty.BountyKind;
+import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.progress.Achievements;
 import com.minecraftmode.raid.RaidAffix;
@@ -165,7 +166,10 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.enhance.button", ko ? "강화" : "Enhance");
 		b.add("screen.minecraft_mode.enhance.protected", ko ? "보호 강화 (%s)" : "Protected (%s)");
 		b.add("screen.minecraft_mode.enhance.next", ko ? "+%s 효과" : "At +%s");
-		b.add("screen.minecraft_mode.enhance.protect_hint", ko ? "보호 강화: 실패해 하락할 때만 보호 주문서 1장 소모" : "Protected: a scroll is used only when it saves the level");
+		b.add("screen.minecraft_mode.enhance.protect_hint", ko
+			? "보호 강화: 실패해 하락할 때만 보호 주문서 1장 소모. 주문서가 없으면 장비 등급 이상의 진화 에테르 " + EnhanceMenu.PROTECTION_ETHER + "개를 대신 소모"
+			: "Protected: a scroll is used only when it saves the level. Without scrolls, " + EnhanceMenu.PROTECTION_ETHER + " Evolution Ether of the piece's grade or higher do instead");
+		b.add("screen.minecraft_mode.enhance.protected_ether", ko ? "에테르 %s" : "ether %s");
 		b.add("screen.minecraft_mode.enhance.result.success", ko ? "성공!" : "Success!");
 		b.add("screen.minecraft_mode.enhance.result.fail", ko ? "실패" : "Failed");
 		b.add("screen.minecraft_mode.enhance.result.drop", ko ? "하락" : "Dropped");

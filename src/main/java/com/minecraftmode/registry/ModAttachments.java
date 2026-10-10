@@ -5,6 +5,7 @@ import com.minecraftmode.bounty.BountyData;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonData;
+import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.quest.QuestData;
@@ -165,6 +166,15 @@ public final class ModAttachments {
 		builder -> builder.persistent(Codec.STRING)
 			.copyOnDeath()
 			.syncWith(ByteBufCodecs.STRING_UTF8, AttachmentSyncPredicate.all())
+	);
+
+	/** The last things sold to shops, newest first ({@link Buyback}). Kept through death; synced to the owner for the shop's buyback panel. */
+	public static final AttachmentType<List<Buyback.Entry>> SOLD = AttachmentRegistry.create(
+		MinecraftMode.id("sold"),
+		builder -> builder.persistent(Buyback.Entry.CODEC.listOf())
+			.copyOnDeath()
+			.initializer(List::of)
+			.syncWith(Buyback.Entry.STREAM_CODEC.apply(ByteBufCodecs.list(Buyback.LIMIT)), AttachmentSyncPredicate.targetOnly())
 	);
 
 	public static void init() {

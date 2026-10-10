@@ -4,7 +4,9 @@ import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ArmorOptions;
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
@@ -31,12 +33,14 @@ import org.jspecify.annotations.Nullable;
  */
 public class UpgradeMenu extends AbstractContainerMenu {
 	public static final int WIDTH = 200;
-	public static final int HEIGHT = 196;
+	public static final int HEIGHT = 222;
 	public static final int SLOT_X = 14;
 	public static final int SLOT_Y = 30;
 	public static final int INVENTORY_X = 20;
-	public static final int INVENTORY_Y = 114;
+	public static final int INVENTORY_Y = 140;
 	public static final int BUTTON_REROLL = 10;
+	public static final int BUTTON_KEEP = 11;
+	public static final int BUTTON_APPLY = 12;
 
 	private final @Nullable Entity npc;
 	private final Container container = new SimpleContainer(1) {
@@ -105,10 +109,34 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		return ClassArmor.def(this.input()) != null;
 	}
 
+	/** Keeps the old options ({@code apply} false) or takes the pending ones; either way the pending set is gone. */
+	private boolean choose(final Player player, final boolean apply) {
+		ItemStack stack = this.input();
+		GearRolls pending = stack.get(ModDataComponents.GEAR_ROLLS_PENDING);
+		if (pending == null) {
+			return false;
+		}
+		if (player.level().isClientSide()) {
+			return true;
+		}
+		if (apply) {
+			stack.set(ModDataComponents.GEAR_ROLLS, pending);
+		}
+		stack.remove(ModDataComponents.GEAR_ROLLS_PENDING);
+		this.container.setChanged();
+		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), apply ? SoundEvents.SMITHING_TABLE_USE : SoundEvents.UI_BUTTON_CLICK.value(),
+			SoundSource.BLOCKS, 0.8F, 1.0F);
+		this.broadcastChanges();
+		return true;
+	}
+
 	@Override
 	public boolean clickMenuButton(final Player player, final int buttonId) {
 		if (buttonId == BUTTON_REROLL) {
 			return this.reroll(player);
+		}
+		if (buttonId == BUTTON_KEEP || buttonId == BUTTON_APPLY) {
+			return this.choose(player, buttonId == BUTTON_APPLY);
 		}
 		List<ClassGear> targets = this.targets();
 		if (buttonId < 0 || buttonId >= targets.size()) {
@@ -141,24 +169,35 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		return true;
 	}
 
+	/** Whether {@code player} can pay a reroll of the armor in the slot: condensed essence (loose essence counts) and coins. */
+	public boolean canPayReroll(final Player player) {
+		ClassGear gear = ClassGear.of(this.input());
+		return gear != null && (player.isCreative()
+			|| Essence.held(player.getInventory(), ModItems.CONDENSED_ESSENCE) >= GearUpgrades.REROLL_CONDENSED && Coins.total(player) >= GearUpgrades.rerollCost(gear));
+	}
+
+	/**
+	 * Rolls every extra option again into a pending set kept on the piece: the player then keeps the old options ({@link #BUTTON_KEEP})
+	 * or takes the new ones ({@link #BUTTON_APPLY}). Rolling again replaces the pending set. The pending set stays on the piece when the
+	 * bench is closed, so the choice can wait.
+	 */
 	private boolean reroll(final Player player) {
 		ItemStack stack = this.input();
 		ArmorPieceDef piece = ClassArmor.def(stack);
 		ClassGear gear = ClassGear.of(stack);
-		if (piece == null || gear == null) {
-			return false;
-		}
-		int coins = GearUpgrades.rerollCost(gear);
-		if (!player.isCreative() && Coins.total(player) < coins) {
+		if (piece == null || gear == null || !this.canPayReroll(player)) {
 			return false;
 		}
 		if (player.level().isClientSide()) {
 			return true;
 		}
-		if (!player.isCreative() && !Wallet.take(player, coins)) {
-			return false;
+		if (!player.isCreative()) {
+			if (!Wallet.take(player, GearUpgrades.rerollCost(gear))) {
+				return false;
+			}
+			Essence.take(player.getInventory(), ModItems.CONDENSED_ESSENCE, GearUpgrades.REROLL_CONDENSED);
 		}
-		stack.set(ModDataComponents.GEAR_ROLLS, ArmorOptions.roll(piece, player.getRandom()));
+		stack.set(ModDataComponents.GEAR_ROLLS_PENDING, ArmorOptions.roll(piece, player.getRandom()));
 		this.container.setChanged();
 		if (player.level() instanceof ServerLevel level) {
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.GRINDSTONE_USE, SoundSource.BLOCKS, 0.8F, 1.0F);

@@ -74,6 +74,13 @@ public final class GearTooltips {
 				lines.add(statLine(line, ChatFormatting.AQUA));
 			}
 		}
+		GearRolls pending = stack.get(ModDataComponents.GEAR_ROLLS_PENDING);
+		if (pending != null) {
+			lines.add(Component.translatable("tooltip.minecraft_mode.gear.pending").withStyle(ChatFormatting.DARK_AQUA));
+			for (StatLine line : pending.lines()) {
+				lines.add(statLine(line, ChatFormatting.DARK_AQUA));
+			}
+		}
 
 		Engravings engravings = stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);
 		lines.add(Component.translatable("tooltip.minecraft_mode.weapon.engravings", engravings.lines().size(), Engravings.ARMOR_LINES).withStyle(ChatFormatting.LIGHT_PURPLE));

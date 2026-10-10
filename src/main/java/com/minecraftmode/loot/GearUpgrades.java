@@ -47,6 +47,9 @@ public final class GearUpgrades {
 		return Math.max(1, base);
 	}
 
+	/** Condensed essence to roll an armor piece's extra options again (on top of {@link #rerollCost} coins). */
+	public static final int REROLL_CONDENSED = 3;
+
 	/** Coins to roll an armor piece's extra options again: half its bracket's guild price. */
 	public static int rerollCost(final ClassGear gear) {
 		return Math.max(1, GearShop.bracketPrice(gear.bracket()) / 2);

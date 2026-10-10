@@ -108,6 +108,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		EndgameClient.init();
 		DungeonClient.init();
 		WalletDisplay.init();
+		BuybackPanel.init();
+		EnhanceVisuals.init();
 		TargetHealthHud.init();
 		TrashButton.init();
 		ClientSettings.init();

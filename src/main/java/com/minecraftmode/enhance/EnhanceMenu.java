@@ -4,6 +4,8 @@ import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.ItemLevels;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.registry.ModDataComponents;
@@ -105,7 +107,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		return Essence.held(inventory, cost.condensed() ? ModItems.CONDENSED_ESSENCE : ModItems.ESSENCE);
 	}
 
-	public static boolean canPay(final Player player, final Cost cost, final boolean protect) {
+	public static boolean canPay(final Player player, final ClassGear gear, final Cost cost, final boolean protect) {
 		if (player.isCreative()) {
 			return true;
 		}
@@ -113,7 +115,47 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		return Coins.total(player) >= cost.coins()
 			&& essenceHeld(inventory, cost) >= cost.essence()
 			&& Bags.count(player, ModItems.ENHANCEMENT_STONE) >= cost.stones()
-			&& (!protect || Bags.count(player, ModItems.PROTECTION_SCROLL) > 0);
+			&& (!protect || canProtect(player, gear));
+	}
+
+	/** Evolution Ether that stands in for a protection scroll: this many of the piece's bracket grade or higher. */
+	public static final int PROTECTION_ETHER = 5;
+
+	/** Ether in the inventory that can protect {@code gear} (grade at or above its bracket). */
+	public static int protectionEther(final Inventory inventory, final ClassGear gear) {
+		int total = 0;
+		for (int i = 0; i < inventory.getContainerSize(); i++) {
+			ItemStack stack = inventory.getItem(i);
+			if (stack.is(ModItems.EVOLUTION_ETHER) && EvolutionEtherItem.grade(stack) >= gear.bracket()) {
+				total += stack.getCount();
+			}
+		}
+		return total;
+	}
+
+	/** A protection scroll, or {@link #PROTECTION_ETHER} ether of the piece's bracket or higher. */
+	public static boolean canProtect(final Player player, final ClassGear gear) {
+		return Bags.count(player, ModItems.PROTECTION_SCROLL) > 0 || protectionEther(player.getInventory(), gear) >= PROTECTION_ETHER;
+	}
+
+	/** Uses up the protection: a scroll when there is one, otherwise ether, lowest qualifying grade first. */
+	private static void useProtection(final Player player, final ClassGear gear) {
+		if (Bags.count(player, ModItems.PROTECTION_SCROLL) > 0) {
+			Bags.take(player, ModItems.PROTECTION_SCROLL, 1);
+			return;
+		}
+		Inventory inventory = player.getInventory();
+		int left = PROTECTION_ETHER;
+		for (int grade = gear.bracket(); grade <= ItemLevels.MAX_BRACKET && left > 0; grade += 10) {
+			for (int i = 0; i < inventory.getContainerSize() && left > 0; i++) {
+				ItemStack stack = inventory.getItem(i);
+				if (stack.is(ModItems.EVOLUTION_ETHER) && EvolutionEtherItem.grade(stack) == grade) {
+					int take = Math.min(left, stack.getCount());
+					stack.shrink(take);
+					left -= take;
+				}
+			}
+		}
 	}
 
 	/** True when the slot holds a +15 piece that can be awakened further. */
@@ -178,7 +220,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		int target = current.level() + 1;
 		boolean protect = buttonId == BUTTON_PROTECTED && Enhancement.risky(target);
 		Cost cost = Cost.of(gear, target);
-		if (!canPay(player, cost, protect)) {
+		if (!canPay(player, gear, cost, protect)) {
 			return false;
 		}
 		if (!(player instanceof ServerPlayer serverPlayer)) {
@@ -212,7 +254,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			boolean saved = risky && protect;
 			next = current.failed(risky && !saved);
 			if (saved && !player.isCreative()) {
-				Bags.take(player, ModItems.PROTECTION_SCROLL, 1);
+				useProtection(player, gear);
 			}
 			outcome = saved ? RESULT_SAVED : risky ? RESULT_DROP : RESULT_FAIL;
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.6F, 0.8F);

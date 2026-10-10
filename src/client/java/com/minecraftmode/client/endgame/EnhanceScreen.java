@@ -53,7 +53,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	}
 
 	private boolean canPay(final boolean protect) {
-		return this.ready() && this.minecraft.player != null && EnhanceMenu.canPay(this.minecraft.player, this.cost(), protect);
+		return this.ready() && this.minecraft.player != null && EnhanceMenu.canPay(this.minecraft.player, ClassGear.of(this.menu.input()), this.cost(), protect);
 	}
 
 	@Override
@@ -139,7 +139,11 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 		this.button(g, x + PX, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.button"), this.canPay(false), mouseX, mouseY);
 		if (Enhancement.risky(target)) {
 			int scrolls = Bags.count(this.minecraft.player, ModItems.PROTECTION_SCROLL);
-			this.button(g, x + PX + PW - BUTTON_W, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.protected", scrolls), this.canPay(true), mouseX, mouseY);
+			ClassGear held = ClassGear.of(this.menu.input());
+			// without scrolls the button counts how many protections the ether covers
+			Component count = scrolls > 0 || held == null ? Component.literal(String.valueOf(scrolls))
+				: Component.translatable("screen.minecraft_mode.enhance.protected_ether", EnhanceMenu.protectionEther(this.minecraft.player.getInventory(), held) / EnhanceMenu.PROTECTION_ETHER);
+			this.button(g, x + PX + PW - BUTTON_W, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.protected", count), this.canPay(true), mouseX, mouseY);
 		}
 	}
 

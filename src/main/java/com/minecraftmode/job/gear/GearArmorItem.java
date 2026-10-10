@@ -71,6 +71,12 @@ public class GearArmorItem extends Item {
 		return Enhancement.decorate(Component.translatable(this.getDescriptionId()).withColor(JobWeaponItem.tierColor(this.def.tier())), itemStack);
 	}
 
+	/** Gear enhanced to +{@value Enhancement#GLOW_FROM} or more has the enchantment glint (the client adds slot frames and particles). */
+	@Override
+	public boolean isFoil(final ItemStack itemStack) {
+		return super.isFoil(itemStack) || Enhancement.glow(itemStack) > 0;
+	}
+
 	@Override
 	public InteractionResult use(final Level level, final Player player, final InteractionHand hand) {
 		if (!GearRules.canUse(player, this.def.job(), this.def.level())) {

@@ -21,7 +21,9 @@ import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.DungeonLayout;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.dungeon.Keystone;
+import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.Ability;
@@ -254,7 +256,9 @@ public class GearDocProvider implements DataProvider {
 		md.append("\n(방어 점수 / 방어 강도 / 물리 보호 / 마법 방어 / 회피, 그 레벨까지 입을 수 있는 가장 높은 세트)\n");
 
 		md.append("\n## 방어구 기본 옵션과 추가 옵션\n\n");
-		md.append("- 부위마다 고정 기본 옵션 1줄 + 무작위 추가 옵션(Lv 30 미만 1줄, Lv 60 미만 2줄, 그 이상 3줄). 추가 옵션 수치는 레벨 최대치의 60–100%.\n\n");
+		md.append("- 부위마다 고정 기본 옵션 1줄 + 무작위 추가 옵션(Lv 30 미만 1줄, Lv 60 미만 2줄, 그 이상 3줄). 추가 옵션 수치는 레벨 최대치의 60–100%.\n");
+		md.append("- 대장장이의 **추가 옵션** 탭에서 다시 굴립니다: 응축된 정수 ").append(GearUpgrades.REROLL_CONDENSED)
+			.append("개(정수 9개 = 1개) + 구간 길드 가격의 절반. 새 옵션은 기존 옵션 옆에 보관되고, ✔(적용) 또는 ✖(기존 유지)를 고를 때까지 기존 옵션이 그대로 적용됩니다.\n\n");
 		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
 		ArmorSetDef sample = ClassArmor.sets().stream().filter(s -> s.level() == 50).findFirst().orElseThrow();
 		for (GearSlot slot : GearSlot.ARMOR) {
@@ -468,7 +472,11 @@ public class GearDocProvider implements DataProvider {
 		md.append("\n## 장비 강화 (+1 ~ +").append(Enhancement.MAX).append(")\n\n");
 		md.append("- 수도 대장간의 **강화 장인 브로크**. 직업 무기와 직업 방어구, 진화해도 강화 단계는 유지됩니다.\n");
 		md.append("- 실패하면 **장인의 기운** +").append(Enhancement.PITY_STEP).append("%(다음 시도 확률에 더해짐, 성공하면 초기화). +")
-			.append(Enhancement.RISKY_FROM).append("부터는 실패하면 한 단계 하락 — **보호 강화**는 하락을 막을 때만 보호 주문서 1장을 씁니다.\n");
+			.append(Enhancement.RISKY_FROM).append("부터는 실패하면 한 단계 하락 — **보호 강화**는 하락을 막을 때만 보호 주문서 1장을 씁니다. 주문서가 없으면 장비 구간 등급 이상의 진화의 에테르 ")
+			.append(EnhanceMenu.PROTECTION_ETHER).append("개를 대신 씁니다(낮은 등급부터).\n");
+		md.append("- +").append(Enhancement.GLOW_FROM).append("부터 장비가 빛납니다: 광택, 슬롯 테두리(+").append(Enhancement.GLOW_FROM).append(" 파랑, +")
+			.append(Enhancement.GLOW_BRIGHT).append(" 보라, +").append(Enhancement.MAX).append(" 금색, 각성 붉은 금색과 ✦), 든 무기 주변 파티클, 직업 방어구 4부위가 모두 +")
+			.append(Enhancement.GLOW_FROM).append(" 이상이면 발밑의 고리. `/enhanceeffects false`로 파티클만 끕니다.\n");
 		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n\n");
 		md.append("| 단계 | 성공률 | 정수 | 강화석 | 실패 시 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|---|---|---|\n");
 		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());
@@ -489,6 +497,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 구매 탭: 검색, 분류(장비·소모품·재료), 정렬(가격·마감), 쪽 넘기기 — 서버가 찾아서 한 쪽(").append(AuctionService.PAGE_SIZE)
 			.append("건)씩만 보냅니다. 판매 탭에서 물건을 고르면 지금 최저가가 자동으로 들어갑니다.\n");
 		md.append("- 물건이 든 셜커 상자·꾸러미, 데이터가 ").append(AuctionService.MAX_ITEM_BYTES / 1024).append("KB를 넘는 물건(긴 책 등)은 등록할 수 없습니다.\n\n");
+		md.append("## 상점 재구매\n\n- 상점에 판 물건은 최근 ").append(Buyback.LIMIT).append("건까지(강화·각인 그대로) 어느 상점에서든 판 값의 ")
+			.append(Buyback.MARKUP).append("배로 되살 수 있습니다. 상점 창 오른쪽의 **재구매** 칸을 누르세요. 같은 물건을 연달아 팔면 한 줄로 합쳐지고, 재구매는 시세에 영향을 주지 않습니다.\n\n");
 
 		md.append("## 업적 (").append(Achievements.all().size()).append("개)\n\n| 업적 | 조건 | 공적 | 칭호 |\n|---|---|---|---|\n");
 		for (Achievements.Achievement a : Achievements.all()) {

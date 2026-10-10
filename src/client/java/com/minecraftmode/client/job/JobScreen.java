@@ -76,6 +76,8 @@ public class JobScreen extends Screen {
 			.bounds(this.left + 96, this.top + H - 30, 64, 20).build());
 		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.codex.title"), b -> this.minecraft.gui.setScreen(new CodexScreen()))
 			.bounds(this.left + 164, this.top + H - 30, 64, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.character.button"), b -> this.minecraft.gui.setScreen(new CharacterScreen()))
+			.bounds(this.left + W - 72, this.top + 5, 64, 16).build());
 	}
 
 	@Override

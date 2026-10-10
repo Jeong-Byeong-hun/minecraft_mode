@@ -42,7 +42,7 @@ import net.minecraft.world.item.component.ItemContainerContents;
  * cheaply ({@link #MAX_ITEM_BYTES}) cannot be listed.
  */
 public final class AuctionService {
-	public static final int MAX_LISTINGS = 10;
+	public static final int MAX_LISTINGS = 20;
 	public static final long DURATION = 72000L;
 	public static final int LIST_FEE_PERCENT = 1;
 	public static final int SALE_FEE_PERCENT = 5;

@@ -33,7 +33,9 @@ final class TownLang {
 		b.add("message.minecraft_mode.dummy.result", ko ? "허수아비 결과: %s초 동안 피해 %s, DPS %s (%s타, 치명 %s%%, 최고 한 방 %s)"
 			: "Dummy result: %2$s damage in %1$ss, %3$s DPS (%4$s hits, %5$s%% crits, best hit %6$s)");
 		b.add("message.minecraft_mode.damage_numbers.on", ko ? "피해 숫자를 표시합니다. 끄려면 /damagenumbers false" : "Damage numbers on. /damagenumbers false turns them off.");
-		b.add("message.minecraft_mode.damage_numbers.off", ko ? "피해 숫자를 숨깁니다. 켜려면 /damagenumbers true" : "Damage numbers off. /damagenumbers true turns them on.");
+		b.add("message.minecraft_mode.enhance_effects.on", ko ? "강화 장비 파티클을 표시합니다. 끄려면 /enhanceeffects false" : "Enhanced gear particles on. /enhanceeffects false turns them off.");
+		b.add("message.minecraft_mode.enhance_effects.off", ko ? "강화 장비 파티클을 숨깁니다(테두리·광택은 유지). 켜려면 /enhanceeffects true" : "Enhanced gear particles off (frames and glint stay). /enhanceeffects true turns them on.");
+		b.add("message.minecraft_mode.damage_numbers.off",ko ? "피해 숫자를 숨깁니다. 켜려면 /damagenumbers true" : "Damage numbers off. /damagenumbers true turns them on.");
 		// trash
 		b.add("screen.minecraft_mode.trash.button", ko ? "버림" : "Bin");
 		b.add("screen.minecraft_mode.trash.tooltip", ko ? "쓰레기통: 커서에 든 아이템을 들고 누르면 없앱니다. 빈 커서로 누르면 마지막에 버린 것을 되돌립니다."

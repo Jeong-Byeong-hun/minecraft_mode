@@ -21,6 +21,7 @@ public final class JobKeys {
 	};
 	public static final KeyMapping OPEN_SCREEN = register("job_screen", InputConstants.KEY_K);
 	public static final KeyMapping INNATE = register("innate_ability", InputConstants.KEY_B);
+	public static final KeyMapping CHARACTER = register("character_screen", InputConstants.KEY_I);
 
 	private static KeyMapping register(final String name, final int key) {
 		return KeyMappingHelper.registerKeyMapping(new KeyMapping("key.minecraft_mode." + name, InputConstants.Type.KEYBOARD, key, CATEGORY));
@@ -48,6 +49,11 @@ public final class JobKeys {
 		}
 		while (OPEN_SCREEN.consumeClick()) {
 			minecraft.gui.setScreen(new JobScreen());
+		}
+		while (CHARACTER.consumeClick()) {
+			if (minecraft.gui.screen() == null) {
+				minecraft.gui.setScreen(new CharacterScreen());
+			}
 		}
 	}
 

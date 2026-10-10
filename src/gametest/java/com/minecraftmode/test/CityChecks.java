@@ -5,6 +5,7 @@ import com.minecraftmode.city.CityFixtures;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.city.Homestead;
+import com.minecraftmode.city.HomesteadLand;
 import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.client.map.MapScreen;
@@ -67,6 +68,7 @@ final class CityChecks {
 		checkProtection(context, server, connection, base);
 		checkNoHostiles(context, server, base);
 		checkTrainingGrounds(context, server, connection, base);
+		checkHomesteadLand(context, server, base);
 		checkFixtures(context, server, connection, base);
 		screenshots(context, server, connection, base);
 		checkInvasion(context, server, base);
@@ -680,6 +682,61 @@ final class CityChecks {
 		context.runOnClient(minecraft -> minecraft.options.renderDistance().set(5));
 		server.runOnServer(s -> s.getPlayerList().setViewDistance(5));
 		server.runCommand("gamemode creative @p");
+	}
+
+	/**
+	 * The runtime pass that brings the homestead plains to older worlds: it finishes on its own after the server starts, flattens a
+	 * hill and a tree put on the plains (as an older world would have them), and leaves the city next to the plains untouched.
+	 */
+	private static void checkHomesteadLand(final ClientGameTestContext context, final TestServerContext server, final int base) {
+		for (int i = 0; i < 120 && !server.computeOnServer(s -> HomesteadLand.get(s.overworld()).done()); i++) {
+			context.waitTicks(10);
+		}
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			HomesteadLand land = HomesteadLand.get(level);
+			require(land.done(), "the homestead pass finishes after the server starts, got " + land.progress() + " of " + HomesteadLand.chunks().size());
+			// an older world: a hill and a tree on the plains
+			int x0 = Homestead.CENTER_X + 40;
+			int z0 = 40;
+			level.getChunk(x0 >> 4, z0 >> 4);
+			for (int x = x0; x < x0 + 4; x++) {
+				for (int z = z0; z < z0 + 4; z++) {
+					for (int y = base; y <= base + 6; y++) {
+						level.setBlock(new BlockPos(x, y, z), Blocks.STONE.defaultBlockState(), 2);
+					}
+				}
+			}
+			for (int y = base; y <= base + 4; y++) {
+				level.setBlock(new BlockPos(x0 + 6, y, z0), Blocks.OAK_LOG.defaultBlockState(), 2);
+			}
+			level.setBlock(new BlockPos(x0 + 6, base + 5, z0), Blocks.OAK_LEAVES.defaultBlockState(), 2);
+			HomesteadLand.reshape(level, x0 >> 4, z0 >> 4);
+			for (int x = x0; x <= x0 + 6; x++) {
+				int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z0);
+				require(top == base, "the pass flattens the hill and the tree, column " + x + " tops at " + top);
+			}
+			// the city beside the plains stays as it is
+			level.getChunk(6, 0);
+			List<BlockState> before = cityColumns(level, base);
+			HomesteadLand.reshape(level, 6, 0);
+			require(before.equals(cityColumns(level, base)), "the pass leaves the city alone");
+			return HomesteadLand.chunks().size() + " chunks";
+		});
+		MinecraftMode.LOGGER.info("[city] homestead pass: {}", report);
+	}
+
+	/** Every block of chunk (6, 0) from just under the floor to the tower tops (all of it inside the city core). */
+	private static List<BlockState> cityColumns(final ServerLevel level, final int base) {
+		List<BlockState> states = new ArrayList<>();
+		for (int x = 96; x <= 111; x++) {
+			for (int z = 0; z <= 15; z++) {
+				for (int y = base - 3; y <= base + 24; y++) {
+					states.add(level.getBlockState(new BlockPos(x, y, z)));
+				}
+			}
+		}
+		return states;
 	}
 
 	/**

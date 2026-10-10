@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.SectionPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -65,7 +66,7 @@ public final class CityGenerator {
 
 	public static void beforeDecoration(final ChunkGenerator generator, final WorldGenLevel level, final ChunkAccess chunk) {
 		if (isBlend(generator, level, chunk)) {
-			shapeTerrain(generator, level, chunk);
+			shapeTerrain(generator, level, chunk, false);
 		}
 	}
 
@@ -73,7 +74,7 @@ public final class CityGenerator {
 		if (!isCore(generator, level, chunk)) {
 			return;
 		}
-		shapeTerrain(generator, level, chunk);
+		shapeTerrain(generator, level, chunk, false);
 		ChunkPos pos = chunk.getPos();
 		Build build = new Build(level, base(generator, level), pos.getMinBlockX(), pos.getMinBlockZ());
 		CityCore.build(build);
@@ -95,7 +96,15 @@ public final class CityGenerator {
 	 * scanned directly: in 26.x the worldgen heightmaps are no longer kept up to date after the
 	 * terrain step, so they cannot be trusted here.
 	 */
-	private static void shapeTerrain(final ChunkGenerator generator, final WorldGenLevel level, final ChunkAccess chunk) {
+	/**
+	 * Flattens the homestead plains in a chunk of a world generated before they existed (see {@code HomesteadLand}). Only the
+	 * plains and their blend ring change; the city core is never touched.
+	 */
+	static void reshapeHomestead(final ServerLevel level, final ChunkAccess chunk) {
+		shapeTerrain(level.getChunkSource().getGenerator(), level, chunk, true);
+	}
+
+	private static void shapeTerrain(final ChunkGenerator generator, final WorldGenLevel level, final ChunkAccess chunk, final boolean homesteadOnly) {
 		int base = base(generator, level);
 		int sea = generator.getSeaLevel();
 		ChunkPos chunkPos = chunk.getPos();
@@ -107,6 +116,9 @@ public final class CityGenerator {
 		int top = highestSection < 0 ? chunk.getMinY() : SectionPos.sectionToBlockCoord(chunk.getSectionYFromSectionIndex(highestSection)) + 15;
 		for (int x = chunkPos.getMinBlockX(); x <= chunkPos.getMaxBlockX(); x++) {
 			for (int z = chunkPos.getMinBlockZ(); z <= chunkPos.getMaxBlockZ(); z++) {
+				if (homesteadOnly && (Math.max(Math.abs(x), Math.abs(z)) <= CityZone.CORE || Homestead.distance(x, z) > CityZone.BLEND)) {
+					continue;
+				}
 				int d = flatDistance(x, z);
 				if (d > CityZone.BLEND) {
 					continue;

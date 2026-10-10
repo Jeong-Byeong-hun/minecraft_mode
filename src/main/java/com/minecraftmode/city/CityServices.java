@@ -83,6 +83,7 @@ public final class CityServices {
 		ServerPlayerEvents.JOIN.register(CityServices::welcome);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			feedResidents(server.overworld());
+			HomesteadLand.tick(server.overworld());
 			if (server.getTickCount() % 100 == 0) {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());

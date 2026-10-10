@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
  * generator flattens it to the city floor like the city itself ({@code CityGenerator}), with no trees or structures; a gravel road
  * leads there from the east gate to a travel circle in the middle that goes back to the plaza (and the plaza's circle comes here,
  * see {@link CityFixtures#useWaystone}). It is part of the outskirts: no hostile mobs spawn on its surface. Building is allowed.
- * Worlds generated before it existed keep their terrain there (the travel circles still work).
+ * Worlds generated before it existed get it once at runtime ({@link HomesteadLand}).
  */
 public final class Homestead {
 	/** West edge: right where the city's flattened apron ends. */

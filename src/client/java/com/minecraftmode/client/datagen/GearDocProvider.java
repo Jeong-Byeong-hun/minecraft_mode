@@ -524,7 +524,7 @@ public class GearDocProvider implements DataProvider {
 			.append(")과 엔드 차원문(x ").append(end.getX()).append(", z ").append(end.getZ()).append(").\n");
 		md.append("- **엔더 상자** ").append(CityFixtures.ENDER_CHESTS.size()).append("개: 광장(스폰 뒤·분수 북쪽), 성 안뜰, 모험가 길드 안, 시장, 남쪽 광장.\n");
 		md.append("- **건축 평야**: 동문 밖 x ").append(Homestead.X0).append("–").append(Homestead.X1).append(", z ").append(-Homestead.HALF_Z).append("–").append(Homestead.HALF_Z)
-			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 새로 생성되는 월드(청크)에만 평지로 만들어집니다.\n");
+			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 이 평야가 생기기 전에 만든 월드는 서버가 처음 켜질 때 한 번 평야 구역을 평지로 깎습니다(그 자리의 지형·나무·건물은 사라지고, 이후 지은 건물은 그대로).\n");
 		md.append("- **이동 마법진**(자석석): 광장 스폰 바로 뒤(x 0, z ").append(CityFixtures.WAYSTONE.getZ()).append(")와 건축 평야 한가운데(x ").append(Homestead.CENTER_X)
 			.append(", z ").append(Homestead.CENTER_Z).append("). 우클릭하면 서로 이동합니다(3초 재사용 대기). 귀환 주문서로도 광장에 돌아올 수 있습니다.\n");
 		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");

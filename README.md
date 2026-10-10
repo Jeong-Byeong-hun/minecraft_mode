@@ -38,6 +38,8 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 | 도감·업적·칭호 (J) | 네임드 22종·소굴 22곳 수집 기록과 영구 **수집 보너스**(보스 피해·아이템 발견·경험치), 업적 48개(공적 보상), 칭호 27개, 메인 스토리 탭. 칭호는 스코어보드 팀 없이 모드가 직접 이름 앞에 붙인다(머리 위·채팅·탭 목록, 다른 플러그인과 충돌 없음). 처치 기록은 근처(48블록) 파티원과 함께 올라간다 |
 | 특성 (N) | 직업마다 3계열 × 5단계(마지막은 핵심 특성). Lv 10부터 3레벨마다 2점, Lv 100에 60점 — 한 계열 최대 21점이라 전부 찍을 수 없다. 동전으로 초기화 |
 | 안내원·보급관 | 광장의 "안내원 넬라"는 우클릭하면 궁금한 것을 주제별로 알려 준다(처음 시작·빠른 성장(Lv 10까지 남은 경험치와 추천 사냥법)·직업·키·길 안내(모든 NPC·교관 좌표)·돈·장비·네임드·레이드·던전·의뢰·펫·이벤트). "보급관 브람"은 모험가마다 한 번 인챈트 없는 철 갑옷 한 벌과 철 검·곡괭이·도끼를 준다 |
+| 지도·미니맵 (M, 쉼표) | 돌아다닌 지형이 클라이언트에 기록되는 월드 지도. 오른쪽 위 미니맵(쉼표 키로 켜고 끔, 크기·배율 조절)에 좌표·다른 플레이어·수도·웨이포인트가 표시되고, M으로 여는 큰 지도는 드래그·휠 확대, 우클릭으로 웨이포인트 추가(이름·색상), 죽은 자리는 자동 표시. 월드·차원별로 `minecraft_mode/map`, `minecraft_mode/waypoints`에 저장 |
+| 손에 든 광원 | 횃불·랜턴·발광석·용암 양동이 등 빛나는 아이템을 한 손(왼손 포함)에 들면 설치한 것처럼 주변이 밝아진다(서버가 보이지 않는 광원 블록을 따라 옮김, 다른 플레이어에게도 보임) |
 | 초월 (N) | Lv 100부터 경험치가 초월 레벨로 쌓이고, 초월 레벨마다 8가지 능력치(위력·활력·정밀·흉포·수호·가속·정신·행운) 중 하나에 1점(능력치당 50랭크). HUD에 ✦레벨과 보라색 경험치 바 |
 | 각성 (✦1–✦5) | +15 장비를 강화 장인에게서 각성. 실패 없음, 각성의 결정(던전 +5 이상)과 동전. 단계마다 무기 기본·스킬·보스 피해 +2%, 방어구 피해 감소·체력 +0.6. 이름에 "+15✦N", 서버 전체 알림 |
 | 생활 기술 | 요리·연금술·대장 기술(Lv 1–50). 수도 시장의 조리대·연금술 작업대, 대장간의 대장 작업대(직접 조합도 가능)에서 레시피 36종(소모품, 강화석, 진화의 에테르 등). 레벨에 따라 두 배 제작. 풀·꽃을 부수면 **약초** 6종(햇살잎·달꽃잎·서리뿌리·빛버섯·잿불꽃·공허버섯) |
@@ -58,9 +60,139 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 - 정수 각인대: `정수 ×3 / 다이아몬드·미스릴 주괴·다이아몬드 / 흑요석 ×3`, 응축된 정수 = 정수 ×9
 - 조리대: `철 주괴·정수·철 주괴 / 판자·훈연기·판자 / 판자 ×3`, 연금술 작업대: `유리병·정수·유리병 / 판자·양조기·판자 / 판자 ×3`, 대장 작업대: `철 주괴·정수·철 주괴 / 조약돌·모루·조약돌 / 조약돌 ×3`
 
-명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 L 키), `/dungeon leave`(던전에서 귀환), `/story`(현재 장). 키: K 직업 창, N 특성·초월, J 도감·스토리, B 고유 기술, P 펫·탈것, H 탈것 호출/내리기
+명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 Y 키), `/dungeon leave`(던전에서 귀환), `/story`(현재 장). 키: K 직업 창, N 특성·초월, J 도감·스토리, B 고유 기술, U 펫·탈것, H 탈것 호출/내리기, M 월드 지도(미니맵은 쉼표 키로 켜고 끔)
 
 관리자 명령어(권한 2): `/job info|set|level|exp|mana|cooldowns|cast`, `/job trainer <직업>`(그 자리에 교관 소환), `/job quest <대상> clear|goals`(시련 취소 / 처치 목표 채우기), `/raid start <보스> [플레이어]`(사령관·레벨 확인 없이 레이드 시작), `/raid list`, `/dungeon start <던전> [단계]|list`, `/worldevent titan [네임드]|invasion|stop`, `/story set <장>`, `/wallet give|set <플레이어> <금액>`, `/locate structure minecraft_mode:lair_<네임드 id>`(소굴 찾기)
+
+## 설치 (플레이어)
+
+모드 jar는 **서버와 모든 클라이언트에 같은 버전**이 들어가야 한다(패킷 구조가 버전마다 다름). 필요한 파일은 두 개뿐이다.
+
+| 파일 | 어디서 |
+|---|---|
+| `minecraft_mode-<ver>.jar` | 이 저장소의 `./gradlew build` 결과물(`build/libs/`) 또는 운영자가 나눠 주는 파일 |
+| `fabric-api-0.162.0+26.3.jar` (또는 26.3용 다른 버전) | https://modrinth.com/mod/fabric-api 또는 https://www.curseforge.com/minecraft/mc-mods/fabric-api |
+
+### 방법 1 — 공식 런처 + Fabric 설치기
+
+1. **Java 25** 이상을 설치한다(https://adoptium.net, Temurin 25). 런처가 쓰는 Java는 설치 후 "설치 설정 → Java 실행 파일"에서 지정할 수 있다(모드가 Java 25를 요구한다).
+2. https://fabricmc.net/use/installer 에서 Fabric 설치기를 받아 실행 → **Client** 탭 → Minecraft Version `26.3`, Loader Version `0.19.5` 이상 → Install.
+3. 런처에 생긴 `fabric-loader-0.19.5-26.3` 프로필을 한 번 실행했다 끈다(폴더가 만들어진다).
+4. `.minecraft/mods/`에 위 두 jar를 넣는다(Windows: `%APPDATA%\.minecraft\mods`).
+5. 같은 프로필로 실행 → 멀티플레이 → 서버 주소 입력.
+
+### 방법 2 — CurseForge 앱
+
+1. CurseForge 앱(https://www.curseforge.com/download/app) 설치 → Minecraft → **Create Custom Profile**.
+2. 이름 입력, Minecraft `26.3`, Mod Loader **Fabric**(`0.19.5` 이상) 선택 → Create.
+3. 프로필 카드의 **Add More Content**에서 `Fabric API`를 검색해 Install(모드 로더 버전에 맞는 26.3 파일을 골라 준다).
+4. 프로필 카드의 `…` → **Open Folder** → `mods` 폴더에 `minecraft_mode-<ver>.jar`를 복사한다(이 모드는 CurseForge에 올라가 있지 않으므로 파일을 직접 넣는다).
+5. **Play**. CurseForge는 Java를 함께 받지만, 모드가 Java 25를 요구하므로 프로필 설정(`…` → Profile Options → Java)에서 Temurin 25 경로를 지정해야 할 수 있다(실행이 안 되면 `java.lang.UnsupportedClassVersionError`가 로그에 남는다).
+
+**프로필 통째로 나눠 주기**: 프로필 `…` → **Export Profile** → 파일 목록에서 `mods/minecraft_mode-<ver>.jar`에 체크(체크하지 않으면 CurseForge에 없는 파일은 빠진다) → zip 생성. 받는 사람은 Create Custom Profile 창의 **Import** 로 zip을 고르면 Fabric·Fabric API·모드가 그대로 들어간 프로필이 생긴다. 모드를 새 버전으로 바꿀 때는 `mods`의 jar만 교체하면 된다.
+
+## 서버 구동
+
+멀티플레이가 기본 설계다(시작 지점이 수도 광장, 수도는 안전 구역, 파티 레이드·던전, 거래소). 전용 서버는 다음 순서로 만든다.
+
+### 1. 준비
+
+- **Java 25** 이상(https://adoptium.net). 확인: `java -version` → `25.x`.
+- 메모리: 플레이어 5명 기준 4 GB(`-Xmx4G`) 권장. 레이드·던전 차원이 두 개 더 돌아가므로 2 GB 미만은 피한다.
+- 서버 폴더(예: `C:\mcserver` 또는 `~/mcserver`)를 만든다.
+
+### 2. Fabric 서버 설치
+
+https://fabricmc.net/use/server 에서 Minecraft `26.3`, Loader `0.19.5`(이상), Installer 최신을 고른 뒤 **Executable Server (.jar)** 를 받아 서버 폴더에 둔다(파일명 예: `fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar`). 이 jar 하나가 바닐라 서버 jar를 내려받아 Fabric과 함께 띄운다.
+
+명령줄로 하려면(설치기 jar를 받은 뒤):
+
+```bash
+java -jar fabric-installer-<ver>.jar server -mcversion 26.3 -loader 0.19.5 -downloadMinecraft
+```
+
+→ `fabric-server-launch.jar`와 `server.jar`가 생긴다.
+
+### 3. 모드 넣기
+
+서버 폴더에 `mods/`를 만들고 두 jar를 넣는다.
+
+```
+mcserver/
+├── fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar   (또는 fabric-server-launch.jar)
+├── mods/
+│   ├── fabric-api-0.162.0+26.3.jar
+│   └── minecraft_mode-0.1.0.jar
+├── eula.txt            (첫 실행 후 eula=true)
+└── server.properties   (첫 실행 후)
+```
+
+### 4. 첫 실행과 EULA
+
+```bash
+java -Xmx4G -Xms2G -jar fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar nogui
+```
+
+첫 실행은 `eula.txt`를 만들고 멈춘다. `eula=false`를 `eula=true`로 고친 뒤 다시 실행하면 월드가 생성된다. 수도 스톰홀드는 **첫 월드 생성 때** 0, 0에 만들어지므로(평지 월드에는 생기지 않는다) 설정을 바꿀 거면 월드를 만들기 전에 한다.
+
+### 5. server.properties 권장값
+
+| 항목 | 값 | 이유 |
+|---|---|---|
+| `level-type` | `minecraft:normal` (기본) | 수도·소굴은 일반 지형 월드에만 생성된다. `flat`은 안 된다 |
+| `difficulty` | `normal` 이상 | `peaceful`이면 몬스터가 없어 경험치·시련 진행이 불가. 사망 시 아이템은 모드가 항상 지켜 준다(`keepInventory` 강제) |
+| `allow-flight` | `true` 권장 | 탈것 **폭풍 그리핀**은 중력을 끄고 날아 기본값(`false`)으로도 대체로 괜찮지만, 공중 체공 판정으로 "Flying is not enabled" 강퇴가 보이면 `true`로 둔다 |
+| `view-distance` / `simulation-distance` | `10` / `8` 이상 | 수도가 지름 ~200블록이라 너무 작으면 성벽 밖이 안 보인다 |
+| `spawn-protection` | `0` | 성벽 안 전체의 건축·PvP·방화 금지는 모드가 맡으므로 바닐라 스폰 보호는 필요 없다(켜 두어도 무방) |
+| `online-mode` | `true` | 정품 인증. 지갑·도감·직업은 플레이어 UUID에 저장되므로 `false`로 바꾸면 기록이 다른 계정으로 취급된다 |
+| `white-list` | `true` + `/whitelist add <닉>` | 친구들끼리 쓸 때 |
+| `max-players` | 인원수 | 레이드 파티는 최대 6명, 던전은 2–4명 |
+| `motd` | 서버 이름 | 접속 목록에 보이는 문구 |
+| `server-port` | `25565` | 바꾸면 접속 주소에 `:포트`를 붙인다 |
+
+같은 서버에 이미 만든 월드를 쓰려면 `level-name`만 맞춘다. 모드 데이터(지갑·직업·거래소·주기)는 월드 폴더 안에 저장되므로 월드 폴더를 통째로 옮기면 그대로 따라간다.
+
+### 6. 운영자 지정과 시작 스크립트
+
+```
+/op <닉네임>
+```
+
+운영자(권한 2)는 수도 안에서도 블록을 놓을 수 있고 `/job`, `/raid start`, `/worldevent`, `/wallet give` 같은 관리 명령을 쓴다(명령어 목록은 위 "관리자 명령어"). 교관·NPC가 사라졌으면 100틱마다 자동으로 다시 선다.
+
+Windows `start.bat`:
+
+```bat
+@echo off
+java -Xmx4G -Xms2G -jar fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar nogui
+pause
+```
+
+Linux `start.sh`(`chmod +x start.sh`; 터미널을 닫아도 돌게 하려면 `screen -S mc ./start.sh` 또는 `tmux`):
+
+```bash
+#!/bin/sh
+java -Xmx4G -Xms2G -jar fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar nogui
+```
+
+### 7. 외부 접속
+
+- 같은 집: 서버 PC의 내부 IP(`ipconfig`/`ip a`)로 접속.
+- 외부: 공유기에서 **TCP 25565** 포트포워딩 + Windows 방화벽 인바운드 허용 → 공인 IP(또는 DDNS)로 접속. 포트포워딩이 어려우면 playit.gg 같은 터널 서비스나 호스팅 업체(Fabric 지원, Java 25 선택 가능한 곳)를 쓴다.
+
+### 8. 업데이트·백업
+
+- 모드 업데이트: 서버를 끄고 `mods/minecraft_mode-*.jar`를 새 파일로 바꾼 뒤 켠다. 접속하는 모든 클라이언트도 같은 jar로 바꿔야 한다(버전이 다르면 접속 시 끊긴다).
+- 백업: 서버를 끄거나 `/save-off` → `/save-all` 후 `world/` 폴더를 복사 → `/save-on`.
+- 로그: `logs/latest.log`. 모드 시작 메시지는 `(minecraft_mode)` 태그로 찍힌다.
+
+### 자주 막히는 곳
+
+- `UnsupportedClassVersionError … class file version 69` → Java 25가 아니다. `java -version` 확인.
+- "Incompatible mods found … fabric-api" → Fabric API가 없거나 26.3용이 아니다.
+- 접속 시 "Network Protocol Error"/바로 끊김 → 서버와 클라이언트의 모드 jar 버전이 다르다.
+- 수도가 없다 → `level-type`이 flat이거나, 모드를 넣기 전에 만든 월드다(0, 0 청크가 이미 생성된 월드에는 생기지 않는다). 새 월드를 만든다.
+- 그리핀 타면 강퇴 → `allow-flight=true`.
 
 ## 개발 환경
 

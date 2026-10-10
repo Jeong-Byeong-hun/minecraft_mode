@@ -74,6 +74,9 @@ public class MultiplayerClientGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(final ClientGameTestContext context) {
+		if (TestSelection.skip(this)) {
+			return;
+		}
 		if (ROLE.isEmpty()) {
 			return;
 		}

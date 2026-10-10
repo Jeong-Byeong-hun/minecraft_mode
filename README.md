@@ -210,6 +210,8 @@ java -Xmx4G -Xms2G -jar fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기�
 ./gradlew runClient          # 개발용 클라이언트 실행
 ./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트/차원 JSON, 무기·방어구·몬스터 텍스처 → src/main/generated, docs/CLASSES.md·GEAR.md·MONSTERS.md·CONSUMABLES.md·ENDGAME.md·CONTENT.md
 ./gradlew runClientGameTest  # 자동 테스트 (월드 생성 → 검증 → 스크린샷 build/run/clientGameTest/screenshots)
+./gradlew runClientGameTest -Ptests=job,town  # 고른 테스트만 (이름 = 클래스 이름에서 ClientGameTest를 뺀 소문자)
+./gradlew runClientGameTestParallel           # 전체 테스트를 게임 3개로 나눠 동시에 (-Pshards=N, -Ptests=...; build/run/clientGameTest1..N)
 java tools/TextureGen.java src/main/resources/assets/minecraft_mode/textures  # 텍스처 재생성
 ```
 

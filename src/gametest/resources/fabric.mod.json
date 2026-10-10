@@ -15,7 +15,8 @@
 			"com.minecraftmode.test.LairClientGameTest",
 			"com.minecraftmode.test.EndgameClientGameTest",
 			"com.minecraftmode.test.ContentClientGameTest",
-			"com.minecraftmode.test.TownClientGameTest"
+			"com.minecraftmode.test.TownClientGameTest",
+			"com.minecraftmode.test.MultiplayerClientGameTest"
 		]
 	},
 	"depends": {

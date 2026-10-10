@@ -90,6 +90,58 @@ publishing {
 	}
 }
 
+// Client game test selection. A test's name is its class name without "ClientGameTest", lower case (job, lair,
+// normalworld, ...); TestSelection in src/gametest skips the ones a run did not pick. Run order is the fabric.mod.json order.
+//   ./gradlew runClientGameTest -Ptests=job,lair      only those tests
+//   ./gradlew runClientGameTestParallel               every test, split over -Pshards (default 3) game clients side by side
+//   ./gradlew runClientGameTestParallel -Ptests=...   the picked tests, split the same way
+// Shard n runs in build/run/clientGameTest<n> with its own saves, logs and screenshots.
+def gameTests = new groovy.json.JsonSlurper().parseText(
+	providers.fileContents(layout.projectDirectory.file("src/gametest/resources/fabric.mod.json")).asText.get()
+).entrypoints."fabric-client-gametest".collect { it.tokenize(".").last().replace("ClientGameTest", "").toLowerCase(Locale.ROOT) }
+def manualGameTests = ["multiplayer"]
+// Seconds each test takes in a full run (0.3.6), to balance the shards; a test missing here counts as 60.
+def gameTestSeconds = [job: 300, normalworld: 275, lair: 232, economy: 219, gearraid: 132, endgame: 55, town: 32, content: 30,
+	minecraftmode: 17, enchantment: 9]
+def requestedGameTests = providers.gradleProperty("tests").getOrElse("").tokenize(", ").collect { it.toLowerCase(Locale.ROOT) }
+def unknownGameTests = requestedGameTests - gameTests
+if (unknownGameTests) {
+	throw new GradleException("Unknown game test(s) ${unknownGameTests}; known: ${gameTests}")
+}
+def pickedGameTests = requestedGameTests ? gameTests.findAll { it in requestedGameTests } : gameTests - manualGameTests
+int shardCount = Math.max(1, Math.min(providers.gradleProperty("shards").map { it as int }.getOrElse(3), pickedGameTests.size()))
+def shards = (1..shardCount).collect { [] }
+def shardSeconds = (1..shardCount).collect { 0 }
+pickedGameTests.toSorted { -(gameTestSeconds[it] ?: 60) }.each { test ->
+	int lightest = (0..<shardCount).min { shardSeconds[it] }
+	shards[lightest] << test
+	shardSeconds[lightest] += gameTestSeconds[test] ?: 60
+}
+shards = shards.collect { slice -> gameTests.findAll { it in slice } }
+
+loom {
+	runs {
+		if (requestedGameTests) {
+			getByName("clientGameTest").property "minecraft_mode.tests", pickedGameTests.join(",")
+		}
+		shards.eachWithIndex { slice, i ->
+			create("clientGameTest${i + 1}") {
+				inherit loom.runs.getByName("clientGameTest")
+				name "Client game tests ${i + 1}/${shardCount}"
+				runDir "build/run/clientGameTest${i + 1}"
+				property "minecraft_mode.tests", slice.join(",")
+				ideConfigGenerated false
+			}
+		}
+	}
+}
+
+tasks.register("runClientGameTestParallel") {
+	group = "fabric"
+	description = "Runs the client game tests in ${shardCount} game clients side by side: " + shards.collect { it.join("+") }.join(" | ")
+	dependsOn((1..shardCount).collect { "runClientGameTest${it}" })
+}
+
 // Two scripted clients for MultiplayerClientGameTest: start `./gradlew runServer` (offline mode, RCON on) first, then
 // `./gradlew runMpAlice -PmpRcon=<password>` and `./gradlew runMpBob`. The clients keep their own game directories.
 loom {
@@ -98,6 +150,7 @@ loom {
 			inherit loom.runs.getByName("clientGameTest")
 			name "Multiplayer test (Alice)"
 			runDir "build/run/mpAlice"
+			property "minecraft_mode.tests", "multiplayer"
 			property "minecraft_mode.mp.role", "alice"
 			property "minecraft_mode.mp.dir", file("build/mp").absolutePath
 			property "minecraft_mode.mp.rcon", (project.findProperty("mpRcon") ?: "").toString()
@@ -107,6 +160,7 @@ loom {
 			inherit loom.runs.getByName("clientGameTest")
 			name "Multiplayer test (Bob)"
 			runDir "build/run/mpBob"
+			property "minecraft_mode.tests", "multiplayer"
 			property "minecraft_mode.mp.role", "bob"
 			property "minecraft_mode.mp.dir", file("build/mp").absolutePath
 			programArgs "--username", "Bob"

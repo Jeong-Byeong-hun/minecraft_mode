@@ -95,6 +95,9 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 public class TownClientGameTest implements FabricClientGameTest {
 	@Override
 	public void runTest(final ClientGameTestContext context) {
+		if (TestSelection.skip(this)) {
+			return;
+		}
 		try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
 			TestServerConnection connection = singleplayer.getConnection();
 			TestServerContext server = singleplayer.getServer();

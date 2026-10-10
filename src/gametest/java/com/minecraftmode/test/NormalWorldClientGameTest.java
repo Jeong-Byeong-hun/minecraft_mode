@@ -57,6 +57,9 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(final ClientGameTestContext context) {
+		if (TestSelection.skip(this)) {
+			return;
+		}
 		try (TestSingleplayerContext singleplayer = context.worldBuilder()
 			.setUseConsistentSettings(false)
 			.adjustSettings(settings -> {

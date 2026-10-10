@@ -96,6 +96,9 @@ public class JobClientGameTest implements FabricClientGameTest {
 
 	@Override
 	public void runTest(final ClientGameTestContext context) {
+		if (TestSelection.skip(this)) {
+			return;
+		}
 		checkContent(context);
 		try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
 			TestServerConnection connection = singleplayer.getConnection();

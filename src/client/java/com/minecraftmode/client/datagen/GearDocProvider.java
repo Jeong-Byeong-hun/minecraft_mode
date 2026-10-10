@@ -55,6 +55,7 @@ import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.loot.GearUpgrades;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Achievements;
+import com.minecraftmode.progress.Codex;
 import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
@@ -505,6 +506,13 @@ public class GearDocProvider implements DataProvider {
 			md.append("| ").append(a.ko()).append(" | ").append(a.descKo()).append(" | ").append(a.merit()).append(" | ").append(a.hasTitle() ? a.titleKo() : "").append(" |\n");
 		}
 		md.append("\n- 칭호는 도감(J)의 칭호 탭에서 착용하며 이름 앞에 붙습니다(머리 위·채팅·탭 목록).\n");
+		Map<Codex.Category, List<Item>> codexItems = Codex.items();
+		md.append("- 도감(J) 탭: **네임드**(네임드 ").append(NamedMobs.all().size()).append("종 숙련, 소굴 ").append(NamedLairs.all().size())
+			.append("곳의 발견·정복), **몬스터**(일반 몬스터 ").append(Codex.monsters().size()).append("종의 처치 수와 ")
+			.append(Codex.MILESTONES[0]).append("/").append(Codex.MILESTONES[1]).append("/").append(Codex.MILESTONES[2])
+			.append("회 테두리, 레이드 보스·던전 보스·거신), **아이템**(무기 ").append(codexItems.get(Codex.Category.WEAPON).size()).append(" · 방어구 ")
+			.append(codexItems.get(Codex.Category.ARMOR).size()).append(" · 소모품 ").append(codexItems.get(Codex.Category.CONSUMABLE).size()).append(" · 재료·기타 ")
+			.append(codexItems.get(Codex.Category.MATERIAL).size()).append("의 획득 기록, 직업·레벨 필터와 검색, 얻는 곳), 업적, 칭호, 스토리. 몬스터·아이템 기록은 능력치를 주지 않습니다.\n");
 		md.append("- 처치 기록(도감·업적·처치 의뢰)은 처치에 기여한 사람과 그 ").append((int)Progress.SHARE_RANGE).append("블록 안의 같은 파티원 모두에게 올라갑니다.\n");
 		md.append("\n## 처치 기여도\n\n");
 		md.append("- 몬스터가 실제로 잃은 체력을 때린 사람별로 기록합니다(방어구·흡수·넘친 피해 제외, 길들인 소환수의 피해는 주인 몫). 마지막 공격 뒤 ")

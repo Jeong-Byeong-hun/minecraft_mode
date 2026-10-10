@@ -34,6 +34,9 @@ import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.AuctionActionPayload;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.progress.Achievements;
+import com.minecraftmode.progress.Codex;
+import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.PlayerRecords;
@@ -80,6 +83,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -129,6 +133,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			checkKillSharing(server, connection);
 			checkTalents(server, connection);
 			checkProgress(server, connection);
+			checkCodex(context, server, connection);
 			screens(context, server, connection);
 			checkNewCycle(context, server, connection);
 			WorldClose.prepare(context, server);
@@ -821,16 +826,68 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 		shot(context, "endgame_talents");
 		requireFits(context, "talents");
 		clickTalent(context, server, connection);
-		for (String tab : new String[] {"codex", "achievements", "titles"}) {
+		for (String tab : new String[] {"codex", "monsters", "items", "achievements", "titles"}) {
 			CodexScreen.showTab(tab);
 			context.runOnClient(minecraft -> minecraft.gui.setScreen(new CodexScreen()));
 			context.waitForScreen(CodexScreen.class);
 			context.waitTicks(5);
 			shot(context, "endgame_codex_" + tab);
 			requireFits(context, "codex " + tab);
+			if (tab.equals("monsters") || tab.equals("items")) {
+				CodexScreen.scrollToEnd();
+				context.waitTicks(2);
+				shot(context, "endgame_codex_" + tab + "_end");
+			}
 		}
 		CodexScreen.showTab("codex");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+	}
+
+	// ------------------------------------------------------------------ monster and item codex
+
+	private static void checkCodex(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		var monsters = Codex.monsters();
+		require(monsters.contains(EntityTypes.ZOMBIE) && monsters.contains(EntityTypes.WARDEN) && monsters.contains(ModEntities.MINE_RAIDER),
+			"the monster codex lists vanilla and mod monsters");
+		require(!monsters.contains(EntityTypes.CREEPER), "creepers never spawn, so they are not listed");
+		for (var def : NamedMobs.all()) {
+			require(!monsters.contains(NamedMobs.type(def)), def.id() + " belongs to the named tab");
+		}
+		for (BossDef boss : RaidBosses.all()) {
+			require(monsters.stream().noneMatch(t -> RaidBosses.def(t) == boss), boss.id() + " belongs to the raid boss section");
+		}
+		var items = Codex.items();
+		require(items.get(Codex.Category.ARMOR).size() == ClassArmor.pieces().size(), "every class armor piece is in the item codex");
+		require(items.get(Codex.Category.CONSUMABLE).size() == Consumables.all().size(), "every consumable is in the item codex");
+		require(items.get(Codex.Category.WEAPON).size() == JobWeapons.all().size(), "every class weapon is in the item codex");
+		require(items.get(Codex.Category.MATERIAL).contains(ModItems.ENHANCEMENT_STONE) && !items.get(Codex.Category.MATERIAL).contains(ModItems.LAIR_CACHE),
+			"materials list stones but not world-placed blocks");
+		MinecraftMode.LOGGER.info("[endgame] codex: {} monsters, items {}", monsters.size(),
+			items.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue().size()).toList());
+		int before = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int kills = Codex.kills(player, EntityTypes.ZOMBIE);
+			Zombie zombie = EntityTypes.ZOMBIE.create(s.overworld(), EntitySpawnReason.COMMAND);
+			zombie.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0.0F, 0.0F);
+			s.overworld().addFreshEntity(zombie);
+			zombie.hurtServer(s.overworld(), player.damageSources().playerAttack(player), 1000.0F);
+			player.getInventory().add(new ItemStack(ModItems.TITAN_SHARD));
+			return kills;
+		});
+		context.waitTicks(25);
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			if (Codex.kills(player, EntityTypes.ZOMBIE) != before + 1) {
+				return "a zombie kill should count, " + before + " -> " + Codex.kills(player, EntityTypes.ZOMBIE);
+			}
+			if (!Codex.found(player, ModItems.TITAN_SHARD)) {
+				return "a titan shard in the inventory should be noted";
+			}
+			return Codex.found(player, ModItems.AWAKENING_CRYSTAL) ? "never held, never found" : "";
+		});
+		require(report.isEmpty(), report);
+		boolean synced = context.computeOnClient(minecraft -> Codex.found(minecraft.player, ModItems.TITAN_SHARD) && Codex.kills(minecraft.player, EntityTypes.ZOMBIE) > 0);
+		require(synced, "the client should see the codex records");
 	}
 
 	// ------------------------------------------------------------------ the next cycle

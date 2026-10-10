@@ -51,6 +51,11 @@ public final class Progress {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> Contribution.clear());
 		ServerPlayerEvents.JOIN.register(Titles::apply);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (server.getTickCount() % 20 == 0) {
+				for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+					Codex.scan(p);
+				}
+			}
 			if (server.getTickCount() % 100 == 0) {
 				for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 					Bounties.ensure(p);
@@ -80,6 +85,7 @@ public final class Progress {
 				set(player, get(player).withNamedKill(named.def().id()));
 				Bounties.progress(player, BountyKind.KILL_NAMED, named.def().id(), 1);
 			}
+			Codex.killed(player, entity);
 			if (entity instanceof Enemy) {
 				Bounties.progress(player, BountyKind.KILL_ANY, "", 1);
 				Bounties.progress(player, BountyKind.KILL_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(), 1);

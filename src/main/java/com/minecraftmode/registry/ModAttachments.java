@@ -13,7 +13,9 @@ import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
 import com.mojang.serialization.Codec;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -175,6 +177,24 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(List::of)
 			.syncWith(Buyback.Entry.STREAM_CODEC.apply(ByteBufCodecs.list(Buyback.LIMIT)), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/** Codex: kills per common monster type (entity type id -> kills, see {@code progress/Codex}). Kept through death; synced to the owner. */
+	public static final AttachmentType<Map<String, Integer>> MONSTER_KILLS = AttachmentRegistry.create(
+		MinecraftMode.id("monster_kills"),
+		builder -> builder.persistent(Codec.unboundedMap(Codec.STRING, Codec.INT))
+			.copyOnDeath()
+			.initializer(Map::of)
+			.syncWith(ByteBufCodecs.map(HashMap::new, ByteBufCodecs.STRING_UTF8, ByteBufCodecs.VAR_INT), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/** Codex: this mod's items the player has held (item paths, see {@code progress/Codex}). Kept through death; synced to the owner. */
+	public static final AttachmentType<List<String>> ITEMS_FOUND = AttachmentRegistry.create(
+		MinecraftMode.id("items_found"),
+		builder -> builder.persistent(Codec.STRING.listOf())
+			.copyOnDeath()
+			.initializer(List::of)
+			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 	);
 
 	public static void init() {

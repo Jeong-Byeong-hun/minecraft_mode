@@ -215,6 +215,7 @@ final class JobLang {
 		ContentLang.add(b, ko);
 		MapLang.add(b, ko);
 		TownLang.add(b, ko);
+		CodexLang.add(b, ko);
 	}
 
 	private JobLang() {

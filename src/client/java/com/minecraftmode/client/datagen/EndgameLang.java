@@ -247,13 +247,13 @@ final class EndgameLang {
 
 		b.add("key.minecraft_mode.codex_screen", ko ? "도감" : "Codex");
 		b.add("screen.minecraft_mode.codex.title", ko ? "도감" : "Codex");
-		b.add("screen.minecraft_mode.codex.tab.codex", ko ? "도감" : "Codex");
-		b.add("screen.minecraft_mode.codex.tab.achievements", ko ? "업적" : "Achievements");
+		b.add("screen.minecraft_mode.codex.tab.codex", ko ? "네임드" : "Named");
+		b.add("screen.minecraft_mode.codex.tab.achievements", ko ? "업적" : "Feats");
 		b.add("screen.minecraft_mode.codex.tab.titles", ko ? "칭호" : "Titles");
 		b.add("screen.minecraft_mode.codex.named", ko ? "네임드 몬스터: 숙련 %s/%s (각 %s회 처치)" : "Named monsters: %s/%s mastered (%s kills each)");
 		b.add("screen.minecraft_mode.codex.lairs", ko ? "정복한 소굴: %s/%s" : "Lairs conquered: %s/%s");
 		b.add("screen.minecraft_mode.codex.unknown", ko ? "아직 만나지 못함" : "Not met yet");
-		b.add("screen.minecraft_mode.codex.unknown_lair", ko ? "아직 정복하지 않음" : "Not conquered yet");
+		b.add("screen.minecraft_mode.codex.unknown_lair", ko ? "아직 발견하지 못함" : "Not found yet");
 		b.add("screen.minecraft_mode.codex.level_range", "Lv %s-%s");
 		b.add("screen.minecraft_mode.codex.kills", ko ? "처치: %s/%s" : "Defeated: %s/%s");
 		b.add("screen.minecraft_mode.codex.clears", ko ? "%s회 정복" : "Conquered %s times");

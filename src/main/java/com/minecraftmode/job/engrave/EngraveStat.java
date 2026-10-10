@@ -26,7 +26,7 @@ public enum EngraveStat {
 	BURN("burn", "Basic hits ignite for %ss", "기본 공격 적중 시 %s초 화상", 0),
 	SLOW("slow", "Basic hits slow for %ss", "기본 공격 적중 시 %s초 둔화", 0),
 	SKILL_AREA("skill_area", "+%s%% skill area", "스킬 범위 +%s%%", 0),
-	EXTRA_SHOT("extra_shot", "+%s projectiles per basic shot", "기본 사격 투사체 +%s", 0),
+	EXTRA_SHOT("extra_shot", "+%s projectiles per basic shot (not skills)", "기본 사격 투사체 +%s (스킬 제외)", 0),
 	SHOT_DAMAGE("shot_damage", "+%s%% basic shot damage", "기본 사격 피해 +%s%%", 0),
 	RANGE_BONUS("range_bonus", "+%s%% damage per 10 blocks of distance", "거리 10블록당 피해 +%s%%", 0),
 	GOLD_FIND("gold_find", "%s%% chance to drop coins on kill", "처치 시 %s%% 확률로 동전 획득", 100),

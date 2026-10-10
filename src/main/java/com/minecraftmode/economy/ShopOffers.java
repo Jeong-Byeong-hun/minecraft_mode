@@ -79,7 +79,14 @@ public final class ShopOffers {
 	/** One {@code goods} for {@code copper}, charged in the largest coin that keeps the price close. */
 	public static Trade priced(final int copper, final ItemLike goods) {
 		if (copper >= Coins.GOLD) {
-			return buy(ModItems.GOLD_COIN, Math.min(64, Math.max(1, Math.round(copper / (float)Coins.GOLD))), goods, 1);
+			int gold = Math.min(64, copper / Coins.GOLD);
+			int silver = gold >= 64 ? 0 : Math.round(copper % Coins.GOLD / (float)Coins.SILVER);
+			if (silver >= Coins.SILVER) {
+				gold = Math.min(64, gold + 1);
+				silver = 0;
+			}
+			// gold plus a silver remainder (100 copper = 1G 2S), so prices between gold steps are not all rounded to the same gold
+			return silver > 0 ? new Trade(ModItems.GOLD_COIN, gold, goods, 1, ModItems.SILVER_COIN, silver) : buy(ModItems.GOLD_COIN, gold, goods, 1);
 		}
 		if (copper >= Coins.SILVER) {
 			return buy(ModItems.SILVER_COIN, Math.max(1, Math.round(copper / (float)Coins.SILVER)), goods, 1);

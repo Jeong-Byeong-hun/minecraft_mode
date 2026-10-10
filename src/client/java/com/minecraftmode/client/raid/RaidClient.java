@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class RaidClient {
 	public static final KeyMapping LOOT = KeyMappingHelper.registerKeyMapping(
-		new KeyMapping("key.minecraft_mode.loot_screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_L, JobKeys.CATEGORY));
+		new KeyMapping("key.minecraft_mode.loot_screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_Y, JobKeys.CATEGORY));
 
 	private static List<PartySyncPayload.Member> party = List.of();
 	private static @Nullable LootStatePayload loot;

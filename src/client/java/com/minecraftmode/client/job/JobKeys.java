@@ -10,12 +10,12 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
-/** Skill keys (R, G, V, Z by default), the innate class ability (B) and the class screen key (K). */
+/** Skill keys (R, X, V, Z by default; G is vanilla quick actions), the innate class ability (B) and the class screen key (K). */
 public final class JobKeys {
 	public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(MinecraftMode.id("classes"));
 	public static final KeyMapping[] SKILLS = {
 		register("skill_1", InputConstants.KEY_R),
-		register("skill_2", InputConstants.KEY_G),
+		register("skill_2", InputConstants.KEY_X),
 		register("skill_3", InputConstants.KEY_V),
 		register("skill_4", InputConstants.KEY_Z)
 	};

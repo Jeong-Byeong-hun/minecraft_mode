@@ -12,10 +12,10 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 
-/** Pet and mount renderers, the collection key (P) and the mount key (H: call the last mount, or get off). */
+/** Pet and mount renderers, the collection key (U; P is vanilla social interactions) and the mount key (H: call the last mount, or get off). */
 public final class CompanionClient {
 	public static final KeyMapping COLLECTION = KeyMappingHelper.registerKeyMapping(
-		new KeyMapping("key.minecraft_mode.companion_screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_P, JobKeys.CATEGORY));
+		new KeyMapping("key.minecraft_mode.companion_screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_U, JobKeys.CATEGORY));
 	public static final KeyMapping MOUNT = KeyMappingHelper.registerKeyMapping(
 		new KeyMapping("key.minecraft_mode.mount", InputConstants.Type.KEYBOARD, InputConstants.KEY_H, JobKeys.CATEGORY));
 

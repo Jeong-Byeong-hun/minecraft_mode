@@ -457,7 +457,12 @@ public final class WorldEvents {
 	}
 
 	private static List<ServerPlayer> defenders(final ServerLevel level) {
-		return level.players().stream().filter(p -> !p.isSpectator() && Math.abs(p.getX()) < INVASION_RANGE && Math.abs(p.getZ()) < INVASION_RANGE).toList();
+		return level.players().stream().filter(p -> defends(p) && Math.abs(p.getX()) < INVASION_RANGE && Math.abs(p.getZ()) < INVASION_RANGE).toList();
+	}
+
+	/** Invaders fight adventurers with a class; players who have not chosen one yet are neither targeted nor counted. */
+	private static boolean defends(final ServerPlayer p) {
+		return !p.isSpectator() && !p.isCreative() && JobProgression.get(p).hasClass();
 	}
 
 	private static void tickInvasion(final ServerLevel level) {
@@ -479,8 +484,22 @@ public final class WorldEvents {
 		if (inv.age % 40 == 0) {
 			BlockPos plaza = CityZone.spawn(CityZone.baseY(level));
 			for (UUID id : inv.alive) {
-				if (level.getEntity(id) instanceof Mob mob && mob.getTarget() == null) {
-					ServerPlayer near = level.getNearestPlayer(mob, 32.0) instanceof ServerPlayer p && !p.isCreative() && !p.isSpectator() ? p : null;
+				if (!(level.getEntity(id) instanceof Mob mob)) {
+					continue;
+				}
+				if (mob.getTarget() instanceof ServerPlayer current && !defends(current)) {
+					mob.setTarget(null); // newcomers without a class are left alone (the plaza is where they spawn)
+				}
+				if (mob.getTarget() == null) {
+					ServerPlayer near = null;
+					double best = 32.0 * 32.0;
+					for (ServerPlayer p : level.players()) {
+						double d = p.distanceToSqr(mob);
+						if (d < best && defends(p)) {
+							best = d;
+							near = p;
+						}
+					}
 					if (near != null) {
 						mob.setTarget(near);
 					} else {

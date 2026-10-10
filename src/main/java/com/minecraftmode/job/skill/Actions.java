@@ -1002,11 +1002,15 @@ public final class Actions {
 			long now = ctx.level.getGameTime();
 			var data = JobProgression.get(ctx.caster);
 			Map<String, Long> cooldowns = new HashMap<>(data.cooldowns());
-			for (Skill other : ctx.weapon.skills()) {
-				if (other != ctx.skill && cooldowns.containsKey(other.id())) {
-					long left = cooldowns.get(other.id()) - now;
+			for (int i = 0; i < ctx.weapon.skills().size(); i++) {
+				Skill other = ctx.weapon.skills().get(i);
+				if (other == ctx.skill) {
+					continue;
+				}
+				for (String key : List.of(other.id(), SkillCaster.slotKey(data.job(), i))) {
+					long left = cooldowns.getOrDefault(key, 0L) - now;
 					if (left > 0) {
-						cooldowns.put(other.id(), now + (long)(left * (1.0 - pct / 100.0)));
+						cooldowns.put(key, now + (long)(left * (1.0 - pct / 100.0)));
 					}
 				}
 			}

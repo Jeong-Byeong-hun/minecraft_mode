@@ -110,8 +110,10 @@ public final class JobHud {
 			int[] c = counts.get(i);
 			boolean done = c[0] >= c[1];
 			int ly = y + 13 + i * 10;
-			g.text(font, labels.get(i), x + 8, ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
 			String count = Math.min(c[0], c[1]) + "/" + c[1];
+			// long goal names (e.g. "Monsters (ranged kills)") must stop short of the counter
+			String label = font.plainSubstrByWidth(labels.get(i).getString(), w - 12 - 6 - font.width(count));
+			g.text(font, label, x + 8, ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
 			g.text(font, count, x + w - 4 - font.width(count), ly, done ? 0xFF7CFC7C : 0xFFD0D0D0, false);
 		}
 	}
@@ -136,7 +138,8 @@ public final class JobHud {
 		boolean active = JobWeapons.isActive(data, def);
 		EngraveTotals mods = JobWeapons.activeTotals(player);
 		long now = minecraft.level.getGameTime();
-		int x0 = g.guiWidth() / 2 + 98;
+		// right of the hotbar, but never past the screen edge (the GUI can be as narrow as 320 px)
+		int x0 = Math.min(g.guiWidth() / 2 + 98, g.guiWidth() - def.skills().size() * 22 - 2);
 		int y = g.guiHeight() - 22;
 		for (int i = 0; i < def.skills().size(); i++) {
 			Skill skill = def.skills().get(i);
@@ -148,7 +151,7 @@ public final class JobHud {
 			String glyph = name.isEmpty() ? "?" : name.substring(0, name.offsetByCodePoints(0, 1));
 			g.centeredText(font, glyph, x + 11, y + 3, active ? 0xFFFFFFFF : 0xFF777777);
 			if (active) {
-				long left = data.readyAt(skill.id()) - now;
+				long left = SkillCaster.readyAt(data, skill, i) - now;
 				if (left > 0) {
 					int total = Math.max(1, SkillCaster.cooldown(data, skill, mods));
 					int h = Math.round(20 * Math.min(1.0F, (float)left / total));

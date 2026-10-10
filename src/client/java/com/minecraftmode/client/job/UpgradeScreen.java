@@ -43,7 +43,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 
 	private boolean canPay(final ClassGear target) {
 		return this.minecraft.player != null && (this.minecraft.player.isCreative()
-			|| this.have(target) >= GearUpgrades.ETHER_COST && Coins.total(this.minecraft.player) >= GearUpgrades.coinCost(target));
+			|| this.have(target) >= GearUpgrades.ETHER_COST && Coins.total(this.minecraft.player) >= GearUpgrades.coinCost(target, this.menu.input()));
 	}
 
 	private static final int REROLL_X = 6;
@@ -106,7 +106,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			g.fakeItem(GearIndex.stack(target), x + ROW_X + 2, ry + 2);
 			Component name = Component.translatable(GearIndex.item(target).getDescriptionId()).withColor(JobWeaponItem.tierColor(target.tier()));
 			g.text(this.font, name, x + ROW_X + 21, ry + 2, 0xFFFFFFFF, false);
-			String coins = "◎" + Coins.format(GearUpgrades.coinCost(target));
+			String coins = "◎" + Coins.format(GearUpgrades.coinCost(target, this.menu.input()));
 			g.text(this.font, coins, x + ROW_X + ROW_W - 3 - this.font.width(coins), ry + 2, ok ? 0xFFFFD27F : 0xFFFF8080, false);
 			String cost = this.have(target) + "/" + GearUpgrades.ETHER_COST;
 			g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.cost", target.level(), GearUpgrades.grade(target)), x + ROW_X + 21, ry + 11, 0xFFE0C090, false);

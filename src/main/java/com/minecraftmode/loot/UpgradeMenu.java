@@ -116,7 +116,7 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		}
 		ClassGear target = targets.get(buttonId);
 		int grade = GearUpgrades.grade(target);
-		int coins = GearUpgrades.coinCost(target);
+		int coins = GearUpgrades.coinCost(target, this.input());
 		if (!player.isCreative() && (ether(player.getInventory(), grade) < GearUpgrades.ETHER_COST || Coins.total(player) < coins)) {
 			return false;
 		}

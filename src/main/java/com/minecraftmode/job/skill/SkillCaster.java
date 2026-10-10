@@ -64,7 +64,7 @@ public final class SkillCaster {
 		}
 		Skill skill = def.skills().get(slot);
 		long now = player.level().getGameTime();
-		if (data.readyAt(skill.id()) > now) {
+		if (readyAt(data, skill, slot) > now) {
 			return Result.COOLDOWN;
 		}
 		EngraveTotals mods = JobWeapons.activeTotals(player);
@@ -76,7 +76,8 @@ public final class SkillCaster {
 		boolean echo = player.getRandom().nextFloat() < mods.fraction(EngraveStat.ECHO);
 		JobData updated = data.withMana(player.isCreative() ? data.mana() : data.mana() - cost);
 		if (!echo) {
-			updated = updated.withCooldown(skill.id(), now + cooldown);
+			// the weapon's own key plus the class-wide slot key: swapping to another weapon of the class does not refresh the slot
+			updated = updated.withCooldown(skill.id(), now + cooldown).withCooldown(slotKey(data.job(), slot), now + cooldown);
 		}
 		JobProgression.set(player, updated);
 		double powerBonus = CombatHooks.has(data, JobClass.MAGE, 3) ? 0.15 : 0.0;
@@ -101,6 +102,16 @@ public final class SkillCaster {
 	 * Percent reductions (capped at 60%) first, then flat seconds from armor; a skill never drops
 	 * below 1 second (or its own cooldown if that is shorter).
 	 */
+	/** Cooldown key shared by every weapon of {@code job} for skill slot {@code slot} (0-based). */
+	public static String slotKey(final JobClass job, final int slot) {
+		return "slot." + job.name().toLowerCase(java.util.Locale.ROOT) + "." + slot;
+	}
+
+	/** When {@code skill} in {@code slot} can be cast again: the later of the weapon's own cooldown and the class slot's. */
+	public static long readyAt(final JobData data, final Skill skill, final int slot) {
+		return Math.max(data.readyAt(skill.id()), data.readyAt(slotKey(data.job(), slot)));
+	}
+
 	public static int cooldown(final JobData data, final Skill skill, final EngraveTotals mods) {
 		float reduction = mods.fraction(EngraveStat.COOLDOWN) + (CombatHooks.has(data, JobClass.MAGE, 4) ? 0.20F : 0.0F);
 		int ticks = Math.round(skill.cooldownTicks() * (1.0F - Math.min(0.6F, reduction)));

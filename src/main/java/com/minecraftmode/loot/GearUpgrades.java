@@ -19,9 +19,20 @@ import net.minecraft.world.item.ItemStack;
 public final class GearUpgrades {
 	public static final int ETHER_COST = 50;
 
-	/** Coins for evolving into {@code target}: half its bracket's guild price. */
-	public static int coinCost(final ClassGear target) {
-		return Math.max(1, GearShop.bracketPrice(target.bracket()) / 2);
+	/**
+	 * Coins for evolving {@code from} into {@code target}: half the target bracket's guild price, plus re-tempering of the
+	 * enhancement that is carried over - half of what those +N attempts would have cost at the target bracket instead of
+	 * the old one, so a +15 made cheaply on level-10 gear cannot skip the coin sink of higher brackets.
+	 */
+	public static int coinCost(final ClassGear target, final ItemStack from) {
+		int base = GearShop.bracketPrice(target.bracket()) / 2;
+		ClassGear source = ClassGear.of(from);
+		int level = Enhancement.of(from).level();
+		if (source != null && level > 0) {
+			float attempts = 0.1F * level + 0.025F * level * (level - 1); // sum of Enhancement.coins' price factors for +0..+N
+			base += Math.round(Math.max(0, GearShop.bracketPrice(target.bracket()) - GearShop.bracketPrice(source.bracket())) * attempts * 0.5F);
+		}
+		return Math.max(1, base);
 	}
 
 	/** Coins to roll an armor piece's extra options again: half its bracket's guild price. */

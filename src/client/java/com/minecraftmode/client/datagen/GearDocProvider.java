@@ -38,6 +38,7 @@ import com.minecraftmode.job.gear.ArmorOptions;
 import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ArmorSetDef;
 import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.job.gear.ClassDefense;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.ItemLevels;
@@ -201,6 +202,54 @@ public class GearDocProvider implements DataProvider {
 					.append(" |\n");
 			}
 		}
+
+		md.append("\n## 직업 방어구 방어 성능\n\n");
+		md.append("- 한 벌(4부위) 기준. 방어 점수 = (").append(exact(ClassDefense.ARMOR_BASE)).append(" + 레벨 × ")
+			.append(exact(ClassDefense.ARMOR_PER_LEVEL)).append(") × 직업 배율, 방어 강도 = 레벨 ÷ 50 × ").append(exact(ClassDefense.TOUGHNESS_PER_50))
+			.append(" × 직업 배율, **물리 보호**(모든 피해 감소, 보호 인챈트 역할) = min(").append(exact(ClassDefense.PROTECTION_MAX)).append("%, 레벨 × ")
+			.append(exact(ClassDefense.PROTECTION_PER_LEVEL)).append("%) × 직업 배율, **마법 방어**(마법 공격에 추가 감소) = min(")
+			.append(exact(ClassDefense.MAGIC_MAX)).append("%, 레벨 × ").append(exact(ClassDefense.MAGIC_PER_LEVEL)).append("%) × 마법 배율. 부위마다 1/4씩.\n");
+		md.append("- 마법 공격: 네임드의 브레스·가시 분출·마력탄(칼·총알·돌·금 파편 같은 물체는 물리), 바닐라 마법(물약·소환사 송곳니·가디언 광선·위더·드래곤 브레스·워든 음파·화염구). 마법 공격에도 방어 점수는 적용됩니다.\n");
+		md.append("- 바닐라 비교: 철 15 / 0, 다이아 20 / 8, 다이아 + 보호 IV 20 / 8 / 피해 -64%. 직업 방어구는 바닐라 인챈트를 받지 않습니다.\n\n");
+		md.append("| 직업 | 방어 배율 | 마법 배율 | 고유 |\n|---|---|---|---|\n");
+		for (JobClass job : JobClass.PLAYABLE) {
+			ClassDefense d = ClassDefense.of(job);
+			String own = d.manaShield() > 0 ? "마나 보호막(받는 피해의 " + exact(d.manaShield()) + "%를 MP로)"
+				: d.setDodge(0) > 0 || d.dodgePerLevel() > 0 ? "회피 " + exact(d.dodgeBase()) + "% + 레벨 × " + exact(d.dodgePerLevel()) + "%" : "-";
+			md.append("| ").append(this.ko.get(job.nameKey())).append(" | ").append(exact(d.armor())).append(" | ").append(exact(d.magic()))
+				.append(" | ").append(own).append(" |\n");
+		}
+		md.append("\n| Lv | ");
+		for (JobClass job : JobClass.PLAYABLE) {
+			md.append(this.ko.get(job.nameKey())).append(" | ");
+		}
+		md.append("\n|---|").append("---|".repeat(JobClass.PLAYABLE.size())).append("\n");
+		for (int level : new int[] {10, 30, 50, 70, 80, 100}) {
+			md.append("| ").append(level).append(" | ");
+			for (JobClass job : JobClass.PLAYABLE) {
+				final int lv = level;
+				ArmorSetDef set = ClassArmor.sets(job).stream().filter(s -> s.level() <= lv).max(java.util.Comparator.comparingInt(ArmorSetDef::level)).orElse(null);
+				if (set == null) {
+					md.append("- | ");
+					continue;
+				}
+				int armor = 0;
+				float toughness = 0.0F;
+				for (ArmorPieceDef piece : ClassArmor.piecesOf(set)) {
+					armor += piece.armor();
+					toughness += piece.toughness();
+				}
+				ClassDefense d = ClassDefense.of(job);
+				md.append(Math.min(30, armor)).append(" / ").append(exact(toughness)).append(" / ").append(exact(d.setProtection(set.level())))
+					.append("% / 마법 ").append(exact(d.setMagicDefense(set.level()))).append("%");
+				if (d.setDodge(set.level()) > 0) {
+					md.append(" / 회피 ").append(exact(d.setDodge(set.level()))).append("%");
+				}
+				md.append(" | ");
+			}
+			md.append("\n");
+		}
+		md.append("\n(방어 점수 / 방어 강도 / 물리 보호 / 마법 방어 / 회피, 그 레벨까지 입을 수 있는 가장 높은 세트)\n");
 
 		md.append("\n## 방어구 기본 옵션과 추가 옵션\n\n");
 		md.append("- 부위마다 고정 기본 옵션 1줄 + 무작위 추가 옵션(Lv 30 미만 1줄, Lv 60 미만 2줄, 그 이상 3줄). 추가 옵션 수치는 레벨 최대치의 60–100%.\n\n");
@@ -688,6 +737,11 @@ public class GearDocProvider implements DataProvider {
 			case FEET -> "장화";
 			case WEAPON -> "무기";
 		};
+	}
+
+	/** Up to two decimals (0.16, 1.15, 43.2). */
+	private static String exact(final double value) {
+		return java.math.BigDecimal.valueOf(Math.round(value * 100.0) / 100.0).stripTrailingZeros().toPlainString();
 	}
 
 	private void write(final String name, final String content) {

@@ -76,4 +76,19 @@ public record Ability(
 		return new Ability(this.type, this.cooldown, this.power, this.range, this.radius, this.count, this.fx, this.color, this.effect, this.effectTicks,
 			this.amplifier, this.summon, this.display, this.homing, gravity);
 	}
+
+	/**
+	 * Whether its hits are spells ({@code MagicDamage}, reduced by magic defense): breaths and eruptions always, bolts unless they throw
+	 * or shoot something solid (knives, bullets, rocks, gold).
+	 */
+	public boolean magic() {
+		return switch (this.type) {
+			case BREATH, SPIKES -> true;
+			case BOLT -> this.display == null || !PHYSICAL_SHOTS.contains(this.display);
+			default -> false;
+		};
+	}
+
+	private static final java.util.Set<Item> PHYSICAL_SHOTS = java.util.Set.of(com.minecraftmode.registry.ModItems.PROJECTILE_KNIFE,
+		com.minecraftmode.registry.ModItems.PROJECTILE_BULLET, net.minecraft.world.item.Items.COBBLESTONE, net.minecraft.world.item.Items.GOLD_NUGGET);
 }

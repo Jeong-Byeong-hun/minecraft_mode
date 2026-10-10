@@ -56,6 +56,9 @@ public final class GearTooltips {
 
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.base").withStyle(ChatFormatting.GOLD));
 		lines.add(statLine(def.baseOption(), ChatFormatting.WHITE));
+		for (StatLine line : def.defenseLines()) {
+			lines.add(statLine(line, ChatFormatting.WHITE));
+		}
 
 		GearRolls rolls = stack.get(ModDataComponents.GEAR_ROLLS);
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.options").withStyle(ChatFormatting.AQUA));

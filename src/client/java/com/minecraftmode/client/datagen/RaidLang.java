@@ -88,6 +88,8 @@ final class RaidLang {
 		b.add("raid.minecraft_mode.ember_warden", ko ? "불씨 수호 정령" : "Ember Warden");
 		b.add("raid.minecraft_mode.phylactery_guard", ko ? "성물 수호자" : "Phylactery Guardian");
 		b.add("death.attack.minecraft_mode.raid_mechanic", ko ? "%1$s은(는) 레이드 기믹에 휘말렸다" : "%1$s was caught by a raid mechanic");
+		b.add("death.attack.minecraft_mode.monster_magic", ko ? "%1$s은(는) 마법에 쓰러졌다" : "%1$s was slain by magic");
+		b.add("death.attack.minecraft_mode.monster_magic.player", ko ? "%1$s은(는) %2$s의 마법에 쓰러졌다" : "%1$s was slain by %2$s's magic");
 		b.add("death.attack.minecraft_mode.raid_mechanic.player", ko ? "%1$s은(는) %2$s의 기믹에 휘말렸다" : "%1$s was caught by %2$s's mechanic");
 	}
 

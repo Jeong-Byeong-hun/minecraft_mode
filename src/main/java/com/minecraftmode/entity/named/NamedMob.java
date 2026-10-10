@@ -694,7 +694,8 @@ public class NamedMob extends CreatureMob {
 		for (int k = 0; k < ability.count(); k++) {
 			float offset = ability.count() == 1 ? 0.0F : -ability.radius() / 2 + ability.radius() * k / (ability.count() - 1);
 			Vec3 dir = aim.yRot((float)Math.toRadians(offset));
-			MobProjectile projectile = MobProjectile.of(this, display, ability.fx(), ability.color(), ability.gravity(), this.damage(ability)).launch(eye, dir, speed);
+			MobProjectile projectile = MobProjectile.of(this, display, ability.fx(), ability.color(), ability.gravity(), this.damage(ability)).magic(ability.magic())
+				.launch(eye, dir, speed);
 			if (ability.effect() != null) {
 				projectile.effect(ability.effect(), ability.effectTicks(), ability.amplifier());
 			}
@@ -774,7 +775,7 @@ public class NamedMob extends CreatureMob {
 			if (!this.isAlive()) {
 				return;
 			}
-			Attacks.hitAll(this, Attacks.inCircle(level, at, ability.radius(), 3.0), this.damage(ability), e -> {
+			Attacks.hitAll(this, Attacks.inCircle(level, at, ability.radius(), 3.0), this.damage(ability), ability.magic(), e -> {
 				Attacks.push(e, new Vec3(0, 0.7, 0));
 				if (ability.effect() != null) {
 					Attacks.effect(e, ability.effect(), ability.effectTicks(), ability.amplifier(), this);
@@ -817,7 +818,7 @@ public class NamedMob extends CreatureMob {
 						float a = yaw - half + (2 * half) * this.random.nextFloat();
 						fx.moving(level, ability.fx(), eye, Vec3.directionFromRotation(0.0F, a).scale(ability.range() / 12.0).add(0, -0.02, 0));
 					}
-					Attacks.hitAll(this, Attacks.inCone(level, origin, yaw, ability.range(), half), this.damage(ability), e -> {
+					Attacks.hitAll(this, Attacks.inCone(level, origin, yaw, ability.range(), half), this.damage(ability), ability.magic(), e -> {
 						if (ability.effect() != null) {
 							Attacks.effect(e, ability.effect(), ability.effectTicks(), ability.amplifier(), this);
 						}

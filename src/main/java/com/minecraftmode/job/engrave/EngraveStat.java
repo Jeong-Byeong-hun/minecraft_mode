@@ -54,7 +54,10 @@ public enum EngraveStat {
 	CRIT_REFUND("crit_refund", "Critical hits cut skill cooldowns by %ss", "치명타 시 스킬 재사용 대기시간 %s초 감소", 2),
 	MANA_SHIELD("mana_shield", "%s%% of damage taken is paid with MP", "받는 피해의 %s%%를 MP로 대신 받음", 50),
 	DOUBLE_STRIKE("double_strike", "%s%% chance for basic attacks to hit twice", "%s%% 확률로 기본 공격이 두 번 적중", 50),
-	HEAL_ON_SKILL("heal_on_skill", "Casting a skill heals %s", "스킬 사용 시 체력 %s 회복", 0);
+	HEAL_ON_SKILL("heal_on_skill", "Casting a skill heals %s", "스킬 사용 시 체력 %s 회복", 0),
+	// built into class armor (ClassDefense)
+	PROTECTION("protection", "-%s%% damage taken (protection)", "물리 보호: 받는 피해 -%s%%", 70),
+	MAGIC_DEFENSE("magic_defense", "-%s%% magic damage taken", "마법 방어: 받는 마법 피해 -%s%%", 70);
 
 	private final String id;
 	private final String en;

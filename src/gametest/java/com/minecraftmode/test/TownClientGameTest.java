@@ -17,7 +17,17 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.entity.combat.MagicDamage;
+import com.minecraftmode.entity.named.Ability;
+import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.job.engrave.EngraveTotals;
+import com.minecraftmode.job.gear.ArmorPieceDef;
+import com.minecraftmode.job.gear.ArmorSetDef;
+import com.minecraftmode.job.gear.ClassArmor;
+import com.minecraftmode.job.gear.ClassDefense;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.GearStats;
+import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
@@ -101,6 +111,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkEngage(context, server, connection);
 			checkVitality(server, connection);
 			checkVindicator(context, server, connection);
+			checkClassDefense(context, server, connection);
 			checkAdvanceKit(server, connection);
 			checkBags(context, server, connection);
 			checkTrash(context, server, connection);
@@ -227,6 +238,87 @@ public class TownClientGameTest implements FabricClientGameTest {
 			require(Math.abs(lost - CombatHooks.VINDICATOR_DAMAGE) < 0.01F, "a vindicator hit takes 2.5 hearts on " + difficulty + ", took " + lost);
 		}
 		server.runOnServer(s -> connection.getServerPlayer().setHealth(connection.getServerPlayer().getMaxHealth()));
+	}
+
+	// ------------------------------------------------------------------ class armor defense
+
+	/**
+	 * A level 80 mage in a full level 80 robe: armor and toughness from {@code ClassDefense}, protection and magic defense from the
+	 * pieces, the mana shield paying part of each hit, and magic attacks taking about half of what a physical hit of the same size does.
+	 * Named monsters' breaths are magic, their bullets are not.
+	 */
+	private static void checkClassDefense(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.MAGE, 4).withProgress(80, 0));
+			ArmorSetDef set = ClassArmor.sets(JobClass.MAGE).stream().filter(x -> x.level() == 80).findFirst().orElseThrow();
+			int armor = 0;
+			for (ArmorPieceDef piece : ClassArmor.piecesOf(set)) {
+				player.setItemSlot(piece.slot().equipmentSlot(), new ItemStack(ClassArmor.item(piece)));
+				armor += piece.armor();
+			}
+			GearStats.invalidate(player);
+			JobStats.refresh(player);
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			ClassDefense defense = ClassDefense.of(JobClass.MAGE);
+			EngraveTotals totals = GearStats.of(player);
+			require(Math.abs(armor - defense.setArmor(80)) <= 1.0F, "a level 80 robe gives about " + defense.setArmor(80) + " armor, got " + armor);
+			require(Math.abs(totals.get(EngraveStat.PROTECTION) - defense.setProtection(80)) < 0.2F, "protection of the full set, got " + totals.get(EngraveStat.PROTECTION));
+			require(Math.abs(totals.get(EngraveStat.MAGIC_DEFENSE) - defense.setMagicDefense(80)) < 0.2F, "magic defense of the full set, got " + totals.get(EngraveStat.MAGIC_DEFENSE));
+			require(Math.abs(totals.get(EngraveStat.MANA_SHIELD) - defense.manaShield()) < 0.2F, "the robe's mana shield, got " + totals.get(EngraveStat.MANA_SHIELD));
+			require(Ability.of(Ability.Type.BREATH, 60, 1.0F, 6.0F, 30.0F, 0, Fx.Kind.SMOKE, 0).magic(), "breaths are magic");
+			require(!new Ability(Ability.Type.BOLT, 60, 1.0F, 20.0F, 0.0F, 1, Fx.Kind.SMOKE, 0, null, 0, 0, null, ModItems.PROJECTILE_BULLET, false, 0.0F).magic(),
+				"bullets are not magic");
+		});
+		// worn armor's attributes apply on the next tick, and the last hit's invulnerability must wear off
+		context.waitTicks(25);
+		String[] detail = new String[1];
+		float physical = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			require(player.getAttributeValue(Attributes.ARMOR) >= 20.0, "the robe's armor is on, got " + player.getAttributeValue(Attributes.ARMOR));
+			player.setHealth(player.getMaxHealth());
+			GearStats.invalidate(player);
+			EngraveTotals t = GearStats.of(player);
+			detail[0] = "armor " + player.getAttributeValue(Attributes.ARMOR) + ", toughness " + player.getAttributeValue(Attributes.ARMOR_TOUGHNESS) + ", reduction "
+				+ t.get(EngraveStat.DAMAGE_REDUCTION) + "%, protection " + t.get(EngraveStat.PROTECTION) + "%, shield " + t.get(EngraveStat.MANA_SHIELD) + "%, mana "
+				+ JobProgression.get(player).mana() + ", absorption " + player.getAbsorptionAmount() + ", effects " + player.getActiveEffects();
+			return hit(player, s.overworld(), false);
+		});
+		context.waitTicks(25);
+		float magic = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setHealth(player.getMaxHealth());
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			float taken = hit(player, s.overworld(), true);
+			int mana = JobProgression.get(player).mana();
+			require(mana < JobStats.maxMana(player), "the mana shield paid with MP");
+			for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD,
+				net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
+				player.setItemSlot(slot, ItemStack.EMPTY);
+			}
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.NONE, 0).withProgress(1, 0));
+			GearStats.invalidate(player);
+			JobStats.refresh(player);
+			player.setHealth(player.getMaxHealth());
+			return taken;
+		});
+		require(physical > 0.5F && physical < 4.0F, "a 20 damage hit on a level 80 mage in full robe takes about 2.5, took " + physical + " (" + detail[0] + ")");
+		float ratio = magic / physical;
+		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio);
+		MinecraftMode.LOGGER.info("[town] class defense: level 80 mage takes {} from a 20 physical hit, {} from a 20 spell", physical, magic);
+		context.waitTicks(25);
+	}
+
+	/** How much of a 20 damage hit from a zombie (physical, or a spell) the player loses. */
+	private static float hit(final ServerPlayer player, final ServerLevel level, final boolean magic) {
+		Zombie zombie = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+		zombie.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0.0F, 0.0F);
+		zombie.setNoAi(true);
+		level.addFreshEntity(zombie);
+		float before = player.getHealth();
+		player.hurtServer(level, magic ? MagicDamage.source(level, zombie, zombie) : level.damageSources().mobAttack(zombie), 20.0F);
+		zombie.discard();
+		return before - player.getHealth();
 	}
 
 	// ------------------------------------------------------------------ advancement kit

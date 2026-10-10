@@ -83,14 +83,24 @@ public final class Attacks {
 	}
 
 	public static void hit(final Mob attacker, final LivingEntity target, final float amount) {
+		hit(attacker, target, amount, false);
+	}
+
+	/** A hit by {@code attacker}; {@code magic} makes it a spell ({@link MagicDamage}), which magic defense also reduces. */
+	public static void hit(final Mob attacker, final LivingEntity target, final float amount, final boolean magic) {
 		if (attacker.level() instanceof ServerLevel level) {
-			target.hurtServer(level, attacker.damageSources().mobAttack(attacker), amount);
+			target.hurtServer(level, magic ? MagicDamage.source(level, attacker, attacker) : attacker.damageSources().mobAttack(attacker), amount);
 		}
 	}
 
 	public static void hitAll(final Mob attacker, final List<LivingEntity> targets, final float amount, final @Nullable Consumer<LivingEntity> extra) {
+		hitAll(attacker, targets, amount, false, extra);
+	}
+
+	public static void hitAll(final Mob attacker, final List<LivingEntity> targets, final float amount, final boolean magic,
+		final @Nullable Consumer<LivingEntity> extra) {
 		for (LivingEntity target : targets) {
-			hit(attacker, target, amount);
+			hit(attacker, target, amount, magic);
 			if (extra != null) {
 				extra.accept(target);
 			}

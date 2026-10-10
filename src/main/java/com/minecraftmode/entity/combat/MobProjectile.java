@@ -49,6 +49,8 @@ public class MobProjectile extends ThrowableItemProjectile {
 	private boolean done;
 	/** Only for show: hits nothing (the damage comes from a matching telegraph). */
 	private boolean visual;
+	/** A spell bolt ({@link MagicDamage}) rather than a thrown or shot object. */
+	private boolean magic;
 
 	public MobProjectile(final EntityType<? extends MobProjectile> type, final Level level) {
 		super(type, level);
@@ -66,6 +68,11 @@ public class MobProjectile extends ThrowableItemProjectile {
 		p.entityData.set(DATA_TRAIL, trail.ordinal());
 		p.entityData.set(DATA_GRAVITY, gravity);
 		return p;
+	}
+
+	public MobProjectile magic(final boolean magic) {
+		this.magic = magic;
+		return this;
 	}
 
 	public MobProjectile effect(final Holder<MobEffect> effect, final int ticks, final int amplifier) {
@@ -179,7 +186,8 @@ public class MobProjectile extends ThrowableItemProjectile {
 			return;
 		}
 		Entity owner = this.getOwner();
-		target.hurtServer(level, this.damageSources().mobProjectile(this, owner instanceof LivingEntity living ? living : null), this.damage);
+		LivingEntity shooter = owner instanceof LivingEntity living ? living : null;
+		target.hurtServer(level, this.magic ? MagicDamage.source(level, this, shooter) : this.damageSources().mobProjectile(this, shooter), this.damage);
 		if (this.effect != null) {
 			target.addEffect(new MobEffectInstance(this.effect, this.effectTicks, this.amplifier), owner);
 		}

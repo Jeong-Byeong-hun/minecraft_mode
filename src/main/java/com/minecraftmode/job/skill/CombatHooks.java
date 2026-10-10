@@ -3,6 +3,7 @@ package com.minecraftmode.job.skill;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.EliteMob;
+import com.minecraftmode.entity.combat.MagicDamage;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -257,6 +258,11 @@ public final class CombatHooks {
 			reduce += mods.fraction(EngraveStat.LAST_STAND);
 		}
 		float result = amount * (1.0F - Math.min(0.8F, reduce));
+		// class armor: protection against everything, magic defense on top against spells (ClassDefense)
+		result *= 1.0F - mods.fraction(EngraveStat.PROTECTION);
+		if (MagicDamage.is(source)) {
+			result *= 1.0F - mods.fraction(EngraveStat.MAGIC_DEFENSE);
+		}
 		// Mana shield: part of the hit is paid with MP, one point per point of damage
 		float shield = mods.fraction(EngraveStat.MANA_SHIELD);
 		if (shield > 0.0F && result > 0.0F) {

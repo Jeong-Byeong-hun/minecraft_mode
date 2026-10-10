@@ -86,6 +86,9 @@ public final class GearStats {
 				continue;
 			}
 			add(builder, piece.baseOption());
+			for (StatLine line : piece.defenseLines()) {
+				add(builder, line);
+			}
 			for (StatLine line : stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines()) {
 				add(builder, line);
 			}

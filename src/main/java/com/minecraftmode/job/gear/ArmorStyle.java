@@ -6,30 +6,26 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
 /**
- * How a class dresses: piece names, how much armor and toughness its sets give, the equip sound,
- * and the drawing style used by the armor artist.
+ * How a class dresses: piece names, the equip sound and the drawing style used by the armor artist. How much the armor protects is
+ * {@link ClassDefense}.
  */
 public enum ArmorStyle {
-	PLATE(1.25F, 1.0F, SoundEvents.ARMOR_EQUIP_IRON,
+	PLATE(SoundEvents.ARMOR_EQUIP_IRON,
 		new String[] {"Helm", "Plate", "Greaves", "Sabatons"}, new String[] {"투구", "흉갑", "각반", "철장화"}),
-	LEATHER(0.80F, 0.4F, SoundEvents.ARMOR_EQUIP_LEATHER,
+	LEATHER(SoundEvents.ARMOR_EQUIP_LEATHER,
 		new String[] {"Hood", "Vest", "Leggings", "Boots"}, new String[] {"두건", "조끼", "바지", "장화"}),
-	ROBE(0.65F, 0.3F, SoundEvents.ARMOR_EQUIP_LEATHER,
+	ROBE(SoundEvents.ARMOR_EQUIP_LEATHER,
 		new String[] {"Hat", "Robe", "Trousers", "Shoes"}, new String[] {"모자", "로브", "하의", "신발"}),
-	RANGER(0.85F, 0.4F, SoundEvents.ARMOR_EQUIP_CHAIN,
+	RANGER(SoundEvents.ARMOR_EQUIP_CHAIN,
 		new String[] {"Cap", "Jerkin", "Breeches", "Boots"}, new String[] {"모자", "가죽 상의", "각반", "장화"}),
-	COAT(1.0F, 0.6F, SoundEvents.ARMOR_EQUIP_CHAIN,
+	COAT(SoundEvents.ARMOR_EQUIP_CHAIN,
 		new String[] {"Tricorn", "Coat", "Breeches", "Boots"}, new String[] {"삼각모", "코트", "바지", "장화"});
 
-	private final float armorFactor;
-	private final float toughnessFactor;
 	private final Holder<SoundEvent> sound;
 	private final String[] pieceEn;
 	private final String[] pieceKo;
 
-	ArmorStyle(final float armorFactor, final float toughnessFactor, final Holder<SoundEvent> sound, final String[] pieceEn, final String[] pieceKo) {
-		this.armorFactor = armorFactor;
-		this.toughnessFactor = toughnessFactor;
+	ArmorStyle(final Holder<SoundEvent> sound, final String[] pieceEn, final String[] pieceKo) {
 		this.sound = sound;
 		this.pieceEn = pieceEn;
 		this.pieceKo = pieceKo;
@@ -44,14 +40,6 @@ public enum ArmorStyle {
 			case SHINIGAMI -> LEATHER;
 			default -> COAT;
 		};
-	}
-
-	public float armorFactor() {
-		return this.armorFactor;
-	}
-
-	public float toughnessFactor() {
-		return this.toughnessFactor;
 	}
 
 	public Holder<SoundEvent> sound() {

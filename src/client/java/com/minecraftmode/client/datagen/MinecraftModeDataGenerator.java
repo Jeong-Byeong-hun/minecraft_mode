@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.enchantment.ModEnchantments;
+import com.minecraftmode.entity.combat.MagicDamage;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.worldgen.ModOreGeneration;
@@ -46,7 +47,10 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 			RaidDimension.bootstrapType(context);
 			DungeonDimension.bootstrapType(context);
 		});
-		registryBuilder.add(Registries.DAMAGE_TYPE, RaidDamage::bootstrap);
+		registryBuilder.add(Registries.DAMAGE_TYPE, context -> {
+			RaidDamage.bootstrap(context);
+			MagicDamage.bootstrap(context);
+		});
 		registryBuilder.add(Registries.STRUCTURE, NamedLairs::bootstrapStructures);
 		registryBuilder.add(Registries.STRUCTURE_SET, NamedLairs::bootstrapSets);
 	}

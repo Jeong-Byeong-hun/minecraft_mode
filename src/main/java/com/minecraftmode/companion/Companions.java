@@ -1,6 +1,7 @@
 package com.minecraftmode.companion;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -37,6 +38,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -194,7 +197,20 @@ public final class Companions {
 		ServerPlayerEvents.JOIN.register(Companions::restore);
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> restore(newPlayer));
 		ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> restore(player));
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> server.execute(() -> dismissPet(handler.player)));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			softLanding(handler.player);
+			server.execute(() -> dismissPet(handler.player));
+		});
+	}
+
+	/**
+	 * Leaving the game in mid-flight: the mount is never saved, so the rider comes back in the air. Slow falling is saved with them
+	 * (this runs before the player is written) and brings them down gently.
+	 */
+	private static void softLanding(final ServerPlayer player) {
+		if (player.getVehicle() instanceof MountEntity mount && mount.flies() && !mount.onGround()) {
+			player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 200, 0, false, false, true));
+		}
 	}
 
 	private static Item registerItem(final String name, final java.util.function.Function<Item.Properties, Item> factory, final Rarity rarity) {
@@ -350,7 +366,7 @@ public final class Companions {
 		}
 		ItemStack stack = new ItemStack(pool.get(player.getRandom().nextInt(pool.size())));
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.companion.found", stack.getHoverName()).withStyle(ChatFormatting.LIGHT_PURPLE));
-		player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+		Bags.giveOrMail(player, stack);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.6F);
 		return true;
 	}

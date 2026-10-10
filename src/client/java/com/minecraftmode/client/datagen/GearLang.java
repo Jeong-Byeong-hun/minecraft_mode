@@ -27,6 +27,8 @@ final class GearLang {
 		b.add("tooltip.minecraft_mode.gear.locked", ko ? "착용 조건 미충족: 입을 수 없음" : "Requirements not met: cannot be worn");
 		b.add("tooltip.minecraft_mode.gear.set", ko ? "%s 세트 (%s/4 착용)" : "%s set (%s/4 worn)");
 		b.add("tooltip.minecraft_mode.gear.base", ko ? "기본 옵션" : "Base option");
+		b.add("tooltip.minecraft_mode.gear.armor", ko ? "방어 +%s" : "Armor +%s");
+		b.add("tooltip.minecraft_mode.gear.armor_toughness", ko ? "방어 +%s · 방어 강도 +%s" : "Armor +%s · Toughness +%s");
 		b.add("tooltip.minecraft_mode.gear.options", ko ? "추가 옵션" : "Extra options");
 		b.add("tooltip.minecraft_mode.gear.unrolled", ko ? " 획득하면 %s줄이 정해집니다" : " %s line(s), rolled when obtained");
 		b.add("tooltip.minecraft_mode.gear.set_bonus", ko ? "%s 세트 효과" : "%s set bonus");

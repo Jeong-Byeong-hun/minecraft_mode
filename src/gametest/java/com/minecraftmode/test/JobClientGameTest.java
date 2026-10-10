@@ -442,7 +442,9 @@ public class JobClientGameTest implements FabricClientGameTest {
 			require(Wallet.balance(player) == wallet - coins, "engraving should take " + coins + " copper from the wallet");
 			int lines = JobWeapons.engravings(menu.weapon()).lines().size();
 			int left = EngravingMenu.essence(player.getInventory());
+			List<Engraving> offered = List.of(menu.offer(0), menu.offer(1), menu.offer(2));
 			require(menu.clickMenuButton(player, EngravingMenu.BUTTON_REMOVE), "removing a line failed");
+			require(offered.equals(List.of(menu.offer(0), menu.offer(1), menu.offer(2))), "removing a line should keep the offers, had " + offered);
 			int afterRemove = JobWeapons.engravings(menu.weapon()).lines().size();
 			int leftAfterRemove = EngravingMenu.essence(player.getInventory());
 			menu.getSlot(0).set(ItemStack.EMPTY);

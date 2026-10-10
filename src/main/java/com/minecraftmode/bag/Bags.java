@@ -1,6 +1,7 @@
 package com.minecraftmode.bag;
 
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
@@ -136,6 +137,79 @@ public final class Bags {
 			}
 		}
 		return moved;
+	}
+
+	/** How many of {@code stack} the carried bags that take it still have room for. */
+	public static int room(final Player player, final ItemStack stack) {
+		if (stack.isEmpty() || !stack.getItem().canFitInsideContainerItems()) {
+			return 0;
+		}
+		int room = 0;
+		for (ItemStack bag : carried(player)) {
+			if (bag.getItem() instanceof BagItem item && item.kind().accepts(stack)) {
+				for (ItemStack held : contents(bag)) {
+					if (held.isEmpty()) {
+						room += stack.getMaxStackSize();
+					} else if (ItemStack.isSameItemSameComponents(held, stack)) {
+						room += Math.max(0, held.getMaxStackSize() - held.getCount());
+					}
+				}
+			}
+		}
+		return room;
+	}
+
+	/** Whether all of {@code stack} fits into the bags that take it and the inventory together. */
+	public static boolean fits(final Player player, final ItemStack stack) {
+		int left = stack.getCount() - room(player, stack);
+		for (ItemStack held : player.getInventory().getNonEquipmentItems()) {
+			if (left <= 0) {
+				break;
+			}
+			if (held.isEmpty()) {
+				left -= stack.getMaxStackSize();
+			} else if (ItemStack.isSameItemSameComponents(held, stack)) {
+				left -= Math.max(0, held.getMaxStackSize() - held.getCount());
+			}
+		}
+		return left <= 0;
+	}
+
+	/**
+	 * Gives {@code stack} to {@code player} the way a pickup would: the carried bags that take it first, then the inventory; what
+	 * fits nowhere drops at their feet. {@code stack} itself is not changed, so callers can still name it in a message.
+	 */
+	public static void give(final ServerPlayer player, final ItemStack stack) {
+		ItemStack rest = giveFitting(player, stack);
+		if (!rest.isEmpty()) {
+			player.getInventory().placeItemBackInInventory(rest, Prediction.SERVER_ONLY);
+		}
+	}
+
+	/**
+	 * Like {@link #give}, but what fits nowhere goes to the player's market mailbox instead of the floor: for rewards handed out in
+	 * places that are cleared right after (dungeon runs, raid arenas).
+	 */
+	public static void giveOrMail(final ServerPlayer player, final ItemStack stack) {
+		ItemStack rest = giveFitting(player, stack);
+		if (!rest.isEmpty()) {
+			AuctionHouse.get(player.level().getServer()).sendItem(player.getUUID(), rest);
+			player.sendSystemMessage(Component.translatable("message.minecraft_mode.bags.mailed", rest.getHoverName(), rest.getCount())
+				.withStyle(ChatFormatting.YELLOW));
+		}
+	}
+
+	/** Puts a copy of {@code stack} into the bags that take it, then the inventory; returns what fit nowhere (empty when all did). */
+	private static ItemStack giveFitting(final ServerPlayer player, final ItemStack stack) {
+		ItemStack rest = stack.copy();
+		int bagged = absorb(player, rest);
+		if (!rest.isEmpty()) {
+			player.getInventory().add(rest);
+		}
+		if (bagged > 0) {
+			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.bags.stored", stack.getHoverName(), bagged).withStyle(ChatFormatting.GRAY));
+		}
+		return rest;
 	}
 
 	/** Called by {@code ItemEntityMixin} before vanilla picks {@code entity} up: what fits goes into the bags. */

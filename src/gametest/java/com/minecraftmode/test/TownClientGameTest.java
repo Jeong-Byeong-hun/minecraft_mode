@@ -7,9 +7,12 @@ import com.minecraftmode.bag.BagMenu;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.client.hud.TargetHealthHud;
+import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
+import com.minecraftmode.client.mixin.AbstractContainerScreenAccessor;
 import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.AdvanceKit;
@@ -40,6 +43,9 @@ import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.market.AuctionHouse;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
@@ -65,11 +71,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -117,7 +126,10 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkClassDefense(context, server, connection);
 			checkAdvanceKit(server, connection);
 			checkBags(context, server, connection);
+			checkBagGive(server, connection);
+			checkMobGear(server, connection);
 			checkTrash(context, server, connection);
+			checkTallTooltip(context, server, connection);
 			checkShop();
 			checkTargetHealth(context, server, connection);
 			checkInvasionNumbers();
@@ -420,6 +432,71 @@ public class TownClientGameTest implements FabricClientGameTest {
 		});
 	}
 
+	/** Rewards handed out directly (dungeons, raids, bounties, crafting) go into the bags like a pickup; overflow can go to the mailbox. */
+	private static void checkBagGive(final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			for (Item bag : Bags.items()) {
+				player.getInventory().add(new ItemStack(bag));
+			}
+			ItemStack sword = new ItemStack(Items.IRON_SWORD);
+			Bags.give(player, sword);
+			require(sword.getCount() == 1 && inBag(player, BagKind.GEAR, Items.IRON_SWORD) == 1,
+				"a given sword goes into the gear bag, and the given stack stays readable for the reward message");
+			Bags.give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, 3));
+			require(inBag(player, BagKind.ORE, ModItems.ENHANCEMENT_STONE) == 3 && Bags.count(player, ModItems.ENHANCEMENT_STONE) == 3,
+				"enhancement stones go into the material bag and still count for the bench");
+			Bags.take(player, ModItems.ENHANCEMENT_STONE, 2);
+			require(Bags.count(player, ModItems.ENHANCEMENT_STONE) == 1, "the bench takes stones out of the bag");
+			Bags.give(player, new ItemStack(ModItems.ESSENCE, 4));
+			require(count(player, ModItems.ESSENCE) == 4, "currency stays in the inventory");
+			// a full gear bag and a full inventory: a sword fits nowhere, so a dungeon reward goes to the mailbox instead of the floor
+			List<ItemStack> swords = new java.util.ArrayList<>();
+			for (int i = 0; i < Bags.SIZE; i++) {
+				swords.add(new ItemStack(Items.IRON_SWORD));
+			}
+			Bags.store(player.getInventory().getItem(slot(player, BagKind.GEAR)), swords);
+			for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) {
+				if (player.getInventory().getItem(i).isEmpty()) {
+					player.getInventory().setItem(i, new ItemStack(Items.STICK, 64));
+				}
+			}
+			ItemStack spare = new ItemStack(Items.DIAMOND_SWORD);
+			require(!Bags.fits(player, spare) && Bags.fits(player, new ItemStack(Items.RAW_IRON)), "fits counts bag room per kind");
+			AuctionHouse.get(s).takeMail(player.getUUID());
+			Bags.giveOrMail(player, spare);
+			require(AuctionHouse.get(s).takeMail(player.getUUID()).items().stream().anyMatch(i -> i.is(Items.DIAMOND_SWORD)),
+				"a reward that fits nowhere goes to the mailbox");
+			player.getInventory().clearContent();
+		});
+	}
+
+	/** Vanilla monsters keep the gear they spawned with; what they were handed or picked up still drops. */
+	private static void checkMobGear(final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = s.overworld();
+			Skeleton spawned = EntityTypes.SKELETON.create(level, EntitySpawnReason.COMMAND);
+			spawned.snapTo(player.getX() + 6, player.getY(), player.getZ(), 0, 0);
+			spawned.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+			spawned.setDropChance(EquipmentSlot.MAINHAND, 1.0F);
+			level.addFreshEntity(spawned);
+			Skeleton handed = EntityTypes.SKELETON.create(level, EntitySpawnReason.COMMAND);
+			handed.snapTo(player.getX() - 6, player.getY(), player.getZ(), 0, 0);
+			handed.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.BOW));
+			handed.setGuaranteedDrop(EquipmentSlot.MAINHAND);
+			level.addFreshEntity(handed);
+			spawned.hurtServer(level, player.damageSources().playerAttack(player), 10000.0F);
+			handed.hurtServer(level, player.damageSources().playerAttack(player), 10000.0F);
+			int spawnedBows = level.getEntitiesOfClass(ItemEntity.class, spawned.getBoundingBox().inflate(3.0), e -> e.getItem().is(Items.BOW)).size();
+			int handedBows = level.getEntitiesOfClass(ItemEntity.class, handed.getBoundingBox().inflate(3.0), e -> e.getItem().is(Items.BOW)).size();
+			require(spawnedBows == 0, "a skeleton should not drop the bow it spawned with");
+			require(handedBows == 1, "a skeleton should still drop a bow it was handed");
+			level.getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(12.0)).forEach(ItemEntity::discard);
+		});
+	}
+
 	private static int slot(final ServerPlayer player, final BagKind kind) {
 		for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
 			if (player.getInventory().getItem(i).getItem() instanceof BagItem bag && bag.kind() == kind) {
@@ -465,6 +542,40 @@ public class TownClientGameTest implements FabricClientGameTest {
 		require(button, "the inventory has the trash button");
 		context.takeScreenshot("town_trash_button");
 		context.setScreen(() -> null);
+	}
+
+	/** A +10 Lv 90 armor piece's tooltip runs past the screen: it starts at the top, and the wheel scrolls it ({@link TooltipLayout}). */
+	private static void checkTallTooltip(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			ArmorPieceDef cloak = ClassArmor.piecesOf(ClassArmor.set("elf_mage")).getFirst();
+			ItemStack stack = GearDrops.create(ClassGear.of(cloak), player.getRandom());
+			stack.set(ModDataComponents.ENHANCEMENT, new Enhancement(10, 0, 0));
+			player.getInventory().setItem(0, stack);
+		});
+		context.waitTicks(5);
+		context.setScreen(() -> new InventoryScreen(Minecraft.getInstance().player));
+		context.waitForScreen(InventoryScreen.class);
+		context.waitTicks(5);
+		// the middle of hotbar slot 0 (8, 142 in the inventory panel)
+		double[] pos = context.computeOnClient(minecraft -> {
+			AbstractContainerScreenAccessor screen = (AbstractContainerScreenAccessor)minecraft.gui.screen();
+			double scale = minecraft.getWindow().getGuiScale();
+			return new double[] {(screen.minecraftMode$leftPos() + 16) * scale, (screen.minecraftMode$topPos() + 150) * scale};
+		});
+		context.getInput().setCursorPos(pos[0], pos[1]);
+		context.waitTicks(5);
+		require(context.computeOnClient(minecraft -> TooltipLayout.tall() && TooltipLayout.offset() == 0), "the +10 armor tooltip should be taller than the screen, shown from its top");
+		context.takeScreenshot("town_tall_tooltip");
+		context.getInput().scroll(-1.0);
+		context.getInput().scroll(-1.0);
+		context.getInput().scroll(-1.0);
+		context.waitTicks(5);
+		require(context.computeOnClient(minecraft -> TooltipLayout.offset() > 0), "the wheel should scroll the tall tooltip");
+		context.takeScreenshot("town_tall_tooltip_scrolled");
+		context.setScreen(() -> null);
+		server.runOnServer(s -> connection.getServerPlayer().getInventory().clearContent());
 	}
 
 	private static void checkShop() {

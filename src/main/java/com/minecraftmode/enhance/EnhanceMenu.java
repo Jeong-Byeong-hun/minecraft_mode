@@ -1,8 +1,8 @@
 package com.minecraftmode.enhance;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
-import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.progress.Progress;
@@ -112,8 +112,8 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		Inventory inventory = player.getInventory();
 		return Coins.total(player) >= cost.coins()
 			&& essenceHeld(inventory, cost) >= cost.essence()
-			&& JobProgression.count(inventory, ModItems.ENHANCEMENT_STONE) >= cost.stones()
-			&& (!protect || JobProgression.count(inventory, ModItems.PROTECTION_SCROLL) > 0);
+			&& Bags.count(player, ModItems.ENHANCEMENT_STONE) >= cost.stones()
+			&& (!protect || Bags.count(player, ModItems.PROTECTION_SCROLL) > 0);
 	}
 
 	/** True when the slot holds a +15 piece that can be awakened further. */
@@ -124,7 +124,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 
 	public static boolean canPayAwaken(final Player player, final ClassGear gear, final int target) {
 		return player.isCreative() || Coins.total(player) >= Enhancement.awakenCoins(gear, target)
-			&& JobProgression.count(player.getInventory(), ModItems.AWAKENING_CRYSTAL) >= Enhancement.crystals(target);
+			&& Bags.count(player, ModItems.AWAKENING_CRYSTAL) >= Enhancement.crystals(target);
 	}
 
 	private boolean awaken(final Player player) {
@@ -145,7 +145,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			if (!Wallet.take(player, Enhancement.awakenCoins(gear, target))) {
 				return false;
 			}
-			JobProgression.removeItems(player.getInventory(), ModItems.AWAKENING_CRYSTAL, Enhancement.crystals(target));
+			Bags.take(player, ModItems.AWAKENING_CRYSTAL, Enhancement.crystals(target));
 		}
 		stack.set(ModDataComponents.ENHANCEMENT, current.awakened());
 		this.container.setChanged();
@@ -189,7 +189,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 				return false;
 			}
 			Essence.take(player.getInventory(), cost.condensed() ? ModItems.CONDENSED_ESSENCE : ModItems.ESSENCE, cost.essence());
-			JobProgression.removeItems(player.getInventory(), ModItems.ENHANCEMENT_STONE, cost.stones());
+			Bags.take(player, ModItems.ENHANCEMENT_STONE, cost.stones());
 		}
 		ServerLevel level = serverPlayer.level();
 		boolean success = player.getRandom().nextInt(100) < Enhancement.chance(target, current.pity());
@@ -212,7 +212,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			boolean saved = risky && protect;
 			next = current.failed(risky && !saved);
 			if (saved && !player.isCreative()) {
-				JobProgression.removeItems(player.getInventory(), ModItems.PROTECTION_SCROLL, 1);
+				Bags.take(player, ModItems.PROTECTION_SCROLL, 1);
 			}
 			outcome = saved ? RESULT_SAVED : risky ? RESULT_DROP : RESULT_FAIL;
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.6F, 0.8F);

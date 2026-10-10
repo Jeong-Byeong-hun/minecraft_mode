@@ -1,5 +1,6 @@
 package com.minecraftmode.story;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.Dungeons;
@@ -238,7 +239,7 @@ public final class Story {
 			Coins.give(player, coins);
 			for (ItemStack stack : done.rewards().apply(player)) {
 				if (!stack.isEmpty()) {
-					player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+					Bags.give(player, stack);
 				}
 			}
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.story.chapter_done", Component.translatable(done.key())).withStyle(ChatFormatting.GOLD,

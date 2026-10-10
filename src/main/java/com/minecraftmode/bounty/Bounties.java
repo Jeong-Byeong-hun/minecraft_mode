@@ -305,7 +305,7 @@ public final class Bounties {
 
 	private static void give(final ServerPlayer player, final ItemStack stack) {
 		if (!stack.isEmpty()) {
-			player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+			Bags.give(player, stack);
 		}
 	}
 

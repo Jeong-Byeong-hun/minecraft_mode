@@ -1,5 +1,6 @@
 package com.minecraftmode.worldgen.lair;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
@@ -11,11 +12,16 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.SimpleMenuProvider;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
@@ -70,6 +76,27 @@ public class LairChestBlock extends BaseEntityBlock {
 		return InteractionResult.SUCCESS;
 	}
 
+	/** A plain chest menu over the player's contents, except that shift-clicking loot out fills the bags that take it first, like a pickup. */
+	private static ChestMenu menu(final int id, final Inventory inventory, final Container container) {
+		return new ChestMenu(MenuType.GENERIC_9x3, id, inventory, container, 3) {
+			@Override
+			public ItemStack quickMoveStack(final Player player, final int slotIndex) {
+				if (slotIndex < container.getContainerSize()) {
+					Slot slot = this.slots.get(slotIndex);
+					ItemStack stack = slot.getItem();
+					if (!stack.isEmpty() && Bags.absorb(player, stack) > 0) {
+						slot.setChanged();
+						if (stack.isEmpty()) {
+							slot.setByPlayer(ItemStack.EMPTY);
+							return ItemStack.EMPTY;
+						}
+					}
+				}
+				return super.quickMoveStack(player, slotIndex);
+			}
+		};
+	}
+
 	/** Opens {@code player}'s own contents (or says why not). Returns true when the menu opened. */
 	public static boolean open(final ServerPlayer player, final LairChestBlockEntity chest) {
 		Level level = player.level();
@@ -88,7 +115,7 @@ public class LairChestBlock extends BaseEntityBlock {
 		boolean fresh = chest.fresh(player, cycle);
 		SimpleContainer container = chest.container(player, cycle);
 		Component title = Component.translatable(chest.isCache() ? "container.minecraft_mode.lair_cache" : "container.minecraft_mode.lair_chest");
-		player.openMenu(new SimpleMenuProvider((id, inventory, p) -> ChestMenu.threeRows(id, inventory, container), title));
+		player.openMenu(new SimpleMenuProvider((id, inventory, p) -> menu(id, inventory, container), title));
 		level.playSound(null, chest.getBlockPos(), chest.isCache() ? SoundEvents.BARREL_OPEN : SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8F, 1.0F);
 		if (fresh) {
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.lair.personal", ResetCycle.remaining(ResetCycle.ticksToNextCycle(level)))

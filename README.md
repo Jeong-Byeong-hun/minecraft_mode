@@ -128,7 +128,7 @@ mcserver/
 ├── fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기버전>.jar   (또는 fabric-server-launch.jar)
 ├── mods/
 │   ├── fabric-api-0.162.0+26.3.jar
-│   └── minecraft_mode-0.3.7.jar
+│   └── minecraft_mode-0.3.8.jar
 ├── eula.txt            (첫 실행 후 eula=true)
 └── server.properties   (첫 실행 후)
 ```

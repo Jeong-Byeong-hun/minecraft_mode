@@ -1,6 +1,7 @@
 package com.minecraftmode.dungeon;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.job.quest.TrialHunts;
@@ -184,6 +185,14 @@ public final class Dungeons {
 				member.active = false;
 			}
 		}));
+		// a run cut short by the server stopping is nobody's fault: its keystone waits in the owner's mailbox at the same level
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			for (DungeonInstance instance : INSTANCES.values()) {
+				if (!instance.finished && instance.keystoneOwner != null) {
+					mailKeystone(server, instance.keystoneOwner, new Keystone(instance.def.id(), instance.level));
+				}
+			}
+		});
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			INSTANCES.clear();
 			BY_PLAYER.clear();
@@ -276,7 +285,20 @@ public final class Dungeons {
 				return true;
 			}
 		}
+		for (ItemStack stack : player.getEnderChestInventory()) {
+			if (stack.is(ModItems.DUNGEON_KEYSTONE)) {
+				return true;
+			}
+		}
 		return false;
+	}
+
+	/**
+	 * A keyless clear hands out a new keystone to a player who carries none (inventory or ender chest), at most once per reset cycle:
+	 * keys left in a chest would otherwise earn a fresh one every run.
+	 */
+	private static boolean mayGetFreeKeystone(final ServerPlayer player) {
+		return !hasAnyKeystone(player) && data(player).freeKeystoneCycle() != ResetCycle.cycle(player.level());
 	}
 
 	private static boolean takeKeystone(final ServerPlayer player, final Keystone keystone) {
@@ -800,7 +822,8 @@ public final class Dungeons {
 			reward(p, instance, random);
 			p.setAttached(ModAttachments.DUNGEON, data(p).withClear(def.id(), timed ? instance.level : 0));
 			Progress.dungeonCleared(p);
-			if (instance.level == 0 && !hasAnyKeystone(p)) {
+			if (instance.level == 0 && mayGetFreeKeystone(p)) {
+				p.setAttached(ModAttachments.DUNGEON, data(p).withFreeKeystone(ResetCycle.cycle(p.level())));
 				giveKeystone(p, new Keystone(randomDungeon(p, random, null).id(), Keystone.MIN_LEVEL), "keystone_new");
 			}
 			Raids.ping(p, BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE), 1.0F);
@@ -955,7 +978,7 @@ public final class Dungeons {
 	}
 
 	private static void give(final ServerPlayer player, final ItemStack stack) {
-		player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+		Bags.giveOrMail(player, stack);
 	}
 
 	private static void title(final ServerPlayer p, final Component title, final Component subtitle) {

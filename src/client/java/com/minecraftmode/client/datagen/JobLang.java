@@ -155,11 +155,21 @@ final class JobLang {
 		// engraving screen
 		b.add("screen.minecraft_mode.engraving.empty_line", ko ? "비어 있음" : "Empty");
 		b.add("screen.minecraft_mode.engraving.offers", ko ? "각인 후보" : "Offers");
-		b.add("screen.minecraft_mode.engraving.insert", ko ? "직업 무기를 왼쪽 슬롯에 넣으세요. 각인은 무기당 3줄, 같은 각인은 중첩됩니다." : "Put a class weapon in the slot. Up to 3 lines per weapon; the same line stacks.");
-		b.add("screen.minecraft_mode.engraving.remove", ko ? "✕ 클릭: 이 줄 제거 (◆%s)" : "Click ✕ to remove this line (◆%s)");
+		b.add("screen.minecraft_mode.engraving.insert", ko ? "직업 무기나 방어구를 왼쪽 슬롯에 넣으세요. 무기는 3줄, 방어구는 4줄까지 새기고 같은 각인은 중첩됩니다."
+			: "Put class gear in the slot. Weapons take 3 lines and armor 4; the same line stacks.");
+		b.add("screen.minecraft_mode.engraving.remove", ko ? "두 번 눌러 이 줄 제거 · 정수 %s개 (환불 없음)" : "Click twice to remove this line · %s essence (no refund)");
+		b.add("screen.minecraft_mode.engraving.confirm", ko ? "확인" : "Sure?");
+		b.add("screen.minecraft_mode.engraving.armed", ko ? "한 번 더 누르면 이 줄을 지웁니다 (환불 없음)" : "Click again to remove the line (no refund)");
+		b.add("screen.minecraft_mode.engraving.short_essence", ko ? "정수가 %s개 부족합니다" : "%s essence short");
+		b.add("screen.minecraft_mode.engraving.short_coins", ko ? "동전이 %s 부족합니다" : "%s coins short");
+		b.add("screen.minecraft_mode.engraving.short_both", ko ? "정수 %s개와 동전 %s이(가) 부족합니다" : "%s essence and %s coins short");
+		b.add("screen.minecraft_mode.engraving.full", ko ? "각인 칸이 모두 찼습니다. 위에서 줄을 지우면 다시 새길 수 있습니다." : "Every line is engraved. Remove one above to engrave again.");
+		b.add("screen.minecraft_mode.engraving.have", ko ? "보유 ◆%s · ◎%s" : "You have ◆%s · ◎%s");
+		b.add("screen.minecraft_mode.engraving.legend", ko ? "◆ 정수 (응축된 정수 = 9개) · ◎ 동전 (지갑 포함)" : "◆ essence (condensed = 9) · ◎ coins (wallet included)");
 		b.add("screen.minecraft_mode.engraving.after", ko ? "각인 후: " : "After: ");
 		b.add("screen.minecraft_mode.engraving.cost", ko ? "정수 %s개 (응축된 정수 = 9개)" : "%s essence (condensed essence = 9)");
-		b.add("screen.minecraft_mode.engraving.reroll", ko ? "후보 새로 고침" : "Reroll offers");
+		b.add("screen.minecraft_mode.engraving.reroll", ko ? "후보 새로 고침 (지금 후보 3개를 바꿉니다)" : "Reroll the three offers");
+		b.add("screen.minecraft_mode.engraving.reroll_short", ko ? "새로 고침" : "Reroll");
 
 		TrialLang.add(b, ko);
 		GearLang.add(b, ko);

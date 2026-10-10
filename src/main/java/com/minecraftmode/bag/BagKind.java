@@ -15,7 +15,8 @@ import net.minecraft.world.item.Items;
 
 /**
  * The three bags and what each one picks up by itself: gear (class gear, weapons, tools, armor), supplies (food, potions,
- * consumables, herbs) and ores (ores, raw metal, ingots, gems and the stone a pickaxe digs up). Currency and quest items (coins, essence,
+ * consumables, herbs) and materials (ores, raw metal, ingots, gems, the stone a pickaxe digs up and the enhancement materials; the
+ * id stays {@code ore_bag}). Currency and quest items (coins, essence,
  * trial tokens, keystones, ether) never go into a bag by themselves, since shops, trainers and benches read them from the
  * inventory. Ids are saved item keys - never rename them.
  */
@@ -33,6 +34,11 @@ public enum BagKind {
 		return stack.is(ModItems.MYTHRIL_ORE) || stack.is(ModItems.DEEPSLATE_MYTHRIL_ORE) || stack.is(ModItems.RAW_MYTHRIL) || stack.is(ModItems.MYTHRIL_NUGGET)
 			|| stack.is(ModItems.MYTHRIL_INGOT) || stack.is(ModItems.ALUMINUM_ORE) || stack.is(ModItems.DEEPSLATE_ALUMINUM_ORE) || stack.is(ModItems.RAW_ALUMINUM)
 			|| stack.is(ModItems.ALUMINUM_NUGGET) || stack.is(ModItems.ALUMINUM_INGOT);
+	}
+
+	/** Enhancement and crafting materials (the enhancement bench and the crafting stations read them from the bags too). */
+	private static boolean material(final ItemStack stack) {
+		return stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.AWAKENING_CRYSTAL) || stack.is(ModItems.TITAN_SHARD);
 	}
 
 	private final String id;
@@ -91,6 +97,6 @@ public enum BagKind {
 		return stack.is(ConventionalItemTags.ORES) || stack.is(ConventionalItemTags.RAW_MATERIALS) || stack.is(ConventionalItemTags.INGOTS)
 			|| stack.is(ConventionalItemTags.GEMS) || stack.is(ConventionalItemTags.NUGGETS) || stack.is(ConventionalItemTags.DUSTS)
 			|| stack.is(ConventionalItemTags.STONES) || stack.is(ConventionalItemTags.COBBLESTONES) || stack.is(ConventionalItemTags.NETHERRACKS)
-			|| stack.is(ConventionalItemTags.GRAVELS) || DIGGINGS.contains(stack.getItem()) || modOre(stack);
+			|| stack.is(ConventionalItemTags.GRAVELS) || DIGGINGS.contains(stack.getItem()) || modOre(stack) || material(stack);
 	}
 }

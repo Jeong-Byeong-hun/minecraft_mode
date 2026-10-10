@@ -1,5 +1,6 @@
 package com.minecraftmode.loot;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.registry.ModDataComponents;
@@ -61,7 +62,8 @@ public class EvolutionEtherItem extends Item {
 		if (player instanceof ServerPlayer serverPlayer) {
 			ItemStack result = split ? of(grade - 10, FUSE) : of(grade + 10, 1);
 			stack.shrink(split ? 1 : FUSE);
-			serverPlayer.getInventory().placeItemBackInInventory(result, net.minecraft.util.Prediction.SERVER_ONLY);
+			// Bags.give hands over a copy, so the result can still be read for the message (an emptied stack reads as grade 10)
+			Bags.give(serverPlayer, result);
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), split ? SoundEvents.AMETHYST_BLOCK_BREAK : SoundEvents.AMETHYST_BLOCK_RESONATE,
 				SoundSource.PLAYERS, 0.8F, split ? 1.4F : 1.2F);
 			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.ether." + (split ? "split" : "fused"), result.getCount(), grade(result))

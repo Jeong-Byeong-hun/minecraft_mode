@@ -55,6 +55,11 @@ public final class GearTooltips {
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.set", Component.translatable(set.nameKey()), worn).withColor(set.accent() | 0xFF000000));
 
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.base").withStyle(ChatFormatting.GOLD));
+		// armor and toughness (the item hides vanilla's "When on feet:" block and its unbreakable line)
+		lines.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(def.toughness() > 0.0F
+			? Component.translatable("tooltip.minecraft_mode.gear.armor_toughness", def.armor(), JobTooltips.num(def.toughness()))
+			: Component.translatable("tooltip.minecraft_mode.gear.armor", def.armor()))
+			.withStyle(ChatFormatting.BLUE));
 		lines.add(statLine(def.baseOption(), ChatFormatting.WHITE));
 		for (StatLine line : def.defenseLines()) {
 			lines.add(statLine(line, ChatFormatting.WHITE));
@@ -82,18 +87,13 @@ public final class GearTooltips {
 		counts.forEach((e, n) -> lines.add(JobTooltips.engravingLine(e, n)));
 
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.set_bonus", Component.translatable(set.nameKey())).withStyle(ChatFormatting.YELLOW));
+		// one row per stat (joined on one row they ran far past the screen edge)
 		for (ArmorSetDef.SetBonus bonus : set.bonuses()) {
-			boolean active = worn >= bonus.pieces();
-			ChatFormatting color = active ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
-			MutableComponent row = Component.literal(" (" + bonus.pieces() + ") ").withStyle(color);
-			for (int i = 0; i < bonus.lines().size(); i++) {
-				if (i > 0) {
-					row.append(Component.literal(", ").withStyle(color));
-				}
-				StatLine line = bonus.lines().get(i);
-				row.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(color));
+			ChatFormatting color = worn >= bonus.pieces() ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
+			for (StatLine line : bonus.lines()) {
+				lines.add(Component.literal(" (" + bonus.pieces() + ") ").withStyle(color)
+					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(color)));
 			}
-			lines.add(row);
 		}
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.bracket", ItemLevels.bracket(def.level())).withStyle(ChatFormatting.DARK_GRAY));
 		lines.add(Component.empty());

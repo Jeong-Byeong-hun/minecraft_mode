@@ -1,5 +1,6 @@
 package com.minecraftmode.enchantment;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -56,6 +57,7 @@ public final class ToolEnchantmentHandlers {
 			}
 			if (EnchantLevels.get(level, ToolEnchantments.MAGNET, tool) > 0) {
 				drops.removeIf(stack -> {
+					Bags.absorb(player, stack);
 					player.getInventory().add(stack);
 					return stack.isEmpty();
 				});

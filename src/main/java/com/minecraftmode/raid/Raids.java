@@ -1,5 +1,6 @@
 package com.minecraftmode.raid;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.Consumables;
@@ -596,7 +597,7 @@ public final class Raids {
 	}
 
 	private static void give(final ServerPlayer player, final ItemStack stack) {
-		player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+		Bags.giveOrMail(player, stack);
 	}
 
 	// ------------------------------------------------------------------ messages

@@ -13,6 +13,7 @@
 		"LivingEntityAccessor",
 		"LivingEntityMixin",
 		"MerchantMenuMixin",
+		"MobMixin",
 		"NaturalSpawnerMixin",
 		"PlayerMixin",
 		"PlayerNameMixin",

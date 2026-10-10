@@ -92,8 +92,11 @@ public class MountEntity extends AbstractHorse implements AnimatedCreature {
 
 	@Override
 	public void tick() {
-		Companions.MountDef def = this.def();
-		this.setNoGravity(def != null && def.flying() && this.isVehicle() && !this.onGround());
+		boolean flies = this.flies();
+		this.setNoGravity(flies && this.isVehicle() && !this.onGround());
+		if (flies) {
+			this.resetFallDistance();
+		}
 		super.tick();
 		if (!(this.level() instanceof ServerLevel level)) {
 			return;
@@ -157,11 +160,25 @@ public class MountEntity extends AbstractHorse implements AnimatedCreature {
 		return true;
 	}
 
+	/**
+	 * The mount itself is never hurt. A flying mount lands wherever its rider steers it, so a landing is never a fall (its fall
+	 * distance would otherwise add up every block it glided down since takeoff). A ground mount passes a fall on to its rider only
+	 * when a horse would have felt it (safe for 6 blocks, half damage), so a charged jump on flat ground costs nothing.
+	 */
 	@Override
 	public boolean causeFallDamage(final double fallDistance, final float damageModifier, final DamageSource damageSource) {
-		// the mount itself cannot be hurt, but like a horse it passes the fall on to its rider
-		this.propagateFallToPassengers(fallDistance, damageModifier, damageSource);
+		if (this.flies()) {
+			return false;
+		}
+		if (this.calculateFallDamage(fallDistance, damageModifier) > 0) {
+			this.propagateFallToPassengers(fallDistance, damageModifier, damageSource);
+		}
 		return false;
+	}
+
+	public boolean flies() {
+		Companions.MountDef def = this.def();
+		return def != null && def.flying();
 	}
 
 	/**

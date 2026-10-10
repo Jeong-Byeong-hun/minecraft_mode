@@ -11,6 +11,7 @@ import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
 import com.minecraftmode.client.style.StylistScreen;
 import com.minecraftmode.client.hud.TargetHealthHud;
+import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
 import com.minecraftmode.client.entity.CityNpcRenderer;
 import com.minecraftmode.client.entity.ClassTrainerRenderer;
@@ -108,6 +109,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		BagTooltips.init();
 		StylistScreen.registerTooltip();
 		ConsumableTooltips.init();
+		// last: wraps the lines every callback above added
+		TooltipLayout.init();
 	}
 
 	private static <T extends CreatureMob> void creature(final EntityType<T> type, final String id) {

@@ -80,6 +80,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
@@ -254,8 +256,27 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			require(player.getVehicle() instanceof MountEntity mount && mount.def() != null && mount.def().flying(), "the whistle puts the player on the griffin");
 			MountEntity mount = (MountEntity)player.getVehicle();
 			require(mount.getControllingPassenger() == player, "the owner steers the mount");
+			// landings: a flyer's glide is never a fall; a ground mount passes on only what a horse would feel (6 blocks safe, half damage)
+			// (the test player wears Resistance V, which would hide any fall damage: take it off for these checks)
+			player.removeEffect(MobEffects.RESISTANCE);
+			float health = player.getHealth();
+			mount.causeFallDamage(30.0, 1.0F, player.damageSources().fall());
+			require(player.getHealth() == health, "landing the griffin after a 30-block glide should not hurt the rider");
 			Companions.toggleMount(player, "");
 			require(player.getVehicle() == null && mount.isRemoved(), "the mount key gets off and the mount leaves");
+			MountEntity stag = Companions.mountType(Companions.mount("crystal_stag")).create(level, EntitySpawnReason.COMMAND);
+			stag.snapTo(player.getX(), player.getY(), player.getZ(), 0, 0);
+			level.addFreshEntity(stag);
+			stag.setup(player);
+			require(player.startRiding(stag, true, false), "the player should ride the stag");
+			stag.causeFallDamage(5.0, 1.0F, player.damageSources().fall());
+			require(player.getHealth() == health, "a 5-block jump on the stag should not hurt the rider");
+			stag.causeFallDamage(10.0, 1.0F, player.damageSources().fall());
+			require(player.getHealth() < health, "a 10-block drop on the stag should still hurt the rider");
+			player.stopRiding();
+			stag.discard();
+			player.setHealth(player.getMaxHealth());
+			player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, MobEffectInstance.INFINITE_DURATION, 4, false, false));
 			Companions.summonPet(player, "");
 			require(Companions.summonedPet(player) == null && Companions.lines(player).isEmpty(), "dismissing the pet removes its bonus");
 			// the whole collection for the screen and the lineup
@@ -726,7 +747,8 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			player.getBoundingBox().inflate(4.0), e -> e.getItem().is(net.minecraft.world.item.Items.BREAD))) {
 			dropped += item.getItem().getCount();
 		}
-		return JobProgression.count(player.getInventory(), net.minecraft.world.item.Items.BREAD) + dropped;
+		// the bread goes into the supply bag when the player carries one
+		return com.minecraftmode.bag.Bags.count(player, net.minecraft.world.item.Items.BREAD) + dropped;
 	}
 
 	// ------------------------------------------------------------------ screens

@@ -1,9 +1,9 @@
 package com.minecraftmode.client.endgame;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
-import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.StatLine;
@@ -129,7 +129,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			essence + "/" + cost.essence(), creative || essence >= cost.essence());
 		ty += 9;
 		if (cost.stones() > 0) {
-			int stones = JobProgression.count(inventory, ModItems.ENHANCEMENT_STONE);
+			int stones = Bags.count(this.minecraft.player, ModItems.ENHANCEMENT_STONE);
 			this.costLine(g, px, ty, Component.translatable(ModItems.ENHANCEMENT_STONE.getDescriptionId()), stones + "/" + cost.stones(), creative || stones >= cost.stones());
 		}
 		ty += 10;
@@ -138,7 +138,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 
 		this.button(g, x + PX, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.button"), this.canPay(false), mouseX, mouseY);
 		if (Enhancement.risky(target)) {
-			int scrolls = JobProgression.count(inventory, ModItems.PROTECTION_SCROLL);
+			int scrolls = Bags.count(this.minecraft.player, ModItems.PROTECTION_SCROLL);
 			this.button(g, x + PX + PW - BUTTON_W, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.protected", scrolls), this.canPay(true), mouseX, mouseY);
 		}
 	}
@@ -154,12 +154,11 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 		int target = now.awaken() + 1;
 		g.text(this.font, Component.translatable("screen.minecraft_mode.enhance.awaken_to", target, Enhancement.MAX_AWAKEN), px, ty + 11, 0xFF6A2A8A, false);
 		ty += 25;
-		Inventory inventory = this.minecraft.player.getInventory();
 		boolean creative = this.minecraft.player.isCreative();
 		int coins = Enhancement.awakenCoins(gear, target);
 		this.costLine(g, px, ty, Component.translatable("screen.minecraft_mode.enhance.coins"), Coins.format(coins), creative || Coins.total(this.minecraft.player) >= coins);
 		ty += 9;
-		int crystals = JobProgression.count(inventory, ModItems.AWAKENING_CRYSTAL);
+		int crystals = Bags.count(this.minecraft.player, ModItems.AWAKENING_CRYSTAL);
 		this.costLine(g, px, ty, Component.translatable(ModItems.AWAKENING_CRYSTAL.getDescriptionId()), crystals + "/" + Enhancement.crystals(target),
 			creative || crystals >= Enhancement.crystals(target));
 		ty += 11;

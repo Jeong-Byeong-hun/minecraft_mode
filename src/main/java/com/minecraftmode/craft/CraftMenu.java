@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -111,7 +110,7 @@ public class CraftMenu extends AbstractContainerMenu {
 				doubled++;
 			}
 			made += out.getCount();
-			player.getInventory().placeItemBackInInventory(out, Prediction.SERVER_ONLY);
+			Bags.give(serverPlayer, out);
 			this.profession.addExp(serverPlayer, recipe.expFor(this.profession.level(player)));
 		}
 		serverPlayer.sendOverlayMessage(Component.translatable(doubled > 0 ? "message.minecraft_mode.profession.crafted_double" : "message.minecraft_mode.profession.crafted",

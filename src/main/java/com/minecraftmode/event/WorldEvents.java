@@ -1,5 +1,6 @@
 package com.minecraftmode.event;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
@@ -635,7 +636,7 @@ public final class WorldEvents {
 	// ------------------------------------------------------------------ helpers
 
 	private static void give(final ServerPlayer player, final ItemStack stack) {
-		player.getInventory().placeItemBackInInventory(stack, net.minecraft.util.Prediction.SERVER_ONLY);
+		Bags.give(player, stack);
 	}
 
 	private static void title(final ServerPlayer p, final Component title, final Component subtitle) {

@@ -1,5 +1,6 @@
 package com.minecraftmode.market;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.loot.Coins;
@@ -26,7 +27,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BundleContents;
@@ -177,7 +177,7 @@ public final class AuctionService {
 		if (listing.seller().equals(player.getUUID())) {
 			return fail(player, "message.minecraft_mode.market.own");
 		}
-		if (player.getInventory().getFreeSlot() < 0) {
+		if (!Bags.fits(player, listing.item())) {
 			return fail(player, "message.minecraft_mode.market.full");
 		}
 		if (!Wallet.take(player, listing.price())) {
@@ -186,7 +186,7 @@ public final class AuctionService {
 		}
 		house.remove(listing);
 		house.sendCoins(listing.seller(), proceeds(listing.price()), true);
-		player.getInventory().placeItemBackInInventory(listing.item().copy(), Prediction.SERVER_ONLY);
+		Bags.give(player, listing.item());
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.bought", listing.item().getHoverName(), listing.item().getCount(),
 			Coins.component(listing.price())).withStyle(ChatFormatting.GREEN));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.VILLAGER_TRADE, SoundSource.PLAYERS, 0.8F, 1.0F);
@@ -205,11 +205,11 @@ public final class AuctionService {
 		if (listing == null || !listing.seller().equals(player.getUUID())) {
 			return fail(player, "message.minecraft_mode.market.gone");
 		}
-		if (player.getInventory().getFreeSlot() < 0) {
+		if (!Bags.fits(player, listing.item())) {
 			return fail(player, "message.minecraft_mode.market.full");
 		}
 		house.remove(listing);
-		player.getInventory().placeItemBackInInventory(listing.item().copy(), Prediction.SERVER_ONLY);
+		Bags.give(player, listing.item());
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.market.cancelled", listing.item().getHoverName()).withStyle(ChatFormatting.YELLOW));
 		return true;
 	}
@@ -228,11 +228,11 @@ public final class AuctionService {
 		int given = 0;
 		List<ItemStack> left = new ArrayList<>();
 		for (ItemStack stack : mail.items()) {
-			if (!left.isEmpty() || player.getInventory().getFreeSlot() < 0) {
+			if (!left.isEmpty() || !Bags.fits(player, stack)) {
 				left.add(stack);
 				continue;
 			}
-			player.getInventory().placeItemBackInInventory(stack.copy(), Prediction.SERVER_ONLY);
+			Bags.give(player, stack);
 			given++;
 		}
 		for (ItemStack stack : left) {

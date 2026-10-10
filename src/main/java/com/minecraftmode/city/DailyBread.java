@@ -1,5 +1,6 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModAttachments;
 import net.minecraft.ChatFormatting;
@@ -31,7 +32,7 @@ public final class DailyBread {
 			return false;
 		}
 		player.setAttached(ModAttachments.DAILY_BREAD, ResetCycle.day(player.level()));
-		player.getInventory().placeItemBackInInventory(new ItemStack(Items.BREAD, COUNT), net.minecraft.util.Prediction.SERVER_ONLY);
+		Bags.give(player, new ItemStack(Items.BREAD, COUNT));
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.daily_bread.given", COUNT).withStyle(ChatFormatting.GREEN));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.8F, 0.8F);
 		return true;

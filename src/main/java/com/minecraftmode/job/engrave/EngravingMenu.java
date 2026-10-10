@@ -37,11 +37,11 @@ import net.minecraft.world.item.ItemStack;
  */
 public class EngravingMenu extends AbstractContainerMenu {
 	public static final int WIDTH = 200;
-	public static final int HEIGHT = 214;
+	public static final int HEIGHT = 226;
 	public static final int WEAPON_X = 14;
 	public static final int WEAPON_Y = 24;
 	public static final int INVENTORY_X = 20;
-	public static final int INVENTORY_Y = 132;
+	public static final int INVENTORY_Y = 144;
 	public static final int BUTTON_REROLL = 3;
 	public static final int BUTTON_REMOVE = 10;
 
@@ -149,10 +149,13 @@ public class EngravingMenu extends AbstractContainerMenu {
 		return stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);
 	}
 
-	/** Three distinct lines from the item's pool, fixed by its seed and line count. */
+	/**
+	 * Three distinct lines from the item's pool, fixed by its seed alone: engraving and rerolling pick a new seed (new offers), removing
+	 * a line keeps it, so the offers stay where they were.
+	 */
 	public static List<Engraving> offers(final ClassGear gear, final Engravings engravings) {
 		List<Engraving> pool = new ArrayList<>(gear.engravingPool());
-		Collections.shuffle(pool, new Random(engravings.seed() * 31L + engravings.lines().size()));
+		Collections.shuffle(pool, new Random(engravings.seed() * 31L));
 		return pool.subList(0, Math.min(3, pool.size()));
 	}
 
@@ -189,7 +192,7 @@ public class EngravingMenu extends AbstractContainerMenu {
 		if (engrave) {
 			updated = engravings.with(this.offer(buttonId), seed);
 		} else if (remove) {
-			updated = engravings.without(buttonId - BUTTON_REMOVE, seed);
+			updated = engravings.without(buttonId - BUTTON_REMOVE, engravings.seed());
 		} else {
 			updated = engravings.withSeed(seed);
 		}

@@ -1,5 +1,6 @@
 package com.minecraftmode.entity.named;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.CreatureMob;
@@ -504,7 +505,7 @@ public class NamedMob extends CreatureMob {
 				this.dropGlowing(level, gear);
 			} else {
 				// the top contributor's piece goes straight to them, so nobody else picks it up
-				mvp.getInventory().placeItemBackInInventory(gear, Prediction.SERVER_ONLY);
+				Bags.give(mvp, gear);
 			}
 			level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.HOSTILE, 0.6F, 1.4F);
 			mvp.sendSystemMessage(Component.translatable("message.minecraft_mode.named.drop", Component.translatable(def.nameKey()), name).withStyle(ChatFormatting.GOLD));

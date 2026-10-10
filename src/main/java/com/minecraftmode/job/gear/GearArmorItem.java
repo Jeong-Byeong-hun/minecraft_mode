@@ -23,6 +23,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.Equippable;
 import net.minecraft.world.level.Level;
@@ -60,6 +61,8 @@ public class GearArmorItem extends Item {
 			.rarity(tier >= 3 ? Rarity.EPIC : tier == 2 ? Rarity.RARE : Rarity.UNCOMMON)
 			.attributes(attributes.build())
 			.component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+			// armor and toughness are a line of the class tooltip (GearTooltips); vanilla's "When on ...:" block and unbreakable line only made it longer
+			.component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true).withHidden(DataComponents.UNBREAKABLE, true))
 			.component(DataComponents.EQUIPPABLE, Equippable.builder(slot.equipmentSlot()).setEquipSound(def.set().style().sound()).setAsset(asset).build());
 	}
 

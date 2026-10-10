@@ -1,5 +1,6 @@
 package com.minecraftmode.raid.loot;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.LootActionPayload;
 import com.minecraftmode.network.LootStatePayload;
@@ -26,7 +27,6 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
@@ -332,7 +332,7 @@ public final class LootSessions {
 	private static void giveItem(final MinecraftServer server, final UUID id, final ItemStack stack) {
 		ServerPlayer p = server.getPlayerList().getPlayer(id);
 		if (p != null) {
-			p.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+			Bags.giveOrMail(p, stack);
 		} else {
 			PENDING.computeIfAbsent(id, k -> new Pending()).items.add(stack);
 		}
@@ -356,7 +356,7 @@ public final class LootSessions {
 			return;
 		}
 		for (ItemStack stack : pending.items) {
-			player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+			Bags.give(player, stack);
 		}
 		Coins.give(player, pending.copper);
 		player.sendSystemMessage(msg("delivered", pending.items.size(), Coins.component(pending.copper)).withStyle(ChatFormatting.GOLD));

@@ -1,8 +1,10 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
+import com.minecraftmode.client.BossBarLayout;
 import com.minecraftmode.client.companion.CompanionScreen;
 import com.minecraftmode.client.craft.CraftScreen;
 import com.minecraftmode.client.dungeon.DungeonScreen;
@@ -327,6 +329,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 				context.getInput().lookAt(new BlockPos(origin.getX() + r.centerX() + 3, origin.getY() + 1, origin.getZ()));
 				context.waitTicks(20);
 				shot(context, "content_dungeon_hall");
+				requireBossBarsClear(context, "dungeon hall");
 			}
 			if (room == 2) {
 				// falling wakes the player at the entrance and costs time
@@ -364,6 +367,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		context.getInput().lookAt(new BlockPos(origin.getX() + boss.x1() - 6, origin.getY() + 2, origin.getZ()));
 		context.waitTicks(30);
 		shot(context, "content_dungeon_boss");
+		requireBossBarsClear(context, "dungeon boss");
 		int stones = server.computeOnServer(s -> JobProgression.count(connection.getServerPlayer().getInventory(), ModItems.ENHANCEMENT_STONE));
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
@@ -437,6 +441,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		context.getInput().lookAt(titan.blockPosition().above(3));
 		context.waitTicks(30);
 		shot(context, "content_titan");
+		requireBossBarsClear(context, "titan");
 		int shards = server.computeOnServer(s -> JobProgression.count(connection.getServerPlayer().getInventory(), ModItems.TITAN_SHARD));
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
@@ -554,7 +559,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(GuideScreen.class);
 		context.waitTicks(5);
 		shot(context, "content_guide");
-		requireFits(context, "guide", 340);
+		requireFits(context, "guide", 380);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 		GuideScreen.showTopic(GuideScreen.Topic.LEVELING);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(new GuideScreen()));
@@ -567,8 +572,32 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		context.waitForScreen(GuideScreen.class);
 		context.waitTicks(5);
 		shot(context, "content_guide_places");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		// the longest answer scrolls instead of running over the buttons
+		GuideScreen.showTopic(GuideScreen.Topic.TOWN);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new GuideScreen()));
+		context.waitForScreen(GuideScreen.class);
+		context.waitTicks(5);
+		shot(context, "content_guide_town");
 		GuideScreen.showTopic(GuideScreen.Topic.START);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		// Nella replaces old handbooks with the current edition
+		String handbook = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().add(CityServices.guideBook());
+			CityServices.reissueGuideBook(player);
+			int copies = 0;
+			int pages = 0;
+			for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+				ItemStack stack = player.getInventory().getItem(i);
+				if (CityServices.isGuideBook(stack)) {
+					copies++;
+					pages = stack.get(DataComponents.WRITTEN_BOOK_CONTENT).pages().size();
+				}
+			}
+			return copies == 1 && pages == CityServices.GUIDE_PAGES ? "" : copies + " handbooks, " + pages + " pages";
+		});
+		require(handbook.isEmpty(), "reissued handbook: " + handbook);
 		// the next day there is bread again
 		server.runCommand("time add " + ResetCycle.DAY_TICKS);
 		int fresh = server.computeOnServer(s -> {
@@ -732,6 +761,12 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		});
 		context.waitTicks(2);
 		context.takeScreenshot(name);
+	}
+
+	/** The boss bars on screen stay clear of the class panel and the effect icons (854x480 window). */
+	private static void requireBossBarsClear(final ClientGameTestContext context, final String what) {
+		String report = context.computeOnClient(minecraft -> BossBarLayout.overlap());
+		require(report.isEmpty(), what + ": " + report);
 	}
 
 	private static void requireFits(final ClientGameTestContext context, final String what, final int width) {

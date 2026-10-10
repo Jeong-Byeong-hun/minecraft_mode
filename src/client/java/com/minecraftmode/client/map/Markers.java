@@ -128,7 +128,7 @@ final class Markers {
 		}
 	}
 
-	/** NPCs are round dots, trainers diamonds and landmarks squares, each in its own color with a black rim. */
+	/** NPCs are round dots, trainers diamonds, landmarks barred squares and shops small squares, each in its own color with a black rim. */
 	private static void icon(final GuiGraphicsExtractor g, final CityPlaces.Place place, final int px, final int py) {
 		int color = place.color();
 		switch (place.kind()) {
@@ -151,6 +151,10 @@ final class Markers {
 				g.fill(px - 3, py - 3, px + 4, py + 4, 0xFF000000);
 				g.fill(px - 2, py - 2, px + 3, py + 3, color);
 				g.fill(px - 2, py, px + 3, py + 1, 0xFF000000);
+			}
+			case SHOP -> {
+				g.fill(px - 2, py - 2, px + 3, py + 3, 0xFF000000);
+				g.fill(px - 1, py - 1, px + 2, py + 2, color);
 			}
 		}
 	}

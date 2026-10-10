@@ -1,9 +1,9 @@
 package com.minecraftmode.client.hud;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.BossBarLayout;
 import com.minecraftmode.client.job.JobHud;
 import com.minecraftmode.client.map.MapSettings;
-import com.minecraftmode.client.mixin.BossHealthOverlayAccessor;
 import com.minecraftmode.network.TargetHealthPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -67,13 +67,14 @@ public final class TargetHealthHud {
 			return;
 		}
 		Font font = minecraft.font;
-		int bosses = ((BossHealthOverlayAccessor)minecraft.gui.hud.getBossOverlay()).minecraftMode$events().size();
 		// centred, but between the class panel (top left) and the minimap (top right) when they come close
 		int left = JobHud.panelRight() + 6;
 		int right = g.guiWidth() - 4 - (MapSettings.minimap ? MapSettings.sizePx() + 12 : 0);
 		int width = Math.max(120, Math.min(WIDTH, right - left));
 		int x = Mth.clamp(g.guiWidth() / 2 - width / 2, left, Math.max(left, right - width));
-		int y = bosses == 0 ? 4 : 12 + bosses * 19;
+		// below the boss bars wherever BossBarLayout put them this frame (they are drawn just before)
+		int bars = BossBarLayout.bottom();
+		int y = bars < 0 ? 4 : bars + 14;
 		float max = Math.max(1.0F, target.getMaxHealth());
 		float health = Mth.clamp(target.getHealth(), 0.0F, max);
 		trail = trail < 0.0F ? health : Math.max(health, trail - max * 0.01F);

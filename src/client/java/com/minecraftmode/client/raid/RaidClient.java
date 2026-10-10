@@ -44,11 +44,10 @@ public final class RaidClient {
 				minecraft.gui.setScreen(new LootScreen());
 			}
 		}));
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
-			party = List.of();
-			loot = null;
-			raidInfo = null;
-		}));
+		// a last sync from the old server can still be queued when DISCONNECT clears, so a new
+		// connection starts clean too (JOIN runs on the client thread); a party re-syncs within 10 ticks
+		ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> reset());
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(RaidClient::reset));
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			while (LOOT.consumeClick()) {
 				openLoot(minecraft);
@@ -56,6 +55,12 @@ public final class RaidClient {
 		});
 		// after the class HUD, which tells the party frames where its panels end
 		HudElementRegistry.attachElementAfter(MinecraftMode.id("job_hud"), MinecraftMode.id("party_hud"), PartyHud::extract);
+	}
+
+	private static void reset() {
+		party = List.of();
+		loot = null;
+		raidInfo = null;
 	}
 
 	public static List<PartySyncPayload.Member> party() {

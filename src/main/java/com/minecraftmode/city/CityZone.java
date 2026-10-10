@@ -124,6 +124,41 @@ public final class CityZone {
 		};
 	}
 
+	/**
+	 * Shops and work places players look for (x, z of the counter or block, as built by {@code CitySouth} and {@code CityNorth}),
+	 * named by the block they are: the guide's directions and the world map list them.
+	 */
+	public enum Spot {
+		GENERAL_STORE("block.minecraft_mode.shop_block", -18, 51, 0xD04040),
+		BLACKSMITH_SHOP("block.minecraft_mode.blacksmith_shop", -18, 61, 0xE08030),
+		GROCER("block.minecraft_mode.grocer_shop", -18, 71, 0x50B040),
+		JEWELER("block.minecraft_mode.jeweler_shop", -8, 51, 0xA050D0),
+		ALCHEMIST("block.minecraft_mode.alchemist_shop", -8, 61, 0x40C0C0),
+		GUILD_SHOP("block.minecraft_mode.guild_shop", 24, 59, 0x4070E0),
+		ENGRAVING_TABLES("block.minecraft_mode.engraving_table", 16, 59, 0x8080FF),
+		KITCHEN_STATION("block.minecraft_mode.kitchen_station", -23, 69, 0xE0A060),
+		ALCHEMY_STATION("block.minecraft_mode.alchemy_station", -13, 59, 0x60D0A0),
+		SMITHING_STATION("block.minecraft_mode.smithing_station", -25, 91, 0xA0A0A0),
+		ENCHANTERS_HALL("screen.minecraft_mode.guide.enchanters_hall", (HALL_X0 + HALL_X1) / 2, (HALL_Z0 + HALL_Z1) / 2, 0xB040E0),
+		ENDER_CHESTS("screen.minecraft_mode.guide.ender_chests", 0, 17, 0x208070);
+
+		public final String nameKey;
+		public final int x;
+		public final int z;
+		public final int color;
+
+		Spot(final String nameKey, final int x, final int z, final int color) {
+			this.nameKey = nameKey;
+			this.x = x;
+			this.z = z;
+			this.color = color;
+		}
+
+		public BlockPos pos(final int base) {
+			return new BlockPos(this.x, base, this.z);
+		}
+	}
+
 	/** The Enchanter's Hall east of the mage tower (outer walls). */
 	public static final int HALL_X0 = -53;
 	public static final int HALL_X1 = -35;

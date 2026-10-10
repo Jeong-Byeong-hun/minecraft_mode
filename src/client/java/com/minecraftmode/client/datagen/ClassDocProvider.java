@@ -70,7 +70,7 @@ public class ClassDocProvider implements DataProvider {
 		StringBuilder md = new StringBuilder();
 		md.append("# 직업 (클래스)\n\n");
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`ClassDocProvider`). 직접 고치지 마세요.\n\n");
-		md.append("- 직업 5종 × 4차 전직, 직업마다 무기 23종(1차 3 · 2차 6 · 3차 6 · 4차 8), 무기마다 스킬 3개(4차는 4개).\n");
+		md.append("- 직업 ").append(JobClass.PLAYABLE.size()).append("종 × 4차 전직, 직업마다 무기 23종(1차 3 · 2차 6 · 3차 6 · 4차 8), 무기마다 스킬 3개(4차는 4개).\n");
 		md.append("- 스킬 키: R / X / V / Z (4번째는 4차 무기만), 직업 창: K. 키는 설정 > 조작에서 바꿀 수 있습니다.\n");
 		md.append("- 직업 무기는 누구나 들 수 있지만, **직업·차수·레벨 조건을 모두 만족해야** 스킬과 각인이 작동합니다. 그 외에는 기본 공격만 됩니다.\n");
 		md.append("- 피해 수치는 무기 위력(차수·레벨로 증가)에 대한 배율입니다. 위력 = 4 + 2.2 × 차수 + 0.06 × 요구 레벨.\n\n");
@@ -167,7 +167,7 @@ public class ClassDocProvider implements DataProvider {
 						md.append(" · ").append(this.ko.get(def.archetype().shot().nameKey())).append(" 기본 사격 ").append(num(def.power() * def.archetype().shotMultiplier()));
 					}
 					md.append("\n\n| 키 | 스킬 | 종류 | MP | 대기 | 효과 |\n|---|---|---|---|---|---|\n");
-					String[] keys = {"R", "G", "V", "Z"};
+					String[] keys = {"R", "X", "V", "Z"};
 					for (int i = 0; i < def.skills().size(); i++) {
 						Skill skill = def.skills().get(i);
 						String effects = skill.actions().stream().map(SkillAction::describe).map(this::render).collect(Collectors.joining("<br>"))

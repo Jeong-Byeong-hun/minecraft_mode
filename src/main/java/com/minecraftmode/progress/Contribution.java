@@ -1,5 +1,6 @@
 package com.minecraftmode.progress;
 
+import com.minecraftmode.job.skill.Actions;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -153,7 +154,7 @@ public final class Contribution {
 		hit.last = now;
 	}
 
-	/** The player a hit counts for: the attacker, or the owner of a tamed creature. */
+	/** The player a hit counts for: the attacker, or the owner of a tamed creature or skill summon. */
 	private static @Nullable UUID creditFor(final @Nullable Entity attacker) {
 		if (attacker instanceof Player player) {
 			return player.getUUID();
@@ -161,7 +162,7 @@ public final class Contribution {
 		if (attacker instanceof OwnableEntity pet && pet.getOwner() instanceof Player owner) {
 			return owner.getUUID();
 		}
-		return null;
+		return Actions.summoner(attacker);
 	}
 
 	/** Credit each player earned on {@code victim} so far: damage plus support (forgotten players left out). */

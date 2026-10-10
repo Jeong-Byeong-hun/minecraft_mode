@@ -55,6 +55,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -73,6 +74,10 @@ public final class WorldEvents {
 	public static final float TITAN_HEALTH = 12.0F;
 	public static final float TITAN_SCALE = 2.2F;
 	public static final double TITAN_LEASH = 40.0;
+	/** Titans only rise next to adventurers with a class of at least this level. */
+	public static final int TITAN_MIN_LEVEL = 10;
+	/** Marks a titan; one that is not the running event's (expired while unloaded, or the server stopped) is removed on load. */
+	public static final String TITAN_TAG = "minecraft_mode.titan";
 	/** Share of the titan's health a player must deal to be rewarded (the killing blow always counts). */
 	public static final float CONTRIBUTION = 0.02F;
 	public static final int WAVES = 3;
@@ -126,6 +131,11 @@ public final class WorldEvents {
 		// the capital forever, ignored by the guards, so they vanish when no invasion is running.
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
 			if (invasion == null && entity.entityTags().contains(INVADER_TAG)) {
+				entity.discard();
+			}
+			// titans from before the tag are only recognisable by their size (lords are 1.2, titans 2.2)
+			if (entity instanceof NamedMob mob && !mob.getUUID().equals(titan) && (entity.entityTags().contains(TITAN_TAG)
+				|| level.dimension() == Level.OVERWORLD && mob.getAttributeBaseValue(Attributes.SCALE) >= TITAN_SCALE - 0.05)) {
 				entity.discard();
 			}
 		});
@@ -191,13 +201,14 @@ public final class WorldEvents {
 		RandomSource random = level.getRandom();
 		ServerPlayer player = near;
 		if (player == null) {
-			List<ServerPlayer> outside = level.players().stream().filter(p -> !p.isSpectator() && !CityZone.inside(p.blockPosition())).toList();
+			List<ServerPlayer> outside = level.players().stream()
+				.filter(p -> defends(p) && JobProgression.get(p).level() >= TITAN_MIN_LEVEL && !CityZone.inside(p.blockPosition())).toList();
 			if (outside.isEmpty()) {
 				return null;
 			}
 			player = outside.get(random.nextInt(outside.size()));
 		}
-		NamedDef chosen = def != null ? def : fitting(JobProgression.get(player).level());
+		NamedDef chosen = def != null ? def : fitting(JobProgression.get(player).level(), random);
 		BlockPos at = null;
 		for (int attempt = 0; attempt < 12 && at == null; attempt++) {
 			double angle = random.nextDouble() * Math.PI * 2;
@@ -220,6 +231,7 @@ public final class WorldEvents {
 		BlockPos home = at;
 		int nearby = (int)level.players().stream().filter(p -> p.distanceToSqr(Vec3.atCenterOf(home)) < 128 * 128).count();
 		mob.snapTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, random.nextFloat() * 360.0F, 0.0F);
+		mob.addTag(TITAN_TAG);
 		mob.makeChampion(TITAN_HEALTH * (1.0F + 0.5F * Math.max(0, nearby - 1)), TITAN_SCALE, "entity.minecraft_mode.world_boss", at, TITAN_LEASH);
 		titan = mob.getUUID();
 		titanDef = chosen;
@@ -239,8 +251,15 @@ public final class WorldEvents {
 		return mob;
 	}
 
-	/** The named monster whose top level is the first at or above {@code level} (the strongest for very high levels). */
-	private static NamedDef fitting(final int level) {
+	/**
+	 * A named monster whose level range holds {@code level}, at random; otherwise the one whose top level is the first above it (the
+	 * strongest for very high levels).
+	 */
+	private static NamedDef fitting(final int level, final RandomSource random) {
+		List<NamedDef> covering = NamedMobs.all().stream().filter(def -> def.lo() <= level && level <= def.hi()).toList();
+		if (!covering.isEmpty()) {
+			return covering.get(random.nextInt(covering.size()));
+		}
 		NamedDef best = null;
 		for (NamedDef def : NamedMobs.all()) {
 			if (def.hi() >= level && (best == null || def.hi() < best.hi())) {
@@ -427,7 +446,7 @@ public final class WorldEvents {
 		}
 		if (inv.wave == WAVES) {
 			// the warlord: a champion of the named monster fitting the defenders
-			NamedDef def = fitting(avgLevel);
+			NamedDef def = fitting(avgLevel, level.getRandom());
 			NamedMob boss = NamedMobs.type(def).create(level, EntitySpawnReason.EVENT);
 			if (boss != null) {
 				BlockPos gate = gates[random.nextInt(gates.length)];

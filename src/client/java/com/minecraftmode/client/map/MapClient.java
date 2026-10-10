@@ -4,9 +4,13 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.network.CityInfoPayload;
 import com.mojang.blaze3d.platform.InputConstants;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -22,6 +26,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.LevelResource;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -95,10 +100,15 @@ public final class MapClient {
 			return;
 		}
 		String key = worldKey(minecraft);
-		if (!key.equals(worldKey) || level.dimension() != dimension) {
-			enter(key, level.dimension());
-		}
 		long now = level.getGameTime();
+		if (!key.equals(worldKey) || level.dimension() != dimension) {
+			if (!key.equals(worldKey)) {
+				adoptLegacy(minecraft, key);
+			}
+			enter(key, level.dimension());
+			// the save timer follows this world's clock, which may be behind the last one's
+			lastSave = now;
+		}
 		SCANNER.tick(level, data, player.blockPosition(), now, NEAR, VIEW);
 		NEAR.center(data, player.getBlockX(), player.getBlockZ());
 		NEAR.upload(now);
@@ -156,17 +166,49 @@ public final class MapClient {
 		return FabricLoader.getInstance().getGameDir().resolve("minecraft_mode");
 	}
 
-	/** A file-safe name for the world (its folder in singleplayer, the address on a server). */
+	/**
+	 * A file-safe name for the world: its save folder in singleplayer (plus a hash, since non-ASCII names flatten to underscores),
+	 * the address on a server.
+	 */
 	private static String worldKey(final Minecraft minecraft) {
-		String raw;
 		if (minecraft.isLocalServer() && minecraft.getSingleplayerServer() != null) {
-			raw = "sp_" + minecraft.getSingleplayerServer().getWorldData().getLevelName();
-		} else if (minecraft.getCurrentServer() != null) {
-			raw = "mp_" + minecraft.getCurrentServer().ip;
-		} else {
-			raw = "unknown";
+			Path folder = minecraft.getSingleplayerServer().getWorldPath(LevelResource.ROOT).toAbsolutePath().normalize().getFileName();
+			String name = folder == null ? "world" : folder.toString();
+			return safe("sp_" + name) + "_" + Integer.toHexString(name.hashCode());
 		}
+		return safe(minecraft.getCurrentServer() != null ? "mp_" + minecraft.getCurrentServer().ip : "unknown");
+	}
+
+	private static String safe(final String raw) {
 		return raw.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9._-]", "_");
+	}
+
+	/**
+	 * Earlier versions keyed a singleplayer world by its display name, so worlds with the same name shared one map. A world
+	 * without a map of its own starts from a copy of what was saved under that old key.
+	 */
+	private static void adoptLegacy(final Minecraft minecraft, final String key) {
+		if (!minecraft.isLocalServer() || minecraft.getSingleplayerServer() == null) {
+			return;
+		}
+		String legacy = safe("sp_" + minecraft.getSingleplayerServer().getWorldData().getLevelName());
+		Path maps = root().resolve("map");
+		if (Files.exists(maps.resolve(key)) || Files.exists(waypointFile(key)) || !Files.isDirectory(maps.resolve(legacy))) {
+			return;
+		}
+		try {
+			Files.createDirectories(maps.resolve(key));
+			try (Stream<Path> files = Files.list(maps.resolve(legacy))) {
+				for (Path file : files.toList()) {
+					Files.copy(file, maps.resolve(key).resolve(file.getFileName().toString()), StandardCopyOption.REPLACE_EXISTING);
+				}
+			}
+			if (Files.exists(waypointFile(legacy))) {
+				Files.copy(waypointFile(legacy), waypointFile(key), StandardCopyOption.REPLACE_EXISTING);
+			}
+		} catch (IOException e) {
+			MinecraftMode.LOGGER.warn("Could not copy the old map {} to {}", legacy, key, e);
+		}
 	}
 
 	private MapClient() {

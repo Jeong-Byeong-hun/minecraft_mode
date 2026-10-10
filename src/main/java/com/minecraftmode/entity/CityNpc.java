@@ -16,7 +16,10 @@ import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -126,6 +129,10 @@ public class CityNpc extends PathfinderMob {
 	}
 
 	private static final EntityDataAccessor<Integer> DATA_ROLE = SynchedEntityData.defineId(CityNpc.class, EntityDataSerializers.INT);
+	/** A player hears this NPC's greeting again only after this long. */
+	private static final int GREETING_TICKS = 20 * 60;
+	/** Game time each player was last greeted (not saved). */
+	private final Map<UUID, Long> greeted = new HashMap<>();
 
 	public CityNpc(final EntityType<? extends CityNpc> type, final Level level) {
 		super(type, level);
@@ -191,9 +198,15 @@ public class CityNpc extends PathfinderMob {
 	protected InteractionResult mobInteract(final Player player, final InteractionHand hand) {
 		if (player instanceof ServerPlayer serverPlayer) {
 			Role role = this.role();
-			serverPlayer.sendSystemMessage(Component.translatable(role.nameKey()).withColor(role.color())
-				.append(Component.literal(": ").withStyle(net.minecraft.ChatFormatting.DARK_GRAY))
-				.append(Component.translatable(role.greetingKey()).withStyle(net.minecraft.ChatFormatting.GRAY)));
+			// greet once in a while, not on every click (the quartermaster and the baker answer each click anyway)
+			long now = this.level().getGameTime();
+			Long last = this.greeted.get(player.getUUID());
+			if (last == null || now < last || now - last >= GREETING_TICKS) {
+				this.greeted.put(player.getUUID(), now);
+				serverPlayer.sendSystemMessage(Component.translatable(role.nameKey()).withColor(role.color())
+					.append(Component.literal(": ").withStyle(net.minecraft.ChatFormatting.DARK_GRAY))
+					.append(Component.translatable(role.greetingKey()).withStyle(net.minecraft.ChatFormatting.GRAY)));
+			}
 			switch (role) {
 				case BLACKSMITH -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new UpgradeMenu(id, inventory, this),
 					Component.translatable("container.minecraft_mode.upgrade")));

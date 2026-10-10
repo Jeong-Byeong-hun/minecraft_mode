@@ -15,7 +15,7 @@ import net.minecraft.world.item.Items;
 
 /**
  * The three bags and what each one picks up by itself: gear (class gear, weapons, tools, armor), supplies (food, potions,
- * consumables) and ores (ores, raw metal, ingots, gems and the stone a pickaxe digs up). Currency and quest items (coins, essence,
+ * consumables, herbs) and ores (ores, raw metal, ingots, gems and the stone a pickaxe digs up). Currency and quest items (coins, essence,
  * trial tokens, keystones, ether) never go into a bag by themselves, since shops, trainers and benches read them from the
  * inventory. Ids are saved item keys - never rename them.
  */
@@ -78,7 +78,13 @@ public enum BagKind {
 
 	public static boolean isSupply(final ItemStack stack) {
 		return stack.has(DataComponents.CONSUMABLE) || stack.has(DataComponents.POTION_CONTENTS) || stack.is(ConventionalItemTags.FOODS)
-			|| stack.is(ConventionalItemTags.POTIONS) || stack.is(ModItems.RETURN_SCROLL);
+			|| stack.is(ConventionalItemTags.POTIONS) || stack.is(ModItems.RETURN_SCROLL) || herb(stack);
+	}
+
+	/** The profession herbs (cooking and alchemy ingredients). */
+	private static boolean herb(final ItemStack stack) {
+		return stack.is(ModItems.SUNLEAF) || stack.is(ModItems.MOONPETAL) || stack.is(ModItems.FROSTROOT) || stack.is(ModItems.GLOWCAP)
+			|| stack.is(ModItems.EMBERBLOOM) || stack.is(ModItems.VOIDCAP);
 	}
 
 	public static boolean isOre(final ItemStack stack) {

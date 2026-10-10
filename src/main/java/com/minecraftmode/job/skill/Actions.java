@@ -60,6 +60,25 @@ import org.jspecify.annotations.Nullable;
 public final class Actions {
 	/** Tag on summoned helpers; they are removed when they expire or get loaded again. */
 	public static final String SUMMON_TAG = "minecraft_mode_summon";
+	/** Tag prefix naming the player who summoned a helper (golems have no owner of their own). */
+	private static final String SUMMONER_TAG = "minecraft_mode_summoner:";
+
+	/** The player a skill summon fights for, or null for anything else. */
+	public static @Nullable UUID summoner(final @Nullable Entity entity) {
+		if (entity == null || !entity.entityTags().contains(SUMMON_TAG)) {
+			return null;
+		}
+		for (String tag : entity.entityTags()) {
+			if (tag.startsWith(SUMMONER_TAG)) {
+				try {
+					return UUID.fromString(tag.substring(SUMMONER_TAG.length()));
+				} catch (IllegalArgumentException e) {
+					return null;
+				}
+			}
+		}
+		return null;
+	}
 
 	private static final Map<String, String[]> TEXTS = new LinkedHashMap<>();
 
@@ -1106,6 +1125,7 @@ public final class Actions {
 				Vec3 pos = ctx.caster.position().add(Math.cos(a) * 1.5, 0.1, Math.sin(a) * 1.5);
 				mob.snapTo(pos.x, pos.y, pos.z, ctx.caster.getYRot(), 0.0F);
 				mob.addTag(SUMMON_TAG);
+				mob.addTag(SUMMONER_TAG + ctx.caster.getUUID());
 				mob.setPersistenceRequired();
 				ctx.level.addFreshEntity(mob);
 				ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, pos.add(0, 0.8, 0), 15, 0.3, 0.03);

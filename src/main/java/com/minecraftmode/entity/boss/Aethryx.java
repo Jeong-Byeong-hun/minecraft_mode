@@ -192,7 +192,10 @@ public class Aethryx extends RaidBoss {
 		});
 	}
 
-	/** Starfall Seals: every seal (one per player, up to 4) needs someone standing on it when the stars fall. */
+	/**
+	 * Starfall Seals: every seal (one per player, up to 4) needs someone standing on it when the stars fall. Fighters are counted
+	 * again at the end, so a party that lost someone meanwhile only needs as many seals as it has players left.
+	 */
 	private void seals(final ServerLevel level, final LivingEntity target) {
 		this.playAnim(CreatureAnim.CAST);
 		this.sound(level, SoundEvents.BEACON_ACTIVATE, 4.0F, 0.6F);
@@ -209,11 +212,11 @@ public class Aethryx extends RaidBoss {
 					manned++;
 				}
 			}
-			this.tally(level, "aethryx_seals", manned, seals.size());
+			this.tally(level, "aethryx_seals", manned, Math.min(seals.size(), Math.max(1, this.fighters(level).size())));
 		});
 		this.after(200, () -> {
 			long manned = seals.stream().filter(s -> !this.near(level, s, 2.5).isEmpty()).count();
-			if (manned < seals.size()) {
+			if (manned < Math.min(seals.size(), Math.max(1, this.fighters(level).size()))) {
 				this.wipe(level, "aethryx_seals");
 			} else {
 				this.cleared(level, "aethryx_seals");

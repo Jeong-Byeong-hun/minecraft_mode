@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.BossBarLayout;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
@@ -46,6 +47,7 @@ public final class JobHud {
 	private static void extract(final GuiGraphicsExtractor graphics, final DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		LocalPlayer player = minecraft.player;
+		BossBarLayout.newFrame();
 		if (player == null || player.isSpectator()) {
 			return;
 		}
@@ -66,6 +68,7 @@ public final class JobHud {
 		int color = 0xFF000000 | data.job().color();
 		panelRight = x + w;
 		g.fill(x, y, x + w, y + 40, 0x90000000);
+		BossBarLayout.reserveLeft(x + w, y, y + 40);
 		g.fill(x, y, x + 2, y + 40, color);
 		g.text(font, title, x + 6, y + 3, 0xFFFFFFFF, true);
 		g.text(font, level, x + w - 4 - font.width(level), y + 3, 0xFFFFE08A, true);
@@ -108,6 +111,7 @@ public final class JobHud {
 		int w = 150;
 		int h = 13 + labels.size() * 10;
 		leftBottom = y + h;
+		BossBarLayout.reserveLeft(x + w, y, y + h);
 		g.fill(x, y, x + w, y + h, 0x70000000);
 		g.text(font, Component.translatable(quest.nameKey()).withColor(quest.job().color()), x + 4, y + 3, 0xFFFFFFFF, true);
 		for (int i = 0; i < labels.size(); i++) {

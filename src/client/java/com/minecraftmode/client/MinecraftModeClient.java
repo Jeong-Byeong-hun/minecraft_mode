@@ -69,7 +69,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		CompanionClient.init();
 		MapClient.init();
 		ClientPlayNetworking.registerGlobalReceiver(OpenGuidePayload.TYPE, (payload, context) -> context.client().execute(
-			() -> context.client().gui.setScreen(new GuideScreen())
+			() -> context.client().gui.setScreen(new GuideScreen(payload.entityId()))
 		));
 		ClientPlayNetworking.registerGlobalReceiver(OpenTrainerPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TrainerScreen(payload.entityId(), payload.job()))
@@ -90,6 +90,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.CRAFT_SMITHING, CraftScreen::new);
 		JobKeys.init();
 		JobHud.init();
+		BossBarLayout.init();
 		JobTooltips.init();
 		RaidClient.init();
 		EndgameClient.init();

@@ -33,6 +33,12 @@ final class TownLang {
 		b.add("screen.minecraft_mode.guide.end_portal", ko ? "엔드 차원문" : "End Portal");
 		b.add("screen.minecraft_mode.guide.waystone", ko ? "이동 마법진 (건축 평야행)" : "Travel circle (to the homestead)");
 		b.add("screen.minecraft_mode.guide.homestead", ko ? "건축 평야" : "Homestead plains");
+		b.add("screen.minecraft_mode.guide.enchanters_hall", ko ? "마법 부여소 (레벨 30 마법 부여대)" : "Enchanter's Hall (level 30 tables)");
+		b.add("screen.minecraft_mode.guide.ender_chests", ko ? "엔더 상자 (광장 외 5곳)" : "Ender chests (plaza and 5 more)");
+		b.add("screen.minecraft_mode.guide.places_hint", ko ? "줄을 누르면 지도에서 보여 줍니다." : "Click a line to see it on the map.");
+		b.add("screen.minecraft_mode.guide.handbook", ko ? "안내서 새로 받기" : "New handbook");
+		b.add("message.minecraft_mode.guide_book.given", ko ? "넬라: 최신판 모험가 안내서예요. 예전 안내서는 제가 가져갈게요."
+			: "Nella: Here is the latest Adventurer's Handbook. I'll take the old one off your hands.");
 		// trial hunts
 		b.add("message.minecraft_mode.hunt.no_trial", ko ? "진행 중인 시련이 없네. 교관에게 시련을 받아 오게." : "You have no trial. Take one from your trainer first.");
 		b.add("message.minecraft_mode.hunt.busy", ko ? "지금은 들여보낼 수 없네." : "I cannot send you in right now.");

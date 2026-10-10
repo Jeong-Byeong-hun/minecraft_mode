@@ -52,6 +52,8 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 	private static final String SEED = "minecraft_mode";
 	private static final int SCAN_RADIUS_CHUNKS = 4;
 	private static final int SOAK_TICKS = 1200;
+	/** How far a mine raider may climb above its spawn limit (Y 40) during the soak. */
+	private static final int RAIDER_CLIMB = 8;
 
 	@Override
 	public void runTest(final ClientGameTestContext context) {
@@ -308,8 +310,10 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 		});
 		MinecraftMode.LOGGER.info("[normal] monsters after {} ticks: {}", SOAK_TICKS, summary);
 		MinecraftMode.LOGGER.info("[normal] mine raiders spawned naturally at: {}", raiders);
+		// they spawn below Y=40 and then wander through the caves for the whole soak, so allow a short climb; a raider on the
+		// surface would still fail
 		for (BlockPos raider : raiders) {
-			require(raider.getY() < 40, "a naturally spawned mine raider is at Y=" + raider.getY() + " (limit is 40)");
+			require(raider.getY() < 40 + RAIDER_CLIMB, "a naturally spawned mine raider is at Y=" + raider.getY() + " (spawn limit 40, climb " + RAIDER_CLIMB + ")");
 		}
 		boolean armed = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();

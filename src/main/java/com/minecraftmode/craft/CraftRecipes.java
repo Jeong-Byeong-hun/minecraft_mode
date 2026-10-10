@@ -133,7 +133,6 @@ public final class CraftRecipes {
 			r("enhancement_stone", p, 1, item(ModItems.ENHANCEMENT_STONE, 1), 8, in(Items.IRON_INGOT, 2), in(ModItems.ESSENCE, 2)),
 			r("return_scroll", p, 5, item(ModItems.RETURN_SCROLL, 2), 8, in(Items.PAPER, 2), in(Items.ENDER_PEARL, 1)),
 			r("lair_map", p, 10, item(ModItems.LAIR_MAP, 1), 10, in(Items.PAPER, 3), in(Items.COMPASS, 1), in(ModItems.ESSENCE, 2)),
-			r("condensed_essence", p, 15, item(ModItems.CONDENSED_ESSENCE, 1), 10, in(ModItems.ESSENCE, 8)),
 			r("enhancement_stones", p, 20, item(ModItems.ENHANCEMENT_STONE, 2), 14, in(ModItems.MYTHRIL_INGOT, 1), in(ModItems.ESSENCE, 3)),
 			r("protection_scroll", p, 25, item(ModItems.PROTECTION_SCROLL, 1), 20, in(Items.PAPER, 3), in(Items.GOLD_INGOT, 2), in(ModItems.CONDENSED_ESSENCE, 2),
 				in(ModItems.ENHANCEMENT_STONE, 2)),

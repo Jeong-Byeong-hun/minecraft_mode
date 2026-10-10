@@ -95,6 +95,8 @@ public final class Dungeons {
 	public static final double GATHER_RANGE = 24.0;
 	public static final int MAX_PARTY = 4;
 	public static final int DEATH_PENALTY_SECONDS = 15;
+	/** A new keystone goes to a dungeon opened at most this many levels below the holder's level. */
+	public static final int KEYSTONE_REACH = 20;
 	/** The boss: health and damage on top of its top-level stats. */
 	public static final float CHAMPION_HEALTH = 2.5F;
 	public static final float CHAMPION_DAMAGE = 1.2F;
@@ -841,17 +843,29 @@ public final class Dungeons {
 		give(player, stack);
 	}
 
-	/** A dungeon {@code player} may enter, other than {@code not} when possible. */
+	/**
+	 * A dungeon {@code player} may enter that still fits their level (opened at most {@link #KEYSTONE_REACH} levels below it, so
+	 * keystone rewards keep pace), other than {@code not} when there is another; the highest one they may enter when none fits.
+	 */
 	private static DungeonDef randomDungeon(final Player player, final RandomSource random, final @Nullable DungeonDef not) {
 		int level = JobProgression.get(player).level();
 		List<DungeonDef> pool = new ArrayList<>();
+		DungeonDef highest = null;
 		for (DungeonDef def : DEFS.values()) {
-			if (def.minLevel() <= level && def != not) {
-				pool.add(def);
+			if (def.minLevel() <= level) {
+				if (highest == null || def.minLevel() > highest.minLevel()) {
+					highest = def;
+				}
+				if (def.minLevel() >= level - KEYSTONE_REACH) {
+					pool.add(def);
+				}
 			}
 		}
+		if (pool.size() > 1) {
+			pool.remove(not);
+		}
 		if (pool.isEmpty()) {
-			return not != null && not.minLevel() <= level ? not : DEFS.values().iterator().next();
+			return highest != null ? highest : DEFS.values().iterator().next();
 		}
 		return pool.get(random.nextInt(pool.size()));
 	}

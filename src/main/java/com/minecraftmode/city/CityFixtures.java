@@ -176,7 +176,8 @@ public final class CityFixtures {
 		}
 		long now = server.getGameTime();
 		Long last = LAST_TRAVEL.get(sp.getUUID());
-		if (last != null && now - last < COOLDOWN_TICKS) {
+		// a time from another world (singleplayer keeps this map between worlds) can be ahead of this clock
+		if (last != null && now >= last && now - last < COOLDOWN_TICKS) {
 			return InteractionResult.SUCCESS;
 		}
 		LAST_TRAVEL.put(sp.getUUID(), now);

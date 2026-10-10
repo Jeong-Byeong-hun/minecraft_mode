@@ -1,5 +1,6 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.quest.QuestDef;
@@ -67,7 +68,8 @@ final class TrialLang {
 			}
 		}
 
-		b.add("message.minecraft_mode.quest.accepted", ko ? "전직 시련 수락: %s. K 키로 목표를 확인하세요." : "Trial accepted: %s. Press K to see your goals.");
+		b.add("message.minecraft_mode.quest.accepted", ko ? "전직 시련 수락: %s. K 키로 목표를 확인하세요. 광장의 사냥터지기 개릭이 시련에 필요한 몬스터만 나오는 사냥터를 열어 줍니다."
+			: "Trial accepted: %s. Press K to see your goals. Huntmaster Garrick on the plaza opens an arena with just the monsters your trial needs.");
 		b.add("message.minecraft_mode.quest.abandoned", ko ? "시련 포기: %s" : "Trial abandoned: %s");
 		b.add("message.minecraft_mode.quest.progress", "%s %s/%s");
 		b.add("message.minecraft_mode.quest.token", ko ? "시련 증표: %s (%s/%s)" : "Trial token: %s (%s/%s)");
@@ -112,14 +114,14 @@ final class TrialLang {
 				"도시 지도 (북쪽)\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성, 레이드 관문\n북서: 마법사 탑, 마법 부여소\n북동: 전사 투기장, 헌터 협회\n서쪽: 구시가지, 그림자 회관"},
 			{"City map (south)\n\nEast: Cathedral, homes\nSouthwest: Archer park, Urahara Shop\nSouth: Market, Alchemist, Guild, forge\nSoutheast: Harbor",
 				"도시 지도 (남쪽)\n\n동쪽: 대성당, 주택가\n남서: 궁수 공원, 우라하라 상점\n남쪽: 시장, 연금술사, 길드, 대장간\n남동: 항구"},
-			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want: you take the class on the spot. Every class has its own trainer, trials, weapons and armor.",
-				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하면 그 자리에서 바로 전직합니다. 직업마다 교관, 시련, 무기와 방어구가 따로 있습니다."},
+			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want: you take the class on the spot. The Training Grounds under the park south-east of the fountain give double EXP until then.",
+				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하면 그 자리에서 바로 전직합니다. 그때까지는 분수 남동쪽 공원 지하의 수련장에서 경험치를 2배로 얻습니다."},
 			{"Trainers\n\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate\nUrahara - Soul Reaper\nBiscuit - Hunter",
 				"교관\n\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적\n우라하라 - 사신\n비스킷 - 헌터"},
 			{"Advancement trials\n\nThe first class needs no trial. From tier 2 on, every advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
 				"전직 시련\n\n1차 전직은 시련 없이 바로 됩니다. 2차부터는 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
-			{"Weapons and skills\n\nClass weapons are sold at the Guild in the south market. Use skills with R, X, V and Z; open the class screen with K. Skills only work for the weapon's class, tier and level.",
-				"무기와 스킬\n\n직업 무기는 남쪽 시장의 길드에서 팝니다. 스킬은 R, X, V, Z, 직업 창은 K입니다. 스킬은 무기의 직업·차수·레벨 조건을 만족해야 쓸 수 있습니다."},
+			{"Weapons and skills\n\nEvery advancement gives class gear for your level; the Guild sells more. Skills: R, X, V, Z; class screen: K. Skills only work for the weapon's class, tier and level.",
+				"무기와 스킬\n\n전직할 때마다 레벨에 맞는 직업 장비를 받고, 길드에서도 팝니다. 스킬은 R, X, V, Z, 직업 창은 K. 스킬은 무기의 직업·차수·레벨이 맞아야 쓸 수 있습니다."},
 			{"Essence\n\nEssence drops from monsters and iron or better ores. Engrave class gear at the engraving tables in the Guild: up to 3 lines on weapons and 4 on armor, and the same line stacks.",
 				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기는 3줄, 방어구는 4줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
 			{"Wallet and supplies\n\nCoins go straight into your wallet and take no inventory space; shops are paid from it (/wallet). You keep your items when you die.\n\nThe Alchemist sells potions and food that last 10 minutes.",
@@ -134,7 +136,14 @@ final class TrialLang {
 				"던전과 이벤트\n\n성 안뜰의 던전 문 옆에 던전 관리인 카엘이 있습니다. 2–4명이 홀 3개와 보스에 도전합니다. 쐐기돌을 쓰면 더 어렵고 시간 제한이 붙습니다.\n\n해 질 녘에는 황야에 거신이 나타나고, 사흘에 한 번 수도가 침공당합니다."},
 			{"Pets, mounts and crafts\n\nPet charms and mount whistles join your collection (U); press H to ride your mount.\n\nCook, brew and smith at the stations in the market and the forge; herbs drop from grass and flowers.",
 				"펫·탈것·생활 기술\n\n펫 부적과 탈것 호루라기를 쓰면 수집품(U)에 추가됩니다. H를 누르면 탈것을 탑니다.\n\n시장과 대장간의 작업대에서 요리·연금술·대장 기술을 익히세요. 약초는 풀과 꽃에서 나옵니다."},
+			{"Town comforts\n\nBram's bags sort what you pick up. The inventory's Bin button destroys a stack (one undo).\n\nNether and End portals: keep courtyard. Ender chests: plaza and four more places.",
+				"마을 편의 시설\n\n브람의 가방에 주운 물건이 종류별로 들어갑니다. 인벤토리의 '버림' 버튼은 아이템을 없앱니다(한 번 되돌리기).\n\n네더·엔드 차원문: 성 안뜰. 엔더 상자: 광장 외 네 곳."},
+			{"Homestead and maps\n\nThe travel circle behind the plaza spawn leads to the homestead plains east of the walls: build there.\n\nHuntmaster Garrick opens a private arena for your trial. M: world map, comma: minimap.",
+				"건축 평야와 지도\n\n광장 스폰 뒤 이동 마법진을 우클릭하면 성벽 동쪽 건축 평야로 갑니다. 집은 그곳에 지으세요.\n\n사냥터지기 개릭은 시련 전용 사냥터를 엽니다. M은 월드 지도, 쉼표는 미니맵."},
 		};
+		if (pages.length != CityServices.GUIDE_PAGES) {
+			throw new IllegalStateException("the handbook has " + CityServices.GUIDE_PAGES + " pages but " + pages.length + " are written");
+		}
 		for (int i = 0; i < pages.length; i++) {
 			b.add("book.minecraft_mode.guide.page" + (i + 1), ko ? pages[i][1] : pages[i][0]);
 		}

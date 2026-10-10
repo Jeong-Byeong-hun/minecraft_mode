@@ -184,7 +184,10 @@ public class Kraken extends RaidBoss {
 		});
 	}
 
-	/** Anchor Chains: one player must hold each anchor (as many anchors as players, up to 3) or the ship goes down. */
+	/**
+	 * Anchor Chains: one player must hold each anchor (as many anchors as players, up to 3) or the ship goes down. Fighters are
+	 * counted again at the end, so a party that lost someone meanwhile only needs as many anchors as it has players left.
+	 */
 	private void anchors(final ServerLevel level, final LivingEntity target) {
 		this.playAnim(CreatureAnim.SUMMON);
 		this.sound(level, SoundEvents.CHAIN_PLACE, 4.0F, 0.5F);
@@ -201,11 +204,11 @@ public class Kraken extends RaidBoss {
 					manned++;
 				}
 			}
-			this.tally(level, "kraken_anchors", manned, anchors.size());
+			this.tally(level, "kraken_anchors", manned, Math.min(anchors.size(), Math.max(1, this.fighters(level).size())));
 		});
 		this.after(190, () -> {
 			long manned = anchors.stream().filter(a -> !this.near(level, a, 2.5).isEmpty()).count();
-			if (manned < anchors.size()) {
+			if (manned < Math.min(anchors.size(), Math.max(1, this.fighters(level).size()))) {
 				this.wipe(level, "kraken_anchors");
 			} else {
 				this.cleared(level, "kraken_anchors");

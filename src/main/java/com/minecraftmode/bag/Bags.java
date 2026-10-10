@@ -1,7 +1,9 @@
 package com.minecraftmode.bag;
 
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.NonNullList;
@@ -69,6 +71,56 @@ public final class Bags {
 			store(bag, items);
 		}
 		return moved;
+	}
+
+	/** The bags {@code player} carries, except one open on screen (its menu writes it back, so it is not read or changed here). */
+	private static List<ItemStack> carried(final Player player) {
+		List<ItemStack> bags = new ArrayList<>();
+		Inventory inventory = player.getInventory();
+		for (int i = 0; i < inventory.getContainerSize(); i++) {
+			ItemStack bag = inventory.getItem(i);
+			if (bag.getItem() instanceof BagItem && !(player.containerMenu instanceof BagMenu menu && menu.bag() == bag)) {
+				bags.add(bag);
+			}
+		}
+		return bags;
+	}
+
+	/** How many of {@code item} {@code player} carries in the inventory and the bags (crafting stations and deliveries count both). */
+	public static int count(final Player player, final Item item) {
+		int total = JobProgression.count(player.getInventory(), item);
+		for (ItemStack bag : carried(player)) {
+			for (ItemStack stack : contents(bag)) {
+				if (stack.is(item)) {
+					total += stack.getCount();
+				}
+			}
+		}
+		return total;
+	}
+
+	/** Takes {@code amount} of {@code item} from the inventory first, then from the bags. */
+	public static void take(final Player player, final Item item, final int amount) {
+		int left = amount - Math.min(amount, JobProgression.count(player.getInventory(), item));
+		JobProgression.removeItems(player.getInventory(), item, amount - left);
+		for (ItemStack bag : carried(player)) {
+			if (left <= 0) {
+				break;
+			}
+			NonNullList<ItemStack> items = contents(bag);
+			boolean changed = false;
+			for (ItemStack stack : items) {
+				if (left > 0 && stack.is(item)) {
+					int take = Math.min(left, stack.getCount());
+					stack.shrink(take);
+					left -= take;
+					changed = true;
+				}
+			}
+			if (changed) {
+				store(bag, items);
+			}
+		}
 	}
 
 	/** Puts what it can of a picked-up {@code stack} into the player's bags that take it; returns how many went in. */

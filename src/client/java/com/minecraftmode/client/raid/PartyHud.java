@@ -1,5 +1,6 @@
 package com.minecraftmode.client.raid;
 
+import com.minecraftmode.client.BossBarLayout;
 import com.minecraftmode.client.job.JobHud;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.network.PartySyncPayload;
@@ -28,6 +29,7 @@ final class PartyHud {
 		// centered on the left edge, but below the class panels and above the hotbar and health
 		int y = Math.max(JobHud.leftBottom() + 6, g.guiHeight() / 2 - party.size() * ROW / 2);
 		y = Math.max(0, Math.min(y, g.guiHeight() - 40 - party.size() * ROW));
+		BossBarLayout.reserveLeft(x + W, y, y + party.size() * ROW);
 		for (int i = 0; i < party.size(); i++) {
 			PartySyncPayload.Member m = party.get(i);
 			JobClass job = JobClass.values()[Math.floorMod(m.job(), JobClass.values().length)];

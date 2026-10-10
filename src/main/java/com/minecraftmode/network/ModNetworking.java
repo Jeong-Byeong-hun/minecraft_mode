@@ -2,6 +2,7 @@ package com.minecraftmode.network;
 
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDef;
@@ -50,6 +51,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
@@ -89,6 +91,11 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(ProgressActionPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> handleProgress(context.player(), payload)
 		));
+		ServerPlayNetworking.registerGlobalReceiver(GuideBookPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			if (npc(context.player(), payload.entityId(), CityNpc.Role.GUIDE) != null) {
+				CityServices.reissueGuideBook(context.player());
+			}
+		}));
 	}
 
 	private static void handleQuest(final ServerPlayer player, final QuestActionPayload payload) {

@@ -1,5 +1,6 @@
 package com.minecraftmode.bounty;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.BountyData.Bounty;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -22,7 +23,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -223,21 +223,13 @@ public final class Bounties {
 		}
 	}
 
-	/** How many of a delivery's items the player carries (capped at the need). */
+	/** How many of a delivery's items the player carries, bags included (capped at the need). */
 	public static int delivered(final Player player, final Bounty bounty) {
 		Item item = item(bounty.target());
 		if (item == Items.AIR) {
 			return 0;
 		}
-		Inventory inventory = player.getInventory();
-		int count = 0;
-		for (int i = 0; i < inventory.getContainerSize(); i++) {
-			ItemStack stack = inventory.getItem(i);
-			if (stack.is(item)) {
-				count += stack.getCount();
-			}
-		}
-		return Math.min(bounty.need(), count);
+		return Math.min(bounty.need(), Bags.count(player, item));
 	}
 
 	public static Item item(final String id) {
@@ -267,17 +259,7 @@ public final class Bounties {
 			return false;
 		}
 		if (bounty.type() == BountyKind.DELIVER) {
-			Item item = item(bounty.target());
-			int left = bounty.need();
-			Inventory inventory = player.getInventory();
-			for (int i = 0; i < inventory.getContainerSize() && left > 0; i++) {
-				ItemStack stack = inventory.getItem(i);
-				if (stack.is(item)) {
-					int take = Math.min(left, stack.getCount());
-					stack.shrink(take);
-					left -= take;
-				}
-			}
+			Bags.take(player, item(bounty.target()), bounty.need());
 			bounty = bounty.withProgress(bounty.need());
 		}
 		int level = level(player);

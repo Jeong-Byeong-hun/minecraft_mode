@@ -619,7 +619,7 @@ public class GearDocProvider implements DataProvider {
 		}
 		md.append("\n### 쐐기돌\n\n");
 		md.append("- 쐐기돌 없이 클리어하면 쐐기돌이 없는 사람마다 **+").append(Keystone.MIN_LEVEL).append(" 쐐기돌**을 받습니다. 쐐기돌 입장은 파티장의 가장 높은 쐐기돌을 씁니다.\n");
-		md.append("- 제한 시간 안에 클리어하면 +1(60% 안이면 +2)되어 다른 던전으로 바뀌고, 늦거나 포기·실패하면 1 내려갑니다(최소 +").append(Keystone.MIN_LEVEL).append(").\n\n");
+		md.append("- 제한 시간 안에 클리어하면 +1(60% 안이면 +2)되어 레벨에 맞는 던전(열린 레벨이 내 레벨 - ").append(Dungeons.KEYSTONE_REACH).append(" 이상, 가능하면 다른 곳)으로 바뀌고, 늦거나 포기·실패하면 1 내려갑니다(최소 +").append(Keystone.MIN_LEVEL).append(").\n\n");
 		md.append("| 속성 | 단계 | 효과 |\n|---|---|---|\n");
 		for (DungeonAffix a : DungeonAffix.values()) {
 			md.append("| ").append(this.ko(a.nameKey())).append(" | +").append(a.level()).append(" | ").append(this.ko(a.descKey())).append(" |\n");

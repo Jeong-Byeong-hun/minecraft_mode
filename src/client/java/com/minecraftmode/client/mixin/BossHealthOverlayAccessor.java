@@ -7,7 +7,7 @@ import net.minecraft.client.gui.components.LerpingBossEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-/** How many boss bars are shown, so the target health bar goes below them. */
+/** The boss bars on screen, so {@code BossBarLayout} can measure their names. */
 @Mixin(BossHealthOverlay.class)
 public interface BossHealthOverlayAccessor {
 	@Accessor("events")

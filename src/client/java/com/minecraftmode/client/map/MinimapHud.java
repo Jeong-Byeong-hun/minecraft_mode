@@ -8,18 +8,33 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The minimap in the top-right corner: explored terrain around the player (north up), other players, waypoints, the capital,
  * the player's own arrow and the coordinates underneath.
  */
-final class MinimapHud {
+public final class MinimapHud {
 	private static final int MARGIN = 6;
+
+	private static boolean shown(final Minecraft minecraft) {
+		return MapSettings.minimap && minecraft.player != null && minecraft.level != null && !(minecraft.gui.screen() instanceof MapScreen);
+	}
+
+	/** What the minimap covers on a screen {@code width} wide as {left, top, bottom} (frame, coordinates and place line), or null when hidden. */
+	public static int @Nullable [] box(final Minecraft minecraft, final int width) {
+		if (!shown(minecraft)) {
+			return null;
+		}
+		int size = MapSettings.sizePx();
+		int text = place(minecraft.player) != null ? 24 : 14;
+		return new int[] {width - size - MARGIN - 2, MARGIN - 2, MARGIN + size + 4 + text};
+	}
 
 	static void extract(final GuiGraphicsExtractor g, final DeltaTracker delta) {
 		Minecraft minecraft = Minecraft.getInstance();
 		LocalPlayer player = minecraft.player;
-		if (!MapSettings.minimap || player == null || minecraft.level == null || minecraft.gui.screen() instanceof MapScreen) {
+		if (!shown(minecraft)) {
 			return;
 		}
 		int size = MapSettings.sizePx();

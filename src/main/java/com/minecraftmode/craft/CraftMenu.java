@@ -1,7 +1,7 @@
 package com.minecraftmode.craft;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
-import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.registry.ModMenus;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -64,11 +64,11 @@ public class CraftMenu extends AbstractContainerMenu {
 	}
 
 	/**
-	 * How much of {@code in} {@code player} can put in: essence ingredients take either kind ({@link Essence}), except in
-	 * recipes that make essence, where condensed essence would pay for the essence it is made from.
+	 * How much of {@code in} {@code player} can put in, bags included: essence ingredients take either kind ({@link Essence}),
+	 * except in recipes that make essence, where condensed essence would pay for the essence it is made from.
 	 */
 	public static int held(final Player player, final CraftRecipes.Recipe recipe, final CraftRecipes.Ingredient in) {
-		return eitherEssence(player, recipe) ? Essence.held(player.getInventory(), in.item()) : JobProgression.count(player.getInventory(), in.item());
+		return eitherEssence(player, recipe) && Essence.is(in.item()) ? Essence.held(player.getInventory(), in.item()) : Bags.count(player, in.item());
 	}
 
 	private static boolean eitherEssence(final Player player, final CraftRecipes.Recipe recipe) {
@@ -99,10 +99,10 @@ public class CraftMenu extends AbstractContainerMenu {
 		boolean eitherEssence = eitherEssence(player, recipe);
 		for (int i = 0; i < times; i++) {
 			for (CraftRecipes.Ingredient in : recipe.ingredients()) {
-				if (eitherEssence) {
+				if (eitherEssence && Essence.is(in.item())) {
 					Essence.take(player.getInventory(), in.item(), in.count());
 				} else {
-					JobProgression.removeItems(player.getInventory(), in.item(), in.count());
+					Bags.take(player, in.item(), in.count());
 				}
 			}
 			ItemStack out = recipe.output().apply(player);

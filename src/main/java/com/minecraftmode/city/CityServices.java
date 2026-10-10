@@ -25,11 +25,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.Filterable;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
@@ -150,9 +152,31 @@ public final class CityServices {
 	}
 
 	/** Number of handbook pages ({@code book.minecraft_mode.guide.page1..N}). */
-	public static final int GUIDE_PAGES = 14;
+	public static final int GUIDE_PAGES = 16;
 
-	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet, the story, dungeons, companions. Pages are translated on the client. */
+	/** Whether {@code stack} is a copy of the handbook (any edition). */
+	public static boolean isGuideBook(final ItemStack stack) {
+		WrittenBookContent content = stack.get(DataComponents.WRITTEN_BOOK_CONTENT);
+		return stack.is(Items.WRITTEN_BOOK) && content != null && "Stormhold".equals(content.author())
+			&& "Stormhold".equals(content.title().raw());
+	}
+
+	/**
+	 * Guide Nella hands over the current handbook: older copies in the inventory are replaced (their page count is fixed when
+	 * printed, so new pages only reach a fresh copy).
+	 */
+	public static void reissueGuideBook(final ServerPlayer player) {
+		Inventory inventory = player.getInventory();
+		for (int i = 0; i < inventory.getContainerSize(); i++) {
+			if (isGuideBook(inventory.getItem(i))) {
+				inventory.setItem(i, ItemStack.EMPTY);
+			}
+		}
+		inventory.placeItemBackInInventory(guideBook(), Prediction.SERVER_ONLY);
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.guide_book.given").withStyle(ChatFormatting.GOLD));
+	}
+
+	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet, the story, dungeons, companions, town comforts, maps and keys. Pages are translated on the client. */
 	public static ItemStack guideBook() {
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 		List<Filterable<Component>> pages = new ArrayList<>();

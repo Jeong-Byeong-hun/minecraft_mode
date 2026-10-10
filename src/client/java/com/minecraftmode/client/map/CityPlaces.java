@@ -14,14 +14,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 
 /**
- * The capital's people and landmarks as map markers: every service NPC, every class trainer and the Training Grounds stairs, at
- * their posts from {@link CityZone} (the city keeps them there, see {@code CityServices.keepTrainers}). Only the x and z matter.
+ * The capital's people and landmarks as map markers: every service NPC, every class trainer, the Training Grounds stairs and the
+ * other landmarks, and the shops and work places ({@link CityZone.Spot}), at their posts from {@link CityZone} (the city keeps
+ * people there, see {@code CityServices.keepTrainers}). Only the x and z matter.
  */
 final class CityPlaces {
 	enum Kind {
 		NPC,
 		TRAINER,
-		LANDMARK
+		LANDMARK,
+		SHOP
 	}
 
 	record Place(String nameKey, int x, int z, int color, Kind kind) {
@@ -53,6 +55,9 @@ final class CityPlaces {
 			out.add(place("screen.minecraft_mode.guide.end_portal", CityFixtures.endPortal(0), 0x40C0A0, Kind.LANDMARK));
 			out.add(place("screen.minecraft_mode.guide.waystone", CityFixtures.waystone(0), 0x60A0FF, Kind.LANDMARK));
 			out.add(place("screen.minecraft_mode.guide.homestead", Homestead.waystone(0), 0x7CC050, Kind.LANDMARK));
+			for (CityZone.Spot spot : CityZone.Spot.values()) {
+				out.add(place(spot.nameKey, spot.pos(0), spot.color, Kind.SHOP));
+			}
 			places = List.copyOf(out);
 		}
 		return places;

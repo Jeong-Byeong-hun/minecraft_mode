@@ -5,6 +5,7 @@ import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.combat.Telegraph;
+import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.job.skill.SkillScheduler;
 import com.minecraftmode.raid.Arenas;
@@ -427,8 +428,9 @@ public abstract class RaidBoss extends CreatureMob {
 			level.sendParticles(ParticleTypes.ENCHANTED_HIT, this.getX(), this.getY(0.6), this.getZ(), 6, 0.5, 0.5, 0.5, 0.2);
 			return false;
 		}
+		// players and their skill summons only: stray mobs, pets and the boss's own adds do nothing
 		Entity attacker = source.getEntity();
-		if (attacker != null && !(attacker instanceof Player) && attacker != this) {
+		if (attacker != null && !(attacker instanceof Player) && attacker != this && Actions.summoner(attacker) == null) {
 			return false;
 		}
 		return super.hurtServer(level, source, damage / this.divisor);

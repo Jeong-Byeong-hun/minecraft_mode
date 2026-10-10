@@ -1,10 +1,12 @@
 package com.minecraftmode.job.quest;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.quest.QuestDef.KillGoal;
 import com.minecraftmode.job.quest.QuestDef.Material;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.registry.ModAttachments;
 import java.util.List;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -23,7 +25,8 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Accepting, tracking and completing advancement trials. Class trainers call {@link #accept} and
+ * Accepting, tracking and completing advancement trials. Accepting an instant trial (the first
+ * choice of class) advances at once. Class trainers call {@link #accept} and
  * {@link #complete}; kills are counted in {@link #onDeath}. Every check works on the client too
  * (the data is synced), so screens can show the same state the server will enforce.
  */
@@ -113,7 +116,7 @@ public final class QuestService {
 			return false;
 		}
 		for (Material material : quest.materials()) {
-			if (JobProgression.count(player.getInventory(), material.item()) < material.count()) {
+			if (Essence.held(player.getInventory(), material.item()) < material.count()) {
 				return false;
 			}
 		}
@@ -125,6 +128,9 @@ public final class QuestService {
 			return false;
 		}
 		QuestDef quest = offered(player, trainer);
+		if (quest.instant()) {
+			return JobProgression.advance(player, quest.job()) == JobProgression.AdvanceResult.OK;
+		}
 		set(player, get(player).start(quest));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0F, 1.0F);
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.quest.accepted", Component.translatable(quest.nameKey()).withColor(quest.job().color()))
@@ -140,7 +146,7 @@ public final class QuestService {
 		if (!player.isCreative()) {
 			JobProgression.removeItems(player.getInventory(), quest.token(), quest.tokenCount());
 			for (Material material : quest.materials()) {
-				JobProgression.removeItems(player.getInventory(), material.item(), material.count());
+				Essence.take(player.getInventory(), material.item(), material.count());
 			}
 		}
 		set(player, get(player).cleared());
@@ -168,10 +174,9 @@ public final class QuestService {
 		List<ServerPlayer> credited;
 		if (Quests.BOSSES.contains(entity.getType())) {
 			credited = level.getPlayers(p -> p.isAlive() && !p.isSpectator() && p.distanceToSqr(entity) <= 64.0 * 64.0);
-		} else if (killer != null) {
-			credited = List.of(killer);
 		} else {
-			return;
+			// everyone who did their share of the damage (Contribution); a projectile goal still needs the killing shot
+			credited = Contribution.shares(entity, source).stream().map(Contribution.Share::player).toList();
 		}
 		for (ServerPlayer player : credited) {
 			credit(player, entity, player == killer && byProjectile);

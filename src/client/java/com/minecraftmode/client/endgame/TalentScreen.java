@@ -9,6 +9,7 @@ import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.ProgressActionPayload;
 import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -260,7 +261,7 @@ public class TalentScreen extends Screen {
 	@Override
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
 		LocalPlayer player = this.minecraft.player;
-		if (player != null && event.button() == 0 && !paragonTab) {
+		if (player != null && event.button() == InputConstants.MOUSE_BUTTON_LEFT && !paragonTab) {
 			JobData job = JobProgression.get(player);
 			List<TalentTree.Branch> branches = job.hasClass() ? TalentTree.of(job.job()) : List.of();
 			for (int b = 0; b < branches.size(); b++) {

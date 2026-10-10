@@ -15,6 +15,10 @@ final class MonsterLang {
 			b.add(NamedMobs.egg(def), (ko ? def.ko() : def.en()) + (ko ? " 생성 알" : " Spawn Egg"));
 		}
 		b.add("message.minecraft_mode.named.drop", ko ? "%s이(가) %s을(를) 떨어뜨렸습니다!" : "%s dropped %s!");
+		String c = "message.minecraft_mode.contribution.";
+		b.add(c + "exp", ko ? "기여도 %s%% · %s/%s위 · 경험치 +%s" : "Contribution %s%% · #%s of %s · +%s EXP");
+		b.add(c + "coins", ko ? "%s 처치 기여도 %s%%: 동전 %s" : "%s defeated, your share %s%%: %s");
+		b.add(c + "assist", ko ? "큰 기여의 보상으로 진화의 에테르를 받았습니다." : "Your big share earned you Evolution Ether.");
 		for (LairDef lair : NamedLairs.all()) {
 			b.add(lair.nameKey(), ko ? lair.ko() : lair.en());
 		}

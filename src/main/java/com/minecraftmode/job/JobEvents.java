@@ -7,7 +7,9 @@ import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.CombatState;
 import com.minecraftmode.job.weapon.JobWeapons;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
+import java.util.List;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -90,25 +92,42 @@ public final class JobEvents {
 			JobProgression.applyDeathPenalty(player);
 			return;
 		}
-		if (!(source.getEntity() instanceof ServerPlayer killer) || !(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy)) {
+		if (!(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy)) {
 			return;
 		}
+		// everyone who hit it shares the experience by damage dealt (Contribution); the top contributor rolls the drops below
+		List<Contribution.Share> shares = Contribution.shares(entity, source);
+		if (shares.isEmpty()) {
+			return;
+		}
+		ServerPlayer mvp = shares.getFirst().player();
 		float maxHealth = entity.getMaxHealth();
 		boolean boss = maxHealth >= BOSS_HEALTH;
-		gainExp(killer, Math.max(3, Math.round(maxHealth * (boss ? 2 : 1))) * TrainingGrounds.expMultiplier(entity, killer));
-		onKill(killer);
+		int solo = Math.max(3, Math.round(maxHealth * (boss ? 2 : 1)));
+		for (int i = 0; i < shares.size(); i++) {
+			Contribution.Share share = shares.get(i);
+			int exp = Contribution.portion(solo, share, shares.size()) * TrainingGrounds.expMultiplier(entity, share.player());
+			gainExp(share.player(), exp);
+			if (shares.size() > 1) {
+				share.player().sendOverlayMessage(Component.translatable("message.minecraft_mode.contribution.exp", Math.round(share.fraction() * 100.0F), i + 1, shares.size(), exp)
+					.withStyle(i == 0 ? ChatFormatting.GOLD : ChatFormatting.YELLOW));
+			}
+		}
+		if (source.getEntity() instanceof ServerPlayer killer) {
+			onKill(killer);
+		}
 
 		// Essence: monsters drop it at random, bosses always drop condensed essence
 		if (boss) {
 			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + (int)(maxHealth / 150.0F)));
-		} else if (killer.getRandom().nextFloat() < Math.min(0.6F, 0.06F + maxHealth * 0.0025F)) {
+		} else if (mvp.getRandom().nextFloat() < Math.min(0.6F, 0.06F + maxHealth * 0.0025F)) {
 			drop(level, entity, new ItemStack(ModItems.ESSENCE));
 		}
 
 		// Coins: pirate passive and the Plunder engraving
-		JobData data = JobProgression.get(killer);
-		float coinChance = (CombatHooks.has(data, JobClass.PIRATE, 1) ? 0.15F : 0.0F) + JobWeapons.activeTotals(killer).fraction(EngraveStat.GOLD_FIND);
-		if (coinChance > 0.0F && killer.getRandom().nextFloat() < coinChance) {
+		JobData data = JobProgression.get(mvp);
+		float coinChance = (CombatHooks.has(data, JobClass.PIRATE, 1) ? 0.15F : 0.0F) + JobWeapons.activeTotals(mvp).fraction(EngraveStat.GOLD_FIND);
+		if (coinChance > 0.0F && mvp.getRandom().nextFloat() < coinChance) {
 			int copper = 1 + (int)(maxHealth / 20.0F);
 			drop(level, entity, copper >= 9 ? new ItemStack(ModItems.SILVER_COIN, copper / 9) : new ItemStack(ModItems.COPPER_COIN, copper));
 			level.sendParticles(ParticleTypes.WAX_ON, entity.getX(), entity.getY(0.5), entity.getZ(), 8, 0.3, 0.3, 0.3, 0.1);

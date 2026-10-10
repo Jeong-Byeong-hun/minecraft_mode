@@ -3,7 +3,6 @@ package com.minecraftmode.client.craft;
 import com.minecraftmode.craft.CraftMenu;
 import com.minecraftmode.craft.CraftRecipes;
 import com.minecraftmode.craft.Profession;
-import com.minecraftmode.job.JobProgression;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -79,7 +78,6 @@ public class CraftScreen extends AbstractContainerScreen<CraftMenu> {
 		g.text(this.font, "▶", x + 246, y + 5, this.page < this.pages() - 1 ? 0xFF404040 : 0xFFA0A0A0, false);
 
 		List<CraftRecipes.Recipe> recipes = this.menu.recipes();
-		Inventory inventory = this.minecraft.player.getInventory();
 		for (int i = 0; i < ROWS; i++) {
 			int index = this.page * ROWS + i;
 			if (index >= recipes.size()) {
@@ -99,7 +97,7 @@ public class CraftScreen extends AbstractContainerScreen<CraftMenu> {
 			for (CraftRecipes.Ingredient in : recipe.ingredients()) {
 				ItemStack stack = new ItemStack(in.item());
 				g.fakeItem(stack, ix, ry + 1);
-				int count = JobProgression.count(inventory, in.item());
+				int count = CraftMenu.held(this.minecraft.player, recipe, in);
 				String text = in.count() > 1 ? Integer.toString(in.count()) : "";
 				g.itemDecorations(this.font, stack, ix, ry + 1, text.isEmpty() ? null : text);
 				if (count < in.count()) {
@@ -126,7 +124,6 @@ public class CraftScreen extends AbstractContainerScreen<CraftMenu> {
 			return;
 		}
 		List<CraftRecipes.Recipe> recipes = this.menu.recipes();
-		Inventory inventory = this.minecraft.player.getInventory();
 		for (int i = 0; i < ROWS; i++) {
 			int index = this.page * ROWS + i;
 			if (index >= recipes.size()) {
@@ -144,7 +141,7 @@ public class CraftScreen extends AbstractContainerScreen<CraftMenu> {
 			int ix = this.leftPos + ING_X;
 			for (CraftRecipes.Ingredient in : recipe.ingredients()) {
 				if (this.inside(mouseX, mouseY, ix, ry + 1, 16, 16)) {
-					int count = JobProgression.count(inventory, in.item());
+					int count = CraftMenu.held(this.minecraft.player, recipe, in);
 					g.setComponentTooltipForNextFrame(this.font, List.of(new ItemStack(in.item()).getHoverName(),
 						Component.translatable("screen.minecraft_mode.profession.have", count, in.count()).withStyle(count >= in.count() ? ChatFormatting.GREEN : ChatFormatting.RED)),
 						mouseX, mouseY);

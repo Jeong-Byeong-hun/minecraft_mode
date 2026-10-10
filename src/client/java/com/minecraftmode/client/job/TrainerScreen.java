@@ -1,5 +1,6 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
@@ -59,7 +60,9 @@ public class TrainerScreen extends Screen {
 		int by = this.top + H - 28;
 		switch (status) {
 			case AVAILABLE, LOW_LEVEL -> {
-				Button accept = Button.builder(Component.translatable("screen.minecraft_mode.trainer.accept"), b -> this.send(QuestActionPayload.Action.ACCEPT))
+				QuestDef offered = QuestService.offered(player, this.job);
+				String label = offered != null && offered.instant() ? "screen.minecraft_mode.trainer.choose" : "screen.minecraft_mode.trainer.accept";
+				Button accept = Button.builder(Component.translatable(label), b -> this.send(QuestActionPayload.Action.ACCEPT))
 					.bounds(this.left + W - 132, by, 120, 20).build();
 				accept.active = status == QuestService.Status.AVAILABLE;
 				this.addRenderableWidget(accept);
@@ -138,7 +141,8 @@ public class TrainerScreen extends Screen {
 
 	private void quest(final GuiGraphicsExtractor g, final LocalPlayer player, final QuestDef quest, final QuestService.Status status, final int x, final int y) {
 		int ty = y;
-		MutableComponent title = Component.translatable("screen.minecraft_mode.trainer.trial", quest.tier(), Component.translatable(quest.nameKey()));
+		String titleKey = quest.instant() ? "screen.minecraft_mode.trainer.choice" : "screen.minecraft_mode.trainer.trial";
+		MutableComponent title = Component.translatable(titleKey, quest.tier(), Component.translatable(quest.nameKey()));
 		g.text(this.font, title.withColor(this.job.color()), x, ty, 0xFFFFFFFF, true);
 		g.text(this.font, Component.translatable("screen.minecraft_mode.trainer.reward", Component.translatable(this.job.tierKey(quest.tier()))),
 			x + 150, ty, 0xFFFFD27F, false);
@@ -150,7 +154,11 @@ public class TrainerScreen extends Screen {
 			int need = quest.kills().get(i).count();
 			ty = this.line(g, x, ty, Component.translatable("screen.minecraft_mode.trainer.goal_kill", Component.translatable(quest.goalKey(i))), have, need, started);
 		}
-		ty = this.item(g, player, x, ty, quest.token(), quest.tokenCount(), started);
+		if (quest.instant()) {
+			ty = g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.trainer.instant"), x, ty, W - 24, 0xFF7CFC7C) + 2;
+		} else {
+			ty = this.item(g, player, x, ty, quest.token(), quest.tokenCount(), started);
+		}
 		for (QuestDef.Material material : quest.materials()) {
 			ty = this.item(g, player, x, ty, material.item(), material.count(), true);
 		}
@@ -160,7 +168,7 @@ public class TrainerScreen extends Screen {
 	}
 
 	private int item(final GuiGraphicsExtractor g, final LocalPlayer player, final int x, final int y, final Item item, final int need, final boolean count) {
-		int have = count ? JobProgression.count(player.getInventory(), item) : 0;
+		int have = count ? Essence.held(player.getInventory(), item) : 0;
 		return this.line(g, x, y, Component.translatable("screen.minecraft_mode.trainer.goal_item", Component.translatable(item.getDescriptionId())), have, need, count);
 	}
 

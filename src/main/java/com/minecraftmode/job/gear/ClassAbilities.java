@@ -6,6 +6,7 @@ import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.Movement;
 import java.util.Locale;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -18,7 +19,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -158,10 +158,9 @@ public final class ClassAbilities {
 	private static boolean smokeStep(final ServerPlayer player) {
 		ServerLevel level = player.level();
 		Vec3 start = player.position();
-		Vec3 dir = Vec3.directionFromRotation(0.0F, player.getYRot());
-		Vec3 end = freePath(player, dir, 6.0);
+		Vec3 end = Movement.end(player, Movement.facing(player), 6.0, 0.0);
 		level.sendParticles(ParticleTypes.LARGE_SMOKE, start.x, start.y + 1, start.z, 25, 0.5, 0.6, 0.5, 0.02);
-		teleport(player, end);
+		Movement.teleport(player, end);
 		player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, true));
 		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 40, 1, false, false, true));
 		level.playSound(null, start.x, start.y, start.z, SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 0.5F, 1.6F);
@@ -170,16 +169,14 @@ public final class ClassAbilities {
 
 	private static boolean blink(final ServerPlayer player) {
 		ServerLevel level = player.level();
-		Vec3 look = player.getLookAngle();
-		Vec3 dir = new Vec3(look.x, Math.max(-0.3, Math.min(0.6, look.y)), look.z).normalize();
 		Vec3 start = player.position();
-		Vec3 end = freePath(player, dir, 8.0);
+		Vec3 end = Movement.end(player, player.getLookAngle(), 8.0, Movement.rise(player, 8.0));
 		if (end.distanceToSqr(start) < 1.0) {
 			return false;
 		}
 		Fx fx = new Fx(Fx.Kind.RUNE, 0x4A8CFF);
 		fx.burst(level, start.add(0, 1, 0), 18, 0.4, 0.05);
-		teleport(player, end);
+		Movement.teleport(player, end);
 		fx.burst(level, Fx.Kind.SPARK, end.add(0, 1, 0), 18, 0.4, 0.08);
 		level.playSound(null, end.x, end.y, end.z, SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.7F, 1.4F);
 		return true;
@@ -188,6 +185,8 @@ public final class ClassAbilities {
 	private static boolean backstep(final ServerPlayer player) {
 		Vec3 back = Vec3.directionFromRotation(0.0F, player.getYRot()).scale(-1.3);
 		push(player, new Vec3(back.x, 0.5, back.z));
+		Movement.guardFall(player, () -> {
+		});
 		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 40, 1, false, false, true));
 		new Fx(Fx.Kind.FEATHER, 0x9BE07A).burst(player.level(), player.position().add(0, 0.5, 0), 12, 0.4, 0.05);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PHANTOM_FLAP, SoundSource.PLAYERS, 0.6F, 1.5F);
@@ -208,24 +207,22 @@ public final class ClassAbilities {
 		double distance = pull.length();
 		Vec3 velocity = pull.normalize().scale(Math.min(2.4, 0.6 + distance * 0.11)).add(0, 0.35, 0);
 		push(player, velocity);
-		player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, 30, 0, false, false, true));
-		player.resetFallDistance();
+		Movement.guardFall(player, () -> {
+		});
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.CHAIN_PLACE, SoundSource.PLAYERS, 0.9F, 0.8F);
 		return true;
 	}
 
 	private static boolean flashStep(final ServerPlayer player) {
 		ServerLevel level = player.level();
-		Vec3 look = player.getLookAngle();
-		Vec3 dir = new Vec3(look.x, Math.max(-0.3, Math.min(0.5, look.y)), look.z).normalize();
 		Vec3 start = player.position();
-		Vec3 end = freePath(player, dir, 11.0);
+		Vec3 end = Movement.end(player, player.getLookAngle(), 11.0, Movement.rise(player, 11.0));
 		if (end.distanceToSqr(start) < 1.0) {
 			return false;
 		}
 		Fx fx = new Fx(Fx.Kind.SLASH, 0x9FD8E8);
 		fx.line(level, start.add(0, 1, 0), end.add(0, 1, 0), 0.8);
-		teleport(player, end);
+		Movement.teleport(player, end);
 		player.addEffect(new MobEffectInstance(MobEffects.SPEED, 60, 1, false, false, true));
 		level.playSound(null, end.x, end.y, end.z, SoundEvents.BREEZE_JUMP, SoundSource.PLAYERS, 0.6F, 1.8F);
 		return true;
@@ -256,31 +253,6 @@ public final class ClassAbilities {
 		} else {
 			entity.needsSync = true;
 		}
-	}
-
-	private static void teleport(final ServerPlayer player, final Vec3 pos) {
-		player.teleportTo(pos.x, pos.y, pos.z);
-		player.resetFallDistance();
-	}
-
-	/** Moves along {@code dir} until a wall (stepping up single blocks); returns the last free position. */
-	private static Vec3 freePath(final ServerPlayer player, final Vec3 dir, final double distance) {
-		Vec3 start = player.position();
-		Vec3 last = start;
-		for (double d = 0.5; d <= distance; d += 0.5) {
-			Vec3 next = start.add(dir.scale(d));
-			AABB box = player.getBoundingBox().move(next.subtract(player.position()));
-			if (!player.level().noCollision(player, box)) {
-				AABB up = box.move(0, 1.0, 0);
-				if (!player.level().noCollision(player, up)) {
-					break;
-				}
-				next = next.add(0, 1.0, 0);
-				start = start.add(0, 1.0, 0);
-			}
-			last = next;
-		}
-		return last;
 	}
 
 	private ClassAbilities() {

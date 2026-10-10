@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.consumable.ReturnScrollItem;
 import com.minecraftmode.dungeon.KeystoneItem;
 import com.minecraftmode.item.ClassResetScrollItem;
+import com.minecraftmode.item.EssenceItem;
 import com.minecraftmode.item.ModMaterials;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.worldgen.lair.LairMapItem;
@@ -50,8 +51,8 @@ public final class ModItems {
 	public static final Item GOLD_COIN = register("gold_coin", new Item.Properties().rarity(Rarity.RARE));
 
 	// Classes: essence (engraving/advancement currency), advancement items
-	public static final Item ESSENCE = register("essence", new Item.Properties().rarity(Rarity.UNCOMMON));
-	public static final Item CONDENSED_ESSENCE = register("condensed_essence", new Item.Properties().rarity(Rarity.RARE));
+	public static final Item ESSENCE = register("essence", EssenceItem::new, new Item.Properties().rarity(Rarity.UNCOMMON));
+	public static final Item CONDENSED_ESSENCE = register("condensed_essence", EssenceItem::new, new Item.Properties().rarity(Rarity.RARE));
 	public static final Item GOLEM_CORE = register("golem_core", new Item.Properties().rarity(Rarity.RARE).stacksTo(16));
 	public static final Item CLASS_RESET_SCROLL = register(
 		"class_reset_scroll", ClassResetScrollItem::new, new Item.Properties().rarity(Rarity.EPIC).stacksTo(16)

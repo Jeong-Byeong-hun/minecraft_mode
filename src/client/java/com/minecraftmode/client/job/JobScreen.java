@@ -3,6 +3,7 @@ package com.minecraftmode.client.job;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.client.endgame.CodexScreen;
 import com.minecraftmode.client.endgame.TalentScreen;
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
@@ -203,7 +204,7 @@ public class JobScreen extends Screen {
 		}
 		ty = this.progress(g, x, ty, Component.translatable(quest.token().getDescriptionId()), JobProgression.count(player.getInventory(), quest.token()), quest.tokenCount());
 		for (QuestDef.Material material : quest.materials()) {
-			ty = this.progress(g, x, ty, Component.translatable(material.item().getDescriptionId()), JobProgression.count(player.getInventory(), material.item()), material.count());
+			ty = this.progress(g, x, ty, Component.translatable(material.item().getDescriptionId()), Essence.held(player.getInventory(), material.item()), material.count());
 		}
 		BlockPos home = CityZone.trainerHome(quest.job(), 0);
 		return g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.job.return_to", Component.translatable(ClassTrainer.nameKey(quest.job())), home.getX(), home.getZ()),

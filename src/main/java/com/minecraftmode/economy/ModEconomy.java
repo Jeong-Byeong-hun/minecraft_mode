@@ -6,6 +6,7 @@ import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.event.WorldEvents;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -25,7 +26,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Coin sources: hostile mobs killed by a player, and ores mined with Coin Finder.
+ * Coin sources: hostile mobs killed by players (see {@link Contribution}), and ores mined with Coin Finder.
  */
 public final class ModEconomy {
 	private static final float COIN_DROP_CHANCE = 0.5F;
@@ -37,7 +38,7 @@ public final class ModEconomy {
 	}
 
 	private static void dropMobCoins(final LivingEntity entity, final DamageSource source) {
-		if (!(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy) || !(source.getEntity() instanceof Player)) {
+		if (!(entity.level() instanceof ServerLevel level) || !(entity instanceof Enemy) || Contribution.shares(entity, source).isEmpty()) {
 			return;
 		}
 		// Only ordinary mobs: the health thresholds below would pay gold for every health-scaled dungeon, invasion or event mob,

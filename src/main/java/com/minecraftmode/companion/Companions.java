@@ -6,6 +6,7 @@ import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModAttachments;
 import com.mojang.serialization.Codec;
@@ -263,14 +264,27 @@ public final class Companions {
 		return def == null ? List.of() : def.lines(petLevel(data.pets().getOrDefault(def.id(), 0)));
 	}
 
-	/** The owner's kills raise the summoned pet: 1 per monster, 10 per named monster, 50 per boss. */
+	/**
+	 * Kills raise the summoned pet of everyone who shared them (see {@link Contribution}): 1 per monster, 10 per named monster, 50
+	 * per boss. A named monster's pet or mount drop is rolled for the top contributor.
+	 */
 	private static void afterDeath(final LivingEntity entity, final net.minecraft.world.damagesource.DamageSource source) {
-		if (!(source.getEntity() instanceof ServerPlayer killer) || !(entity instanceof Enemy)) {
+		if (!(entity instanceof Enemy)) {
+			return;
+		}
+		List<Contribution.Share> shares = Contribution.shares(entity, source);
+		if (shares.isEmpty()) {
 			return;
 		}
 		if (entity instanceof NamedMob) {
-			rollDrop(killer, NAMED_DROP, Rarity.RARE);
+			rollDrop(shares.getFirst().player(), NAMED_DROP, Rarity.RARE);
 		}
+		for (Contribution.Share share : shares) {
+			growPet(share.player(), entity);
+		}
+	}
+
+	private static void growPet(final ServerPlayer killer, final LivingEntity entity) {
 		Data data = data(killer);
 		if (data.activePet().isEmpty() || !data.hasPet(data.activePet())) {
 			return;

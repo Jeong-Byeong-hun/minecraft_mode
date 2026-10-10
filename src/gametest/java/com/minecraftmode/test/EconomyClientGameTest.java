@@ -7,6 +7,7 @@ import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
@@ -47,8 +48,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 
@@ -76,14 +79,12 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 
 			checkWallet(context, server, connection);
 			checkShop(context, server, connection);
+			checkEssence(context, server, connection);
 			checkConsumables(context, server, connection);
 			checkReturnScroll(context, server, connection);
 			checkMechanicSmoke(context, server, connection);
 			checkMechanicsInRaid(context, server, connection);
-			// Let the server catch up before the world closes: Fabric's client gametest close() submits a blocking task to the server
-			// (IntegratedServer.halt) right as the tick phase starts, and a server that is behind schedule skips its idle task window and
-			// parks on the test phaser first - both sides then wait on each other forever (seen once after a 65-tick lag spike).
-			context.waitTicks(40);
+			WorldClose.prepare(context, server);
 		}
 	}
 
@@ -201,6 +202,75 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			}
 			int price = menu.getOffers().get(index).getCostA().getCount() * Wallet.value(menu.getOffers().get(index).getCostA().getItem());
 			return paid > 0 && paid % 9 == 0 ? "" : "wallet should pay whole silver, paid " + paid + " (price " + price + ")";
+		});
+		require(report.isEmpty(), report);
+		server.runCommand("setblock 0 -60 -3 minecraft:air");
+		context.waitTicks(2);
+	}
+
+	/** Essence pays as one currency: condensed essence is broken for an essence trade (change back as essence), and both convert on use. */
+	private static void checkEssence(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("setblock 0 -60 -3 minecraft_mode:guild_shop");
+		context.waitTicks(2);
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Inventory inventory = player.getInventory();
+			inventory.clearContent();
+			Wallet.add(player, 50000);
+			inventory.add(new ItemStack(ModItems.CONDENSED_ESSENCE, 1));
+			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GUILD)
+				.openTradingScreen(player, Component.translatable(ShopType.GUILD.titleKey()), 1);
+			MerchantMenu menu = (MerchantMenu)player.containerMenu;
+			int index = -1;
+			for (int i = 0; i < menu.getOffers().size(); i++) {
+				ItemStack costB = menu.getOffers().get(i).getCostB();
+				if (costB.is(ModItems.ESSENCE) && costB.getCount() < Essence.CONDENSED) {
+					index = i;
+					break;
+				}
+			}
+			if (index < 0) {
+				player.closeContainer();
+				return "the guild should sell something for fewer than 9 essence";
+			}
+			MerchantOffer offer = menu.getOffers().get(index);
+			int need = offer.getCostB().getCount();
+			menu.setSelectionHint(index);
+			menu.tryMoveItems(index);
+			ItemStack paid = menu.getSlot(1).getItem();
+			if (!paid.is(ModItems.ESSENCE) || paid.getCount() != need) {
+				player.closeContainer();
+				return "a condensed essence should be broken into the " + need + " essence the trade needs, slot has " + paid;
+			}
+			if (JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE) != 0 || JobProgression.count(inventory, ModItems.ESSENCE) != Essence.CONDENSED - need) {
+				player.closeContainer();
+				return "the change should come back as " + (Essence.CONDENSED - need) + " essence";
+			}
+			menu.quickMoveStack(player, 2);
+			player.closeContainer();
+			if (inventory.countItem(offer.getResult().getItem()) < 1) {
+				return "the gear should be bought with the broken essence";
+			}
+			// condensed costs are made up from loose essence, and both kinds convert by hand
+			inventory.clearContent();
+			inventory.add(new ItemStack(ModItems.ESSENCE, 20));
+			Essence.take(inventory, ModItems.CONDENSED_ESSENCE, 2);
+			if (JobProgression.count(inventory, ModItems.ESSENCE) != 2) {
+				return "2 condensed essence should take 18 loose essence, left " + JobProgression.count(inventory, ModItems.ESSENCE);
+			}
+			inventory.clearContent();
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.CONDENSED_ESSENCE, 2));
+			player.getMainHandItem().use(player.level(), player, InteractionHand.MAIN_HAND);
+			if (JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE) != 1 || JobProgression.count(inventory, ModItems.ESSENCE) != Essence.CONDENSED) {
+				return "using condensed essence should break one into 9 essence";
+			}
+			inventory.clearContent();
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.ESSENCE, 20));
+			player.getMainHandItem().use(player.level(), player, InteractionHand.MAIN_HAND);
+			int loose = JobProgression.count(inventory, ModItems.ESSENCE);
+			int condensed = JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE);
+			inventory.clearContent();
+			return loose == 11 && condensed == 1 ? "" : "using essence should condense 9 into one, got " + loose + " essence and " + condensed + " condensed";
 		});
 		require(report.isEmpty(), report);
 		server.runCommand("setblock 0 -60 -3 minecraft:air");

@@ -97,9 +97,16 @@ final class JobLang {
 		b.add("message.minecraft_mode.job.can_advance", ko
 			? "다음 전직 시련을 받을 수 있습니다! 스톰홀드의 교관을 찾아가세요."
 			: "Your next advancement trial is open! Visit your trainer in Stormhold.");
+		b.add("message.minecraft_mode.job.can_choose", ko
+			? "레벨 10 달성! 스톰홀드의 교관에게 가면 바로 전직할 수 있습니다."
+			: "Level 10! Visit a trainer in Stormhold to take a class right away.");
 		b.add("message.minecraft_mode.job.advanced", ko ? "%s님이 %s(으)로 전직했습니다!" : "%s has become a %s!");
 		b.add("message.minecraft_mode.job.avalon", ko ? "아발론이 치명상을 막아냈습니다! (3분 후 재사용)" : "Avalon turned aside a lethal blow! (ready again in 3 minutes)");
 		b.add("message.minecraft_mode.job.reset_none", ko ? "초기화할 직업이 없습니다." : "You have no class to reset.");
+		b.add("message.minecraft_mode.essence.too_few", ko ? "정수가 %s개 있어야 응축할 수 있습니다." : "You need %s essence to condense.");
+		b.add("tooltip.minecraft_mode.essence.use", ko ? "사용: 정수 9개 → 응축된 정수 1개 (웅크리고 사용: 전부)" : "Use: 9 essence → 1 condensed essence (sneak: all)");
+		b.add("tooltip.minecraft_mode.condensed_essence.use", ko ? "사용: 정수 9개로 분해 (웅크리고 사용: 묶음 전체)" : "Use: break into 9 essence (sneak: whole stack)");
+		b.add("tooltip.minecraft_mode.essence.change", ko ? "정수와 응축된 정수는 서로 대신 낼 수 있습니다 (잔돈은 정수로)" : "Essence and condensed essence pay for each other (change comes back as essence)");
 		b.add("message.minecraft_mode.job.reset_done", ko ? "직업이 초기화되었습니다. 레벨은 유지됩니다." : "Your class was reset. Your level is kept.");
 		b.add("message.minecraft_mode.skill.no_weapon", ko ? "직업 무기를 들고 있어야 합니다." : "Hold a class weapon to use skills.");
 		b.add("message.minecraft_mode.skill.wrong_class", ko ? "%s 전용 무기입니다. 기본 공격만 가능합니다." : "Only a %s can use this weapon's skills. Basic attacks only.");

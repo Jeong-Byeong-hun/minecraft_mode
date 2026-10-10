@@ -1,5 +1,6 @@
 package com.minecraftmode.mixin;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.Wallet;
 import net.minecraft.server.level.ServerPlayer;
@@ -13,6 +14,7 @@ import net.minecraft.world.item.trading.Merchant;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * would crash for a block-backed merchant, so the sound plays at the shop block instead. And since
  * coins live in the {@link Wallet}, picking a trade that costs coins pays them out of the wallet into
  * the payment slot (enough for several trades; what is left goes back to the wallet when the shop closes).
+ * Essence costs take either kind of essence, with change ({@link Essence}).
  */
 @Mixin(MerchantMenu.class)
 public abstract class MerchantMenuMixin {
@@ -69,6 +72,10 @@ public abstract class MerchantMenuMixin {
 			return;
 		}
 		Item coin = cost.item().value();
+		if (Essence.is(coin)) {
+			this.minecraftMode$essenceChange(player, paymentSlot, coin, cost.count());
+			return;
+		}
 		int each = Wallet.value(coin);
 		if (each <= 0) {
 			return;
@@ -83,5 +90,25 @@ public abstract class MerchantMenuMixin {
 		if (add > 0 && Wallet.take(player, add * each)) {
 			this.tradeContainer.setItem(paymentSlot, new ItemStack(coin, have + add));
 		}
+	}
+
+	/**
+	 * Vanilla only moved essence of the exact kind; when that is short of one trade, the other kind makes up the rest
+	 * ({@link Essence#take}: condensed essence is broken with the change going back to the inventory, or loose essence
+	 * is condensed).
+	 */
+	@Unique
+	private void minecraftMode$essenceChange(final ServerPlayer player, final int paymentSlot, final Item essence, final int need) {
+		ItemStack current = this.tradeContainer.getItem(paymentSlot);
+		if (!current.isEmpty() && !current.is(essence)) {
+			return;
+		}
+		int have = current.getCount();
+		int missing = need - have;
+		if (missing <= 0 || Essence.held(player.getInventory(), essence) < missing) {
+			return;
+		}
+		Essence.take(player.getInventory(), essence, missing);
+		this.tradeContainer.setItem(paymentSlot, new ItemStack(essence, need));
 	}
 }

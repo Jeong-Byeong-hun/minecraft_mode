@@ -13,6 +13,7 @@ import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
@@ -35,6 +36,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.Prediction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
@@ -455,9 +457,12 @@ public class NamedMob extends CreatureMob {
 	@Override
 	protected void dropCustomDeathLoot(final ServerLevel level, final DamageSource source, final boolean killedByPlayer) {
 		super.dropCustomDeathLoot(level, source, killedByPlayer);
-		if (!(source.getEntity() instanceof ServerPlayer killer)) {
+		// shared by everyone who did their part (Contribution): coins by share, ether for big helpers, gear for the top contributor
+		List<Contribution.Share> shares = Contribution.shares(this, source);
+		if (shares.isEmpty()) {
 			return;
 		}
+		ServerPlayer mvp = shares.getFirst().player();
 		NamedDef def = this.def();
 		this.dropGlowing(level, GearDrops.ether(def.lo(), def.hi(), this.getRandom()));
 		if (this.lord) {
@@ -470,19 +475,37 @@ public class NamedMob extends CreatureMob {
 		}
 		// coins grow with the level: about 4 copper at Lv 20, about a gold coin at Lv 90
 		int copper = Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, this.namedLevel)) * 0.15F * (0.6F + this.getRandom().nextFloat() * 0.8F)));
-		for (ItemStack coins : Coins.asItems(copper)) {
-			this.spawnAtLocation(level, coins);
+		if (shares.size() == 1) {
+			for (ItemStack coins : Coins.asItems(copper)) {
+				this.spawnAtLocation(level, coins);
+			}
+		} else {
+			for (Contribution.Share share : shares) {
+				int part = Contribution.portion(copper, share, shares.size());
+				Coins.give(share.player(), part);
+				share.player().sendSystemMessage(Component.translatable("message.minecraft_mode.contribution.coins", Component.translatable(def.nameKey()),
+					Math.round(share.fraction() * 100.0F), Coins.component(part)).withStyle(ChatFormatting.YELLOW));
+				if (share.player() != mvp && share.fraction() >= Contribution.ASSIST_SHARE) {
+					share.player().getInventory().placeItemBackInInventory(GearDrops.ether(def.lo(), def.hi(), this.getRandom()), Prediction.SERVER_ONLY);
+					share.player().sendSystemMessage(Component.translatable("message.minecraft_mode.contribution.assist").withStyle(ChatFormatting.AQUA));
+				}
+			}
 		}
 		ItemStack supply = Consumables.namedDrop(Math.max(def.lo(), this.namedLevel), this.getRandom());
 		if (!supply.isEmpty()) {
 			this.dropGlowing(level, supply);
 		}
-		ItemStack gear = GearDrops.namedDrop(killer, def.lo(), def.hi(), this.getRandom());
+		ItemStack gear = GearDrops.namedDrop(mvp, def.lo(), def.hi(), this.getRandom());
 		if (!gear.isEmpty()) {
-			this.dropGlowing(level, gear);
+			Component name = gear.getHoverName();
+			if (shares.size() == 1) {
+				this.dropGlowing(level, gear);
+			} else {
+				// the top contributor's piece goes straight to them, so nobody else picks it up
+				mvp.getInventory().placeItemBackInInventory(gear, Prediction.SERVER_ONLY);
+			}
 			level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.HOSTILE, 0.6F, 1.4F);
-			killer.sendSystemMessage(Component.translatable("message.minecraft_mode.named.drop", Component.translatable(def.nameKey()), gear.getHoverName())
-				.withStyle(ChatFormatting.GOLD));
+			mvp.sendSystemMessage(Component.translatable("message.minecraft_mode.named.drop", Component.translatable(def.nameKey()), name).withStyle(ChatFormatting.GOLD));
 		}
 	}
 

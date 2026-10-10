@@ -1,5 +1,6 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -14,6 +15,7 @@ import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,6 +44,12 @@ public final class JobTooltips {
 			ArmorPieceDef armor = ClassArmor.def(stack);
 			if (armor != null) {
 				lines.addAll(1, GearTooltips.build(stack, armor));
+				return;
+			}
+			if (Essence.is(stack.getItem())) {
+				String use = stack.is(ModItems.CONDENSED_ESSENCE) ? "tooltip.minecraft_mode.condensed_essence.use" : "tooltip.minecraft_mode.essence.use";
+				lines.add(1, Component.translatable(use).withStyle(ChatFormatting.GRAY));
+				lines.add(2, Component.translatable("tooltip.minecraft_mode.essence.change").withStyle(ChatFormatting.DARK_GRAY));
 			}
 		});
 	}

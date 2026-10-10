@@ -1,13 +1,12 @@
 package com.minecraftmode.job.engrave;
 
-import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModDataComponents;
-import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +16,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
@@ -209,24 +207,12 @@ public class EngravingMenu extends AbstractContainerMenu {
 
 	/** Essence units in the inventory; condensed essence counts as 9. */
 	public static int essence(final Inventory inventory) {
-		return JobProgression.count(inventory, ModItems.ESSENCE) + 9 * JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE);
+		return Essence.total(inventory);
 	}
 
-	public static void pay(final Player player, int units) {
-		if (player.isCreative() || units <= 0) {
-			return;
-		}
-		Inventory inventory = player.getInventory();
-		int loose = Math.min(units, JobProgression.count(inventory, ModItems.ESSENCE));
-		JobProgression.removeItems(inventory, ModItems.ESSENCE, loose);
-		units -= loose;
-		if (units > 0) {
-			int condensed = (units + 8) / 9;
-			JobProgression.removeItems(inventory, ModItems.CONDENSED_ESSENCE, condensed);
-			int change = condensed * 9 - units;
-			if (change > 0) {
-				inventory.placeItemBackInInventory(new ItemStack(ModItems.ESSENCE, change), Prediction.SERVER_ONLY);
-			}
+	public static void pay(final Player player, final int units) {
+		if (!player.isCreative()) {
+			Essence.pay(player.getInventory(), units);
 		}
 	}
 

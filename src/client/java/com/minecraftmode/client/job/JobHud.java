@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -97,7 +98,7 @@ public final class JobHud {
 		counts.add(new int[] {JobProgression.count(player.getInventory(), quest.token()), quest.tokenCount()});
 		for (QuestDef.Material material : quest.materials()) {
 			labels.add(Component.translatable(material.item().getDescriptionId()));
-			counts.add(new int[] {JobProgression.count(player.getInventory(), material.item()), material.count()});
+			counts.add(new int[] {Essence.held(player.getInventory(), material.item()), material.count()});
 		}
 		int x = 4;
 		int y = 48;

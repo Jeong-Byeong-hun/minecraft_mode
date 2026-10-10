@@ -4,6 +4,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.ProjectileStyle;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.registry.ModEffects;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,7 +47,6 @@ import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -202,33 +202,6 @@ public final class Actions {
 		}
 	}
 
-	/** Moves the caster along {@code dir} until a wall; returns the last free position. */
-	static Vec3 freePath(final SkillContext ctx, final Vec3 dir, final double distance) {
-		ServerPlayer p = ctx.caster;
-		Vec3 start = p.position();
-		Vec3 last = start;
-		for (double d = 0.5; d <= distance; d += 0.5) {
-			Vec3 next = start.add(dir.scale(d));
-			AABB box = p.getBoundingBox().move(next.subtract(start));
-			if (!ctx.level.noCollision(p, box)) {
-				// try stepping up one block (stairs, slabs)
-				AABB up = box.move(0, 1.0, 0);
-				if (!ctx.level.noCollision(p, up)) {
-					break;
-				}
-				next = next.add(0, 1.0, 0);
-				start = start.add(0, 1.0, 0);
-			}
-			last = next;
-		}
-		return last;
-	}
-
-	static void teleport(final ServerPlayer player, final Vec3 pos) {
-		player.teleportTo(pos.x, pos.y, pos.z);
-		player.resetFallDistance();
-	}
-
 	// ================================================================== melee / area
 
 	/** Cone in front of the caster. */
@@ -262,20 +235,27 @@ public final class Actions {
 	public static SkillAction dash(final double distance, final double mult) {
 		Component text = mult > 0 ? Component.translatable(DASH_HIT, num(distance), pct(mult)) : Component.translatable(DASH, num(distance));
 		return action(ctx -> {
-			Vec3 dir = ctx.flatLook();
-			Vec3 end = freePath(ctx, dir, distance);
-			Vec3 start = ctx.caster.position();
-			int steps = Math.max(1, (int)Math.ceil(start.distanceTo(end) / 2.0));
+			// follow the path itself (2 blocks a tick) so steps never cut through slopes
+			List<Vec3> path = new ArrayList<>();
+			path.add(ctx.caster.position());
+			path.addAll(Movement.path(ctx.caster, ctx.flatLook(), distance, 0.0));
+			List<Vec3> stops = new ArrayList<>();
+			for (int i = 4; i < path.size(); i += 4) {
+				stops.add(path.get(i));
+			}
+			if (stops.isEmpty() || !stops.getLast().equals(path.getLast())) {
+				stops.add(path.getLast());
+			}
 			Set<UUID> hit = new HashSet<>();
 			sound(ctx, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, 1.5F);
-			for (int i = 1; i <= steps; i++) {
-				final Vec3 from = start.lerp(end, (double)(i - 1) / steps);
-				final Vec3 to = start.lerp(end, (double)i / steps);
-				SkillScheduler.schedule(i - 1, () -> {
+			for (int i = 0; i < stops.size(); i++) {
+				final Vec3 from = i == 0 ? path.getFirst() : stops.get(i - 1);
+				final Vec3 to = stops.get(i);
+				SkillScheduler.schedule(i + 1, () -> {
 					if (!ctx.valid()) {
 						return;
 					}
-					teleport(ctx.caster, to);
+					Movement.teleport(ctx.caster, to);
 					ctx.fx.line(ctx.level, from.add(0, 1, 0), to.add(0, 1, 0), 0.4);
 					if (mult > 0) {
 						for (LivingEntity e : ctx.enemiesAlong(from.add(0, 1, 0), to.add(0, 1, 0), 1.2)) {
@@ -295,7 +275,7 @@ public final class Actions {
 			Vec3 dir = ctx.flatLook();
 			impulse(ctx.caster, new Vec3(dir.x * 0.9, 0.5 + height * 0.12, dir.z * 0.9));
 			sound(ctx, SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 0.6F);
-			waitForLanding(ctx, 0, () -> {
+			Movement.guardFall(ctx.caster, () -> {
 				double r = ctx.area(radius);
 				Vec3 c = ctx.caster.position();
 				for (LivingEntity e : ctx.enemiesNear(c, r)) {
@@ -307,20 +287,6 @@ public final class Actions {
 				soundAt(ctx, c, SoundEvents.GENERIC_EXPLODE.value(), 0.8F, 0.8F);
 			});
 		}, Component.translatable(LEAP, num(radius), pct(mult)));
-	}
-
-	private static void waitForLanding(final SkillContext ctx, final int waited, final Runnable onLand) {
-		SkillScheduler.schedule(1, () -> {
-			if (!ctx.valid()) {
-				return;
-			}
-			ctx.caster.resetFallDistance();
-			if (waited > 3 && ctx.caster.onGround() || waited > 50) {
-				onLand.run();
-			} else {
-				waitForLanding(ctx, waited + 1, onLand);
-			}
-		});
 	}
 
 	/** Instant line through every enemy. */
@@ -340,11 +306,9 @@ public final class Actions {
 	public static SkillAction blink(final double distance) {
 		return action(ctx -> {
 			Vec3 start = ctx.caster.position();
-			Vec3 dir = ctx.look();
-			Vec3 flat = new Vec3(dir.x, Math.max(-0.2, Math.min(0.5, dir.y)), dir.z).normalize();
-			Vec3 end = freePath(ctx, flat, distance);
+			Vec3 end = Movement.end(ctx.caster, ctx.look(), distance, Movement.rise(ctx.caster, distance));
 			ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, start.add(0, 1, 0), 15, 0.4, 0.02);
-			teleport(ctx.caster, end);
+			Movement.teleport(ctx.caster, end);
 			ctx.fx.burst(ctx.level, end.add(0, 1, 0), 15, 0.4, 0.05);
 			sound(ctx, SoundEvents.ENDERMAN_TELEPORT, 0.8F, 1.3F);
 		}, Component.translatable(BLINK, num(distance)));
@@ -357,10 +321,9 @@ public final class Actions {
 				return;
 			}
 			Vec3 behind = target.position().subtract(Vec3.directionFromRotation(0.0F, target.getYRot()).scale(1.2));
-			AABB box = ctx.caster.getBoundingBox().move(behind.subtract(ctx.caster.position()));
 			ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, ctx.caster.position().add(0, 1, 0), 15, 0.4, 0.02);
-			if (ctx.level.noCollision(ctx.caster, box)) {
-				teleport(ctx.caster, behind);
+			if (Movement.canStand(ctx.caster, behind) && Movement.clearLine(ctx.caster, target.position(), behind)) {
+				Movement.teleport(ctx.caster, behind);
 				ctx.caster.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
 			}
 			ctx.hit(target, mult);
@@ -728,7 +691,7 @@ public final class Actions {
 					}
 					if (this.heal > 0) {
 						for (Player ally : allies(ctx, center, r)) {
-							ally.heal((float)(ally.getMaxHealth() * this.heal / 200.0));
+							healAlly(ctx, ally, (float)(ally.getMaxHealth() * this.heal / 200.0));
 						}
 					}
 				});
@@ -753,6 +716,13 @@ public final class Actions {
 			}
 			return text;
 		}
+	}
+
+	/** Heals an ally; healing someone else counts toward the kills they are fighting for (see {@link Contribution}). */
+	static void healAlly(final SkillContext ctx, final Player ally, final float amount) {
+		float before = ally.getHealth();
+		ally.heal(amount);
+		Contribution.healed(ctx.caster, ally, ally.getHealth() - before);
 	}
 
 	static List<Player> allies(final SkillContext ctx, final Vec3 center, final double radius) {
@@ -807,6 +777,7 @@ public final class Actions {
 			double r = ctx.area(radius);
 			for (LivingEntity e : ctx.enemiesNear(ctx.caster.position(), r)) {
 				e.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), ctx.caster);
+				Contribution.debuffed(ctx.caster, e, (int)(seconds * 20));
 				ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, e.position().add(0, e.getBbHeight() / 2, 0), 6, 0.3, 0.02);
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), r);
@@ -867,6 +838,7 @@ public final class Actions {
 		return action(ctx -> {
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
 				ally.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), ctx.caster);
+				Contribution.buffed(ctx.caster, ally, (int)(seconds * 20));
 				ctx.fx.burst(ctx.level, ally.position().add(0, 1, 0), 8, 0.4, 0.05);
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
@@ -885,7 +857,7 @@ public final class Actions {
 	public static SkillAction allyHeal(final double radius, final double pct) {
 		return action(ctx -> {
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
-				ally.heal((float)(ally.getMaxHealth() * pct / 100.0));
+				healAlly(ctx, ally, (float)(ally.getMaxHealth() * pct / 100.0));
 				ctx.level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY(1.0), ally.getZ(), 4, 0.4, 0.3, 0.4, 0.0);
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
@@ -985,7 +957,7 @@ public final class Actions {
 			impulse(ctx.caster, to.normalize().scale(Math.min(3.0, 0.6 + to.length() * 0.18)).add(0, 0.35, 0));
 			ctx.fx.line(ctx.level, eye, hit.getLocation(), 0.5);
 			sound(ctx, SoundEvents.FISHING_BOBBER_THROW, 1.0F, 0.6F);
-			waitForLanding(ctx, 0, () -> {
+			Movement.guardFall(ctx.caster, () -> {
 			});
 		}, Component.translatable(GRAPPLE, num(range)));
 	}

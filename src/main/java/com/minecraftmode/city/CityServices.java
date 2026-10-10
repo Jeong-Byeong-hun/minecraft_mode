@@ -31,6 +31,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.monster.Phantom;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.FoodData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.BrushItem;
@@ -76,6 +77,7 @@ public final class CityServices {
 		});
 		ServerPlayerEvents.JOIN.register(CityServices::welcome);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			feedResidents(server.overworld());
 			if (server.getTickCount() % 100 == 0) {
 				keepTrainers(server.overworld());
 				keepNpcs(server.overworld());
@@ -93,6 +95,22 @@ public final class CityServices {
 				entity.discard();
 			}
 		});
+	}
+
+	private static final int MAX_FOOD = 20;
+
+	/** Nobody goes hungry in the capital: inside the walls food and saturation are kept full every tick. */
+	private static void feedResidents(final ServerLevel level) {
+		if (!CityZone.isCityLevel(level)) {
+			return;
+		}
+		for (ServerPlayer player : level.players()) {
+			FoodData food = player.getFoodData();
+			if (CityZone.inside(player.blockPosition()) && (food.getFoodLevel() < MAX_FOOD || food.getSaturationLevel() < MAX_FOOD)) {
+				food.setFoodLevel(MAX_FOOD);
+				food.setSaturation(MAX_FOOD);
+			}
+		}
 	}
 
 	// ------------------------------------------------------------------ spawn and welcome

@@ -84,12 +84,18 @@ public class ClassDocProvider implements DataProvider {
 		md.append("- 직업 초기화 주문서(모험가 길드, 금화 4)로 직업을 다시 고를 수 있습니다. 레벨은 유지됩니다.\n\n");
 
 		md.append("## 전직 시련\n\n");
-		md.append("- 직업 선택과 모든 전직은 수도 **스톰홀드**(0, 0)의 직업 교관에게서 받는 시련으로 합니다. 시련은 한 번에 하나만 진행할 수 있습니다.\n");
+		md.append("- **1차 전직(직업 선택)은 시련이 없습니다.** 레벨 10이 되면 수도 **스톰홀드**(0, 0)에서 원하는 직업의 교관에게 \"이 직업으로 전직\"을 누르면 바로 전직합니다.\n");
+		md.append("- 2~4차 전직은 자기 직업 교관에게서 받는 시련으로 합니다. 시련은 한 번에 하나만 진행할 수 있습니다.\n");
 		md.append("- 목표 몹을 처치하면 진행도가 오르고, 해당 몹이 **시련 증표**를 확률적으로 떨어뜨립니다. 증표는 시련 중인 플레이어의 인벤토리로 바로 들어옵니다.\n");
 		md.append("- 보스(위더 · 엔더 드래곤 · 워든 · 엘더 가디언 · 미스릴 골렘)는 64블록 안에서 같은 시련을 진행 중인 모든 플레이어에게 인정됩니다.\n");
 		md.append("- 목표 처치 + 증표 + 재료를 갖추고 교관에게 돌아가 \"시련 완료\"를 누르면 증표와 재료를 소모하고 전직합니다.\n\n");
 		md.append("| 직업 | 차수 | 교관 | 시련 | 처치 목표 | 증표 (드롭) | 재료 |\n|---|---|---|---|---|---|---|\n");
 		for (QuestDef quest : Quests.all()) {
+			if (quest.instant()) {
+				md.append("| ").append(quest.job().ko()).append(" | 1차 | ").append(this.ko.get(ClassTrainer.nameKey(quest.job())))
+					.append(" | ").append(quest.ko()).append(" | 시련 없음 (레벨 10에 바로 전직) | - | - |\n");
+				continue;
+			}
 			String goals = quest.kills().stream().map(k -> k.ko() + " ×" + k.count()).collect(Collectors.joining("<br>"));
 			String drops = quest.sources().stream().map(s -> (s.types().size() > 8 ? "모든 적대적 몹" : s.types().stream().map(this::entityName).sorted().collect(Collectors.joining("·")))
 				+ " " + Math.round(s.chance() * 100) + "%" + (s.amount() > 1 ? " ×" + s.amount() : "")).collect(Collectors.joining("<br>"));

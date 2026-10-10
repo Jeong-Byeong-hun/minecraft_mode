@@ -392,7 +392,22 @@ final class CityChecks {
 			require(changed == 0, "an explosion changed " + changed + " city blocks");
 			return "break/place refused for strangers, ops allowed, no PvP damage, TNT-sized blast changed 0 of " + around.size() + " blocks";
 		});
+		// nobody goes hungry inside the walls
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			require(CityZone.inside(player.blockPosition()), "the hunger check needs the player inside the city, at " + player.blockPosition());
+			player.getFoodData().setFoodLevel(3);
+			player.getFoodData().setSaturation(0.0F);
+		});
+		context.waitTicks(2);
+		String food = server.computeOnServer(s -> {
+			var data = connection.getServerPlayer().getFoodData();
+			require(data.getFoodLevel() == 20 && data.getSaturationLevel() == 20.0F,
+				"food and saturation should be full in the city, got " + data.getFoodLevel() + " / " + data.getSaturationLevel());
+			return data.getFoodLevel() + " / " + data.getSaturationLevel();
+		});
 		server.runCommand("gamemode creative @p");
+		MinecraftMode.LOGGER.info("[city] hunger refilled inside the walls: {}", food);
 		MinecraftMode.LOGGER.info("[city] safe zone: {}", report);
 	}
 

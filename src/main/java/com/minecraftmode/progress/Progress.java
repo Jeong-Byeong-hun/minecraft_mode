@@ -14,10 +14,14 @@ import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairDef;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -43,6 +47,8 @@ public final class Progress {
 
 	public static void init() {
 		ServerLivingEntityEvents.AFTER_DEATH.register(Progress::afterDeath);
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> Contribution.forget(handler.player.getUUID()));
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> Contribution.clear());
 		ServerPlayerEvents.JOIN.register(Titles::apply);
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 100 == 0) {
@@ -65,10 +71,11 @@ public final class Progress {
 	// ------------------------------------------------------------------ events
 
 	private static void afterDeath(final LivingEntity entity, final DamageSource source) {
-		if (!(source.getEntity() instanceof ServerPlayer killer)) {
-			return;
+		Set<ServerPlayer> credited = new LinkedHashSet<>();
+		for (Contribution.Share share : Contribution.shares(entity, source)) {
+			credited.addAll(sharers(share.player(), entity, Parties.onlineMembers(share.player())));
 		}
-		for (ServerPlayer player : sharers(killer, entity, Parties.onlineMembers(killer))) {
+		for (ServerPlayer player : credited) {
 			if (entity instanceof NamedMob named) {
 				set(player, get(player).withNamedKill(named.def().id()));
 				Bounties.progress(player, BountyKind.KILL_NAMED, named.def().id(), 1);
@@ -82,8 +89,9 @@ public final class Progress {
 	}
 
 	/**
-	 * Who a kill counts for: the killer, and every other member of their party in the same world within {@link #SHARE_RANGE} of
-	 * the kill, so a party hunting together fills its codex and bounties together.
+	 * Who a kill counts for through {@code killer} (each contributor of {@link Contribution#shares}): them, and every other member of
+	 * their party in the same world within {@link #SHARE_RANGE} of the kill, so a party hunting together fills its codex and bounties
+	 * together.
 	 */
 	public static List<ServerPlayer> sharers(final ServerPlayer killer, final LivingEntity dead, final List<ServerPlayer> party) {
 		List<ServerPlayer> out = new ArrayList<>();

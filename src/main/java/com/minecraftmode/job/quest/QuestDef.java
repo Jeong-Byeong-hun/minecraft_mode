@@ -9,7 +9,9 @@ import net.minecraft.world.item.Item;
 /**
  * One advancement trial: defeat the listed enemies, collect the trial tokens they drop while the
  * quest is active, and bring the tokens plus the extra materials (essence, boss drops) back to the
- * class trainer. Ids are saved in player data, so never rename them.
+ * class trainer. A trial without goals, tokens or materials ({@link #instant()}, the first choice of
+ * class) is no trial at all: the trainer grants the tier on the spot. Ids are saved in player data,
+ * so never rename them.
  */
 public record QuestDef(
 	String id,
@@ -38,6 +40,11 @@ public record QuestDef(
 
 	/** Extra item handed in at the end (essence, condensed essence, boss drops). */
 	public record Material(Item item, int count) {
+	}
+
+	/** Nothing to do: accepting it advances right away. */
+	public boolean instant() {
+		return this.kills.isEmpty() && this.tokenCount == 0 && this.materials.isEmpty();
 	}
 
 	public String nameKey() {

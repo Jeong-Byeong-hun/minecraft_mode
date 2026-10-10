@@ -12,7 +12,9 @@ import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.core.component.DataComponents;
@@ -249,7 +251,8 @@ public final class ShopOffers {
 	/**
 	 * Class gear for the visitor: for every 10-level bracket up to one above their own, the bracket's
 	 * shop weapon and shop armor piece of their class (everything else only drops; see {@link GearIndex}).
-	 * Players without a class see the Lv 10 items of every class. Plus essence and the class reset scroll.
+	 * Players without a class see the Lv 10 items of every class. Plus essence, the class reset scroll
+	 * and a buyback line for every kind of class gear the visitor carries.
 	 */
 	private static List<Trade> guild(final @Nullable Player player) {
 		JobData data = player == null ? JobData.DEFAULT : JobProgression.get(player);
@@ -270,7 +273,22 @@ public final class ShopOffers {
 		}
 		list.add(sell(ModItems.ESSENCE, 6, ModItems.COPPER_COIN, 2));
 		list.add(buy(ModItems.GOLD_COIN, 4, ModItems.CLASS_RESET_SCROLL, 1));
+		if (player != null) {
+			list.addAll(buybacks(player));
+		}
 		return list;
+	}
+
+	/** Class gear the visitor carries (worn armor excluded), one line per item kind. */
+	private static List<Trade> buybacks(final Player player) {
+		Map<String, ClassGear> carried = new LinkedHashMap<>();
+		for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+			ClassGear gear = stack.isEmpty() ? null : ClassGear.of(stack);
+			if (gear != null) {
+				carried.putIfAbsent(gear.id(), gear);
+			}
+		}
+		return carried.values().stream().map(GearShop::buyback).toList();
 	}
 
 	private static Trade sell(final ItemLike goods, final int goodsCount, final ItemLike coin, final int coinCount) {

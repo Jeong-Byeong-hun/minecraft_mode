@@ -5,6 +5,7 @@ import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.network.AuctionActionPayload;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.progress.ResetCycle;
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -358,7 +359,7 @@ public class AuctionScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-		if (tab == Tab.SELL && event.button() == 0) {
+		if (tab == Tab.SELL && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
 			int slot = this.gridSlot(event.x(), event.y());
 			if (slot >= 0) {
 				sellSlot = slot;

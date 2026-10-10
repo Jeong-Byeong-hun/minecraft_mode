@@ -35,6 +35,7 @@ import com.minecraftmode.network.AuctionActionPayload;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.progress.Achievements;
 import com.minecraftmode.progress.CollectionBonuses;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
@@ -56,6 +57,7 @@ import com.minecraftmode.talent.Talents;
 import com.minecraftmode.worldgen.lair.LairChestBlock;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -126,10 +128,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			checkProgress(server, connection);
 			screens(context, server, connection);
 			checkNewCycle(context, server, connection);
-			// Let the server catch up before the world closes: Fabric's client gametest close() submits a blocking task to the server
-			// (IntegratedServer.halt) right as the tick phase starts, and a server that is behind schedule skips its idle task window and
-			// parks on the test phaser first - both sides then wait on each other forever (seen once after a 65-tick lag spike).
-			context.waitTicks(40);
+			WorldClose.prepare(context, server);
 		}
 	}
 
@@ -557,6 +556,92 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			return shared.size() + " credited";
 		});
 		MinecraftMode.LOGGER.info("[endgame] kill sharing: {}", report);
+
+		String contribution = server.computeOnServer(s -> {
+			// the split itself: shares by damage, hitters under 5% dropped, the group bonus
+			java.util.Map<String, Float> split = Contribution.split(new java.util.LinkedHashMap<>(java.util.Map.of("a", 40.0F, "b", 60.0F)));
+			require(split.keySet().iterator().next().equals("b") && Math.abs(split.get("b") - 0.6F) < 1.0E-4F && Math.abs(split.get("a") - 0.4F) < 1.0E-4F,
+				"60:40 damage should split 0.6/0.4 best first, got " + split);
+			java.util.Map<String, Float> tagged = Contribution.split(new java.util.LinkedHashMap<>(java.util.Map.of("main", 97.0F, "tap", 3.0F)));
+			require(tagged.size() == 1 && tagged.get("main") == 1.0F, "a 3% tap should get nothing, got " + tagged);
+			require(Contribution.groupMultiplier(1) == 1.0F && Math.abs(Contribution.groupMultiplier(2) - 1.2F) < 1.0E-4F
+				&& Math.abs(Contribution.groupMultiplier(9) - 1.8F) < 1.0E-4F, "group bonus +20% per extra hunter up to five");
+
+			// a real fight: the player and Carol hurt a zombie, Carol finishes it; both share by the health it really lost
+			ServerLevel level = s.overworld();
+			ServerPlayer player = connection.getServerPlayer();
+			FakePlayer carol = FakePlayer.get(level, new GameProfile(UUID.nameUUIDFromBytes("Carol".getBytes()), "Carol"));
+			carol.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0.0F, 0.0F);
+			net.minecraft.world.entity.monster.zombie.Zombie zombie = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			zombie.snapTo(player.getX() + 3, player.getY(), player.getZ(), 0.0F, 0.0F);
+			zombie.setNoAi(true);
+			level.addFreshEntity(zombie);
+			float max = zombie.getMaxHealth();
+			zombie.hurtServer(level, player.damageSources().playerAttack(player), 3.0F);
+			float byPlayer = max - zombie.getHealth();
+			require(zombie.isAlive() && byPlayer > 0.0F && byPlayer < max / 2, "the player's hit should take less than half, took " + byPlayer + " of " + max);
+			zombie.hurtServer(level, carol.damageSources().playerAttack(carol), 1000.0F);
+			require(!zombie.isAlive(), "the zombie should be dead");
+			var dealt = Contribution.dealt(zombie);
+			require(Math.abs(dealt.get(player.getUUID()) - byPlayer) < 1.0E-3F && Math.abs(dealt.get(carol.getUUID()) - (max - byPlayer)) < 1.0E-3F,
+				"recorded damage should be the health lost, no overkill: player " + byPlayer + ", Carol " + (max - byPlayer) + ", got " + dealt);
+			List<Contribution.Share> shares = Contribution.shares(zombie, carol.damageSources().playerAttack(carol));
+			require(shares.size() == 2 && shares.getFirst().player() == carol && Math.abs(shares.get(1).fraction() - byPlayer / max) < 1.0E-3F,
+				"the player and the killer should share by damage, got " + shares);
+
+			// killed by something else right after a player hit it: the hitter still gets it all; a fresh mob killed by nothing gets nobody
+			net.minecraft.world.entity.monster.zombie.Zombie burnt = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			burnt.snapTo(player.getX() + 3, player.getY(), player.getZ() + 2, 0.0F, 0.0F);
+			burnt.setNoAi(true);
+			level.addFreshEntity(burnt);
+			burnt.hurtServer(level, player.damageSources().playerAttack(player), 4.0F);
+			burnt.hurtServer(level, player.damageSources().magic(), 1000.0F);
+			List<Contribution.Share> dot = Contribution.shares(burnt, player.damageSources().magic());
+			require(dot.size() == 1 && dot.getFirst().player() == player && dot.getFirst().fraction() == 1.0F, "a damage-over-time kill should count for the hitter, got " + dot);
+			net.minecraft.world.entity.monster.zombie.Zombie lone = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			lone.snapTo(player.getX() + 3, player.getY(), player.getZ() - 2, 0.0F, 0.0F);
+			level.addFreshEntity(lone);
+			lone.hurtServer(level, player.damageSources().magic(), 1000.0F);
+			require(Contribution.shares(lone, player.damageSources().magic()).isEmpty(), "a monster no player touched counts for nobody");
+			net.minecraft.world.entity.monster.zombie.Zombie removed = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			removed.snapTo(player.getX() + 5, player.getY(), player.getZ(), 0.0F, 0.0F);
+			removed.setNoAi(true);
+			level.addFreshEntity(removed);
+			removed.hurtServer(level, player.damageSources().playerAttack(player), 2.0F);
+			removed.kill(level);
+			require(Contribution.shares(removed, removed.damageSources().genericKill()).isEmpty(), "a monster removed with /kill pays nobody, even right after a hit");
+
+			// support: Dave buffs and heals the player and debuffs the monster; he earns credit without hitting it
+			FakePlayer dave = FakePlayer.get(level, new GameProfile(UUID.nameUUIDFromBytes("Dave".getBytes()), "Dave"));
+			net.minecraft.world.entity.monster.zombie.Zombie fought = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			fought.snapTo(player.getX() + 3, player.getY(), player.getZ() + 4, 0.0F, 0.0F);
+			fought.setNoAi(true);
+			level.addFreshEntity(fought);
+			Contribution.buffed(dave, player, 200);
+			float start = fought.getHealth();
+			fought.hurtServer(level, player.damageSources().playerAttack(player), 3.0F);
+			float buffedHit = start - fought.getHealth();
+			float fromBuff = Contribution.dealt(fought).getOrDefault(dave.getUUID(), 0.0F);
+			require(buffedHit > 0.0F && Math.abs(fromBuff - buffedHit * Contribution.BUFF_SHARE) < 1.0E-3F,
+				"a buff should earn " + Contribution.BUFF_SHARE + " of the buffed player's damage " + buffedHit + ", got " + fromBuff);
+			Contribution.healed(dave, player, 4.0F);
+			float afterHeal = Contribution.dealt(fought).get(dave.getUUID());
+			require(afterHeal > fromBuff && afterHeal <= fromBuff + 4.0F * Contribution.HEAL_WEIGHT + 1.0E-3F,
+				"healing a fighting player should count toward their fight, got " + fromBuff + " -> " + afterHeal);
+			Contribution.healed(dave, player, 0.0F);
+			require(Contribution.dealt(fought).get(dave.getUUID()) == afterHeal, "overhealing (nothing restored) counts for nothing");
+			Contribution.debuffed(dave, fought, 200);
+			fought.damageCooldownTime = 0; // a later blow, not one swallowed by the hurt cooldown of the last
+			float before = fought.getHealth();
+			fought.hurtServer(level, carol.damageSources().playerAttack(carol), 2.0F);
+			float carolHit = before - fought.getHealth();
+			float afterDebuff = Contribution.dealt(fought).get(dave.getUUID());
+			require(carolHit > 0.0F && Math.abs(afterDebuff - afterHeal - carolHit * Contribution.DEBUFF_SHARE) < 1.0E-3F,
+				"a debuff should earn " + Contribution.DEBUFF_SHARE + " of others' damage " + carolHit + ", got " + afterHeal + " -> " + afterDebuff);
+			fought.discard();
+			return String.format(java.util.Locale.ROOT, "player %.0f%% / Carol %.0f%%", shares.get(1).fraction() * 100, shares.getFirst().fraction() * 100);
+		});
+		MinecraftMode.LOGGER.info("[endgame] contribution: {}", contribution);
 	}
 
 	private static void checkTalents(final TestServerContext server, final TestServerConnection connection) {
@@ -717,6 +802,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 		context.waitTicks(5);
 		shot(context, "endgame_talents");
 		requireFits(context, "talents");
+		clickTalent(context, server, connection);
 		for (String tab : new String[] {"codex", "achievements", "titles"}) {
 			CodexScreen.showTab(tab);
 			context.runOnClient(minecraft -> minecraft.gui.setScreen(new CodexScreen()));
@@ -757,6 +843,26 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ helpers
 
 	/** A screenshot without recipe and advancement toasts over the screen. */
+	/** A left click on a node through the real mouse input spends a point (SDL numbers the left button 1, not 0). */
+	private static void clickTalent(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		String node = "warrior.guard.0";
+		int before = server.computeOnServer(s -> Talents.rank(connection.getServerPlayer(), node));
+		// the middle of the second branch's first node (TalentScreen: 320 x 236 panel, nodes at x 8 + branch * 102, y 40, 100 x 30)
+		double[] pos = context.computeOnClient(minecraft -> {
+			double scale = minecraft.getWindow().getGuiScale();
+			int left = (minecraft.getWindow().getGuiScaledWidth() - 320) / 2;
+			int top = (minecraft.getWindow().getGuiScaledHeight() - 236) / 2;
+			return new double[] {(left + 8 + 102 + 50) * scale, (top + 40 + 15) * scale};
+		});
+		context.getInput().setCursorPos(pos[0], pos[1]);
+		context.waitTicks(2);
+		context.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+		context.waitTicks(10);
+		int after = server.computeOnServer(s -> Talents.rank(connection.getServerPlayer(), node));
+		require(after == before + 1, "clicking " + node + " should spend a point, rank " + before + " -> " + after);
+		require(context.computeOnClient(minecraft -> Talents.rank(minecraft.player, node)) == after, "the client should see the new rank");
+	}
+
 	private static void shot(final ClientGameTestContext context, final String name) {
 		context.runOnClient(minecraft -> minecraft.gui.toastManager().clear());
 		context.waitTicks(2);

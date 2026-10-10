@@ -1,5 +1,6 @@
 package com.minecraftmode.craft;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.registry.ModMenus;
 import java.util.List;
@@ -57,9 +58,21 @@ public class CraftMenu extends AbstractContainerMenu {
 	public static int makeable(final Player player, final CraftRecipes.Recipe recipe) {
 		int times = Integer.MAX_VALUE;
 		for (CraftRecipes.Ingredient in : recipe.ingredients()) {
-			times = Math.min(times, JobProgression.count(player.getInventory(), in.item()) / in.count());
+			times = Math.min(times, held(player, recipe, in) / in.count());
 		}
 		return times;
+	}
+
+	/**
+	 * How much of {@code in} {@code player} can put in: essence ingredients take either kind ({@link Essence}), except in
+	 * recipes that make essence, where condensed essence would pay for the essence it is made from.
+	 */
+	public static int held(final Player player, final CraftRecipes.Recipe recipe, final CraftRecipes.Ingredient in) {
+		return eitherEssence(player, recipe) ? Essence.held(player.getInventory(), in.item()) : JobProgression.count(player.getInventory(), in.item());
+	}
+
+	private static boolean eitherEssence(final Player player, final CraftRecipes.Recipe recipe) {
+		return !Essence.is(recipe.preview(player).getItem());
 	}
 
 	@Override
@@ -83,9 +96,14 @@ public class CraftMenu extends AbstractContainerMenu {
 		}
 		int made = 0;
 		int doubled = 0;
+		boolean eitherEssence = eitherEssence(player, recipe);
 		for (int i = 0; i < times; i++) {
 			for (CraftRecipes.Ingredient in : recipe.ingredients()) {
-				JobProgression.removeItems(player.getInventory(), in.item(), in.count());
+				if (eitherEssence) {
+					Essence.take(player.getInventory(), in.item(), in.count());
+				} else {
+					JobProgression.removeItems(player.getInventory(), in.item(), in.count());
+				}
 			}
 			ItemStack out = recipe.output().apply(player);
 			if (player.getRandom().nextInt(100) < this.profession.doubleChance(player)) {

@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
@@ -43,7 +44,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 
 	private boolean canPay(final ClassGear target) {
 		return this.minecraft.player != null && (this.minecraft.player.isCreative()
-			|| this.have(target) >= GearUpgrades.ETHER_COST && Coins.total(this.minecraft.player) >= GearUpgrades.coinCost(target, this.menu.input()));
+			|| this.have(target) >= GearUpgrades.etherCost(target) && Coins.total(this.minecraft.player) >= GearUpgrades.coinCost(target, this.menu.input()));
 	}
 
 	private static final int REROLL_X = 6;
@@ -90,7 +91,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 
 		List<ClassGear> targets = this.menu.targets();
 		if (this.menu.input().isEmpty()) {
-			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.insert", GearUpgrades.ETHER_COST), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.insert", GearUpgrades.etherCost(ItemLevels.MIN_BRACKET), GearUpgrades.etherCost(ItemLevels.MAX_BRACKET)), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
 			return;
 		}
 		if (targets.isEmpty()) {
@@ -108,7 +109,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			g.text(this.font, name, x + ROW_X + 21, ry + 2, 0xFFFFFFFF, false);
 			String coins = "◎" + Coins.format(GearUpgrades.coinCost(target, this.menu.input()));
 			g.text(this.font, coins, x + ROW_X + ROW_W - 3 - this.font.width(coins), ry + 2, ok ? 0xFFFFD27F : 0xFFFF8080, false);
-			String cost = this.have(target) + "/" + GearUpgrades.ETHER_COST;
+			String cost = this.have(target) + "/" + GearUpgrades.etherCost(target);
 			g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.cost", target.level(), GearUpgrades.grade(target)), x + ROW_X + 21, ry + 11, 0xFFE0C090, false);
 			g.text(this.font, cost, x + ROW_X + ROW_W - 3 - this.font.width(cost), ry + 11, ok ? 0xFF7FFFD4 : 0xFFFF8080, false);
 		}

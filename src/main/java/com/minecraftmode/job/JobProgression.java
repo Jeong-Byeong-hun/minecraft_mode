@@ -77,7 +77,8 @@ public final class JobProgression {
 		for (int tier = data.tier() + 1; tier <= 4; tier++) {
 			int need = levelForTier(tier);
 			if (need > from && need <= to) {
-				player.sendSystemMessage(Component.translatable("message.minecraft_mode.job.can_advance").withStyle(ChatFormatting.AQUA));
+				String key = data.tier() == 0 ? "message.minecraft_mode.job.can_choose" : "message.minecraft_mode.job.can_advance";
+				player.sendSystemMessage(Component.translatable(key).withStyle(ChatFormatting.AQUA));
 				break;
 			}
 		}

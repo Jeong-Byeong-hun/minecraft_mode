@@ -29,6 +29,7 @@ import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearUpgrades;
@@ -65,6 +66,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -93,7 +95,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			context.waitTicks(5);
 
 			checkArmor(server, connection);
-			checkUpgrade(server);
+			checkUpgrade(server, connection);
 			checkNamed(context, server, connection);
 			checkBossPatterns(context, server, connection);
 			checkRaidFlow(context, server, connection);
@@ -101,10 +103,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			checkLoot(context, server, connection);
 			raidBoard(context, server, connection);
 			arenaShots(context, server, connection);
-			// Let the server catch up before the world closes: Fabric's client gametest close() submits a blocking task to the server
-			// (IntegratedServer.halt) right as the tick phase starts, and a server that is behind schedule skips its idle task window and
-			// parks on the test phaser first - both sides then wait on each other forever (seen once after a 65-tick lag spike).
-			context.waitTicks(40);
+			WorldClose.prepare(context, server);
 		}
 	}
 
@@ -246,8 +245,35 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		require(report.isEmpty(), report);
 	}
 
-	private static void checkUpgrade(final TestServerContext server) {
+	private static void checkUpgrade(final TestServerContext server, final TestServerConnection connection) {
 		String report = server.computeOnServer(s -> {
+			if (GearUpgrades.etherCost(10) != 3) {
+				return "evolving into Lv 10-19 gear should take 3 ether, takes " + GearUpgrades.etherCost(10);
+			}
+			for (int bracket = 20; bracket <= 100; bracket += 10) {
+				if (GearUpgrades.etherCost(bracket) < GearUpgrades.etherCost(bracket - 10)) {
+					return "ether cost should climb with the bracket, Lv " + bracket + " is cheaper";
+				}
+			}
+			// fuse 3 -> 1 of the next grade, split 1 -> 3 of the grade below
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			player.setItemInHand(InteractionHand.MAIN_HAND, EvolutionEtherItem.of(10, 4));
+			player.setShiftKeyDown(false);
+			player.getMainHandItem().use(player.level(), player, InteractionHand.MAIN_HAND);
+			int fused = ether(player, 20);
+			int left = ether(player, 10);
+			player.getInventory().clearContent();
+			player.setItemInHand(InteractionHand.MAIN_HAND, EvolutionEtherItem.of(30, 1));
+			player.setShiftKeyDown(true);
+			player.getMainHandItem().use(player.level(), player, InteractionHand.MAIN_HAND);
+			player.setShiftKeyDown(false);
+			int split = ether(player, 20);
+			int whole = ether(player, 30);
+			player.getInventory().clearContent();
+			if (fused != 1 || left != 1 || split != EvolutionEtherItem.FUSE || whole != 0) {
+				return "ether fuse/split: 4x Lv10 -> " + fused + " Lv20 + " + left + " Lv10, 1x Lv30 -> " + split + " Lv20 + " + whole + " Lv30";
+			}
 			ClassGear from = ClassGear.of(JobWeapons.of(JobClass.ROGUE).getFirst());
 			List<ClassGear> targets = GearUpgrades.targets(from);
 			if (targets.isEmpty()) {
@@ -266,6 +292,16 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			return "";
 		});
 		require(report.isEmpty(), report);
+	}
+
+	private static int ether(final ServerPlayer player, final int grade) {
+		int total = 0;
+		for (ItemStack stack : player.getInventory()) {
+			if (stack.is(ModItems.EVOLUTION_ETHER) && EvolutionEtherItem.grade(stack) == grade) {
+				total += stack.getCount();
+			}
+		}
+		return total;
 	}
 
 	// ------------------------------------------------------------------ named monsters

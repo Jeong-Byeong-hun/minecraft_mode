@@ -20,11 +20,13 @@ import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ClassAbilities;
+import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Actions;
+import com.minecraftmode.job.skill.Movement;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.Archetype;
@@ -32,6 +34,7 @@ import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.GearIndex;
+import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.network.QuestActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
@@ -45,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -54,6 +58,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -102,16 +107,14 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkSkillKey(context, server, connection);
 			checkGating(server, connection);
 			checkNewClasses(server, connection);
+			checkSafeMovement(context, server, connection);
 			checkEngravingStacks(context, server, connection);
 			checkEngravingTable(context, server, connection);
 			checkBasicShot(context, server, connection);
 			checkGuildAndDrops(context, server, connection);
 			jobScreen(context, server);
 			castEverySkill(context, server, connection);
-			// Let the server catch up before the world closes: Fabric's client gametest close() submits a blocking task to the server
-			// (IntegratedServer.halt) right as the tick phase starts, and a server that is behind schedule skips its idle task window and
-			// parks on the test phaser first - both sides then wait on each other forever (seen once after a 65-tick lag spike).
-			context.waitTicks(40);
+			WorldClose.prepare(context, server);
 		}
 	}
 
@@ -139,7 +142,12 @@ public class JobClientGameTest implements FabricClientGameTest {
 			for (int tier = 1; tier <= 4; tier++) {
 				QuestDef quest = Quests.forTier(job, tier);
 				require(quest != null && quest.job() == job && quest.tier() == tier, "missing trial for " + job.id() + " tier " + tier);
-				require(quest.materials().stream().anyMatch(m -> m.item() == ModItems.ESSENCE || m.item() == ModItems.CONDENSED_ESSENCE), quest.id() + " should cost essence");
+				if (tier == 1) {
+					require(quest.instant(), quest.id() + " (the first choice of class) should need no trial");
+				} else {
+					require(!quest.kills().isEmpty() && quest.tokenCount() > 0, quest.id() + " should be a real trial");
+					require(quest.materials().stream().anyMatch(m -> m.item() == ModItems.ESSENCE || m.item() == ModItems.CONDENSED_ESSENCE), quest.id() + " should cost essence");
+				}
 			}
 		}
 		final int skillTotal = skills;
@@ -220,9 +228,10 @@ public class JobClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ progression
 
 	/**
-	 * Class choice and advancement through the warrior trainer: the dialog opens over the network,
-	 * the trial is accepted like the button does, kills count, tokens drop into the inventory, and
-	 * completing takes the tokens and materials and promotes the player. Ends at warrior tier 2,
+	 * Class choice and advancement through the warrior trainer: the dialog opens over the network and
+	 * choosing the class at level 10 (like the button does) makes a tier 1 warrior at once. The tier 2
+	 * trial then counts kills, drops tokens into the inventory, and completing takes the tokens and
+	 * materials and promotes the player. Ends at warrior tier 2,
 	 * level 25, with an empty inventory and no active trial.
 	 */
 	private static void checkProgression(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
@@ -245,7 +254,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			}
 			JobProgression.addExp(player, toTen);
 			require(JobProgression.get(player).level() == 10, "level after " + toTen + " exp: " + JobProgression.get(player).level());
-			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.AVAILABLE, "the first warrior trial should open at level 10");
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.AVAILABLE, "the warrior class should open at level 10");
 			return trainer.getId();
 		});
 
@@ -262,64 +271,61 @@ public class JobClientGameTest implements FabricClientGameTest {
 
 		int[] tokens = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			QuestDef quest = QuestService.active(player);
-			require(quest != null && quest.id().equals("warrior_1"), "accepting should start warrior_1, got " + (quest == null ? null : quest.id()));
-			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.BUSY, "other trainers should see a busy player");
-			require(!QuestService.complete(player, JobClass.WARRIOR), "an unfinished trial cannot be completed");
-			// 15 zombies killed by the player count; one killed by something else does not
-			for (int i = 0; i < 16; i++) {
-				var zombie = EntityTypes.ZOMBIE.create(player.level(), EntitySpawnReason.COMMAND);
-				require(zombie != null, "could not create a zombie");
-				zombie.snapTo(0.5 + i % 4, -60, -6.5 - i / 4, 0.0F, 0.0F);
-				zombie.setNoAi(true);
-				player.level().addFreshEntity(zombie);
-				zombie.hurtServer(player.level(), i == 0 ? player.damageSources().generic() : player.damageSources().playerAttack(player), 1000.0F);
-			}
-			int kills = QuestService.get(player).progress(0);
-			int medals = JobProgression.count(player.getInventory(), Quests.RUSTED_MEDAL);
-			boolean dropped = !player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(16), e -> e.getItem().is(Quests.RUSTED_MEDAL)).isEmpty();
-			require(kills == 15, "15 zombie kills should count, got " + kills);
-			require(medals > 0 && !dropped, "rusted medals should go straight into the inventory (got " + medals + ", dropped " + dropped + ")");
-			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.IN_PROGRESS, "the trial should still need its essence");
-
-			// top up to exactly the 6 medals and 4 essence it needs, plus one spare essence
-			if (medals < 6) {
-				player.getInventory().add(new ItemStack(Quests.RUSTED_MEDAL, 6 - medals));
-			}
-			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 5));
-			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.READY, "the trial should be ready to complete");
-			require(QuestService.complete(player, JobClass.WARRIOR), "completing warrior_1 failed");
 			JobData data = JobProgression.get(player);
-			require(data.job() == JobClass.WARRIOR && data.tier() == 1, "completing the first trial should make a tier 1 warrior");
-			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 1, "the trial should take 4 of 5 essence");
-			require(JobProgression.count(player.getInventory(), Quests.RUSTED_MEDAL) == Math.max(0, medals - 6), "the trial should take 6 medals");
-			require(QuestService.active(player) == null, "no trial should be active after completing");
+			require(data.job() == JobClass.WARRIOR && data.tier() == 1, "choosing at level 10 should make a tier 1 warrior at once, got " + data.job().id() + " " + data.tier());
+			require(QuestService.active(player) == null, "the first class needs no trial");
 			JobStats.refresh(player);
 			double maxHealth = player.getAttributeValue(Attributes.MAX_HEALTH);
 			require(maxHealth == 25.0, "warrior tier 1 at level 10 should have 20 + 4 (Iron Body) + 1 (level) health, got " + maxHealth);
 			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.OTHER_CLASS, "other trainers should turn a warrior away");
 
-			// tier 2: level gate, abandon, then the materials
+			// tier 2: level gate, abandon, kills and tokens, then the materials
 			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.LOW_LEVEL, "tier 2 should need level 25");
 			JobProgression.set(player, JobProgression.get(player).withProgress(25, 0));
 			require(QuestService.accept(player, JobClass.WARRIOR), "accepting warrior_2 failed");
 			QuestService.abandon(player);
 			require(QuestService.active(player) == null, "abandoning should clear the trial");
 			require(QuestService.accept(player, JobClass.WARRIOR), "accepting warrior_2 again failed");
-			QuestService.set(player, QuestService.get(player).withProgress(0, 12));
-			player.getInventory().add(new ItemStack(Quests.CHAMPIONS_LAUREL, 8));
-			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 15));
+			QuestDef quest = QuestService.active(player);
+			require(quest != null && quest.id().equals("warrior_2"), "accepting should start warrior_2, got " + (quest == null ? null : quest.id()));
+			require(QuestService.status(player, JobClass.ROGUE) == QuestService.Status.BUSY, "other trainers should see a busy player");
+			require(!QuestService.complete(player, JobClass.WARRIOR), "an unfinished trial cannot be completed");
+			// 6 pillagers killed by the player count; one killed by something else does not
+			for (int i = 0; i < 7; i++) {
+				var pillager = EntityTypes.PILLAGER.create(player.level(), EntitySpawnReason.COMMAND);
+				require(pillager != null, "could not create a pillager");
+				pillager.snapTo(0.5 + i % 4, -60, -6.5 - i / 4, 0.0F, 0.0F);
+				pillager.setNoAi(true);
+				player.level().addFreshEntity(pillager);
+				pillager.hurtServer(player.level(), i == 0 ? player.damageSources().generic() : player.damageSources().playerAttack(player), 1000.0F);
+			}
+			int kills = QuestService.get(player).progress(0);
+			int laurels = JobProgression.count(player.getInventory(), Quests.CHAMPIONS_LAUREL);
+			boolean dropped = !player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(16), e -> e.getItem().is(Quests.CHAMPIONS_LAUREL)).isEmpty();
+			require(kills == 6, "6 pillager kills should count, got " + kills);
+			require(laurels > 0 && !dropped, "laurels should go straight into the inventory (got " + laurels + ", dropped " + dropped + ")");
+			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.IN_PROGRESS, "the trial should still need its essence");
+
+			// top up to exactly the 4 laurels and 8 essence it needs, plus one spare essence
+			if (laurels < 4) {
+				player.getInventory().add(new ItemStack(Quests.CHAMPIONS_LAUREL, 4 - laurels));
+			}
+			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 9));
 			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.READY, "warrior_2 should be ready");
 			require(QuestService.complete(player, JobClass.WARRIOR), "completing warrior_2 failed");
 			require(JobProgression.get(player).tier() == 2, "tier should be 2");
-			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 0, "warrior_2 should take 16 essence");
+			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 1, "warrior_2 should take 8 of 9 essence");
+			require(JobProgression.count(player.getInventory(), Quests.CHAMPIONS_LAUREL) == Math.max(0, laurels - 4), "warrior_2 should take 4 laurels");
+			require(QuestService.active(player) == null, "no trial should be active after completing");
+			// the trial kills gave EXP; later checks expect a fresh level 25
+			JobProgression.set(player, JobProgression.get(player).withProgress(25, 0));
 			player.getInventory().clearContent();
 			for (ClassTrainer trainer : player.level().getEntitiesOfClass(ClassTrainer.class, player.getBoundingBox().inflate(16))) {
 				trainer.discard();
 			}
-			return new int[] {medals};
+			return new int[] {laurels};
 		});
-		MinecraftMode.LOGGER.info("[job] trainer dialog + network accept, 15 kills, {} medals dropped into the inventory, warrior_1 and warrior_2 completed", tokens[0]);
+		MinecraftMode.LOGGER.info("[job] trainer dialog + network class choice (tier 1 at once), warrior_2: 6 kills, {} laurels dropped into the inventory, completed", tokens[0]);
 	}
 
 	// ------------------------------------------------------------------ skills
@@ -479,16 +485,51 @@ public class JobClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[job] staff basic shot hit a target 6 blocks away");
 	}
 
+	/** Guild lines that sell to the visitor (buyback lines, which take class gear, left out). */
+	private static List<ShopOffers.Trade> sales(final List<ShopOffers.Trade> trades) {
+		return trades.stream().filter(t -> ClassGear.of(new ItemStack(t.cost())) == null).toList();
+	}
+
 	private static void checkGuildAndDrops(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		int[] offers = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			int warriorTier2 = ShopOffers.trades(ShopType.GUILD, player).size();
+			int warriorTier2 = sales(ShopOffers.trades(ShopType.GUILD, player)).size();
 			JobData saved = JobProgression.get(player);
 			JobProgression.set(player, saved.withJob(JobClass.NONE, 0));
-			int none = ShopOffers.trades(ShopType.GUILD, player).size();
+			int none = sales(ShopOffers.trades(ShopType.GUILD, player)).size();
 			JobProgression.set(player, saved);
 			return new int[] {warriorTier2, none};
 		});
+		// the guild buys any class gear back, own class included (one line per kind, whatever its components)
+		String buyback = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			WeaponDef mage = JobWeapons.all().stream().filter(d -> d.job() == JobClass.MAGE).findFirst().orElseThrow();
+			WeaponDef warrior = JobWeapons.all().stream().filter(d -> d.job() == JobClass.WARRIOR).findFirst().orElseThrow();
+			ItemStack named = new ItemStack(JobWeapons.item(mage));
+			named.set(DataComponents.CUSTOM_NAME, Component.literal("Loot"));
+			List<ItemStack> before = player.getInventory().getNonEquipmentItems().stream().map(ItemStack::copy).toList();
+			player.getInventory().add(named.copy());
+			player.getInventory().add(new ItemStack(JobWeapons.item(mage)));
+			player.getInventory().add(new ItemStack(JobWeapons.item(warrior)));
+			List<ShopOffers.Trade> trades = ShopOffers.trades(ShopType.GUILD, player);
+			List<ShopOffers.Trade> buys = trades.stream().filter(t -> ClassGear.of(new ItemStack(t.cost())) != null).toList();
+			for (int slot = 0; slot < before.size(); slot++) {
+				player.getInventory().setItem(slot, before.get(slot));
+			}
+			List<ShopOffers.Trade> mageBuys = buys.stream().filter(t -> t.cost().asItem() == JobWeapons.item(mage)).toList();
+			long warriorBuys = buys.stream().filter(t -> t.cost().asItem() == JobWeapons.item(warrior)).count();
+			if (mageBuys.size() != 1 || warriorBuys != 1) {
+				return "a warrior carrying two mage weapons and a warrior weapon should see one buyback line each, got " + mageBuys.size() + " / " + warriorBuys;
+			}
+			ShopOffers.Trade sale = mageBuys.getFirst();
+			int paid = sale.resultCount() * com.minecraftmode.economy.Wallet.value(sale.result().asItem());
+			int expected = GearShop.buybackPrice(ClassGear.of(mage));
+			if (Math.abs(paid - expected) > expected / 4 + 1 || paid >= GearShop.price(ClassGear.of(mage))) {
+				return "the buyback pays " + paid + " copper, expected about " + expected;
+			}
+			return sale.toOffer().satisfiedBy(named, ItemStack.EMPTY) ? "" : "a named mage weapon should satisfy the buyback";
+		});
+		require(buyback.isEmpty(), buyback);
 		// one weapon + one armor piece per bracket up to the next bracket (Lv 25 -> 10, 20, 30); no class: the Lv 10 items of every class
 		int warriorItems = 0;
 		for (int bracket = 10; bracket <= 30; bracket += 10) {
@@ -660,6 +701,124 @@ public class JobClientGameTest implements FabricClientGameTest {
 				moved, reaper.get(EngraveStat.COOLDOWN), hunter.get(EngraveStat.DOUBLE_STRIKE));
 		});
 		MinecraftMode.LOGGER.info("[job] soul reaper and hunter: {}", report);
+	}
+
+	/**
+	 * Movement never kills its caster: a blink looking straight up climbs at most {@link Movement#MAX_RISE} and stops at the edge
+	 * of a platform 10 blocks up, and a leap that rises about 13 blocks lands without fall damage (and only after leaving the ground).
+	 */
+	private static void checkSafeMovement(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("fill 40 -51 40 44 -51 46 minecraft:stone");
+		context.waitTicks(2);
+		JobData[] saved = new JobData[1];
+		String blink = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			saved[0] = JobProgression.get(player);
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.SHINIGAMI, 4).withProgress(80, 0));
+			fill(player);
+			JobStats.refresh(player);
+			player.setHealth(player.getMaxHealth());
+			player.teleportTo(42.5, -50, 40.5);
+			player.snapTo(42.5, -50, 40.5, 0.0F, -90.0F);
+			Vec3 end = Movement.end(player, player.getLookAngle(), 14.0, Movement.rise(player, 14.0));
+			require(end.y - player.getY() <= Movement.MAX_RISE + 1.0E-6, "a blink looking up should climb at most " + Movement.MAX_RISE + ", climbed " + (end.y - player.getY()));
+			require(end.z > 44.0 && end.z < 47.5, "a blink should stop at the platform edge (z 40..47), ended at z " + end.z);
+			ClassAbilities.use(player);
+			return String.format(java.util.Locale.ROOT, "blink up ends %.1f above at z %.1f, flash step to %.1f %.1f", end.y - (-50), end.z, player.getY(), player.getZ());
+		});
+		context.waitTicks(40);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			require(player.getHealth() >= player.getMaxHealth(), "Flash Step off a platform edge should not hurt, health " + player.getHealth());
+			require(player.getY() >= -50.01, "Flash Step should leave the player on the platform, y " + player.getY());
+		});
+		String walls = checkWalls(context, server, connection);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.teleportTo(30.5, -60, 30.5);
+			player.snapTo(30.5, -60, 30.5, 0.0F, 0.0F);
+		});
+		context.waitTicks(5);
+		AtomicBoolean landed = new AtomicBoolean();
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setDeltaMovement(0.0, 1.46, 0.0);
+			player.syncVelocity = true;
+			Movement.guardFall(player, () -> landed.set(true));
+		});
+		context.waitTicks(12);
+		double high = context.computeOnClient(minecraft -> minecraft.player.getY());
+		require(high > -55.0, "the test leap should rise, client y " + high);
+		require(!landed.get(), "a leap should not land before it comes down");
+		context.waitTicks(60);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			require(landed.get(), "the leap should have landed");
+			require(player.getHealth() >= player.getMaxHealth(), "a leap back to its start height should not hurt, health " + player.getHealth());
+			JobProgression.set(player, saved[0]);
+			JobStats.refresh(player);
+			player.removeAllEffects();
+			player.teleportTo(0.5, -60, 0.5);
+		});
+		server.runCommand("fill 40 -51 40 44 -51 46 minecraft:air");
+		MinecraftMode.LOGGER.info("[job] safe movement: {}, {}, leap peak y {}", blink, walls, high);
+	}
+
+	/**
+	 * Blinks never go through what blocks them: in a 2-high corridor a blink looking straight up stays on the floor and stops in
+	 * front of iron bars, a step it cannot climb under the low ceiling stops it, and Flash Step never leaves the player inside blocks.
+	 */
+	private static String checkWalls(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// 3 wide, 2 high, along +z from z 59; iron bars across it at z 66 (their bar is z 66.44..66.56)
+		server.runCommand("fill 59 -60 59 63 -58 73 minecraft:stone");
+		server.runCommand("fill 60 -60 59 62 -59 73 minecraft:air");
+		server.runCommand("fill 60 -60 66 62 -59 66 minecraft:iron_bars");
+		context.waitTicks(2);
+		String bars = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			fill(player);
+			player.setHealth(player.getMaxHealth());
+			player.teleportTo(61.5, -60, 60.5);
+			player.snapTo(61.5, -60, 60.5, 0.0F, -90.0F);
+			Vec3 end = Movement.end(player, player.getLookAngle(), 14.0, Movement.rise(player, 14.0));
+			// the corridor leaves 0.2 blocks of headroom (ceiling at y -58, the player is 1.8 tall)
+			require(end.y >= -60.0 && end.y + player.getBbHeight() <= -58.0 + 1.0E-6, "a blink looking up should stay under the ceiling, ended at y " + end.y);
+			require(end.z > 63.0 && end.z < 66.44, "a blink should stop in front of the iron bars, ended at z " + end.z);
+			// shadowstep's "behind the target" spot: never across the bars, fine along the open corridor
+			require(!Movement.clearLine(player, new Vec3(61.5, -60, 65.6), new Vec3(61.5, -60, 67.2)), "a step behind a target should not cross iron bars");
+			require(Movement.clearLine(player, new Vec3(61.5, -60, 61.0), new Vec3(61.5, -60, 64.0)), "a step along an open corridor should be clear");
+			ClassAbilities.use(player);
+			return String.format(java.util.Locale.ROOT, "under a ceiling stopped at z %.2f before bars", player.getZ());
+		});
+		context.waitTicks(20);
+		server.runOnServer(s -> requireFree(connection.getServerPlayer(), 66.44));
+
+		// a one-block step the ceiling leaves no room to climb
+		server.runCommand("fill 60 -60 66 62 -59 66 minecraft:air");
+		server.runCommand("fill 60 -60 63 62 -60 63 minecraft:stone");
+		context.waitTicks(2);
+		String step = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			fill(player);
+			player.teleportTo(61.5, -60, 60.5);
+			player.snapTo(61.5, -60, 60.5, 0.0F, 0.0F);
+			Vec3 end = Movement.end(player, player.getLookAngle(), 14.0, Movement.rise(player, 14.0));
+			require(Math.abs(end.y + 60.0) < 1.0E-6 && end.z < 62.71, "a blink should stop before a step it cannot climb under a low ceiling, ended at y "
+				+ end.y + " z " + end.z);
+			ClassAbilities.use(player);
+			return String.format(java.util.Locale.ROOT, "before a step at z %.2f", player.getZ());
+		});
+		context.waitTicks(20);
+		server.runOnServer(s -> requireFree(connection.getServerPlayer(), 62.71));
+		server.runCommand("fill 59 -60 59 63 -58 73 minecraft:air");
+		return bars + ", " + step;
+	}
+
+	/** The player is still in the corridor, short of {@code maxZ}, not inside any block and unhurt. */
+	private static void requireFree(final ServerPlayer player, final double maxZ) {
+		require(player.level().noCollision(player), "Flash Step left the player inside blocks at " + player.position());
+		require(player.getY() < -59.0 && player.getZ() < maxZ, "Flash Step went through a wall or ceiling to " + player.position());
+		require(player.getHealth() >= player.getMaxHealth(), "Flash Step in a corridor should not hurt, health " + player.getHealth());
 	}
 
 	private static void fill(final ServerPlayer player) {

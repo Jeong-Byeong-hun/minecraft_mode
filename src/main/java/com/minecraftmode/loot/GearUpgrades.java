@@ -4,6 +4,7 @@ import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.registry.ModDataComponents;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,11 +14,22 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * The blacksmith's evolution: a piece of class gear becomes one of the next pieces of the same class
- * and kind (any weapon for weapons, the same slot for armor) for {@link #ETHER_COST} Evolution Ether
+ * and kind (any weapon for weapons, the same slot for armor) for {@link #etherCost} Evolution Ether
  * of the target's bracket. Engravings that fit the new piece are kept; armor rolls new options.
  */
 public final class GearUpgrades {
-	public static final int ETHER_COST = 50;
+	/** Ether per target bracket (Lv 10, 20, ..., 100): a few early on, climbing in steps. */
+	private static final int[] ETHER_COSTS = {3, 5, 8, 12, 16, 20, 25, 30, 40, 50};
+
+	/** Evolution Ether of the target's bracket needed to evolve into {@code target}. */
+	public static int etherCost(final ClassGear target) {
+		return etherCost(target.bracket());
+	}
+
+	public static int etherCost(final int bracket) {
+		int index = (ItemLevels.bracket(bracket) - ItemLevels.MIN_BRACKET) / 10;
+		return ETHER_COSTS[Math.min(index, ETHER_COSTS.length - 1)];
+	}
 
 	/**
 	 * Coins for evolving {@code from} into {@code target}: half the target bracket's guild price, plus re-tempering of the

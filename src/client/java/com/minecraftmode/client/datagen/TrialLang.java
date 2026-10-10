@@ -82,6 +82,8 @@ final class TrialLang {
 
 		b.add("screen.minecraft_mode.trainer.accept", ko ? "시련 수락" : "Accept trial");
 		b.add("screen.minecraft_mode.trainer.complete", ko ? "시련 완료" : "Complete trial");
+		b.add("screen.minecraft_mode.trainer.choose", ko ? "이 직업으로 전직" : "Choose this class");
+		b.add("screen.minecraft_mode.trainer.instant", ko ? "시련 없이 바로 전직합니다." : "No trial: you advance on the spot.");
 		b.add("screen.minecraft_mode.trainer.abandon", ko ? "포기" : "Abandon");
 		b.add("screen.minecraft_mode.trainer.of", ko ? "%s 교관" : "%s trainer");
 		b.add("screen.minecraft_mode.trainer.other_class", ko
@@ -94,6 +96,7 @@ final class TrialLang {
 			? "이미 다른 시련(%s)을 진행 중입니다. 먼저 완료하거나 포기하세요."
 			: "You are already on another trial (%s). Finish or abandon it first.");
 		b.add("screen.minecraft_mode.trainer.trial", ko ? "%s차 시련: %s" : "Trial %s: %s");
+		b.add("screen.minecraft_mode.trainer.choice", ko ? "%s차 전직: %s" : "Tier %s: %s");
 		b.add("screen.minecraft_mode.trainer.reward", "→ %s");
 		b.add("screen.minecraft_mode.trainer.goal_kill", ko ? "%s 처치" : "Defeat %s");
 		b.add("screen.minecraft_mode.trainer.goal_item", "%s");
@@ -109,14 +112,14 @@ final class TrialLang {
 				"도시 지도 (북쪽)\n\n중앙: 광장 (시작 지점)\n북쪽: 왕성, 레이드 관문\n북서: 마법사 탑, 마법 부여소\n북동: 전사 투기장, 헌터 협회\n서쪽: 구시가지, 그림자 회관"},
 			{"City map (south)\n\nEast: Cathedral, homes\nSouthwest: Archer park, Urahara Shop\nSouth: Market, Alchemist, Guild, forge\nSoutheast: Harbor",
 				"도시 지도 (남쪽)\n\n동쪽: 대성당, 주택가\n남서: 궁수 공원, 우라하라 상점\n남쪽: 시장, 연금술사, 길드, 대장간\n남동: 항구"},
-			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want. Every class has its own trainer, trials, weapons and armor.",
-				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하세요. 직업마다 교관, 시련, 무기와 방어구가 따로 있습니다."},
+			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want: you take the class on the spot. Every class has its own trainer, trials, weapons and armor.",
+				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하면 그 자리에서 바로 전직합니다. 직업마다 교관, 시련, 무기와 방어구가 따로 있습니다."},
 			{"Trainers\n\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate\nUrahara - Soul Reaper\nBiscuit - Hunter",
 				"교관\n\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적\n우라하라 - 사신\n비스킷 - 헌터"},
-			{"Advancement trials\n\nEvery advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
-				"전직 시련\n\n모든 전직은 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
-			{"Weapons and skills\n\nClass weapons are sold at the Guild in the south market. Use skills with R, G, V and Z; open the class screen with K. Skills only work for the weapon's class, tier and level.",
-				"무기와 스킬\n\n직업 무기는 남쪽 시장의 길드에서 팝니다. 스킬은 R, G, V, Z, 직업 창은 K입니다. 스킬은 무기의 직업·차수·레벨 조건을 만족해야 쓸 수 있습니다."},
+			{"Advancement trials\n\nThe first class needs no trial. From tier 2 on, every advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
+				"전직 시련\n\n1차 전직은 시련 없이 바로 됩니다. 2차부터는 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
+			{"Weapons and skills\n\nClass weapons are sold at the Guild in the south market. Use skills with R, X, V and Z; open the class screen with K. Skills only work for the weapon's class, tier and level.",
+				"무기와 스킬\n\n직업 무기는 남쪽 시장의 길드에서 팝니다. 스킬은 R, X, V, Z, 직업 창은 K입니다. 스킬은 무기의 직업·차수·레벨 조건을 만족해야 쓸 수 있습니다."},
 			{"Essence\n\nEssence drops from monsters and iron or better ores. Engrave class gear at the engraving tables in the Guild: up to 3 lines on weapons and 4 on armor, and the same line stacks.",
 				"정수\n\n정수는 몬스터와 철 이상의 광석에서 나옵니다. 길드의 정수 각인대에서 직업 무기는 3줄, 방어구는 4줄까지 각인할 수 있고, 같은 각인은 중첩됩니다."},
 			{"Wallet and supplies\n\nCoins go straight into your wallet and take no inventory space; shops are paid from it (/wallet). You keep your items when you die.\n\nThe Alchemist sells potions and food that last 10 minutes.",

@@ -1,8 +1,8 @@
 package com.minecraftmode.enhance;
 
+import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobProgression;
-import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.progress.Progress;
@@ -100,9 +100,9 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		}
 	}
 
-	/** Essence the player has toward {@code cost}: essence units (condensed = 9) up to +5, condensed essence after. */
+	/** Essence the player has toward {@code cost}: essence units up to +5, condensed essence after (either kind pays, see {@link Essence}). */
 	public static int essenceHeld(final Inventory inventory, final Cost cost) {
-		return cost.condensed() ? JobProgression.count(inventory, ModItems.CONDENSED_ESSENCE) : EngravingMenu.essence(inventory);
+		return Essence.held(inventory, cost.condensed() ? ModItems.CONDENSED_ESSENCE : ModItems.ESSENCE);
 	}
 
 	public static boolean canPay(final Player player, final Cost cost, final boolean protect) {
@@ -188,11 +188,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			if (!Wallet.take(player, cost.coins())) {
 				return false;
 			}
-			if (cost.condensed()) {
-				JobProgression.removeItems(player.getInventory(), ModItems.CONDENSED_ESSENCE, cost.essence());
-			} else {
-				EngravingMenu.pay(player, cost.essence());
-			}
+			Essence.take(player.getInventory(), cost.condensed() ? ModItems.CONDENSED_ESSENCE : ModItems.ESSENCE, cost.essence());
 			JobProgression.removeItems(player.getInventory(), ModItems.ENHANCEMENT_STONE, cost.stones());
 		}
 		ServerLevel level = serverPlayer.level();

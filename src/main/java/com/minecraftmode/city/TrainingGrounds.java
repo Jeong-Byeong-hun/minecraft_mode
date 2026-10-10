@@ -1,8 +1,6 @@
 package com.minecraftmode.city;
 
 import com.minecraftmode.job.JobProgression;
-import com.minecraftmode.job.quest.QuestDef;
-import com.minecraftmode.job.quest.QuestService;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +34,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * The Training Grounds: a sealed hall under the capital for adventurers who have not chosen a class yet, reached by a stairway in
- * the park south-east of the plaza. While a classless player is inside, monsters (zombies, skeletons, spiders, drowned; half of them
- * from the trainee's trial when one is active) keep stepping out of the nine alcoves, up to {@link #BASE_CAP} plus
+ * the park south-east of the plaza. While a classless player is inside, monsters (zombies, skeletons, spiders, drowned) keep
+ * stepping out of the nine alcoves, up to {@link #BASE_CAP} plus
  * {@link #PER_TRAINEE} per trainee, and give classless killers {@link #EXP_MULTIPLIER} times the class experience. The monsters carry
  * {@link #TAG}: the city guards leave them alone inside the hall (and drive off any that follow a player up the stairs), and they
  * vanish when nobody is training. The hall is built by the city generator like every building: a pure function of coordinates.
@@ -330,7 +328,7 @@ public final class TrainingGrounds {
 			return;
 		}
 		if (mobs.size() < cap(trainees.size())) {
-			spawn(level, base, inside, trainees.get(level.getRandom().nextInt(trainees.size())));
+			spawn(level, base, inside);
 		}
 	}
 
@@ -339,7 +337,7 @@ public final class TrainingGrounds {
 		return Math.min(MAX_CAP, BASE_CAP + PER_TRAINEE * trainees);
 	}
 
-	private static void spawn(final ServerLevel level, final int base, final List<ServerPlayer> inside, final ServerPlayer trainee) {
+	private static void spawn(final ServerLevel level, final int base, final List<ServerPlayer> inside) {
 		RandomSource random = level.getRandom();
 		List<BlockPos> free = new ArrayList<>();
 		for (int[] s : SPAWNS) {
@@ -353,7 +351,7 @@ public final class TrainingGrounds {
 			return;
 		}
 		BlockPos pos = free.get(random.nextInt(free.size()));
-		Mob mob = pick(trainee, random).create(level, EntitySpawnReason.SPAWNER);
+		Mob mob = pick(random).create(level, EntitySpawnReason.SPAWNER);
 		if (mob == null) {
 			return;
 		}
@@ -375,22 +373,8 @@ public final class TrainingGrounds {
 		level.playSound(null, mob.getX(), mob.getY(), mob.getZ(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.HOSTILE, 1.0F, 0.8F);
 	}
 
-	/** Half the time a monster the trainee's trial asks for (when the roster has one), otherwise a weighted pick. */
-	private static EntityType<? extends Mob> pick(final ServerPlayer trainee, final RandomSource random) {
-		QuestDef trial = QuestService.active(trainee);
-		if (trial != null && random.nextBoolean()) {
-			List<EntityType<? extends Mob>> wanted = new ArrayList<>();
-			for (QuestDef.KillGoal goal : trial.kills()) {
-				for (EntityType<? extends Mob> type : ROSTER) {
-					if (goal.types().contains(type) && !goal.ranged()) {
-						wanted.add(type);
-					}
-				}
-			}
-			if (!wanted.isEmpty()) {
-				return wanted.get(random.nextInt(wanted.size()));
-			}
-		}
+	/** A weighted pick from the roster. */
+	private static EntityType<? extends Mob> pick(final RandomSource random) {
 		int total = 0;
 		for (int w : WEIGHTS) {
 			total += w;

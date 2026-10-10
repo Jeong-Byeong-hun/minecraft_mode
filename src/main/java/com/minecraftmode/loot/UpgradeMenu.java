@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The blacksmith's evolution bench: put a class weapon or armor piece in the slot, pick one of the
- * offered next pieces ({@link GearUpgrades#targets}) and pay {@link GearUpgrades#ETHER_COST}
+ * offered next pieces ({@link GearUpgrades#targets}) and pay {@link GearUpgrades#etherCost}
  * Evolution Ether of that piece's bracket plus coins. Armor can also have its extra options rolled
  * again for coins. Button id = index of the target, or {@link #BUTTON_REROLL}.
  */
@@ -117,7 +117,8 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		ClassGear target = targets.get(buttonId);
 		int grade = GearUpgrades.grade(target);
 		int coins = GearUpgrades.coinCost(target, this.input());
-		if (!player.isCreative() && (ether(player.getInventory(), grade) < GearUpgrades.ETHER_COST || Coins.total(player) < coins)) {
+		int etherCost = GearUpgrades.etherCost(target);
+		if (!player.isCreative() && (ether(player.getInventory(), grade) < etherCost || Coins.total(player) < coins)) {
 			return false;
 		}
 		if (player.level().isClientSide()) {
@@ -127,7 +128,7 @@ public class UpgradeMenu extends AbstractContainerMenu {
 			if (!Wallet.take(player, coins)) {
 				return false;
 			}
-			takeEther(player.getInventory(), grade, GearUpgrades.ETHER_COST);
+			takeEther(player.getInventory(), grade, etherCost);
 		}
 		ItemStack evolved = GearUpgrades.evolve(this.input(), target, player.getRandom());
 		this.container.setItem(0, evolved);

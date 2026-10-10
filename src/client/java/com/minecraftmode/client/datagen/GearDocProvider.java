@@ -39,12 +39,14 @@ import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.gear.StatLine;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.loot.GearUpgrades;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Achievements;
 import com.minecraftmode.progress.CollectionBonuses;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.BossDef;
@@ -162,9 +164,16 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 모든 직업 장비는 요구 레벨이 있고 10레벨 단위 **구간**에 속합니다. 무기 ").append(GearIndex.list().stream().filter(ClassGear::isWeapon).count())
 			.append("종, 방어구 ").append(ClassArmor.pieces().size()).append("부위(").append(ClassArmor.sets().size()).append("세트).\n");
 		md.append("- 모험가 길드는 직업마다 구간당 **무기 1개 + 방어구 1부위**만 팝니다(자기 레벨 구간 + 10까지). 나머지는 네임드·보스 드롭 전용입니다.\n");
+		md.append("- 길드는 **모든 직업 장비**(자기 직업 포함)를 길드 가격의 ").append(Math.round(GearShop.BUYBACK_SHARE * 100))
+			.append("%에 사들입니다. 상점을 열 때 인벤토리에 있는 종류마다 판매 줄이 붙고(입고 있는 방어구 제외), 강화·각인·옵션은 값에 반영되지 않습니다.\n");
 		md.append("- 방어구는 해당 직업만, 차수·레벨이 맞아야 입을 수 있습니다. 각인은 무기 3줄, 방어구 4줄.\n");
-		md.append("- 강화: 도시 대장장이 \"명장 볼룬드\"가 장비를 같은 직업·종류의 다음 단계로 바꿔 줍니다(목표 구간 등급의 진화의 에테르 ")
-			.append(GearUpgrades.ETHER_COST).append("개 + 목표 구간 길드 가격의 절반). 강화를 이어받을 때는 **재담금 수수료**가 붙습니다: 그 +N을 목표 구간에서 올렸다면 더 들었을 동전의 절반(낮은 구간에서 싸게 +15를 만들어 올리는 우회 방지).\n\n");
+		md.append("- 강화: 도시 대장장이 \"명장 볼룬드\"가 장비를 같은 직업·종류의 다음 단계로 바꿔 줍니다(목표 구간 등급의 진화의 에테르 + 목표 구간 길드 가격의 절반). 강화를 이어받을 때는 **재담금 수수료**가 붙습니다: 그 +N을 목표 구간에서 올렸다면 더 들었을 동전의 절반(낮은 구간에서 싸게 +15를 만들어 올리는 우회 방지).\n");
+		md.append("- 진화 에테르 비용(목표 구간):");
+		for (int bracket = ItemLevels.MIN_BRACKET; bracket <= ItemLevels.MAX_BRACKET; bracket += 10) {
+			md.append(bracket == ItemLevels.MIN_BRACKET ? " " : " · ").append("Lv").append(bracket).append(' ').append(GearUpgrades.etherCost(bracket)).append("개");
+		}
+		md.append(".\n- 에테르 합치기·나누기: 손에 들고 우클릭하면 같은 등급 ").append(EvolutionEtherItem.FUSE).append("개가 한 단계 위 1개로, 웅크리고 우클릭하면 1개가 한 단계 아래 ")
+			.append(EvolutionEtherItem.FUSE).append("개로 바뀝니다(손실 없음).\n\n");
 
 		md.append("## 드롭 확률 (네임드 1마리당)\n\n| 레벨 | 장비 드롭 | 진화의 에테르 |\n|---|---|---|\n");
 		for (int level = 10; level <= 100; level += 10) {
@@ -429,7 +438,22 @@ public class GearDocProvider implements DataProvider {
 			md.append("| ").append(a.ko()).append(" | ").append(a.descKo()).append(" | ").append(a.merit()).append(" | ").append(a.hasTitle() ? a.titleKo() : "").append(" |\n");
 		}
 		md.append("\n- 칭호는 도감(J)의 칭호 탭에서 착용하며 이름 앞에 붙습니다(머리 위·채팅·탭 목록).\n");
-		md.append("- 처치 기록(도감·업적·처치 의뢰)은 마지막 일격을 넣은 사람과 ").append((int)Progress.SHARE_RANGE).append("블록 안의 같은 파티원 모두에게 올라갑니다.\n");
+		md.append("- 처치 기록(도감·업적·처치 의뢰)은 처치에 기여한 사람과 그 ").append((int)Progress.SHARE_RANGE).append("블록 안의 같은 파티원 모두에게 올라갑니다.\n");
+		md.append("\n## 처치 기여도\n\n");
+		md.append("- 몬스터가 실제로 잃은 체력을 때린 사람별로 기록합니다(방어구·흡수·넘친 피해 제외, 길들인 소환수의 피해는 주인 몫). 마지막 공격 뒤 ")
+			.append(Contribution.FORGET_TICKS / 20).append("초가 지나면 그 사람의 기여는 잊힙니다.\n");
+		md.append("- **지원도 기여입니다**: 다른 플레이어를 치유한 양(넘친 치유 제외)은 그 사람이 최근 ").append(Contribution.COMBAT_TICKS / 20)
+			.append("초 안에 싸운 몬스터들에게 피해로 나눠 계산합니다. 아군 강화를 걸어 주면 그 사람이 효과 동안 넣는 피해의 ").append(Math.round(Contribution.BUFF_SHARE * 100))
+			.append("%, 적에게 약화를 걸면 다른 사람이 그 적에게 넣는 피해의 ").append(Math.round(Contribution.DEBUFF_SHARE * 100))
+			.append("%가 내 기여로 더해집니다(때린 사람의 몫은 줄지 않고 함께 나눕니다).\n");
+		md.append("- 전체 기여의 ").append(Math.round(Contribution.MIN_SHARE * 100)).append("% 이상인 사람만 몫을 받습니다(1위는 항상). 막타가 아니어도 됩니다.\n");
+		md.append("- **직업 경험치**: 혼자 잡을 때의 경험치 × (1 + ").append(Math.round(Contribution.GROUP_BONUS * 100)).append("% × (기여자 수 - 1), 최대 ")
+			.append(Contribution.MAX_BONUS_MEMBERS).append("명분)을 기여 비율대로 나눕니다. 예: 둘이 6:4로 잡으면 각자 혼자 잡을 때의 72%·48%.\n");
+		md.append("- **최다 기여자(1위)**: 정수·동전 발견(해적·약탈) 판정, 네임드 장비 판정(1위의 직업 기준, 여럿이면 1위 인벤토리로 바로), 펫·탈것 드롭 판정.\n");
+		md.append("- **네임드 동전**: 여럿이 잡으면 바닥에 떨어지지 않고 경험치와 같은 비율로 각자의 지갑에. 1위가 아닌 기여자도 ")
+			.append(Math.round(Contribution.ASSIST_SHARE * 100)).append("% 이상이면 진화의 에테르를 하나 받습니다.\n");
+		md.append("- 기여자 모두: 전직 시험 처치 목표와 시험 토큰 판정(원거리 처치 조건은 막타만), 펫 성장. 처치 시 회복·MP 같은 각인 효과는 막타 친 사람만.\n");
+		md.append("- 독·불 같은 지속 피해로 죽어도 직전에 플레이어가 때렸다면 똑같이 나눕니다.\n");
 		md.append("- **수집 보너스**(영구): 네임드 종마다 ").append(CollectionBonuses.KILLS).append("마리 처치하면 보스 피해 +0.5%, 정복한 소굴 종류마다 아이템 발견 +0.5%, 업적 ")
 			.append(CollectionBonuses.ACHIEVEMENT_STEP).append("개마다 경험치 +1%.\n\n");
 
@@ -483,7 +507,7 @@ public class GearDocProvider implements DataProvider {
 			.append("): 직업을 고르기 전의 모험가가 홀 안에 있으면 벽의 감실 ").append(TrainingGrounds.SPAWNS.size())
 			.append("곳에서 좀비·스켈레톤·거미·드라운드가 계속 나옵니다(동시에 ").append(TrainingGrounds.cap(1)).append("마리, 수련생이 한 명 늘 때마다 +")
 			.append(TrainingGrounds.PER_TRAINEE).append(", 최대 ").append(TrainingGrounds.MAX_CAP)
-			.append("마리, 플레이어 바로 옆 감실에서는 나오지 않음; 전직 시련을 진행 중이면 절반은 그 시련의 몬스터). 직업이 없는 모험가는 수련장 몬스터에게서 직업 경험치를 ")
+			.append("마리, 플레이어 바로 옆 감실에서는 나오지 않음). 직업이 없는 모험가는 수련장 몬스터에게서 직업 경험치를 ")
 			.append(TrainingGrounds.EXP_MULTIPLIER).append("배로 얻어, 레벨 10까지(경험치 ").append(toTen).append(") 좀비 약 ")
 			.append((toTen + 20 * TrainingGrounds.EXP_MULTIPLIER - 1) / (20 * TrainingGrounds.EXP_MULTIPLIER))
 			.append("마리면 됩니다. 아무도 수련하지 않으면 몬스터는 사라지고, 계단으로 따라 올라온 몬스터는 경비병이 쫓아냅니다. 직업이 있는 플레이어만 있으면 몬스터가 나오지 않습니다.\n\n");

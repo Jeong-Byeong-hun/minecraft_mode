@@ -182,8 +182,9 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			g.text(this.font, "-", lx + 4, ly, 0xFF6B6B6B, false);
 			return ly + 10;
 		}
+		ClassGear gear = ClassGear.of(this.menu.input());
 		for (StatLine line : rolls.lines()) {
-			g.text(this.font, Component.literal("• ").append(Component.translatable(line.stat().key(), JobTooltips.num(line.value()))), lx + 4, ly, color, false);
+			g.text(this.font, Component.literal("• ").append(Component.translatable(line.stat().key(gear == null ? null : gear.job()), JobTooltips.num(line.value()))), lx + 4, ly, color, false);
 			ly += 10;
 		}
 		return ly;

@@ -83,6 +83,9 @@ final class JobLang {
 		}
 		for (EngraveStat stat : EngraveStat.values()) {
 			b.add(stat.key(), ko ? stat.ko() : stat.en());
+			for (JobClass job : stat.worded()) {
+				b.add(stat.key(job), ko ? stat.ko(job) : stat.en(job));
+			}
 		}
 
 		// keys

@@ -95,6 +95,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.world.item.Item;
+import org.jspecify.annotations.Nullable;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -276,7 +277,7 @@ public class GearDocProvider implements DataProvider {
 				String pieces = ClassArmor.piecesOf(set).stream().map(p -> this.ko.getOrDefault(p.nameKey(), p.id())).collect(Collectors.joining(", "));
 				md.append("| ").append(set.level()).append(" | **").append(set.ko()).append("** | ").append(pieces);
 				for (ArmorSetDef.SetBonus bonus : set.bonuses()) {
-					md.append(" | ").append(bonus.lines().stream().map(this::stat).collect(Collectors.joining(", ")));
+					md.append(" | ").append(bonus.lines().stream().map(l -> this.stat(l.stat(), l.value(), job)).collect(Collectors.joining(", ")));
 				}
 				md.append(" |\n");
 			}
@@ -797,7 +798,12 @@ public class GearDocProvider implements DataProvider {
 	}
 
 	private String stat(final EngraveStat stat, final float value) {
-		return String.format(Locale.ROOT, stat.ko(), ClassDocProvider.num(value)).replace("%%", "%");
+		return this.stat(stat, value, null);
+	}
+
+	/** A stat line as {@code job} reads it (see {@link EngraveStat#ko(JobClass)}). */
+	private String stat(final EngraveStat stat, final float value, final @Nullable JobClass job) {
+		return String.format(Locale.ROOT, stat.ko(job), ClassDocProvider.num(value)).replace("%%", "%");
 	}
 
 	private static String slotName(final GearSlot slot) {

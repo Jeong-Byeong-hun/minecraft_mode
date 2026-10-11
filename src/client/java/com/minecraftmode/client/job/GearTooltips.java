@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -25,6 +26,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Class armor tooltip: requirements (red when unmet), set and worn piece count, the fixed option,
@@ -60,9 +62,9 @@ public final class GearTooltips {
 			? Component.translatable("tooltip.minecraft_mode.gear.armor_toughness", def.armor(), JobTooltips.num(def.toughness()))
 			: Component.translatable("tooltip.minecraft_mode.gear.armor", def.armor()))
 			.withStyle(ChatFormatting.BLUE));
-		lines.add(statLine(def.baseOption(), ChatFormatting.WHITE));
+		lines.add(statLine(def.baseOption(), ChatFormatting.WHITE, def.job()));
 		for (StatLine line : def.defenseLines()) {
-			lines.add(statLine(line, ChatFormatting.WHITE));
+			lines.add(statLine(line, ChatFormatting.WHITE, def.job()));
 		}
 
 		GearRolls rolls = stack.get(ModDataComponents.GEAR_ROLLS);
@@ -71,14 +73,14 @@ public final class GearTooltips {
 			lines.add(Component.translatable("tooltip.minecraft_mode.gear.unrolled", def.optionCount()).withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			for (StatLine line : rolls.lines()) {
-				lines.add(statLine(line, ChatFormatting.AQUA));
+				lines.add(statLine(line, ChatFormatting.AQUA, def.job()));
 			}
 		}
 		GearRolls pending = stack.get(ModDataComponents.GEAR_ROLLS_PENDING);
 		if (pending != null) {
 			lines.add(Component.translatable("tooltip.minecraft_mode.gear.pending").withStyle(ChatFormatting.DARK_AQUA));
 			for (StatLine line : pending.lines()) {
-				lines.add(statLine(line, ChatFormatting.DARK_AQUA));
+				lines.add(statLine(line, ChatFormatting.DARK_AQUA, def.job()));
 			}
 		}
 
@@ -99,7 +101,7 @@ public final class GearTooltips {
 			ChatFormatting color = worn >= bonus.pieces() ? ChatFormatting.GREEN : ChatFormatting.DARK_GRAY;
 			for (StatLine line : bonus.lines()) {
 				lines.add(Component.literal(" (" + bonus.pieces() + ") ").withStyle(color)
-					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(color)));
+					.append(Component.translatable(line.stat().key(def.job()), JobTooltips.num(line.value())).withStyle(color)));
 			}
 		}
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.bracket", ItemLevels.bracket(def.level())).withStyle(ChatFormatting.DARK_GRAY));
@@ -125,13 +127,18 @@ public final class GearTooltips {
 		}
 		lines.add(head);
 		for (StatLine line : Enhancement.lines(gear, e.level(), e.awaken())) {
-			lines.add(statLine(line, ChatFormatting.GREEN));
+			lines.add(statLine(line, ChatFormatting.GREEN, gear.job()));
 		}
 	}
 
 	static Component statLine(final StatLine line, final ChatFormatting color) {
+		return statLine(line, color, null);
+	}
+
+	/** One stat row, worded for {@code job} where the stat reads differently per class ({@link EngraveStat#key(JobClass)}). */
+	static Component statLine(final StatLine line, final ChatFormatting color, final @Nullable JobClass job) {
 		EngraveStat stat = line.stat();
-		return Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable(stat.key(), JobTooltips.num(line.value())).withStyle(color));
+		return Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable(stat.key(job), JobTooltips.num(line.value())).withStyle(color));
 	}
 
 	private GearTooltips() {

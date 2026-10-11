@@ -145,7 +145,7 @@ public final class JobTooltips {
 			line.append(Component.literal(" x" + count).withStyle(ChatFormatting.GOLD));
 		}
 		return line.append(Component.literal(": ").withStyle(ChatFormatting.DARK_GRAY))
-			.append(Component.translatable(stat.key(), num(total)).withStyle(ChatFormatting.GRAY));
+			.append(Component.translatable(stat.key(e.job()), num(total)).withStyle(ChatFormatting.GRAY));
 	}
 
 	public static int tierColor(final int tier) {

@@ -246,14 +246,14 @@ public class TalentScreen extends Screen {
 		return tip;
 	}
 
-	private static Component lines(final List<StatLine> lines, final ChatFormatting color) {
+	private Component lines(final List<StatLine> lines, final ChatFormatting color) {
 		MutableComponent out = Component.literal(" ");
 		for (int i = 0; i < lines.size(); i++) {
 			if (i > 0) {
 				out.append(", ");
 			}
 			StatLine line = lines.get(i);
-			out.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())));
+			out.append(Component.translatable(line.stat().key(this.shownJob == null ? null : this.shownJob.job()), JobTooltips.num(line.value())));
 		}
 		return out.withStyle(color);
 	}

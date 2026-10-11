@@ -1,5 +1,10 @@
 package com.minecraftmode.job.engrave;
 
+import com.minecraftmode.job.JobClass;
+import java.util.Map;
+import java.util.Set;
+import org.jspecify.annotations.Nullable;
+
 /**
  * What an engraving line adds. Lines of the same stat add up (three "+1.5 splash radius" lines give
  * 4.5); {@link #cap()} bounds the total for stats that would break the game past a point.
@@ -87,6 +92,33 @@ public enum EngraveStat {
 
 	public String ko() {
 		return this.ko;
+	}
+
+	/**
+	 * How a class reads a stat that means something different per class: {@link #EXTRA_SHOT} adds arrows for archers, bullets for
+	 * pirates and throwing weapons for rogues ({en, ko}). Display only; the stat and its saved id stay one.
+	 */
+	private static final Map<EngraveStat, Map<JobClass, String[]>> CLASS_WORDING = Map.of(EXTRA_SHOT, Map.of(
+		JobClass.ARCHER, new String[] {"+%s arrows per basic shot (not skills)", "화살 +%s (기본 사격, 스킬 제외)"},
+		JobClass.PIRATE, new String[] {"+%s bullets per basic shot (not skills)", "탄환 +%s (기본 사격, 스킬 제외)"},
+		JobClass.ROGUE, new String[] {"+%s throwing weapons per basic shot (not skills)", "투척 무기 +%s (기본 사격, 스킬 제외)"}));
+
+	/** The classes with their own wording of this stat (for lang). */
+	public Set<JobClass> worded() {
+		return CLASS_WORDING.getOrDefault(this, Map.of()).keySet();
+	}
+
+	/** {@link #key()} as {@code job} reads it (the plain key for every other class, or with no class). */
+	public String key(final @Nullable JobClass job) {
+		return job != null && this.worded().contains(job) ? this.key() + "." + job.id() : this.key();
+	}
+
+	public String en(final @Nullable JobClass job) {
+		return job != null && this.worded().contains(job) ? CLASS_WORDING.get(this).get(job)[0] : this.en;
+	}
+
+	public String ko(final @Nullable JobClass job) {
+		return job != null && this.worded().contains(job) ? CLASS_WORDING.get(this).get(job)[1] : this.ko;
 	}
 
 	/** 0 = no cap. */

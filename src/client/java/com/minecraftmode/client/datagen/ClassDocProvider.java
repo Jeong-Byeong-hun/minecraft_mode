@@ -142,7 +142,7 @@ public class ClassDocProvider implements DataProvider {
 				String only = Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).count() == Archetype.values().length
 					? "전체"
 					: Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).map(Archetype::ko).collect(Collectors.joining(", "));
-				md.append("| ").append(e.ko()).append(" | ").append(statText(e.stat(), e.value())).append(" | ").append(only).append(" |\n");
+				md.append("| ").append(e.ko()).append(" | ").append(statText(e.stat(), e.value(), job)).append(" | ").append(only).append(" |\n");
 			}
 			md.append("\n### 특성\n\n| 단계 |");
 			List<TalentTree.Branch> branches = TalentTree.of(job);
@@ -154,7 +154,7 @@ public class ClassDocProvider implements DataProvider {
 				md.append("| ").append(t + 1).append(t == TalentTree.TIERS - 1 ? " (핵심)" : "").append(" |");
 				for (TalentTree.Branch b : branches) {
 					TalentTree.Node node = b.nodes().get(t);
-					md.append(" **").append(node.ko()).append("** ").append(node.perRank().stream().map(l -> statText(l.stat(), l.value()))
+					md.append(" **").append(node.ko()).append("** ").append(node.perRank().stream().map(l -> statText(l.stat(), l.value(), job))
 						.collect(Collectors.joining(", "))).append(node.maxRank() > 1 ? " (×" + node.maxRank() + ")" : "").append(" |");
 				}
 				md.append("\n");
@@ -257,8 +257,8 @@ public class ClassDocProvider implements DataProvider {
 		return this.ko.getOrDefault(type.getDescriptionId(), BuiltInRegistries.ENTITY_TYPE.getKey(type).getPath());
 	}
 
-	private String statText(final EngraveStat stat, final float value) {
-		return String.format(Locale.ROOT, stat.ko(), num(value)).replace("%%", "%");
+	private String statText(final EngraveStat stat, final float value, final JobClass job) {
+		return String.format(Locale.ROOT, stat.ko(job), num(value)).replace("%%", "%");
 	}
 
 	static String num(final double v) {

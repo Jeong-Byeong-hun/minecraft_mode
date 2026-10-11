@@ -183,7 +183,7 @@ public class JobScreen extends Screen {
 				if (i > 0) {
 					text.append(", ");
 				}
-				text.append(Component.translatable(rewards.get(i).stat().key(), JobTooltips.num(rewards.get(i).value())));
+				text.append(Component.translatable(rewards.get(i).stat().key(data.job()), JobTooltips.num(rewards.get(i).value())));
 			}
 			ty = g.textWithWordWrap(this.font, text, x, ty, COL, 0xFF9CE89C) + 1;
 		}

@@ -136,6 +136,16 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 					missing.add("lang " + key);
 				}
 			}
+			// extra shots read as arrows, bullets or throwing weapons for the classes that shoot them
+			for (JobClass job : List.of(JobClass.ARCHER, JobClass.PIRATE, JobClass.ROGUE)) {
+				String key = EngraveStat.EXTRA_SHOT.key(job);
+				if (key.equals(EngraveStat.EXTRA_SHOT.key()) || !ko.has(key)) {
+					missing.add("extra shot wording for " + job.id());
+				}
+			}
+			require(ko.get("engrave_stat.minecraft_mode.extra_shot.archer").getAsString().startsWith("화살"), "archers read extra shots as arrows");
+			require(EngraveStat.EXTRA_SHOT.key(JobClass.WARRIOR).equals(EngraveStat.EXTRA_SHOT.key()) && EngraveStat.EXTRA_SHOT.key(null).equals(EngraveStat.EXTRA_SHOT.key()),
+				"other classes keep the plain wording");
 			require(missing.isEmpty(), "missing: " + missing);
 		});
 	}

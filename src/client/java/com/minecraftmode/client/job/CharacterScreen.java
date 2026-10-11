@@ -130,7 +130,7 @@ public class CharacterScreen extends Screen {
 				raw += v;
 			}
 			boolean capped = stat.cap() > 0.0F && raw > stat.cap();
-			Component line = Component.translatable(stat.key(), JobTooltips.num(value));
+			Component line = Component.translatable(stat.key(data.job()), JobTooltips.num(value));
 			// long lines are cut at the scroll bar; the tooltip has them whole
 			String text = line.getString();
 			int room = W - LIST_X - 12;

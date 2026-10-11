@@ -199,7 +199,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			tip.add(Component.translatable("screen.minecraft_mode.enhance.awaken_next", target).withColor(0xFF55FF));
 			for (StatLine line : Enhancement.lines(gear, 0, target)) {
 				tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
-					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(ChatFormatting.LIGHT_PURPLE)));
+					.append(Component.translatable(line.stat().key(gear.job()), JobTooltips.num(line.value())).withStyle(ChatFormatting.LIGHT_PURPLE)));
 			}
 			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 			return;
@@ -216,7 +216,7 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			for (StatLine line : Enhancement.lines(gear, target)) {
 				EngraveStat stat = line.stat();
 				tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
-					.append(Component.translatable(stat.key(), JobTooltips.num(line.value())).withStyle(ChatFormatting.GREEN)));
+					.append(Component.translatable(stat.key(gear.job()), JobTooltips.num(line.value())).withStyle(ChatFormatting.GREEN)));
 			}
 			if (Enhancement.risky(target)) {
 				tip.add(Component.translatable("screen.minecraft_mode.enhance.protect_hint").withStyle(ChatFormatting.GRAY));

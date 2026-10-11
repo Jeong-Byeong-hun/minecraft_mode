@@ -4,6 +4,7 @@ import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.command.EventCommands;
 import com.minecraftmode.command.JobCommand;
+import com.minecraftmode.command.LandCommand;
 import com.minecraftmode.command.RaidCommands;
 import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.companion.Companions;
@@ -41,6 +42,7 @@ import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
 import com.minecraftmode.registry.ModParticles;
+import com.minecraftmode.residence.ResidenceRules;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import com.minecraftmode.worldgen.lair.NamedLairs;
@@ -88,6 +90,7 @@ public class MinecraftMode implements ModInitializer {
 		JobEvents.init();
 		QuestService.init();
 		CityServices.init();
+		ResidenceRules.init();
 		Consumables.initEvents();
 		Parties.init();
 		Raids.init();
@@ -102,6 +105,7 @@ public class MinecraftMode implements ModInitializer {
 		RaidCommands.init();
 		EventCommands.init();
 		WalletCommand.init();
+		LandCommand.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

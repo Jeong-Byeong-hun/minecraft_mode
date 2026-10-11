@@ -9,6 +9,8 @@ import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModEntities;
+import com.minecraftmode.residence.ResidenceDimension;
+import com.minecraftmode.residence.ResidenceRules;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -228,27 +230,31 @@ public final class CityServices {
 		}
 		int base = CityZone.baseY(level);
 		for (CityNpc.Role role : CityNpc.Role.values()) {
-			BlockPos home = CityZone.npcHome(role, base);
-			if (!level.isLoaded(home) || !level.shouldTickBlocksAt(home)) {
-				continue;
+			keepNpc(level, role, CityZone.npcHome(role, base));
+		}
+	}
+
+	/** Exactly one {@code role} NPC at {@code home} (spawned when missing, extras removed, a wanderer brought back); loaded chunks only. */
+	public static void keepNpc(final ServerLevel level, final CityNpc.Role role, final BlockPos home) {
+		if (!level.isLoaded(home) || !level.shouldTickBlocksAt(home)) {
+			return;
+		}
+		List<CityNpc> found = level.getEntitiesOfClass(CityNpc.class, new AABB(home).inflate(32), n -> n.role() == role);
+		if (found.isEmpty()) {
+			CityNpc npc = ModEntities.CITY_NPC.create(level, EntitySpawnReason.STRUCTURE);
+			if (npc != null) {
+				npc.setRole(role);
+				npc.snapTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 0.0F, 0.0F);
+				level.addFreshEntity(npc);
 			}
-			List<CityNpc> found = level.getEntitiesOfClass(CityNpc.class, new AABB(home).inflate(32), n -> n.role() == role);
-			if (found.isEmpty()) {
-				CityNpc npc = ModEntities.CITY_NPC.create(level, EntitySpawnReason.STRUCTURE);
-				if (npc != null) {
-					npc.setRole(role);
-					npc.snapTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 0.0F, 0.0F);
-					level.addFreshEntity(npc);
-				}
-				continue;
-			}
-			CityNpc keep = found.getFirst();
-			for (int i = 1; i < found.size(); i++) {
-				found.get(i).discard();
-			}
-			if (keep.blockPosition().distManhattan(home) > 2) {
-				keep.teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
-			}
+			return;
+		}
+		CityNpc keep = found.getFirst();
+		for (int i = 1; i < found.size(); i++) {
+			found.get(i).discard();
+		}
+		if (keep.blockPosition().distManhattan(home) > 2) {
+			keep.teleportTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5);
 		}
 	}
 
@@ -300,7 +306,6 @@ public final class CityServices {
 		}
 	}
 
-	/** Players may not build or break inside the city, in raid arenas or in dungeons unless they are operators or in creative. */
 	/** Items whose use on a block alters it (no block placed, so {@code BlockItem.place} never sees them). */
 	private static boolean changesBlocks(final ItemStack stack) {
 		Item item = stack.getItem();
@@ -310,10 +315,19 @@ public final class CityServices {
 			|| item == Items.INK_SAC || item == Items.GLOW_INK_SAC;
 	}
 
+	/**
+	 * Players may not build or break inside the city, in raid arenas, in dungeons or on residence land that is not theirs (or
+	 * shared with them) unless they are operators or in creative.
+	 */
 	public static boolean blocksBuilding(final Player player, final BlockPos pos) {
-		return !player.isCreative()
-			&& !player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER)
-			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()) || DungeonDimension.is(player.level()));
+		return !exempt(player)
+			&& (CityZone.protectedAt(player.level(), pos) || RaidDimension.is(player.level()) || DungeonDimension.is(player.level())
+				|| ResidenceRules.denies(player, pos));
+	}
+
+	/** Operators and creative players are never held back by the protected zones or residence claims. */
+	public static boolean exempt(final Player player) {
+		return player.isCreative() || player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER);
 	}
 
 	/**
@@ -324,7 +338,7 @@ public final class CityServices {
 		if (!monster) {
 			return false;
 		}
-		if (CityZone.protectedAt(level, pos)) {
+		if (CityZone.protectedAt(level, pos) || ResidenceDimension.is(level)) {
 			return true;
 		}
 		return CityZone.outskirts(pos.getX(), pos.getZ()) && CityZone.isCityLevel(level)

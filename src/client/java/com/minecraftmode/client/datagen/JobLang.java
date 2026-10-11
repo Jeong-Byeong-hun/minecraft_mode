@@ -172,6 +172,7 @@ final class JobLang {
 		ContentLang.add(b, ko);
 		MapLang.add(b, ko);
 		TownLang.add(b, ko);
+		ResidenceLang.add(b, ko);
 	}
 
 	private JobLang() {

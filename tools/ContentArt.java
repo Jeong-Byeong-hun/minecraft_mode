@@ -112,7 +112,26 @@ final class ContentArt {
 		TextureGen.write("block/smithing_station_top", smithingTop(907L));
 		TextureGen.write("block/smithing_station_side", smithingSide(908L));
 		TextureGen.write("block/smithing_station_bottom", stone(0x6A6A70, 909L));
+		TextureGen.write("item/land_deed", QuestArt.grid(new String[] {
+			"................",
+			"..oooooooooooo..",
+			".oPPPPPPPPPPPPo.",
+			".oPpppppppppPPo.",
+			"..oPPPPPPPPPPo..",
+			"..oPiiiiiiiPPo..",
+			"..oPPPPPPPPPPo..",
+			"..oPiiiiiPPPPo..",
+			"..oPPPPPPPgggo..",
+			"..oPiiiiPPgGGgo.",
+			"..oPPPPPPPgGGgo.",
+			".oPPPPPPPPPgggo.",
+			".oPpppppppppPPo.",
+			"..oooooooooooo..",
+			"................",
+			"................"
+		}, "o4A3418 PEFE2BC pC9B27E i7A6A50 g2E7A2A G6AD050"));
 	}
+
 
 	private static BufferedImage flower(final String palette) {
 		return QuestArt.grid(new String[] {

@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.minecraftmode.city.CityGenerator;
+import com.minecraftmode.residence.ResidenceTown;
 import java.util.List;
 import net.minecraft.core.HolderSet;
 import net.minecraft.world.level.StructureManager;
@@ -18,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Builds the capital at 0,0: chunks in the city core skip surface features and structures (ores
+ * Builds the capital at 0,0 (and the residence's square and avenues): chunks in the city core skip surface features and structures (ores
  * stay) and get the city after decoration; the surrounding ring is reshaped before decoration.
  */
 @Mixin(ChunkGenerator.class)
@@ -31,6 +32,7 @@ public abstract class ChunkGeneratorMixin {
 	@Inject(method = "applyBiomeDecoration", at = @At("TAIL"))
 	private void minecraftMode$buildCity(final WorldGenLevel level, final ChunkAccess chunk, final StructureManager structureManager, final CallbackInfo ci) {
 		CityGenerator.afterDecoration((ChunkGenerator)(Object)this, level, chunk);
+		ResidenceTown.build(level, chunk);
 	}
 
 	@WrapOperation(

@@ -128,7 +128,7 @@ public final class LandClaims extends SavedData {
 	/** Claims the box of the chunk at {@code feet}, from the block under the feet up 16 blocks, for {@code owner}. */
 	public Result claim(final UUID owner, final String name, final BlockPos feet, final LevelHeightAccessor heights) {
 		int minY = feet.getY() - 1;
-		if (ResidenceDimension.isSpawn(feet)) {
+		if (ResidenceDimension.isPublic(feet)) {
 			return Result.SPAWN;
 		}
 		if (minY < heights.getMinY() || minY + SIZE - 1 > heights.getMaxY()) {

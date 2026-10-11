@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Roads, the central plaza with its fountain, the city walls with towers and gates, and the final lamp/flower pass. */
-final class CityCore {
+public final class CityCore {
 	/** Road rectangles {x0, z0, x1, z1}; edges are drawn first so crossings stay clean. */
 	static final int[][] ROADS = {
 		{-100, -4, 100, 4},
@@ -52,7 +52,8 @@ final class CityCore {
 
 	// ------------------------------------------------------------------ plaza
 
-	private static void plaza(final Build b) {
+	/** The plaza around 0, 0 (radius 21): radial paving, the fountain, planters and a ring of lamps. Also the residence square. */
+	public static void plaza(final Build b) {
 		if (!b.touches(-21, -21, 21, 21)) {
 			return;
 		}
@@ -180,7 +181,7 @@ final class CityCore {
 	}
 
 	/** Round tower with a blue cone roof. */
-	static void tower(final Build b, final int cx, final int cz, final int r, final int height) {
+	public static void tower(final Build b, final int cx, final int cz, final int r, final int height) {
 		if (!b.touches(cx - r - 2, cz - r - 2, cx + r + 2, cz + r + 2)) {
 			return;
 		}

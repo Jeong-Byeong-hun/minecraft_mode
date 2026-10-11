@@ -46,7 +46,6 @@ public enum Destination {
 				if (residence == null) {
 					yield null;
 				}
-				ResidenceDimension.ensureSpawn(residence);
 				yield new Spot(residence, ResidenceDimension.arrival(), 0.0F);
 			}
 			case PLAZA -> {

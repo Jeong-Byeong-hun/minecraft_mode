@@ -28,15 +28,29 @@ public final class Build {
 	private final int maxX;
 	private final int minZ;
 	private final int maxZ;
+	/** Offset added to x/z when writing, so a builder drawn around 0, 0 can stand elsewhere ({@link #shifted}). */
+	private final int dx;
+	private final int dz;
 	private final BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
-	Build(final WorldGenLevel level, final int base, final int minX, final int minZ) {
+	public Build(final WorldGenLevel level, final int base, final int minX, final int minZ) {
+		this(level, base, minX, minZ, 0, 0);
+	}
+
+	private Build(final WorldGenLevel level, final int base, final int minX, final int minZ, final int dx, final int dz) {
+		this.dx = dx;
+		this.dz = dz;
 		this.level = level;
 		this.base = base;
 		this.minX = minX;
 		this.maxX = minX + 15;
 		this.minZ = minZ;
 		this.maxZ = minZ + 15;
+	}
+
+	/** The same chunk seen from a builder whose 0, 0 lies at {@code dx, dz}. */
+	public Build shifted(final int dx, final int dz) {
+		return new Build(this.level, this.base, this.minX - dx, this.minZ - dz, this.dx + dx, this.dz + dz);
 	}
 
 	public boolean touches(final int x0, final int z0, final int x1, final int z1) {
@@ -49,7 +63,7 @@ public final class Build {
 
 	public void set(final int x, final int dy, final int z, final BlockState state) {
 		if (this.inside(x, z)) {
-			this.level.setBlock(this.pos.set(x, this.base + dy, z), state, Block.UPDATE_CLIENTS);
+			this.level.setBlock(this.pos.set(x + this.dx, this.base + dy, z + this.dz), state, Block.UPDATE_CLIENTS);
 		}
 	}
 
@@ -58,7 +72,7 @@ public final class Build {
 	}
 
 	public BlockState get(final int x, final int dy, final int z) {
-		return this.level.getBlockState(this.pos.set(x, this.base + dy, z));
+		return this.level.getBlockState(this.pos.set(x + this.dx, this.base + dy, z + this.dz));
 	}
 
 	public void fill(final int x0, final int dy0, final int z0, final int x1, final int dy1, final int z1, final BlockState state) {

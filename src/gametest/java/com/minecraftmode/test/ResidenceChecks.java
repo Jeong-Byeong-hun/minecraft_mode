@@ -92,6 +92,7 @@ final class ResidenceChecks {
 			LandClaims claims = LandClaims.get(s);
 			require(claims.claim(ALICE.id(), "Alice", new BlockPos(40, y, 40), level) == LandClaims.Result.CLAIMED, "Alice claims chunk 2,2");
 			require(claims.claim(BOB.id(), "Bob", new BlockPos(56, y, 40), level) == LandClaims.Result.CLAIMED, "Bob claims chunk 3,2");
+			require(claims.claim(BOB.id(), "Bob", new BlockPos(8, y, 80), level) == LandClaims.Result.SPAWN, "nobody claims the south avenue");
 			require(ResidenceRules.crosses(level, new BlockPos(EDGE, y, 40), new BlockPos(EDGE + 1, y, 40)), "x 47 to 48 crosses from Alice to Bob");
 			require(!ResidenceRules.crosses(level, new BlockPos(EDGE - 1, y, 40), new BlockPos(EDGE, y, 40)), "inside Alice's land nothing crosses");
 			require(ResidenceRules.crosses(level, new BlockPos(40, y, 40), new BlockPos(40, y + 16, 40)), "Alice's land to the open air above crosses");
@@ -202,12 +203,13 @@ final class ResidenceChecks {
 			ServerPlayer player = connection.getServerPlayer();
 			require(player.level() == residence, "the waymaster sends the player to the residence");
 			require(player.position().distanceTo(ResidenceDimension.arrival()) < 2.0, "players arrive on the square, got " + player.position());
-			require(residence.getBlockState(new BlockPos(0, ResidenceDimension.SURFACE_Y, 0)).is(Blocks.SMOOTH_STONE), "the arrival square is paved");
+			require(!residence.getBlockState(BlockPos.containing(ResidenceDimension.arrival()).below()).is(Blocks.GRASS_BLOCK), "the arrival square is paved");
+			require(!residence.getBlockState(new BlockPos(8, ResidenceDimension.SURFACE_Y, 80)).is(Blocks.GRASS_BLOCK), "the south avenue is paved");
 			require(!Travel.go(player, Destination.RESIDENCE), "the residence is not offered inside the residence");
 			java.util.List<CityNpc> keepers = residence.getEntitiesOfClass(CityNpc.class, new AABB(ResidenceDimension.waymaster()).inflate(4),
 				n -> n.role() == CityNpc.Role.WAYMASTER);
 			require(keepers.size() == 1, "one waymaster stands on the residence square, got " + keepers.size());
-			player.teleportTo(residence, 0.5, ResidenceDimension.SURFACE_Y + 1, 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			player.teleportTo(residence, ResidenceDimension.waymaster().getX() + 0.5, ResidenceDimension.SURFACE_Y + 1, ResidenceDimension.waymaster().getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
 			return keepers.getFirst().getId();
 		});
 		context.waitTicks(40);

@@ -125,8 +125,10 @@ public record Enhancement(int level, int pity, int awaken) {
 				out.add(StatLine.of(EngraveStat.SKILL_DAMAGE, 2.0F * awaken));
 				out.add(StatLine.of(EngraveStat.BOSS_DAMAGE, 2.0F * awaken));
 			} else {
-				out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.6F * awaken));
-				out.add(StatLine.of(EngraveStat.MAX_HEALTH, 0.6F * awaken));
+				// mostly health: four +15 ✦5 pieces alone filled the 50% damage reduction cap, which left Ironskin and every other
+				// reduction line worthless; now they reach 34% and the rest comes from the set, engravings, options and food
+				out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.2F * awaken));
+				out.add(StatLine.of(EngraveStat.MAX_HEALTH, 1.0F * awaken));
 			}
 		}
 		return out;
@@ -154,7 +156,7 @@ public record Enhancement(int level, int pity, int awaken) {
 				out.add(StatLine.of(EngraveStat.MOVE_SPEED, 2));
 			}
 			if (level >= 15) {
-				out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 2));
+				out.add(StatLine.of(EngraveStat.MAX_HEALTH, 2));
 			}
 		}
 		return out;

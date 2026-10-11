@@ -13,6 +13,7 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>Toughness is the other way round: what such a monster takes is divided by it. Vanilla caps max health at 1024, so a monster
  * meant to have more keeps {@link #HEALTH_CAP} health and takes damage divided by (wanted health / cap), like raid bosses do.
+ * Armor still reads the whole hit ({@code LivingEntityMixin}), so it takes the same share it would off the real health.
  */
 public final class MobPower {
 	/** Health a monster keeps when it should have more than vanilla allows; the rest becomes toughness. */

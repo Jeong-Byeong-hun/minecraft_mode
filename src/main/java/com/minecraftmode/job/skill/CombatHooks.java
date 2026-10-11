@@ -63,8 +63,13 @@ public final class CombatHooks {
 		SPLASH,
 		/** Counter stance and thorns; never reflected again. */
 		REFLECT,
-		/** Double strike and chain lightning procs; never proc again. */
-		EXTRA
+		/** Chain lightning procs; never proc again. */
+		EXTRA,
+		/**
+		 * Double strike's second hit: the first hit again as it landed, so bonuses, crits and vulnerability are not applied twice (only
+		 * the toughness division the first hit had too); never procs.
+		 */
+		REPEAT
 	}
 
 	/** What a vindicator's melee hit deals to a player on every difficulty, before armor (2.5 hearts). */
@@ -162,6 +167,9 @@ public final class CombatHooks {
 		}
 		long now = level.getGameTime();
 		DamageKind kind = current;
+		if (kind == DamageKind.REPEAT) {
+			return amount / MobPower.toughness(victim);
+		}
 		float result = amount;
 		Entity direct = source.getDirectEntity();
 		Float arrowDamage = direct == null || kind != null ? null : ARROWS.get(direct);
@@ -201,7 +209,8 @@ public final class CombatHooks {
 			float hit = Actions.summonDamage(source.getEntity());
 			result = outgoing(owner, victim, source, Float.isNaN(hit) ? result : hit, DamageKind.SKILL, now);
 		}
-		// event monsters meant to have more than vanilla's 1024 health take damage divided by the rest (MobPower)
+		// event monsters meant to have more than vanilla's 1024 health take damage divided by the rest (MobPower); armor still reads
+		// the whole hit (LivingEntityMixin)
 		result /= MobPower.toughness(victim);
 		MobEffectInstance vulnerable = victim.getEffect(ModEffects.VULNERABLE);
 		if (vulnerable != null) {
@@ -376,16 +385,23 @@ public final class CombatHooks {
 	}
 
 	/**
-	 * The attacker's client shows the target's health bar ({@code TargetHealthHud}) and floats the damage over it ({@code DamageNumbers}),
-	 * as the damage really counted: toughness (dungeons) and raid boss divisors scale the health lost back up. Fake players have no client.
+	 * What a hit on {@code victim} is divided by before it reaches the health bar: the toughness of event monsters past vanilla's 1024
+	 * health ({@link MobPower}) times a raid boss's divisor. Armor still reads the whole hit ({@code LivingEntityMixin}).
 	 */
-	public static void showHit(final ServerPlayer attacker, final LivingEntity victim, final float damageTaken, final boolean crit) {
+	public static float healthDivisor(final LivingEntity victim) {
+		return MobPower.toughness(victim) * (victim instanceof RaidBoss boss ? boss.divisor() : 1.0F);
+	}
+
+	/**
+	 * The attacker's client shows the target's health bar ({@code TargetHealthHud}) and floats the damage over it ({@code DamageNumbers}).
+	 * {@code dealt} is the hit as it really counted ({@link #healthDivisor} already scaled back in). Fake players have no client.
+	 */
+	public static void showHit(final ServerPlayer attacker, final LivingEntity victim, final float dealt, final boolean crit) {
 		if (!ServerPlayNetworking.canSend(attacker, TargetHealthPayload.TYPE)) {
 			return;
 		}
-		float shown = damageTaken * MobPower.toughness(victim) * (victim instanceof RaidBoss boss ? boss.divisor() : 1.0F);
 		ServerPlayNetworking.send(attacker, new TargetHealthPayload(victim.getId()));
-		ServerPlayNetworking.send(attacker, new DamageNumberPayload(victim.getId(), shown, crit));
+		ServerPlayNetworking.send(attacker, new DamageNumberPayload(victim.getId(), dealt, crit));
 	}
 
 	/** A critical hit: the vanilla crit sparks with a gold burst on top, and a sharper sound everyone nearby hears. */
@@ -408,20 +424,27 @@ public final class CombatHooks {
 		if (damageTaken <= 0.0F || !(victim.level() instanceof ServerLevel level)) {
 			return;
 		}
+		// what the hit really counted for: monsters with toughness or a raid divisor got it divided, and lifesteal, splash, chains and
+		// double strike must start from the whole hit (they got 1/13 of it off a +82 dungeon boss, double strike 1/169)
+		float dealt = damageTaken * healthDivisor(victim);
 		ServerPlayer owner = summonOwner(level, source.getEntity());
 		if (owner != null && owner != victim) {
-			showHit(owner, victim, damageTaken, crit);
+			showHit(owner, victim, dealt, crit);
 			return;
 		}
 		if (!(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim) {
 			return;
 		}
-		showHit(attacker, victim, damageTaken, crit);
+		showHit(attacker, victim, dealt, crit);
 		DamageKind kind = current;
+		float buffSteal = kind == DamageKind.REFLECT ? 0.0F : CombatState.of(attacker).lifesteal(level.getGameTime());
+		if (buffSteal > 0.0F) {
+			attacker.heal(dealt * buffSteal);
+		}
 		Entity direct = source.getDirectEntity();
 		SkillArrow skillArrow = kind == null && direct != null ? SKILL_ARROWS.get(direct) : null;
 		if (skillArrow != null) {
-			skillArrow.ctx.afterArrowHit(victim, damageTaken);
+			skillArrow.ctx.afterArrowHit(victim, dealt);
 			return;
 		}
 		boolean melee = kind == null && direct == attacker && !CombatState.of(attacker).sweep;
@@ -438,26 +461,26 @@ public final class CombatHooks {
 			applyOnHit(victim, mods);
 			float splash = mods.get(EngraveStat.SPLASH);
 			if (melee && splash > 0.0F) {
-				splash(attacker, victim, damageTaken * 0.5F, splash);
+				splash(attacker, victim, dealt * 0.5F, splash);
 			}
 			if (melee && attacker.getRandom().nextFloat() < mods.fraction(EngraveStat.DOUBLE_STRIKE)) {
-				float again = damageTaken;
+				float again = dealt;
 				SkillScheduler.schedule(3, () -> {
 					if (victim.isAlive() && attacker.isAlive()) {
-						deal(attacker, victim, again, attacker.damageSources().playerAttack(attacker), DamageKind.EXTRA);
+						deal(attacker, victim, again, attacker.damageSources().playerAttack(attacker), DamageKind.REPEAT);
 						attacker.level().sendParticles(ParticleTypes.SWEEP_ATTACK, victim.getX(), victim.getY(0.6), victim.getZ(), 1, 0.0, 0.0, 0.0, 0.0);
 					}
 				});
 			}
 			if (attacker.getRandom().nextFloat() < mods.fraction(EngraveStat.CHAIN_LIGHTNING)) {
-				chainLightning(attacker, victim, Math.max(2.0F, damageTaken * 0.5F));
+				chainLightning(attacker, victim, Math.max(2.0F, dealt * 0.5F));
 			}
 		}
 		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
 			lifesteal += 0.05F;
 		}
 		if (lifesteal > 0.0F) {
-			attacker.heal(damageTaken * lifesteal);
+			attacker.heal(dealt * lifesteal);
 		}
 		if (has(data, JobClass.PIRATE, 3) && kind != DamageKind.SPLASH && kind != DamageKind.REFLECT && victim.isAlive()
 			&& attacker.getRandom().nextFloat() < 0.10F) {
@@ -489,14 +512,18 @@ public final class CombatHooks {
 	}
 
 	/** Lightning jumps from the victim to up to three more enemies within 6 blocks. */
+	/** Strikes the struck target first, then jumps to the nearest enemies: 3 in all (it did nothing against a lone boss). */
 	private static void chainLightning(final ServerPlayer attacker, final LivingEntity victim, final float damage) {
 		ServerLevel level = attacker.level();
 		Fx fx = new Fx(Fx.Kind.BOLT, 0x9FD0FF);
-		List<LivingEntity> targets = new java.util.ArrayList<>(level.getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(6.0),
+		List<LivingEntity> others = new java.util.ArrayList<>(level.getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(6.0),
 			e -> e != victim && isEnemy(attacker, e)));
-		targets.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(victim)));
-		Vec3 from = victim.position().add(0, victim.getBbHeight() * 0.6, 0);
-		for (LivingEntity target : targets.subList(0, Math.min(3, targets.size()))) {
+		others.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(victim)));
+		List<LivingEntity> targets = new java.util.ArrayList<>();
+		targets.add(victim);
+		targets.addAll(others.subList(0, Math.min(2, others.size())));
+		Vec3 from = victim.position().add(0, victim.getBbHeight() + 2.0, 0);
+		for (LivingEntity target : targets) {
 			Vec3 to = target.position().add(0, target.getBbHeight() * 0.6, 0);
 			fx.line(level, from, to, 0.35);
 			deal(attacker, target, damage, attacker.damageSources().playerAttack(attacker), DamageKind.EXTRA);

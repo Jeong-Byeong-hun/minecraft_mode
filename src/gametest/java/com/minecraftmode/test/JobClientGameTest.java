@@ -738,8 +738,39 @@ public class JobClientGameTest implements FabricClientGameTest {
 		float arrowed = server.computeOnServer(s -> pressed[0].getHealth());
 		require(arrowed < 400.0F, "a bow shot from inside a pressed husk went through it");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
-		MinecraftMode.LOGGER.info("[job] volleys: {} health from blades under a roof, arrows through the damage cooldown {}, bow shot from inside a husk hit",
-			blades[0], java.util.Arrays.toString(drops));
+
+		// a homing fan splits the enemies between its shots: a lone husk takes Flower Storm's middle orb, not all seven of them
+		LivingEntity[] lone = new LivingEntity[1];
+		float[] orb = new float[1];
+		int storm = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.MAGE, 4).withProgress(100, 0));
+			WeaponDef merlin = JobWeapons.def("merlin_staff");
+			ItemStack staff = new ItemStack(JobWeapons.item(merlin));
+			player.setItemInHand(InteractionHand.MAIN_HAND, staff);
+			JobStats.refresh(player);
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			lone[0] = spawnTarget(player.level(), 0.5, -60, -6.5);
+			int slot = 0;
+			while (!merlin.skills().get(slot).id().equals("merlin_staff.flower_storm")) {
+				slot++;
+			}
+			orb[0] = new SkillContext(player, merlin, merlin.skills().get(slot), staff, JobWeapons.activeTotals(player), 0.15).damageFor(1.85);
+			return slot;
+		});
+		context.waitTicks(2);
+		SkillCaster.Result flowers = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), storm);
+		});
+		require(flowers == SkillCaster.Result.OK, "Flower Storm could not be cast: " + flowers);
+		context.waitTicks(40);
+		float stormed = server.computeOnServer(s -> 400.0F - lone[0].getHealth());
+		require(stormed > 0.0F && stormed < 3.0F * orb[0], "Flower Storm should hit a lone husk with about one orb of " + orb[0] + ", took " + stormed);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		MinecraftMode.LOGGER.info("[job] volleys: {} health from blades under a roof, arrows through the damage cooldown {}, bow shot from inside a husk hit,"
+			+ " Flower Storm took {} off a lone husk (one orb {})", blades[0], java.util.Arrays.toString(drops), stormed, orb[0]);
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package com.minecraftmode.enchantment;
 
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerLevel;
@@ -36,7 +37,8 @@ public final class CombatEnchantmentHandlers {
 		if (cleave <= 0) {
 			return;
 		}
-		float splash = damageTaken * CLEAVE_RATIO_PER_LEVEL * cleave;
+		// the whole hit, also off a monster whose damage was divided by its toughness or raid divisor
+		float splash = damageTaken * CombatHooks.healthDivisor(victim) * CLEAVE_RATIO_PER_LEVEL * cleave;
 		cleaving = true;
 		try {
 			for (LivingEntity other : level.getEntitiesOfClass(LivingEntity.class, victim.getBoundingBox().inflate(CLEAVE_RADIUS), e -> isCleaveTarget(e, victim, attacker))) {

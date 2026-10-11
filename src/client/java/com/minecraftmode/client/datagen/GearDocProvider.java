@@ -679,7 +679,7 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 성 안뜰 서쪽 던전 문의 **던전 관리인 카엘**. 파티장이 입장시키며(").append((int)Dungeons.GATHER_RANGE).append("블록 안의 파티원, 최대 ")
 			.append(Dungeons.MAX_PARTY).append("명) 혼자도 됩니다.\n");
 		md.append("- 구성: 입구 → 홀 ").append(DungeonLayout.HALLS).append("개(들어서면 몬스터가 깨어나고, 모두 쓰러뜨리면 다음 문이 열림, 홀마다 정예 1마리) → 보스 방(네임드의 **챔피언**: 최고 레벨, 체력 ×")
-			.append(ClassDocProvider.num(Dungeons.CHAMPION_HEALTH)).append(", 피해 ×").append(ClassDocProvider.num(Dungeons.CHAMPION_DAMAGE)).append(", 분노 패턴).\n");
+			.append(ClassDocProvider.num(Dungeons.CHAMPION_HEALTH)).append(", 피해 ×").append(ClassDocProvider.num(Dungeons.CHAMPION_DAMAGE)).append(", 분노 패턴, 재생은 한 번만).\n");
 		md.append("- 쓰러지면 죽지 않고 입구에서 깨어나며 ").append(Dungeons.DEATH_PENALTY_SECONDS).append("초를 잃습니다. 건축·PvP 불가. `/dungeon leave`로 나갑니다.\n");
 		md.append("- 홀 몬스터 체력: 기본 × (1 + 던전 힘/10) × 파티(1인 ").append(ClassDocProvider.num(Dungeons.partyScale(1))).append(" … 4인 ")
 			.append(ClassDocProvider.num(Dungeons.partyScale(4))).append(", 인원마다 2마리씩 더 나옴) × 쐐기돌(1 + 0.08 × 단계), 정예 ×").append(ClassDocProvider.num(Dungeons.ELITE_HEALTH))

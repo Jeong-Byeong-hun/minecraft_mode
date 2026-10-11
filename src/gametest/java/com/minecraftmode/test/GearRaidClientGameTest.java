@@ -229,17 +229,18 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			player.getInventory().clearContent();
 			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 2));
 
-			// cooldown floor: flat reduction never takes a skill below 1 second
+			// cooldown floor: percent and flat reductions together take at most 60% off (flat seconds used to take 6-9 s skills to 1 s)
 			Skill skill = JobWeapons.all().stream().flatMap(d -> d.skills().stream()).filter(k -> k.cooldownTicks() >= 60).findFirst().orElseThrow();
+			int floor = Math.round(skill.cooldownTicks() * (1.0F - SkillCaster.MAX_COOLDOWN_CUT));
 			EngraveTotals heavy = EngraveTotals.builder().add(EngraveStat.COOLDOWN_FLAT, 6.0F).add(EngraveStat.COOLDOWN, 60.0F).build();
 			int cd = SkillCaster.cooldown(JobProgression.get(player), skill, heavy);
-			if (cd != 20) {
-				return "cooldown with huge reductions should floor at 20 ticks, got " + cd;
+			if (cd != floor) {
+				return "cooldown with huge reductions should stop at 40% of " + skill.cooldownTicks() + " (" + floor + " ticks), got " + cd;
 			}
 			EngraveTotals two = EngraveTotals.builder().add(EngraveStat.COOLDOWN_FLAT, 2.0F).build();
 			int cd2 = SkillCaster.cooldown(JobProgression.get(player), skill, two);
-			if (cd2 != Math.max(20, skill.cooldownTicks() - 40)) {
-				return "-2 s should take 40 ticks off " + skill.cooldownTicks() + ", got " + cd2;
+			if (cd2 != Math.max(floor, skill.cooldownTicks() - 40)) {
+				return "-2 s should take 40 ticks off " + skill.cooldownTicks() + " (not past 40%), got " + cd2;
 			}
 
 			// armor engraving: 4 lines, armor engravings that fit the slot

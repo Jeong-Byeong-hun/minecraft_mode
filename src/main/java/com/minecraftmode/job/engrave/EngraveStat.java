@@ -40,7 +40,7 @@ public enum EngraveStat {
 	DODGE("dodge", "%s%% chance to dodge attacks", "%s%% 확률로 공격 회피", 40),
 	DRAW_SPEED("draw_speed", "+%s%% draw and reload speed", "시위 당기기·재장전 속도 +%s%%", 75),
 	// armor options, set bonuses and level rewards
-	COOLDOWN_FLAT("cooldown_flat", "-%ss skill cooldowns (never below 1s)", "스킬 재사용 대기시간 -%s초 (1초 미만으로는 줄지 않음)", 6),
+	COOLDOWN_FLAT("cooldown_flat", "-%ss skill cooldowns (all cooldown cuts together at most 60%%)", "스킬 재사용 대기시간 -%s초 (모든 감소를 합쳐 최대 60%%)", 6),
 	MANA_REGEN("mana_regen", "+%s MP per second", "초당 MP 회복 +%s", 0),
 	HEALTH_REGEN("health_regen", "Heals %s every 4 seconds", "4초마다 체력 %s 회복", 0),
 	THORNS("thorns", "Reflects %s%% of melee damage taken", "받은 근접 피해의 %s%% 반사", 100),
@@ -53,7 +53,7 @@ public enum EngraveStat {
 	LAST_STAND("last_stand", "Below 30%% health: -%s%% damage taken", "체력 30%% 미만일 때 받는 피해 -%s%%", 60),
 	FIRST_STRIKE("first_strike", "+%s%% damage to enemies above 90%% health", "체력 90%% 이상인 적에게 피해 +%s%%", 0),
 	BOSS_DAMAGE("boss_damage", "+%s%% damage to bosses and named monsters", "보스·네임드에게 주는 피해 +%s%%", 0),
-	CHAIN_LIGHTNING("chain_lightning", "%s%% chance on hit to chain lightning to 3 enemies", "적중 시 %s%% 확률로 적 3명에게 연쇄 번개", 50),
+	CHAIN_LIGHTNING("chain_lightning", "%s%% chance on hit to chain lightning through the target and 2 nearby enemies", "적중 시 %s%% 확률로 대상과 주변 적 2명에게 연쇄 번개", 50),
 	STEALTH_ON_KILL("stealth_on_kill", "Invisible for %ss after a kill", "처치 후 %s초간 투명", 5),
 	SPEED_ON_KILL("speed_on_kill", "Swiftness for %ss after a kill", "처치 후 %s초간 신속", 10),
 	CRIT_REFUND("crit_refund", "Critical hits cut skill cooldowns by %ss", "치명타 시 스킬 재사용 대기시간 %s초 감소", 2),

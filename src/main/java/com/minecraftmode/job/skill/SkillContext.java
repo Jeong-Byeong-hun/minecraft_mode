@@ -308,7 +308,8 @@ public final class SkillContext {
 		}
 		float before = target.getHealth();
 		CombatHooks.deal(this.caster, target, this.damageFor(multiplier), source, CombatHooks.DamageKind.SKILL);
-		float dealt = Math.max(0.0F, before - target.getHealth());
+		// health lost off a monster with toughness or a raid divisor counts as the whole hit it stands for
+		float dealt = Math.max(0.0F, before - target.getHealth()) * CombatHooks.healthDivisor(target);
 		if (this.lifesteal > 0.0 && dealt > 0.0F) {
 			this.caster.heal((float)(dealt * this.lifesteal));
 		}

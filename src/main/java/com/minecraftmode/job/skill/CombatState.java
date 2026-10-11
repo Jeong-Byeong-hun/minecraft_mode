@@ -32,6 +32,10 @@ public final class CombatState {
 	public float stealthBonus;
 	public long stealthUntil;
 
+	/** A buff skill's lifesteal: every hit until then heals this share of its damage ({@code Actions.lifestealFor}). */
+	public float lifesteal;
+	public long lifestealUntil;
+
 	/** Game time until which a gap-closing skill guards the player (see {@link Engage}). */
 	public long guardUntil;
 
@@ -61,6 +65,10 @@ public final class CombatState {
 
 	public float stanceValue(final Stance type, final long now) {
 		return this.stance == type && now < this.stanceUntil ? this.stanceValue : 0.0F;
+	}
+
+	public float lifesteal(final long now) {
+		return now < this.lifestealUntil ? this.lifesteal : 0.0F;
 	}
 
 	public float markBonus(final UUID target, final long now) {

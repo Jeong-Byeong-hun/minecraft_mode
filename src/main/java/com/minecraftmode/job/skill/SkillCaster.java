@@ -19,6 +19,8 @@ import net.minecraft.world.item.ItemStack;
 public final class SkillCaster {
 	/** Arcane Mastery (mage tier 3): skill damage bonus, which a mage's orbs get too ({@code BasicAttacks.shotBonus}). */
 	public static final float ARCANE_MASTERY = 0.15F;
+	/** The most percent and flat cooldown reductions together take off a skill's cooldown. */
+	public static final float MAX_COOLDOWN_CUT = 0.6F;
 
 	public enum Result {
 		OK,
@@ -101,10 +103,6 @@ public final class SkillCaster {
 		return Math.round(skill.manaCost() * (1.0F - mods.fraction(EngraveStat.MANA_COST)));
 	}
 
-	/**
-	 * Percent reductions (capped at 60%) first, then flat seconds from armor; a skill never drops
-	 * below 1 second (or its own cooldown if that is shorter).
-	 */
 	/** Cooldown key shared by every weapon of {@code job} for skill slot {@code slot} (0-based). */
 	public static String slotKey(final JobClass job, final int slot) {
 		return "slot." + job.name().toLowerCase(java.util.Locale.ROOT) + "." + slot;
@@ -115,11 +113,18 @@ public final class SkillCaster {
 		return Math.max(data.readyAt(skill.id()), data.readyAt(slotKey(data.job(), slot)));
 	}
 
+	/**
+	 * Percent reductions first, then flat seconds from armor; together they take at most {@link #MAX_COOLDOWN_CUT} off a skill (flat
+	 * seconds on top of 50% took 6-9 s skills down to 1-2.5 s, so mana was the only limit left), and a skill never drops below 1 second
+	 * (or its own cooldown if that is shorter).
+	 */
 	public static int cooldown(final JobData data, final Skill skill, final EngraveTotals mods) {
+		int base = skill.cooldownTicks();
 		float reduction = mods.fraction(EngraveStat.COOLDOWN) + (CombatHooks.has(data, JobClass.MAGE, 4) ? 0.20F : 0.0F);
-		int ticks = Math.round(skill.cooldownTicks() * (1.0F - Math.min(0.6F, reduction)));
+		int ticks = Math.round(base * (1.0F - Math.min(MAX_COOLDOWN_CUT, reduction)));
 		ticks -= Math.round(mods.get(EngraveStat.COOLDOWN_FLAT) * 20.0F);
-		return Math.max(Math.min(skill.cooldownTicks(), 20), ticks);
+		ticks = Math.max(ticks, Math.round(base * (1.0F - MAX_COOLDOWN_CUT)));
+		return Math.max(Math.min(base, 20), ticks);
 	}
 
 	private static Component message(final ServerPlayer player, final int slot, final Result result) {

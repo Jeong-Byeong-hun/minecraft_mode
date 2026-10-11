@@ -137,7 +137,7 @@ public final class HunterContent extends ClassContent {
 
 		weapon("adult_gon", 4, 78, KNUCKLE, "Adult Gon", "어른 곤",
 			art(0x2A6A2A, 0xE8E0D0, 0xF5D040), fx(Fx.Kind.ORB, 0xFFE070),
-			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, buff(STRENGTH, 10, 3), lifesteal(10)),
+			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, buff(STRENGTH, 10, 3), lifestealFor(10, 10)),
 			skill("first_comes_rock", "First Comes Rock", "처음은 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
 			skill("long_scissors", "Long Scissors", "긴 가위", ATTACK, 12, 26, beam(18, 2.6)),
 			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝이라도 좋아", ULTIMATE, 75, 60, delay(1.0, nova(7, 13.2)), stun(2.0)));
@@ -167,7 +167,7 @@ public final class HunterContent extends ClassContent {
 			art(0x6A8A3A, 0x2A3A1A, 0xC8F070), fx(Fx.Kind.SLASH, 0xC8F070),
 			skill("tail_pierce", "Tail Pierce", "꼬리 관통", ATTACK, 8, 22, beam(10, 2.38)),
 			skill("photon", "Photon", "광자", ATTACK, 14, 28, nova(6, 2.6), inflict(VULNERABLE, 6, 1)),
-			skill("kings_aura", "King's Aura", "왕의 아우라", UTILITY, 24, 22, debuff(12, WEAKNESS, 6, 2), debuff(12, SLOWNESS, 6, 1), lifesteal(15)),
+			skill("kings_aura", "King's Aura", "왕의 아우라", UTILITY, 24, 22, debuff(12, WEAKNESS, 6, 2), debuff(12, SLOWNESS, 6, 1), lifestealFor(6, 15)),
 			skill("king_of_ants", "King of the Chimera Ants", "키메라 앤트의 왕", ULTIMATE, 70, 55, buff(STRENGTH, 15, 3), buff(RESISTANCE, 15, 2), heal(50), nova(7, 5.4)));
 
 		weapon("hundred_type_guanyin", 4, 100, KNUCKLE, "Hundred-Type Guanyin Bodhisattva", "백식관음",

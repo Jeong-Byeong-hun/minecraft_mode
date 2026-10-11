@@ -131,7 +131,7 @@ public final class ShinigamiContent extends ClassContent {
 			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10)),
 			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, blink(12), dash(6, 1.66)),
 			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10), inflict(WITHER, 4, 1)),
-			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, buff(STRENGTH, 12, 2), buff(SPEED, 12, 1), lifesteal(15), empower(8, 80, 12)));
+			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, buff(STRENGTH, 12, 2), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
 
 		weapon("senbonzakura_kageyoshi", 4, 75, KATANA, "Senbonzakura Kageyoshi", "천본앵경엄",
 			art(0xFFE0EC, 0x2A2A3A, 0xFF7AA0), fx(Fx.Kind.PETAL, 0xFF9AB8),

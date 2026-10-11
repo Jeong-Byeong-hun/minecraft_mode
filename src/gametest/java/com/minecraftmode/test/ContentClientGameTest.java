@@ -45,8 +45,11 @@ import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearStats;
+import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.Coins;
@@ -186,6 +189,11 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			GearStats.invalidate(player);
 			float stronger = GearStats.of(player).get(EngraveStat.BASIC_DAMAGE);
 			require(Math.abs(stronger - plain - 2.0F) < 0.01F, "✦1 adds 2% basic damage, got " + (stronger - plain));
+			// four +15 ✦5 armor pieces leave room under the 50% damage reduction cap (they filled it alone): 4 x (7.5 + 1) = 34%
+			ClassGear chest = ClassGear.of(ClassArmor.pieces(JobClass.WARRIOR).getFirst());
+			float reduction = 4.0F * (float)Enhancement.lines(chest, Enhancement.MAX, 5).stream()
+				.filter(l -> l.stat() == EngraveStat.DAMAGE_REDUCTION).mapToDouble(StatLine::value).sum();
+			require(Math.abs(reduction - 34.0F) < 0.01F, "four +15 ✦5 armor pieces should give 34% damage reduction, give " + reduction);
 			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 			String name = awakened.getHoverName().getString();
 			// kept in the backpack (the hand is used for charms and whistles later) for the awakening screenshot
@@ -340,6 +348,28 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			float wanted = (float)(NamedMobs.byId("astral_knight").health() * 1.3 * 10.0);
 			require(champion.getMaxHealth() == MobPower.HEALTH_CAP && Math.abs(MobPower.toughness(champion) * MobPower.HEALTH_CAP - wanted) < 1.0F,
 				"a champion wanting " + wanted + " health should keep " + MobPower.HEALTH_CAP + " with toughness, has " + champion.getMaxHealth() + " / " + MobPower.toughness(champion));
+			// its 18 armor reads the whole hit: 60 damage loses the floor share (18 x 0.2 / 25 = 14.4%), not the 46% it would take off
+			// 60 / toughness (cactus: armor applies, no class bonuses)
+			float before = champion.getHealth();
+			champion.hurtServer(level, level.damageSources().cactus(), 60.0F);
+			float lost = (before - champion.getHealth()) * MobPower.toughness(champion);
+			float expected = 60.0F * (1.0F - 18.0F * 0.2F / 25.0F);
+			require(Math.abs(lost - expected) < 0.5F, "armor should take 14.4% of a 60 hit on a tough champion: lost " + lost + ", expected " + expected);
+			// double strike's second hit repeats the first as it landed: divided by the toughness once (it was twice), no bonuses again
+			ServerPlayer striker = connection.getServerPlayer();
+			float beforeRepeat = champion.getHealth();
+			CombatHooks.deal(striker, champion, 60.0F, striker.damageSources().playerAttack(striker), CombatHooks.DamageKind.REPEAT);
+			float repeated = (beforeRepeat - champion.getHealth()) * MobPower.toughness(champion);
+			require(Math.abs(repeated - expected) < 0.5F, "a repeated 60 hit should land like the first one (" + expected + "), landed " + repeated);
+			// a world boss may heal again; a dungeon boss heals once per fight
+			champion.setHealth(champion.getMaxHealth() * 0.4F);
+			require(champion.castHeal(level) && champion.canStillHeal(), "a champion under half health should heal and may heal again later");
+			NamedMob dungeonBoss = NamedMobs.type(NamedMobs.byId("astral_knight")).create(level, EntitySpawnReason.COMMAND);
+			dungeonBoss.makeChampion(10.0F, 1.0F, "entity.minecraft_mode.dungeon_boss", connection.getServerPlayer().blockPosition(), 18.0);
+			dungeonBoss.healOnlyOnce();
+			dungeonBoss.setHealth(dungeonBoss.getMaxHealth() * 0.4F);
+			require(dungeonBoss.castHeal(level) && !dungeonBoss.canStillHeal(), "a dungeon boss should heal once and then never again");
+			dungeonBoss.discard();
 			champion.discard();
 			require(MobPower.toughness(champion) == 1.0F, "a removed champion forgets its toughness");
 			require(Dungeons.rewardLevel(20) == 20 && Dungeons.rewardLevel(30) == 25, "rewards grow at half speed past +20");

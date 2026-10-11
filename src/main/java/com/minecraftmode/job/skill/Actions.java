@@ -178,6 +178,8 @@ public final class Actions {
 	private static final String REPEAT = key("repeat", "%1$s (x%2$s)", "%1$s (x%2$s)");
 	private static final String DELAY = key("delay", "After %2$ss: %1$s", "%2$s초 후: %1$s");
 	private static final String LIFESTEAL = key("lifesteal", "Heal for %s%% of damage dealt", "입힌 피해의 %s%% 회복");
+	private static final String LIFESTEAL_FOR = key("lifesteal_for", "For %1$ss, every hit heals for %2$s%% of its damage",
+		"%1$s초 동안 모든 공격이 입힌 피해의 %2$s%% 회복");
 	private static final String LOOT = key("loot", "Enemies hit have a %s%% chance to drop a coin", "적중한 적이 %s%% 확률로 동전 드롭");
 	private static final String REFRESH = key("refresh", "Reduce this weapon's other cooldowns by %s%%", "이 무기의 다른 스킬 대기시간 %s%% 감소");
 
@@ -616,22 +618,24 @@ public final class Actions {
 		@Override
 		public void run(final SkillContext ctx) {
 			int shots = this.shots();
+			// homing shots of one fan split the enemies between them, as estimate() counts them
+			SkillProjectile.Volley volley = this.homing && shots > 1 ? new SkillProjectile.Volley() : null;
 			for (int i = 0; i < shots; i++) {
 				double yaw = shots == 1 || this.parallel > 0.0 ? 0.0 : -this.spread / 2 + this.spread * i / (shots - 1);
 				double side = shots == 1 || this.parallel <= 0.0 ? 0.0 : -this.parallel / 2 + this.parallel * i / (shots - 1);
 				if (this.interval > 0 && i > 0) {
 					SkillScheduler.schedule(i * this.interval, () -> {
 						if (ctx.valid()) {
-							this.fire(ctx, yaw, side);
+							this.fire(ctx, yaw, side, volley);
 						}
 					});
 				} else {
-					this.fire(ctx, yaw, side);
+					this.fire(ctx, yaw, side, volley);
 				}
 			}
 		}
 
-		private void fire(final SkillContext ctx, final double yawOffset, final double side) {
+		private void fire(final SkillContext ctx, final double yawOffset, final double side, final SkillProjectile.@Nullable Volley volley) {
 			ServerPlayer p = ctx.caster;
 			Vec3 eye = p.getEyePosition().add(0, -0.15, 0);
 			float pitch = p.getXRot();
@@ -646,13 +650,18 @@ public final class Actions {
 			}
 			Vec3 dir = Vec3.directionFromRotation(pitch, (float)(yaw + yawOffset));
 			Vec3 from = side == 0.0 ? eye : SkillContext.openPoint(p, eye.add(Vec3.directionFromRotation(0.0F, yaw + 90.0F).scale(side)));
-			spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false);
+			SkillProjectile shot = spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false);
+			if (shot != null && volley != null) {
+				// the middle shot flies at the enemy in the crosshair and keeps it
+				shot.volley(volley, yawOffset == 0.0 && side == 0.0 ? aimed : null);
+			}
 			sound(ctx, this.style.sound(), 0.6F, 1.0F + p.getRandom().nextFloat() * 0.3F);
 		}
 
 		/**
 		 * Side by side or straight ahead every shot reaches a lone target; a fan sends only its middle one at it, and the rest at others
-		 * nearby. Piercing ones go through the pack, exploding ones hit everyone around where they land.
+		 * nearby (homing shots too: they split the enemies between them, {@link SkillProjectile.Volley}). Piercing ones go through the
+		 * pack, exploding ones hit everyone around where they land.
 		 */
 		@Override
 		public double estimate(final int targets) {
@@ -681,8 +690,8 @@ public final class Actions {
 		}
 	}
 
-	/** Spawns one skill projectile (vanilla arrow for plain ARROW shots). */
-	static void spawn(
+	/** Spawns one skill projectile (vanilla arrow for plain ARROW shots, then null). */
+	static @Nullable SkillProjectile spawn(
 		final SkillContext ctx,
 		final ProjectileStyle style,
 		final Vec3 from,
@@ -704,7 +713,7 @@ public final class Actions {
 			CombatHooks.trackSkillArrow(arrow, ctx, mult);
 			ctx.level.addFreshEntity(arrow);
 			SkillScheduler.schedule(100, arrow::discard);
-			return;
+			return null;
 		}
 		ItemStack display = switch (style) {
 			case BLADE -> randomWeapon ? JobWeapons.randomWeaponStack(ctx.caster.getRandom()) : ctx.stack.copyWithCount(1);
@@ -719,6 +728,7 @@ public final class Actions {
 			.onImpact(impact)
 			.launch(from, dir, speed);
 		ctx.level.addFreshEntity(projectile);
+		return projectile;
 	}
 
 	/** Projectiles fall from the sky onto the target area. */
@@ -1075,8 +1085,19 @@ public final class Actions {
 		return modifier(ctx -> ctx.addOnHit((c, e) -> e.igniteForSeconds((float)seconds)), Component.translatable(BURN, num(seconds)));
 	}
 
+	/** Lifesteal on this skill's own hits; a skill without hits (a buff) uses {@link #lifestealFor}. */
 	public static SkillAction lifesteal(final double pct) {
 		return modifier(ctx -> ctx.addLifesteal(pct / 100.0), Component.translatable(LIFESTEAL, num(pct)));
+	}
+
+	/** For {@code seconds} every hit of the caster (basic, shot or skill) heals {@code pct}% of its damage. */
+	public static SkillAction lifestealFor(final double seconds, final double pct) {
+		return action(ctx -> {
+			CombatState state = CombatState.of(ctx.caster);
+			state.lifesteal = (float)(pct / 100.0);
+			state.lifestealUntil = ctx.level.getGameTime() + (long)(seconds * 20);
+			ctx.level.sendParticles(ParticleTypes.HEART, ctx.caster.getX(), ctx.caster.getY(1.1), ctx.caster.getZ(), 6, 0.5, 0.3, 0.5, 0.0);
+		}, Component.translatable(LIFESTEAL_FOR, num(seconds), num(pct)));
 	}
 
 	public static SkillAction loot(final double pct) {

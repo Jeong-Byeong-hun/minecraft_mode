@@ -99,6 +99,9 @@ public class NamedMob extends CreatureMob {
 	private float stealthPower;
 	private int healTicks;
 	private float healPerTick;
+	/** A dungeon boss heals once per fight ({@link #healOnlyOnce}); {@link #healed} remembers that it has. */
+	private boolean healOnce;
+	private boolean healed;
 	private final List<Mob> minions = new ArrayList<>();
 	/** A lair lord: the cycle's guardian of a lair treasure (tougher, boss bar, the lair's wrath). */
 	private boolean lord;
@@ -285,6 +288,19 @@ public class NamedMob extends CreatureMob {
 
 	public boolean isChampion() {
 		return this.champion;
+	}
+
+	/**
+	 * Lets the heal pattern run only once. Dungeon bosses: on a high keystone a solo player cannot take the last half in the 20-30 s
+	 * between two heals, so every heal past the first only stretched the fight.
+	 */
+	public void healOnlyOnce() {
+		this.healOnce = true;
+	}
+
+	/** Whether its heal pattern may still run (it still needs to be under half health). */
+	public boolean canStillHeal() {
+		return !(this.healOnce && this.healed);
 	}
 
 	private void applyLord() {
@@ -627,7 +643,7 @@ public class NamedMob extends CreatureMob {
 
 	private boolean ready(final Ability ability) {
 		return switch (ability.type()) {
-			case HEAL -> this.getHealth() < this.getMaxHealth() * 0.5F && this.healTicks == 0;
+			case HEAL -> this.getHealth() < this.getMaxHealth() * 0.5F && this.healTicks == 0 && this.canStillHeal();
 			case STEALTH -> !this.hasEffect(MobEffects.INVISIBILITY);
 			case LEAP -> this.onGround() || this.def().flying();
 			case SUMMON -> this.minions.size() < ability.count() * 2;
@@ -810,8 +826,20 @@ public class NamedMob extends CreatureMob {
 		});
 	}
 
+	/** Starts the heal pattern now if it is ready (tests). */
+	public boolean castHeal(final ServerLevel level) {
+		for (Ability ability : this.def().abilities()) {
+			if (ability.type() == Ability.Type.HEAL && this.ready(ability)) {
+				this.startHeal(level, ability);
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void startHeal(final ServerLevel level, final Ability ability) {
 		this.playAnim(CreatureAnim.CAST);
+		this.healed = true;
 		this.healTicks = 80;
 		this.healPerTick = this.getMaxHealth() * ability.power() / 80.0F;
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ZOMBIE_VILLAGER_CURE, SoundSource.HOSTILE, 0.6F, 1.4F);

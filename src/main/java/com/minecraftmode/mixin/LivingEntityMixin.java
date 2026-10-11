@@ -1,5 +1,7 @@
 package com.minecraftmode.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalFloatRef;
@@ -24,6 +26,22 @@ public abstract class LivingEntityMixin {
 	@ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
 	private float minecraftMode$classDamage(final float damage, @Local(argsOnly = true) final DamageSource source) {
 		return CombatHooks.modifyIncoming((LivingEntity)(Object)this, source, damage);
+	}
+
+	/**
+	 * Monsters with toughness or a raid boss divisor get hits already divided by it ({@link CombatHooks#healthDivisor}). Vanilla armor
+	 * takes more off small hits, so it must read the whole hit: otherwise a +80 dungeon boss's 18 armor ate up to 72% of every hit
+	 * instead of 14%.
+	 */
+	@WrapOperation(method = "getDamageAfterArmorAbsorb", at = @At(value = "INVOKE",
+		target = "Lnet/minecraft/world/damagesource/CombatRules;getDamageAfterAbsorb(Lnet/minecraft/world/entity/LivingEntity;FLnet/minecraft/world/damagesource/DamageSource;FF)F"))
+	private float minecraftMode$armorReadsWholeHit(final LivingEntity victim, final float damage, final DamageSource source, final float armor, final float toughness,
+		final Operation<Float> original) {
+		float divisor = CombatHooks.healthDivisor(victim);
+		if (divisor <= 1.0F) {
+			return original.call(victim, damage, source, armor, toughness);
+		}
+		return original.call(victim, damage * divisor, source, armor, toughness) / divisor;
 	}
 
 	@Inject(method = "actuallyHurt", at = @At("HEAD"))

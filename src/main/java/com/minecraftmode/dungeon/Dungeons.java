@@ -724,6 +724,7 @@ public final class Dungeons {
 			boolean tyrant = instance.has(DungeonAffix.TYRANNICAL);
 			boss.makeChampion(CHAMPION_HEALTH * bossHealth * (tyrant ? DungeonAffix.TYRANNICAL_HEALTH : 1.0F), 1.3F, "entity.minecraft_mode.dungeon_boss",
 				instance.origin.offset(DungeonLayout.ROOMS.get(DungeonLayout.BOSS_ROOM).centerX(), 0, 0), BOSS_LEASH);
+			boss.healOnlyOnce();
 			instance.bossId = boss.getUUID();
 			MobPower.set(boss.getUUID(), CHAMPION_DAMAGE * bossDamageScale(instance.level) * (tyrant ? DungeonAffix.TYRANNICAL_DAMAGE : 1.0F));
 			level.addFreshEntity(boss);

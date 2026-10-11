@@ -3,8 +3,10 @@ package com.minecraftmode.job.skill;
 import com.minecraftmode.registry.ModEntities;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
@@ -58,8 +60,33 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private float explode;
 	private int maxAge = 60;
 	private boolean homing;
+	private @Nullable Volley volley;
+	private @Nullable UUID claimed;
 	private @Nullable BiConsumer<SkillContext, Vec3> impact;
 	private final Set<UUID> hits = new HashSet<>();
+
+	/**
+	 * The homing shots of one fan: each steers to a different enemy. A fan of seven used to curl every shot into a lone boss (seven times
+	 * what the class docs count, which give a lone target the middle shot and the rest to the monsters around). The middle shot keeps the
+	 * enemy in the crosshair; a shot that finds no free enemy flies straight on.
+	 */
+	public static final class Volley {
+		/** enemy -> the shot that took it */
+		private final Map<UUID, UUID> taken = new HashMap<>();
+
+		boolean free(final UUID enemy, final UUID shot) {
+			UUID owner = this.taken.get(enemy);
+			return owner == null || owner.equals(shot);
+		}
+
+		void claim(final UUID enemy, final SkillProjectile shot) {
+			if (shot.claimed != null && !shot.claimed.equals(enemy)) {
+				this.taken.remove(shot.claimed, shot.getUUID());
+			}
+			this.taken.put(enemy, shot.getUUID());
+			shot.claimed = enemy;
+		}
+	}
 
 	public SkillProjectile(final EntityType<? extends SkillProjectile> type, final Level level) {
 		super(type, level);
@@ -115,6 +142,15 @@ public class SkillProjectile extends ThrowableItemProjectile {
 
 	public SkillProjectile homing(final boolean homing) {
 		this.homing = homing;
+		return this;
+	}
+
+	/** Shares targets with the other homing shots of the same fan ({@link Volley}); {@code first} is this shot's enemy from the start. */
+	public SkillProjectile volley(final @Nullable Volley volley, final @Nullable LivingEntity first) {
+		this.volley = volley;
+		if (volley != null && first != null) {
+			volley.claim(first.getUUID(), this);
+		}
 		return this;
 	}
 
@@ -178,7 +214,8 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		AABB box = this.getBoundingBox().inflate(8.0);
 		LivingEntity target = null;
 		double best = Double.MAX_VALUE;
-		for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, box, e -> CombatHooks.isEnemy(owner, e) && !this.hits.contains(e.getUUID()))) {
+		for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, box, e -> CombatHooks.isEnemy(owner, e) && !this.hits.contains(e.getUUID())
+			&& (this.volley == null || this.volley.free(e.getUUID(), this.getUUID())))) {
 			double d = e.distanceToSqr(this);
 			if (d < best) {
 				best = d;
@@ -186,6 +223,9 @@ public class SkillProjectile extends ThrowableItemProjectile {
 			}
 		}
 		if (target != null) {
+			if (this.volley != null) {
+				this.volley.claim(target.getUUID(), this);
+			}
 			Vec3 motion = this.getDeltaMovement();
 			Vec3 want = target.getBoundingBox().getCenter().subtract(this.position()).normalize().scale(motion.length());
 			this.setDeltaMovement(motion.lerp(want, 0.25));

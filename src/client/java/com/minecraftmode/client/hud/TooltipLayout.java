@@ -19,7 +19,7 @@ import net.minecraft.util.Mth;
  * Long item tooltips (26.3 neither wraps tooltip lines nor keeps a tall tooltip on screen): lines wider than half the screen
  * (at least {@link #MIN_WIDTH}) wrap with a small indent, and a tooltip taller than the screen starts at its top and scrolls with
  * the mouse wheel ({@code GuiGraphicsExtractorMixin} places it through {@link #place}). Registered after every other tooltip
- * callback, so it sees the finished lines.
+ * callback, so it sees the finished lines. Only on the render thread: the font must never be touched from anywhere else.
  */
 public final class TooltipLayout {
 	private static final int MIN_WIDTH = 200;
@@ -38,6 +38,11 @@ public final class TooltipLayout {
 	public static void init() {
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			Minecraft minecraft = Minecraft.getInstance();
+			// the recipe book and creative search build every tooltip on a background thread: measuring text there bakes unseen
+			// glyphs (Hangul) into the GPU font atlas off the render thread, and the next search crashed (0.5.19). Searches need no wrapping.
+			if (!minecraft.isSameThread()) {
+				return;
+			}
 			int max = Math.max(MIN_WIDTH, minecraft.getWindow().getGuiScaledWidth() / 2);
 			Font font = minecraft.font;
 			for (int i = 0; i < lines.size(); i++) {

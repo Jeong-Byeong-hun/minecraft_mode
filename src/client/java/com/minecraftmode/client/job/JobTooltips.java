@@ -29,6 +29,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Class weapon tooltip: requirements (red when unmet), basic attack, skill list with keys, MP and
@@ -55,6 +56,15 @@ public final class JobTooltips {
 		});
 	}
 
+	/**
+	 * The local player the requirement colours and stat totals are read for; null off the render thread, where the recipe book and
+	 * creative search build every tooltip and the client stat caches ({@code GearStats}) are not safe to read.
+	 */
+	static @Nullable Player viewer() {
+		Minecraft minecraft = Minecraft.getInstance();
+		return minecraft.isSameThread() ? minecraft.player : null;
+	}
+
 	public static String num(final double v) {
 		double r = Math.round(v * 10.0) / 10.0;
 		return r == Math.rint(r) ? Long.toString((long)r) : String.format(Locale.ROOT, "%.1f", r);
@@ -68,7 +78,7 @@ public final class JobTooltips {
 
 	public static List<Component> build(final ItemStack stack, final WeaponDef def) {
 		List<Component> lines = new ArrayList<>();
-		Player player = Minecraft.getInstance().player;
+		Player player = viewer();
 		JobData data = player == null ? JobData.DEFAULT : JobProgression.get(player);
 		boolean classOk = data.job() == def.job();
 		boolean tierOk = classOk && data.tier() >= def.tier();

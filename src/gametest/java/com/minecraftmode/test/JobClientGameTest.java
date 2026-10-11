@@ -59,6 +59,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -70,6 +71,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.multiplayer.SessionSearchTrees;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -79,6 +81,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.util.Util;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.effect.MobEffects;
@@ -138,6 +141,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkGuildAndDrops(context, server, connection);
 			jobScreen(context, server, connection);
 			weaponTooltip(context, server, connection);
+			searchTooltips(context);
 			checkPointBlank(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
@@ -1135,6 +1139,37 @@ public class JobClientGameTest implements FabricClientGameTest {
 		server.runOnServer(s -> connection.getServerPlayer().getInventory().setItem(0, saved));
 		context.waitTicks(2);
 		MinecraftMode.LOGGER.info("[job] weapon tooltip shows skill power and damage per cast");
+	}
+
+	/**
+	 * The recipe book and creative search build every item's tooltip on a background thread with no player: mod tooltips must not touch
+	 * the font or the client stat caches there. Until 0.5.19 searching the crafting table's recipe book (in Korean) crashed the game:
+	 * {@code TooltipLayout} measured lines off the render thread, which baked unseen glyphs into the GPU font atlas.
+	 */
+	private static void searchTooltips(final ClientGameTestContext context) {
+		Item.TooltipContext tooltip = context.computeOnClient(minecraft -> Item.TooltipContext.of(minecraft.level));
+		List<ItemStack> stacks = new ArrayList<>();
+		for (Item item : BuiltInRegistries.ITEM) {
+			stacks.add(new ItemStack(item));
+		}
+		// glyphs no screen has drawn yet, in a line long enough to wrap: measuring them would bake them
+		ItemStack unseen = new ItemStack(Items.COMPASS);
+		unseen.set(DataComponents.CUSTOM_NAME, Component.literal("龘靐齉 뷁햏 " + "꽑".repeat(80)));
+		stacks.add(unseen);
+		String weapon = CompletableFuture.supplyAsync(() -> {
+			stacks.forEach(stack -> stack.getTooltipLines(tooltip, null, TooltipFlag.NORMAL));
+			return new ItemStack(JobWeapons.item(JobWeapons.def("gladiator_longsword"))).getTooltipLines(tooltip, null, TooltipFlag.NORMAL).stream()
+				.map(Component::getString).collect(Collectors.joining("\n"));
+		}, Util.backgroundExecutor()).join();
+		require(weapon.contains("Skill power"), "a class weapon's tooltip built for a search should still list its skills:\n" + weapon);
+		// the real path: rebuild the session's search trees and search them as the recipe book and creative tab do
+		SessionSearchTrees trees = context.computeOnClient(minecraft -> {
+			minecraft.getConnection().searchTrees().rebuildAfterLanguageChange();
+			return minecraft.getConnection().searchTrees();
+		});
+		trees.recipes().search("compass");
+		trees.creativeNameSearch().search("compass");
+		MinecraftMode.LOGGER.info("[job] {} tooltips build off the render thread for searches", stacks.size());
 	}
 
 	// ------------------------------------------------------------------ every skill

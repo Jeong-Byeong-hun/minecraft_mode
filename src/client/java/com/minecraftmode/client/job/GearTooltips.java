@@ -21,7 +21,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
@@ -35,7 +34,7 @@ import org.jspecify.annotations.Nullable;
 public final class GearTooltips {
 	public static List<Component> build(final ItemStack stack, final ArmorPieceDef def) {
 		List<Component> lines = new ArrayList<>();
-		Player player = Minecraft.getInstance().player;
+		Player player = JobTooltips.viewer();
 		JobData data = player == null ? JobData.DEFAULT : JobProgression.get(player);
 		boolean classOk = data.job() == def.job();
 		boolean tierOk = classOk && data.tier() >= def.tier();

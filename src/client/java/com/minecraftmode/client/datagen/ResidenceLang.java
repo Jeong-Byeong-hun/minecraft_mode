@@ -14,7 +14,7 @@ final class ResidenceLang {
 			: "Use in the residence: the chunk you stand in, from under your feet up 16 blocks (16x16x16), becomes yours. Sneak-use or /land: manage your land");
 		// claiming
 		b.add(m + "claimed", ko ? "땅을 얻었습니다: X %s, Y %s, Z %s ~ X %s, Y %s, Z %s" : "This land is yours: X %s, Y %s, Z %s to X %s, Y %s, Z %s");
-		b.add(m + "spawn", ko ? "거주구역 광장 근처는 점유할 수 없습니다." : "The land around the residence square cannot be claimed.");
+		b.add(m + "spawn", ko ? "거주구역 광장과 대로는 점유할 수 없습니다." : "The residence square and its avenues cannot be claimed.");
 		b.add(m + "taken", ko ? "이 청크 기둥에는 이미 다른 사람의 땅이 있습니다." : "Someone else already owns land in this chunk column.");
 		b.add(m + "overlap", ko ? "이미 가진 땅과 겹칩니다. 위나 아래로 16칸 떨어진 곳에서 쓰세요." : "That overlaps land you already own. Use it 16 blocks above or below.");
 		b.add(m + "limit", ko ? "땅은 최대 %s개까지 가질 수 있습니다." : "You can own at most %s plots.");
@@ -41,6 +41,7 @@ final class ResidenceLang {
 		b.add(m + "refused", ko ? "%s님의 땅입니다." : "This is %s's land.");
 		b.add(m + "refused_wild", ko ? "주인 없는 땅에는 지을 수 없습니다. 토지 소유권 증서로 점유하세요." : "Nobody can build on unclaimed land. Claim it with a land deed.");
 		b.add(m + "hud.square", ko ? "거주구역 광장" : "Residence square");
+		b.add(m + "hud.avenue", ko ? "거주구역 대로" : "Residence avenue");
 		b.add(m + "hud.wild", ko ? "주인 없는 땅 · 증서로 점유할 수 있습니다" : "Unclaimed land · a deed can claim it");
 		b.add(m + "hud.mine", ko ? "내 땅" : "Your land");
 		b.add(m + "hud.trusted", ko ? "%s님의 땅 · 허용됨" : "%s's land · you may build");

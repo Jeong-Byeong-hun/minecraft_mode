@@ -46,6 +46,7 @@ public final class ResidenceRules {
 	private static final int WAYMASTER_INTERVAL = 100;
 	private static final Object WILD = new Object();
 	private static final Object SQUARE = new Object();
+	private static final Object AVENUE = new Object();
 	private static final Map<UUID, Long> LAST_REFUSAL = new ConcurrentHashMap<>();
 	private static final Map<UUID, Object> LAST_PLACE = new ConcurrentHashMap<>();
 	/** The claims version each player in the residence last got borders for. */
@@ -160,7 +161,7 @@ public final class ResidenceRules {
 				}
 				BlockPos pos = player.blockPosition();
 				LandClaims.Claim claim = claims.at(pos);
-				Object place = claim != null ? claim : ResidenceDimension.isSpawn(pos) ? SQUARE : WILD;
+				Object place = claim != null ? claim : ResidenceDimension.isSpawn(pos) ? SQUARE : ResidenceDimension.isAvenue(pos) ? AVENUE : WILD;
 				if (!Objects.equals(LAST_PLACE.put(player.getUUID(), place), place)) {
 					player.sendOverlayMessage(label(claims, player.getUUID(), pos));
 				}
@@ -185,9 +186,8 @@ public final class ResidenceRules {
 	public static Component label(final LandClaims claims, final UUID viewer, final BlockPos pos) {
 		LandClaims.Claim claim = claims.at(pos);
 		if (claim == null) {
-			return ResidenceDimension.isSpawn(pos)
-				? Component.translatable("message.minecraft_mode.land.hud.square").withStyle(ChatFormatting.AQUA)
-				: Component.translatable("message.minecraft_mode.land.hud.wild").withStyle(ChatFormatting.GRAY);
+			String key = ResidenceDimension.isSpawn(pos) ? "square" : ResidenceDimension.isAvenue(pos) ? "avenue" : "wild";
+			return Component.translatable("message.minecraft_mode.land.hud." + key).withStyle(key.equals("wild") ? ChatFormatting.GRAY : ChatFormatting.AQUA);
 		}
 		if (claim.owner().equals(viewer)) {
 			return Component.translatable("message.minecraft_mode.land.hud.mine").withStyle(ChatFormatting.GREEN);

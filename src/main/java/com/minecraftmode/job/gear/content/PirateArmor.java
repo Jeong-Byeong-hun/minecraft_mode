@@ -53,7 +53,7 @@ public final class PirateArmor extends ArmorContent {
 			four(line(DOUBLE_STRIKE, 15), line(GOLD_FIND, 10)));
 		set("pirate_king", 100, "Pirate King's Regalia", "해적왕의 예복", 0xE8C45A, 0xA8282E, 0xF4F4F0,
 			two(line(ITEM_FIND, 20), line(GOLD_FIND, 10)),
-			three(line(BASIC_DAMAGE, 20), line(SHOT_DAMAGE, 20)),
+			three(line(BASIC_DAMAGE, 25), line(SHOT_DAMAGE, 25)),
 			four(line(CHAIN_LIGHTNING, 15), line(BOSS_DAMAGE, 25)));
 	}
 }

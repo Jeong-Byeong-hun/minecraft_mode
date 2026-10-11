@@ -22,7 +22,7 @@ public final class RogueArmor extends ArmorContent {
 		set("nightstalker", 20, "Nightstalker", "밤사냥꾼", 0x1E2A44, 0x101014, 0x6FA8FF,
 			two(line(BACKSTAB, 10)),
 			three(line(DODGE, 5)),
-			four(line(STEALTH_ON_KILL, 2)));
+			four(line(STEALTH_ON_KILL, 2), line(CRIT_CHANCE, 6)));
 		set("leaf_shinobi", 30, "Leaf Shinobi", "나뭇잎 시노비", 0x3E6B3A, 0x1E2A44, 0xC0C8D0,
 			two(line(ATTACK_SPEED, 6)),
 			three(line(EXTRA_SHOT, 1)),

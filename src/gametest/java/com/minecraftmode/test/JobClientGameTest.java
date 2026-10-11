@@ -748,7 +748,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 		// the arrows of one basic shot hit each enemy once: of a fan of four (three Multishot lines) the husk in front takes the middle one
 		// (three used to land), and an arrow passing through it goes on to the husk beside and behind it
 		LivingEntity[] fanned = new LivingEntity[2];
-		float[] arrowHit = new float[2];
+		float[] arrowHit = new float[3];
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			// tier 3: no treasure blades joining the shot
@@ -764,9 +764,13 @@ public class JobClientGameTest implements FabricClientGameTest {
 			fanned[1] = spawnTarget(player.level(), 1.35, -60, -5.5);
 			EngraveTotals mods = JobWeapons.activeTotals(player);
 			arrowHit[0] = mods.get(EngraveStat.EXTRA_SHOT);
-			arrowHit[1] = def.shotDamage() * (1.0F + BasicAttacks.shotBonus(JobProgression.get(player), mods)) * 1.15F;
+			arrowHit[1] = def.shotDamage() * (1.0F + BasicAttacks.shotBonus(JobProgression.get(player), mods)) * (1.0F + BasicAttacks.EAGLE_EYE);
+			arrowHit[2] = BasicAttacks.shotBonus(JobProgression.get(player), mods) - mods.fraction(EngraveStat.SHOT_DAMAGE);
 		});
 		require(arrowHit[0] == 3.0F, "three Multishot lines should add 3 arrows, got " + arrowHit[0]);
+		// what the extra arrows are worth on a lone target
+		require(Math.abs(arrowHit[2] - 3 * BasicAttacks.EXTRA_SHOT_DAMAGE / 100.0F) < 1.0E-4F,
+			"three extra arrows should add " + 3 * BasicAttacks.EXTRA_SHOT_DAMAGE + "% basic shot damage, got " + arrowHit[2] * 100.0F + "%");
 		context.waitTicks(2);
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();

@@ -37,7 +37,7 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Grand Caster", "그랜드 캐스터", "Akashic Record", "아카식 레코드", "Skill cooldowns -20%.", "스킬 재사용 대기시간 -20%.")
 	}),
 	ARCHER("archer", 0x58C04A, "Archer", "궁수", new Tier[] {
-		new Tier("Bowman", "궁수", "Eagle Eye", "매의 눈", "Basic shot damage +15%.", "기본 사격 피해 +15%."),
+		new Tier("Bowman", "궁수", "Eagle Eye", "매의 눈", "Basic shot damage +20%.", "기본 사격 피해 +20%."),
 		new Tier("Ranger", "레인저", "Wind Walker", "바람 걸음", "Movement speed +8%.", "이동 속도 +8%."),
 		new Tier("Heroic Archer", "아처", "Deadeye", "필중", "+2% damage per 4 blocks of distance (max +40%).", "거리 4블록마다 피해 +2% (최대 +40%)."),
 		new Tier("King of Heroes", "영웅왕", "Gate of Babylon", "왕의 재보",

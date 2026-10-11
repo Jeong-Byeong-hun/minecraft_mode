@@ -21,7 +21,7 @@ public final class ArcherArmor extends ArmorContent {
 			four(line(CRIT_CHANCE, 6)));
 		set("ranger_cloak", 20, "Ranger's Cloak", "레인저의 망토", 0x2F4F2F, 0x5A3E24, 0x8FBC8F,
 			two(line(DRAW_SPEED, 10)),
-			three(line(RANGE_BONUS, 3)),
+			three(line(RANGE_BONUS, 5)),
 			four(line(EXTRA_SHOT, 1)));
 		set("sherwood_outlaw", 30, "Sherwood Outlaw", "셔우드의 무법자", 0x3B5E2B, 0x8C2E2E, 0xC8B488,
 			two(line(POISON, 2)),
@@ -29,7 +29,7 @@ public final class ArcherArmor extends ArmorContent {
 			four(line(STEALTH_ON_KILL, 2), line(SHOT_DAMAGE, 8)));
 		set("storm_hunter", 40, "Storm Hunter", "폭풍 사냥꾼", 0x4A5A6A, 0x2A3A4A, 0x9FD0FF,
 			two(line(EXTRA_SHOT, 1)),
-			three(line(EXTRA_SHOT, 1), line(SHOT_DAMAGE, 15)),
+			three(line(EXTRA_SHOT, 1)),
 			four(line(CRIT_CHANCE, 15)));
 		set("calydonian_huntress", 50, "Calydonian Huntress", "칼리돈의 사냥꾼", 0x4A7A3A, 0xD9B44A, 0xF4E8C0,
 			two(line(MOVE_SPEED, 6)),
@@ -38,7 +38,7 @@ public final class ArcherArmor extends ArmorContent {
 		set("red_mantle", 60, "Red Mantle of the Archer", "붉은 성의", 0xA8282E, 0x141418, 0xE6E6E6,
 			two(line(SKILL_DAMAGE, 10)),
 			three(line(COOLDOWN_FLAT, 0.8F)),
-			four(line(EXTRA_SHOT, 1), line(SHOT_DAMAGE, 12)));
+			four(line(EXTRA_SHOT, 1), line(SHOT_DAMAGE, 26)));
 		set("stella_bowman", 70, "Stella Bowman", "스텔라의 궁수", 0xD8C08A, 0x8A5A2A, 0x9FF4FF,
 			two(line(RANGE_BONUS, 5)),
 			three(line(SHOT_DAMAGE, 15)),
@@ -52,7 +52,7 @@ public final class ArcherArmor extends ArmorContent {
 			three(line(CHAIN_LIGHTNING, 12)),
 			four(line(CRIT_CHANCE, 12), line(EXTRA_SHOT, 1)));
 		set("king_of_heroes", 100, "Golden Armor of the King of Heroes", "영웅왕의 황금 갑주", 0xE8C45A, 0xA8282E, 0xFFF4C0,
-			two(line(EXTRA_SHOT, 1), line(SHOT_DAMAGE, 15)),
+			two(line(EXTRA_SHOT, 1), line(SHOT_DAMAGE, 5)),
 			three(line(CRIT_CHANCE, 15), line(CRIT_DAMAGE, 40)),
 			four(line(BOSS_DAMAGE, 25), line(EXTRA_SHOT, 1)));
 	}

@@ -34,6 +34,7 @@ import com.minecraftmode.job.gear.ArmorSetDef;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ClassDefense;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.job.gear.ItemLevels;
@@ -279,7 +280,11 @@ public class TownClientGameTest implements FabricClientGameTest {
 			ArmorSetDef set = ClassArmor.sets(JobClass.MAGE).stream().filter(x -> x.level() == 80).findFirst().orElseThrow();
 			int armor = 0;
 			for (ArmorPieceDef piece : ClassArmor.piecesOf(set)) {
-				player.setItemSlot(piece.slot().equipmentSlot(), new ItemStack(ClassArmor.item(piece)));
+				// no random options: a dodge line (legs, feet) made the spell miss now and then (the mana shield still paid), and the
+				// others moved the numbers from run to run
+				ItemStack stack = new ItemStack(ClassArmor.item(piece));
+				stack.set(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY);
+				player.setItemSlot(piece.slot().equipmentSlot(), stack);
 				armor += piece.armor();
 			}
 			GearStats.invalidate(player);
@@ -297,7 +302,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 		});
 		// worn armor's attributes apply on the next tick, and the last hit's invulnerability must wear off
 		context.waitTicks(25);
-		String[] detail = new String[1];
+		String[] detail = new String[2];
 		float physical = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			require(player.getAttributeValue(Attributes.ARMOR) >= 20.0, "the robe's armor is on, got " + player.getAttributeValue(Attributes.ARMOR));
@@ -316,6 +321,9 @@ public class TownClientGameTest implements FabricClientGameTest {
 			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
 			float taken = hit(player, s.overworld(), true);
 			int mana = JobProgression.get(player).mana();
+			EngraveTotals t = GearStats.of(player);
+			detail[1] = "MP paid " + (JobStats.maxMana(player) - mana) + ", magic defense " + t.get(EngraveStat.MAGIC_DEFENSE) + "%, dodge " + t.get(EngraveStat.DODGE)
+				+ "%, health " + player.getHealth() + "/" + player.getMaxHealth() + ", last source " + player.getLastDamageSource();
 			require(mana < JobStats.maxMana(player), "the mana shield paid with MP");
 			for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD,
 				net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
@@ -329,7 +337,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 		});
 		require(physical > 0.5F && physical < 4.0F, "a 20 damage hit on a level 80 mage in full robe takes about 2.5, took " + physical + " (" + detail[0] + ")");
 		float ratio = magic / physical;
-		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio + " (physical " + physical + ", magic " + magic + "; " + detail[0] + ")");
+		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio + " (physical " + physical + ", magic " + magic + "; " + detail[0] + "; " + detail[1] + ")");
 		MinecraftMode.LOGGER.info("[town] class defense: level 80 mage takes {} from a 20 physical hit, {} from a 20 spell", physical, magic);
 		context.waitTicks(25);
 	}

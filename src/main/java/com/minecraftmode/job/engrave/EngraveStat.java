@@ -1,6 +1,7 @@
 package com.minecraftmode.job.engrave;
 
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.weapon.BasicAttacks;
 import java.util.Map;
 import java.util.Set;
 import org.jspecify.annotations.Nullable;
@@ -31,7 +32,8 @@ public enum EngraveStat {
 	BURN("burn", "Basic hits ignite for %ss", "기본 공격 적중 시 %s초 화상", 0),
 	SLOW("slow", "Basic hits slow for %ss", "기본 공격 적중 시 %s초 둔화", 0),
 	SKILL_AREA("skill_area", "+%s%% skill area", "스킬 범위 +%s%%", 0),
-	EXTRA_SHOT("extra_shot", "+%s projectiles per basic shot (not skills, one per enemy)", "기본 사격 투사체 +%s (스킬 제외, 적마다 1발)", 4),
+	EXTRA_SHOT("extra_shot", "+%s projectiles per basic shot (not skills, one per enemy, +" + BasicAttacks.EXTRA_SHOT_DAMAGE + "%% basic shot damage each)",
+		"기본 사격 투사체 +%s (스킬 제외, 적마다 1발, 1발당 기본 사격 피해 +" + BasicAttacks.EXTRA_SHOT_DAMAGE + "%%)", 4),
 	SHOT_DAMAGE("shot_damage", "+%s%% basic shot damage", "기본 사격 피해 +%s%%", 0),
 	RANGE_BONUS("range_bonus", "+%s%% damage per 10 blocks of distance", "거리 10블록당 피해 +%s%%", 0),
 	GOLD_FIND("gold_find", "%s%% chance to drop coins on kill", "처치 시 %s%% 확률로 동전 획득", 100),
@@ -98,10 +100,13 @@ public enum EngraveStat {
 	 * How a class reads a stat that means something different per class: {@link #EXTRA_SHOT} adds arrows for archers, bullets for
 	 * pirates and throwing weapons for rogues ({en, ko}). Display only; the stat and its saved id stay one.
 	 */
+	private static final String EACH_EN = "+" + BasicAttacks.EXTRA_SHOT_DAMAGE + "%% basic shot damage each)";
+	private static final String EACH_KO = "1발당 기본 사격 피해 +" + BasicAttacks.EXTRA_SHOT_DAMAGE + "%%)";
 	private static final Map<EngraveStat, Map<JobClass, String[]>> CLASS_WORDING = Map.of(EXTRA_SHOT, Map.of(
-		JobClass.ARCHER, new String[] {"+%s arrows per basic shot (not skills, one per enemy)", "화살 +%s (기본 사격, 스킬 제외, 적마다 1발)"},
-		JobClass.PIRATE, new String[] {"+%s bullets per basic shot (not skills, one per enemy)", "탄환 +%s (기본 사격, 스킬 제외, 적마다 1발)"},
-		JobClass.ROGUE, new String[] {"+%s throwing weapons per basic shot (not skills, one per enemy)", "투척 무기 +%s (기본 사격, 스킬 제외, 적마다 1발)"}));
+		JobClass.ARCHER, new String[] {"+%s arrows per basic shot (not skills, one per enemy, " + EACH_EN, "화살 +%s (기본 사격, 스킬 제외, 적마다 1발, " + EACH_KO},
+		JobClass.PIRATE, new String[] {"+%s bullets per basic shot (not skills, one per enemy, " + EACH_EN, "탄환 +%s (기본 사격, 스킬 제외, 적마다 1발, " + EACH_KO},
+		JobClass.ROGUE, new String[] {"+%s throwing weapons per basic shot (not skills, one per enemy, " + EACH_EN,
+			"투척 무기 +%s (기본 사격, 스킬 제외, 적마다 1발, " + EACH_KO}));
 
 	/** The classes with their own wording of this stat (for lang). */
 	public Set<JobClass> worded() {

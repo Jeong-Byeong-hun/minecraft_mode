@@ -205,7 +205,7 @@ final class ClassComparison {
 			shotRate = 20.0 / ticks;
 			double distance = mods.fraction(RANGE_BONUS) * SHOT_DISTANCE / 10.0
 				+ (CombatHooks.has(data, JobClass.ARCHER, 3) ? Math.min(0.40, 0.02 * (int)(SHOT_DISTANCE / 4.0)) : 0.0);
-			double hit = w.shotDamage() * (1.0 + BasicAttacks.shotBonus(data, mods)) * (CombatHooks.has(data, JobClass.ARCHER, 1) ? 1.15 : 1.0)
+			double hit = w.shotDamage() * (1.0 + BasicAttacks.shotBonus(data, mods)) * (CombatHooks.has(data, JobClass.ARCHER, 1) ? 1.0 + BasicAttacks.EAGLE_EYE : 1.0)
 				* (1.0 + execute + first + distance) * crit * (CombatHooks.has(data, JobClass.ARCHER, 4) ? 1.0 + BasicAttacks.BABYLON_CHANCE * 2 : 1.0);
 			shot = hit * shotRate;
 			double extra = mods.get(EXTRA_SHOT) * 0.5;

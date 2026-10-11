@@ -34,6 +34,13 @@ import org.jspecify.annotations.Nullable;
 public final class BasicAttacks {
 	/** King of Heroes (archer tier 4): chance that two treasure blades join a basic shot. */
 	public static final float BABYLON_CHANCE = 0.15F;
+	/** Eagle Eye (archer tier 1): basic shot damage bonus, a multiplier on top of the shot damage stat. */
+	public static final float EAGLE_EYE = 0.20F;
+	/**
+	 * Basic shot damage (percent) each extra projectile ({@link EngraveStat#EXTRA_SHOT}) adds. The extras only reach other enemies
+	 * ({@link Fan}); this is what they are worth on a lone target, steady whatever its size or distance (Heavy Draw gives 10 a line).
+	 */
+	public static final int EXTRA_SHOT_DAMAGE = 4;
 
 	/**
 	 * The projectiles of one basic shot. Each enemy takes one of them: the extra ones ({@link EngraveStat#EXTRA_SHOT}) fly on past it to the
@@ -60,11 +67,11 @@ public final class BasicAttacks {
 	}
 
 	/**
-	 * Damage bonus (fraction) of an active weapon's basic shot: the shot damage stat and, for mages, their skill damage too (Mana
-	 * Affinity: a mage's orbs are spells, so whatever strengthens the spells strengthens them).
+	 * Damage bonus (fraction) of an active weapon's basic shot: the shot damage stat, {@link #EXTRA_SHOT_DAMAGE} per extra projectile
+	 * and, for mages, their skill damage too (Mana Affinity: a mage's orbs are spells, so whatever strengthens the spells strengthens them).
 	 */
 	public static float shotBonus(final JobData data, final EngraveTotals mods) {
-		float bonus = mods.fraction(EngraveStat.SHOT_DAMAGE);
+		float bonus = mods.fraction(EngraveStat.SHOT_DAMAGE) + mods.get(EngraveStat.EXTRA_SHOT) * EXTRA_SHOT_DAMAGE / 100.0F;
 		if (CombatHooks.has(data, JobClass.MAGE, 1)) {
 			bonus += mods.fraction(EngraveStat.SKILL_DAMAGE) + (CombatHooks.has(data, JobClass.MAGE, 3) ? SkillCaster.ARCANE_MASTERY : 0.0F);
 		}
@@ -85,7 +92,7 @@ public final class BasicAttacks {
 		EngraveTotals mods = active ? JobWeapons.activeTotals(player) : EngraveTotals.EMPTY;
 		float damage = def.shotDamage() * power * (1.0F + (active ? shotBonus(data, mods) : 0.0F));
 		if (CombatHooks.has(data, JobClass.ARCHER, 1)) {
-			damage *= 1.15F;
+			damage *= 1.0F + EAGLE_EYE;
 		}
 		int count = 1 + (int)mods.get(EngraveStat.EXTRA_SHOT);
 		ProjectileStyle style = def.archetype().shot();

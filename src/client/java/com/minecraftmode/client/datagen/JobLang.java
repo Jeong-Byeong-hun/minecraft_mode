@@ -180,15 +180,15 @@ final class JobLang {
 		b.add("screen.minecraft_mode.job.exp", ko ? "경험치 %s" : "EXP %s");
 		b.add("screen.minecraft_mode.job.mana", ko ? "MP %s/%s (초당 +%s)" : "MP %s/%s (+%s/s)");
 		b.add("screen.minecraft_mode.job.no_class", ko
-			? "레벨 %s에 직업을 고를 수 있습니다. 몬스터를 처치하거나 철 이상의 광석을 캐면 레벨이 오릅니다."
-			: "Choose a class at level %s. Gain levels by defeating monsters and mining iron or better ores.");
+			? "레벨 %s에 직업을 고를 수 있습니다. 몬스터를 처치하거나 광석을 캐면 레벨이 오릅니다."
+			: "Choose a class at level %s. Gain levels by defeating monsters and mining ores.");
 		b.add("screen.minecraft_mode.job.tier_line", ko ? "%s차 · %s" : "Tier %s · %s");
 		b.add("screen.minecraft_mode.job.requires_level", ko ? "요구 레벨 %s" : "Requires level %s");
 		b.add("screen.minecraft_mode.job.next_passive", ko ? "해금 패시브 %s: %s" : "Unlocks %s: %s");
 		b.add("screen.minecraft_mode.job.final", ko ? "최종 전직을 달성했습니다!" : "You have reached the final tier!");
 		b.add("screen.minecraft_mode.job.hint", ko
-			? "스킬 키: %s %s %s %s. 정수는 몬스터와 철 이상 광석에서 얻고 정수 각인대에서 씁니다. 직업 무기는 직업 길드에서 삽니다."
-			: "Skill keys: %s %s %s %s. Essence drops from monsters and iron+ ores; spend it at the Essence Engraving Table. Buy class weapons at the Class Guild.");
+			? "스킬 키: %s %s %s %s. 정수는 몬스터와 광석에서 얻고 정수 각인대에서 씁니다. 직업 무기는 직업 길드에서 삽니다."
+			: "Skill keys: %s %s %s %s. Essence drops from monsters and ores; spend it at the Essence Engraving Table. Buy class weapons at the Class Guild.");
 
 		// engraving screen
 		b.add("screen.minecraft_mode.engraving.empty_line", ko ? "비어 있음" : "Empty");

@@ -29,7 +29,7 @@ import net.minecraft.network.chat.MutableComponent;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The raid marshal's board: the six bosses on the left and the difficulty along the top; the chosen boss's level range, arena,
+ * The raid marshal's board: the bosses on the left and the difficulty along the top; the chosen boss's level range, arena,
  * fee, whether this cycle's reward is still open, the cycle's modifiers and story on the right, then the party with who meets
  * the level. The records button swaps the story for the fastest clears and the modifier details. The leader (or a solo player)
  * starts the raid; the server checks everything again.

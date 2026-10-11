@@ -10,7 +10,7 @@ public enum BountyKind {
 	KILL_NAMED("kill_named"),
 	/** Clear named lairs (open a lair treasure after its lord fell). */
 	CLEAR_LAIR("clear_lair"),
-	/** Mine iron or better ores. */
+	/** Mine ores (any kind; Silk Touch does not count). */
 	MINE_ORE("mine_ore"),
 	/** Clear raids (any boss, any difficulty, rewarded clears only). */
 	RAID("raid"),

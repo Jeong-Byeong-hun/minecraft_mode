@@ -782,6 +782,27 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		shot(context, "content_guide_town");
 		GuideScreen.showTopic(GuideScreen.Topic.START);
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		// a lone % in an answer without arguments breaks the whole format and shows the raw text, %% included (until 0.5.17 the raids topic did)
+		String rawTexts = context.computeOnClient(minecraft -> {
+			List<String> keys = new ArrayList<>();
+			for (GuideScreen.Topic topic : GuideScreen.Topic.values()) {
+				if (topic != GuideScreen.Topic.LEVELING && topic != GuideScreen.Topic.KEYS && topic != GuideScreen.Topic.PLACES) {
+					keys.add(topic.key() + ".text");
+				}
+			}
+			for (int i = 1; i <= CityServices.GUIDE_PAGES; i++) {
+				keys.add("book.minecraft_mode.guide.page" + i);
+			}
+			List<String> broken = new ArrayList<>();
+			for (String key : keys) {
+				String raw = net.minecraft.locale.Language.getInstance().getOrDefault(key);
+				if (raw.indexOf('%') >= 0 && Component.translatable(key).getString().equals(raw)) {
+					broken.add(key);
+				}
+			}
+			return String.join(", ", broken);
+		});
+		require(rawTexts.isEmpty(), "guide texts that fail to format: " + rawTexts);
 		// Nella replaces old handbooks with the current edition
 		String handbook = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();

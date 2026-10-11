@@ -93,8 +93,8 @@ public final class Story {
 			"Reach level 10 in a profession", "생활 기술 레벨 10 달성", 10, Story::bestProfession,
 			p -> List.of(new ItemStack(ModItems.PROTECTION_SCROLL)), "a protection scroll", "보호 주문서 1장");
 		chapter("marshals_call", "The Marshal's Call", "사령관의 부름",
-			"Six great monsters threaten the realm. The raid marshal is gathering parties. Answer his call and fell one of them.",
-			"여섯 거대 마물이 왕국을 위협하고 있소. 토벌 사령관이 파티를 모으고 있으니 부름에 응해 그중 하나를 쓰러뜨리시오.",
+			"Great monsters threaten the realm. The raid marshal is gathering parties. Answer his call and fell one of them.",
+			"거대한 마물들이 왕국을 위협하고 있소. 토벌 사령관이 파티를 모으고 있으니 부름에 응해 그중 하나를 쓰러뜨리시오.",
 			"Clear a raid", "레이드 클리어", 1, p -> Progress.get(p).raidClears().values().stream().mapToInt(Integer::intValue).sum(),
 			p -> List.of(new ItemStack(ModItems.ENHANCEMENT_STONE, 3), new ItemStack(ModItems.CONDENSED_ESSENCE, 5)),
 			"3 enhancement stones, 5 condensed essence", "강화석 3개, 응축된 정수 5개");

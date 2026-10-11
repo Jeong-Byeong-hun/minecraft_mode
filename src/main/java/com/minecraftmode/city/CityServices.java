@@ -161,7 +161,7 @@ public final class CityServices {
 	}
 
 	/** Number of handbook pages ({@code book.minecraft_mode.guide.page1..N}). */
-	public static final int GUIDE_PAGES = 16;
+	public static final int GUIDE_PAGES = 17;
 
 	/** Whether {@code stack} is a copy of the handbook (any edition). */
 	public static boolean isGuideBook(final ItemStack stack) {
@@ -185,7 +185,7 @@ public final class CityServices {
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.guide_book.given").withStyle(ChatFormatting.GOLD));
 	}
 
-	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet, the story, dungeons, companions, town comforts, maps and keys. Pages are translated on the client. */
+	/** Adventurer's handbook: city map, classes and trainers, trials, essence, the wallet, the story, dungeons, companions, town comforts, maps and keys, the residence. Pages are translated on the client. */
 	public static ItemStack guideBook() {
 		ItemStack book = new ItemStack(Items.WRITTEN_BOOK);
 		List<Filterable<Component>> pages = new ArrayList<>();

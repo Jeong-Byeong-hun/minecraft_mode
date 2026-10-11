@@ -86,7 +86,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Dungeons for 2-4 players (solo works, with less health on the monsters). The dungeon warden sends a party into a fresh run of
+ * Dungeons for 1-4 players (solo works, with less health on the monsters). The dungeon warden sends a party into a fresh run of
  * the dungeon dimension: three halls whose doors open as each is cleared, then a champion of a named monster. Without a keystone
  * the run is untimed and the clear gives a +2 keystone; with one, monsters grow by {@link #healthScale}/{@link #damageScale} per
  * level, modifiers join from +4, +7 and +10, and beating the timer upgrades the keystone (+2 under 60% of the time) and moves it to

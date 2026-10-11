@@ -4,6 +4,7 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityFixtures;
+import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
@@ -344,7 +345,9 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 체력은 1인 기준 × (1 + ").append(ClassDocProvider.num(RaidBoss.PARTY_SCALE)).append(" × (인원 - 1)). 페이즈마다 제목과 함께 패턴이 추가되고, 모든 광역기는 바닥 경고가 먼저 나옵니다.\n");
 		md.append("- 입장료: 파티원 각자 보스 레벨 구간의 무기값만큼 동전을 냅니다(지갑에서). 레이드에서 죽어도 경험치와 아이템을 잃지 않고 입장한 곳으로 돌아갑니다(그 전투에는 복귀 불가). 전원 이탈 시 실패.\n");
 		md.append("- **즉사 기믹**: 보스마다 1–3개. 정해진 체력 이하가 되면 처음 발동하고 이후 일정 간격으로 반복되며, 기믹과 기믹 사이는 최소 45초입니다. 실패한 사람은 즉사급 피해(방어·저항 무시)를 받고, 일부 협동 기믹은 실패하면 전멸합니다. 협동 기믹의 필요 인원은 파티 규모에 맞춰 줄어들어 혼자서도 깰 수 있습니다.\n");
-		md.append("- 처치 보상: 참가자마다 진화의 에테르 5–8개 · 응축된 정수 2–4개 · 직업 경험치. 장비 3개(+2명마다 1개)는 **경매**(기본) 또는 **주사위**로 나눕니다.\n");
+		md.append("- 처치 보상: 참가자마다 진화의 에테르 5–8개(난이도 배율) · 응축된 정수 2–4개 · 직업 경험치. 장비 1 + 참가자당 2개(영웅 +")
+			.append(RaidDifficulty.HEROIC.extraLots).append(", 악몽 +").append(RaidDifficulty.NIGHTMARE.extraLots)
+			.append(")는 **경매**(기본) 또는 **주사위**로 나눕니다.\n");
 		md.append("  경매: 시작가 = 구간 상점가 × 1.5, 입찰 단위 ≈ 시작가의 5%, ").append(LootSessions.AUCTION_TICKS / 20).append("초(마지막 ")
 			.append(LootSessions.SNIPE_TICKS / 20).append("초 입찰 시 연장), 낙찰금은 나머지 참가자에게 분배, 입찰이 없으면 주사위. 주사위: ")
 			.append(LootSessions.DICE_TICKS / 20).append("초, 1–100, 동점은 재굴림, 전원 포기 시 파티장.\n\n");
@@ -585,7 +588,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요.\n\n");
 
 		md.append("## 광장의 안내원·보급관·제빵사와 수련장\n\n");
-		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 명령어, 길 안내(모든 NPC·교관과 수련장 입구 좌표), 돈, 장비, 네임드, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트.\n");
+		md.append("- **안내원 넬라**(광장, 시작 지점 왼쪽 앞): 우클릭하면 주제별 안내 창 — 처음 시작, 빠른 성장(레벨 10까지 필요한 경험치와 남은 양, 추천 사냥법), 직업, 키와 메뉴, 길 안내(모든 NPC·교관·상점·작업대와 수련장 입구 좌표, 누르면 지도에 표시), 돈·상점·거래소, 장비, 네임드와 소굴, 레이드·던전, 의뢰·스토리, 펫·생활 기술, 이벤트, 마을 편의 시설(거주구역 포함). \"안내서 새로 받기\" 버튼으로 최신판 모험가 안내서(")
+			.append(CityServices.GUIDE_PAGES).append("쪽)를 받습니다.\n");
 		md.append("- **보급관 브람**(넬라 뒤): 모험가마다 한 번, 인챈트 없이 내구도가 닳지 않는 \"보급관의\" 장비 ").append(StarterKit.ITEMS.size())
 			.append("개 — 철 투구·흉갑·레깅스·부츠, 철 검·곡괭이·도끼, 방패(왼손이 비어 있으면 바로 들려 줌). 방패가 생기기 전에 보급품을 받은 모험가는 다시 찾아가면 방패만 받습니다.\n");
 		md.append("- **제빵사 한나**(브람 맞은편): 모험가마다 마인크래프트 하루(낮과 밤 한 바퀴, 잠자면 넘어감)에 한 번 빵 ").append(DailyBread.COUNT).append("개.\n");
@@ -633,8 +637,10 @@ public class GearDocProvider implements DataProvider {
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
 			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");
-		md.append("- **월드 지도**(M): 이 차원에서 본 모든 지형. 드래그로 이동, 휠로 확대/축소, 우클릭으로 그 자리에 웨이포인트(이름·색상). 오른쪽 목록은 거리순이 아닌 추가순이며 클릭하면 그곳을 보여 주고 우클릭하면 편집·삭제합니다. 죽은 자리는 \"마지막 사망 지점\"으로 자동 표시됩니다.\n");
-		md.append("- 지형과 웨이포인트는 클라이언트의 `minecraft_mode/map/<월드>/<차원>.bin`, `minecraft_mode/waypoints/<월드>.json`에 저장됩니다(싱글은 월드 이름, 서버는 주소 기준).\n");
+		md.append("- **월드 지도**(M): 이 차원에서 본 모든 지형. 드래그로 이동, 휠로 확대/축소, 우클릭으로 그 자리에 웨이포인트(이름·색상). 오른쪽 목록은 거리순이 아닌 추가순이며 클릭하면 그곳을 보여 주고 우클릭하면 편집·삭제합니다. 옆 탭은 수도의 NPC·교관 목록입니다(누르면 그곳을 보여 주고, 지도 위 표시에 마우스를 올리면 이름). 죽은 자리는 \"마지막 사망 지점\"으로 자동 표시됩니다.\n");
+		md.append("- **네임드와 보스**: 보이는 네임드 몬스터와 미니 보스는 주황 마름모, 레이드 보스·거신·던전 보스·바닐라 보스는 큰 진홍 마름모로 미니맵과 지도에 나옵니다(미니맵 밖이면 가장자리에 붙고, 큰 지도에서는 이름과 레벨). 거신은 서버가 1초마다 위치를 알려 주어 오버월드 어디서든 보입니다. 허수아비는 표시하지 않습니다.\n");
+		md.append("- **소굴 지도**를 쓰면 찾은 소굴이 주황색 웨이포인트로 남고, 바로 M을 누르면 그 소굴이 가운데 오도록 열립니다.\n");
+		md.append("- 지형과 웨이포인트는 클라이언트의 `minecraft_mode/map/<월드>/<차원>.bin`, `minecraft_mode/waypoints/<월드>.json`에 저장됩니다(싱글은 저장 폴더 이름, 서버는 주소 기준).\n");
 		md.append("- **손에 든 광원**: 횃불·영혼 횃불·랜턴·발광석·바다 랜턴·슈룸라이트·개구리불·용암 양동이처럼 빛나는 블록 아이템을 어느 손에든 들면 그 블록의 밝기로 주변이 밝아집니다. 서버가 머리(또는 발) 위치의 공기·물 칸에 보이지 않는 광원 블록을 두고 따라 옮기며, 내려놓거나 죽거나 접속을 끊으면 사라집니다.\n\n");
 		md.append("## 칭호 이름표\n\n");
 		md.append("- 착용한 칭호는 스코어보드 팀을 쓰지 않고 모드가 직접 이름 앞에 붙입니다(머리 위 이름·채팅·탭 목록). 다른 플러그인·데이터팩의 팀 설정과 충돌하지 않습니다.\n\n");
@@ -693,7 +699,7 @@ public class GearDocProvider implements DataProvider {
 		}
 
 		md.append("\n## 펫과 탈것\n\n");
-		md.append("- 펫 부적·탈것 호루라기를 쓰면 수집품에 추가되고(아이템 소모) 바로 소환됩니다. 수집품: P. 탈것 호출/내리기: H(마지막 탈것).\n");
+		md.append("- 펫 부적·탈것 호루라기를 쓰면 수집품에 추가되고(아이템 소모) 바로 소환됩니다. 수집품: U. 탈것 호출/내리기: H(마지막 탈것).\n");
 		md.append("- 펫은 주인을 따라다니며(공격받지 않음) 소환 중일 때만 보너스를 줍니다. 레벨 1–").append(Companions.MAX_PET_LEVEL)
 			.append(": 소환한 채 몬스터 처치 1, 네임드 10, 보스 50 경험치. 레벨 L까지 누적 25 × L × (L − 1).\n");
 		md.append("- 탈것은 주인만 타고, 다치지 않으며, 내린 뒤 3초가 지나면 사라집니다. 레이드·던전·물속에서는 부를 수 없습니다. 비행 탈것은 공중에서 시선 방향으로 날아갑니다.\n");
@@ -713,7 +719,7 @@ public class GearDocProvider implements DataProvider {
 
 		this.growth(md);
 
-		md.append("\n## 던전 (2–4인)\n\n");
+		md.append("\n## 던전 (1–").append(Dungeons.MAX_PARTY).append("인)\n\n");
 		md.append("- 성 안뜰 서쪽 던전 문의 **던전 관리인 카엘**. 파티장이 입장시키며(").append((int)Dungeons.GATHER_RANGE).append("블록 안의 파티원, 최대 ")
 			.append(Dungeons.MAX_PARTY).append("명) 혼자도 됩니다.\n");
 		md.append("- 구성: 입구 → 홀 ").append(DungeonLayout.HALLS).append("개(들어서면 몬스터가 깨어나고, 모두 쓰러뜨리면 다음 문이 열림, 홀마다 정예 1마리) → 보스 방(네임드의 **챔피언**: 최고 레벨, 체력 ×")

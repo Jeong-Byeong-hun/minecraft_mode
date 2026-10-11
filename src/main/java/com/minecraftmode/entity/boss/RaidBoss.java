@@ -71,7 +71,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Base of the six raid bosses. Health: the health attribute is always {@link #HEALTH_BAR}; the real
+ * Base of the raid bosses. Health: the health attribute is always {@link #HEALTH_BAR}; the real
  * toughness ({@link BossDef#health()} x (1 + 0.6 x (party size - 1))) comes from dividing all
  * damage taken, so bosses can be far tougher than the 1024 attribute cap. Phases start at the
  * definition's health fractions; each phase is announced with a title and unlocks more

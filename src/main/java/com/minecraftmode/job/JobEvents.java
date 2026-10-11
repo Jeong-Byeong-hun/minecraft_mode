@@ -109,12 +109,9 @@ public final class JobEvents {
 		});
 		// players never drop their items on death (the job exp penalty still applies outside raids)
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> server.overworld().getGameRules().set(GameRules.KEEP_INVENTORY, true, server));
-		// Summons are temporary; drop any that were saved with a chunk.
-		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
-			if (entity.entityTags().contains(Actions.SUMMON_TAG)) {
-				entity.discard();
-			}
-		});
+		// Summons are temporary; drop any that were saved with a chunk. Only those read from disk: ENTITY_LOAD also fires for fresh
+		// spawns (vanilla starts tracking every new entity), so until 0.5.15 every skill summon vanished the moment it was added.
+		ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) -> !fromDisk || !entity.entityTags().contains(Actions.SUMMON_TAG));
 	}
 
 	private static void tick(final MinecraftServer server) {

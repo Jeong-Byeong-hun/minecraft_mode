@@ -35,6 +35,7 @@ import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Movement;
 import com.minecraftmode.job.skill.Skill;
+import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.skill.SkillContext;
 import com.minecraftmode.job.weapon.Archetype;
@@ -73,6 +74,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -1161,6 +1163,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 				for (int slot = 0; slot < def.skills().size(); slot++) {
 					final int index = slot;
 					Skill skill = def.skills().get(slot);
+					int before = server.computeOnServer(s -> summonsOf(connection.getServerPlayer()));
 					SkillCaster.Result result = server.computeOnServer(s -> {
 						ServerPlayer player = connection.getServerPlayer();
 						fill(player);
@@ -1173,6 +1176,9 @@ public class JobClientGameTest implements FabricClientGameTest {
 						context.takeScreenshot("skill_" + def.id());
 					}
 					context.waitTicks(4);
+					// summons must still be there a few ticks later (until 0.5.15 the cleanup of saved summons removed every fresh one)
+					int summoned = server.computeOnServer(s -> summonsOf(connection.getServerPlayer())) - before;
+					require(summoned == summonCount(skill), skill.id() + " should summon " + summonCount(skill) + ", " + summoned + " are there");
 				}
 				context.waitTicks(20);
 				server.runOnServer(s -> {
@@ -1191,6 +1197,22 @@ public class JobClientGameTest implements FabricClientGameTest {
 		server.runCommand("time set noon");
 		require(casts == JobWeapons.skillCount(), "cast " + casts + " of " + JobWeapons.skillCount() + " skills");
 		MinecraftMode.LOGGER.info("[job] cast all {} skills of all 161 weapons without errors", casts);
+	}
+
+	/** Living skill summons fighting for {@code player}. */
+	private static int summonsOf(final ServerPlayer player) {
+		return player.level().getEntities((Entity)null, player.getBoundingBox().inflate(32), e -> player.getUUID().equals(Actions.summoner(e))).size();
+	}
+
+	/** How many helpers {@code skill} summons, read from its summon steps' tooltip lines. */
+	private static int summonCount(final Skill skill) {
+		int count = 0;
+		for (SkillAction action : skill.actions()) {
+			if (action.describe().getContents() instanceof TranslatableContents text && text.getKey().equals("skill_action.minecraft_mode.summon")) {
+				count += (Integer)text.getArgs()[0];
+			}
+		}
+		return count;
 	}
 
 	// ------------------------------------------------------------------ helpers

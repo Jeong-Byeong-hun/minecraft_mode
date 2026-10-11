@@ -64,7 +64,9 @@ public enum EngraveStat {
 	HEAL_ON_SKILL("heal_on_skill", "Casting a skill heals %s", "스킬 사용 시 체력 %s 회복", 0),
 	// built into class armor (ClassDefense)
 	PROTECTION("protection", "-%s%% damage taken (protection)", "물리 보호: 받는 피해 -%s%%", 70),
-	MAGIC_DEFENSE("magic_defense", "-%s%% magic damage taken", "마법 방어: 받는 마법 피해 -%s%%", 70);
+	MAGIC_DEFENSE("magic_defense", "-%s%% magic damage taken", "마법 방어: 받는 마법 피해 -%s%%", 70),
+	// skill boosts (Boost): every hit of the player, basic, shot, skill or summon
+	DAMAGE("damage", "+%s%% damage dealt", "주는 피해 +%s%%", 0);
 
 	private final String id;
 	private final String en;

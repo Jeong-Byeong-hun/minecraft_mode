@@ -1,7 +1,7 @@
 package com.minecraftmode.job.content;
 
 import static com.minecraftmode.job.skill.Actions.*;
-import static com.minecraftmode.job.skill.CombatState.Stance.*;
+import static com.minecraftmode.job.skill.Boost.*;
 import static com.minecraftmode.job.skill.SkillKind.*;
 import static com.minecraftmode.job.weapon.Archetype.*;
 import static com.minecraftmode.registry.ModEffects.BLEEDING;
@@ -31,7 +31,7 @@ public final class PirateContent extends ClassContent {
 			art(0xA0886A, 0x5C3A21, 0xB5651D), fx(Fx.Kind.SLASH, 0xD9C29A),
 			skill("plunder_slash", "Plunder Slash", "약탈 베기", ATTACK, 6, 10, slash(4.0, 140, 1.5), loot(15)),
 			skill("boarding_rush", "Boarding Rush", "적선 돌입", MOVEMENT, 10, 8, dash(6, 0.9)),
-			skill("swig_of_rum", "Swig of Rum", "럼주 한 모금", UTILITY, 18, 10, heal(12), buff(STRENGTH, 6, 0)));
+			skill("swig_of_rum", "Swig of Rum", "럼주 한 모금", UTILITY, 18, 10, heal(12), boost(DAMAGE, 6, 10)));
 
 		weapon("flintlock_pistol", 1, 15, PISTOL, "Flintlock Pistol", "플린트락 권총",
 			art(0x7A7F87, 0x6B4226, 0xC9A227), fx(Fx.Kind.SMOKE, 0xA8A8A8),
@@ -61,7 +61,7 @@ public final class PirateContent extends ClassContent {
 		weapon("ahab_harpoon", 2, 31, HARPOON, "Ahab's Harpoon", "에이해브의 작살",
 			art(0xA9B4BE, 0x7A5230, 0xEDEDED), fx(Fx.Kind.BUBBLE, 0x6FB7E8),
 			skill("whale_line", "Whale Line", "포경줄", ATTACK, 10, 14, shoot(ProjectileStyle.HARPOON, 1.4).pierce(1), delay(0.5, pull(7, 1.5))),
-			skill("ahabs_obsession", "Ahab's Obsession", "에이해브의 집념", UTILITY, 18, 12, mark(20, 10, 30), buff(STRENGTH, 8, 0)),
+			skill("ahabs_obsession", "Ahab's Obsession", "에이해브의 집념", UTILITY, 18, 12, mark(20, 10, 30), boost(DAMAGE, 8, 10)),
 			skill("whale_breach", "Breach", "고래의 도약", MOVEMENT, 12, 14, leap(5, 4, 1.6), inflict(SLOWNESS, 2, 1)));
 
 		weapon("buccaneer_musket", 2, 34, MUSKET, "Buccaneer's Long Musket", "버커니어 장총",
@@ -80,20 +80,20 @@ public final class PirateContent extends ClassContent {
 			art(0x3E4248, 0x6B4A2B, 0xD4AF37), fx(Fx.Kind.SMOKE, 0x8C8C8C),
 			skill("broadside", "Broadside", "현측 일제 포격", ATTACK, 10, 18, shoot(ProjectileStyle.CANNONBALL, 1.3).count(3).spread(35).explode(2.0F)),
 			skill("chain_shot", "Chain Shot", "사슬탄", UTILITY, 12, 14, shoot(ProjectileStyle.CANNONBALL, 1.6).pierce(3), inflict(SLOWNESS, 4, 2)),
-			skill("brace_for_impact", "Brace for Impact", "충격 대비", DEFENSE, 20, 14, stance(GUARD, 5, 40), shield(8, 6)));
+			skill("brace_for_impact", "Brace for Impact", "충격 대비", DEFENSE, 20, 14, boost(DAMAGE, 5, 20), shield(8, 6)));
 
 		// ---------------------------------------------------------------- tier 3: Emperor of the Sea
 		weapon("buggy_cannon", 3, 45, HAND_CANNON, "Buggy's Hand Cannon", "버기의 핸드 캐논",
 			art(0x4A4E57, 0x1F3A93, 0xE03C31), fx(Fx.Kind.SMOKE, 0xD95040),
 			skill("buggy_ball", "Special Buggy Ball", "특제 버기탄", ATTACK, 14, 24, shoot(ProjectileStyle.CANNONBALL, 2.6).explode(4.0F), burn(4)),
 			skill("chop_chop_cannon", "Chop-Chop Cannon", "동강동강 포", ATTACK, 8, 18, shoot(ProjectileStyle.KNIFE, 1.3).count(3).spread(20).homing()),
-			skill("chop_chop_escape", "Chop-Chop Emergency Escape", "동강동강 긴급탈출", MOVEMENT, 14, 16, blink(10), stance(EVADE, 5, 50)));
+			skill("chop_chop_escape", "Chop-Chop Emergency Escape", "동강동강 긴급탈출", MOVEMENT, 14, 16, blink(10), boost(CRIT_CHANCE, 5, 25)));
 
 		weapon("fire_fist_knuckles", 3, 49, KNUCKLE, "Fire Fist Knuckles", "불주먹 너클",
 			art(0xD35400, 0x2B2B2B, 0xFFC93C), fx(Fx.Kind.ORB, 0xFF7A1A),
 			skill("hiken", "Hiken", "불주먹", ATTACK, 10, 20, shoot(ProjectileStyle.FIREBALL, 2.4).pierce(6).explode(2.0F), burn(5)),
 			skill("hotarubi", "Hotarubi: Hidaruma", "반디 불덩이", ATTACK, 16, 22, zone(5, 4, 1.0).at(12), burn(3)),
-			skill("flame_logia", "Flame Logia", "불꽃 자연계", DEFENSE, 20, 18, stance(EVADE, 6, 55), buff(FIRE_RESISTANCE, 10, 0)));
+			skill("flame_logia", "Flame Logia", "불꽃 자연계", DEFENSE, 20, 18, boost(CRIT_CHANCE, 6, 30), buff(FIRE_RESISTANCE, 10, 0)));
 
 		weapon("blackbeard_flintlock", 3, 53, PISTOL, "Blackbeard's Flintlock", "검은 수염의 플린트락",
 			art(0x2A2A2A, 0x4B2E1A, 0x6A0DAD), fx(Fx.Kind.SMOKE, 0x3A1F5C),
@@ -104,25 +104,25 @@ public final class PirateContent extends ClassContent {
 		weapon("yasopp_rifle", 3, 57, MUSKET, "Yasopp's Rifle", "야솝의 장총",
 			art(0x6B6F75, 0x8B5A2B, 0xB22222), fx(Fx.Kind.SPARK, 0xFFE6A0),
 			skill("ants_eye", "Ant's Eye Shot", "개미 눈 저격", ATTACK, 9, 20, mark(24, 8, 30), shoot(ProjectileStyle.BULLET, 2.6).pierce(2).speed(5.0F)),
-			skill("observation_haki", "Observation Haki", "견문색 패기", DEFENSE, 20, 18, stance(EVADE, 6, 45), debuff(16, GLOWING, 8, 0)),
+			skill("observation_haki", "Observation Haki", "견문색 패기", UTILITY, 20, 18, boost(CRIT_CHANCE, 6, 25), debuff(16, GLOWING, 8, 0)),
 			skill("covering_fire", "Covering Fire", "엄호 사격", UTILITY, 14, 20, shoot(ProjectileStyle.BULLET, 1.3).count(4).spread(30).interval(3), allyBuff(8, SPEED, 6, 1)));
 
 		weapon("hassaikai", 3, 61, ANCHOR, "Hassaikai", "핫사이카이",
 			art(0x4A4F57, 0x3B2F2F, 0x3FA7D6), fx(Fx.Kind.BOLT, 0x9FD8FF),
 			skill("thunder_bagua", "Thunder Bagua", "뇌명팔괘", ATTACK, 14, 26, dash(8, 2.6), stun(1.2)),
 			skill("bolo_breath", "Bolo Breath", "보로브레스", ATTACK, 12, 22, shoot(ProjectileStyle.FIREBALL, 1.5).count(3).spread(30).explode(2.5F), burn(4)),
-			skill("strongest_creature", "World's Strongest Creature", "이 세상 최강의 생물", DEFENSE, 24, 22, buff(RESISTANCE, 8, 2), shield(12, 8), taunt(8)));
+			skill("strongest_creature", "World's Strongest Creature", "이 세상 최강의 생물", DEFENSE, 24, 22, boost(DAMAGE, 8, 30), shield(12, 8), taunt(8)));
 
 		weapon("gryphon_sabre", 3, 66, CUTLASS, "Gryphon", "그리폰",
 			art(0xE1E6EC, 0x1E1E1E, 0xC0392B), fx(Fx.Kind.SLASH, 0xFF4B3E),
 			skill("haki_burst", "Conqueror's Haki Burst", "패왕색 패기 방출", UTILITY, 22, 24, debuff(10, STUN, 1.5, 0), debuff(10, WEAKNESS, 6, 1)),
 			skill("armament_slash", "Armament Slash", "무장색 참격", ATTACK, 9, 22, slash(5, 160, 3.12), inflict(VULNERABLE, 5, 1)),
-			skill("end_this_war", "I Came to End This War", "이 전쟁을 끝내러 왔다", DEFENSE, 26, 22, stance(COUNTER, 6, 50), allyBuff(10, RESISTANCE, 8, 1)));
+			skill("end_this_war", "I Came to End This War", "이 전쟁을 끝내러 왔다", UTILITY, 26, 22, boost(CRIT_DAMAGE, 6, 50), allyBoost(10, DAMAGE, 8, 20)));
 
 		// ---------------------------------------------------------------- tier 4: Pirate King
 		weapon("battleship_cannon", 4, 70, HAND_CANNON, "Battleship Cannon", "배틀쉽 캐논",
 			art(0x4F5B66, 0x2C3E50, 0xF1C40F), fx(Fx.Kind.SPARK, 0xFFC94D),
-			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, shield(16, 10), buff(RESISTANCE, 10, 1),
+			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, shield(16, 10), boost(DAMAGE, 10, 20),
 				shoot(ProjectileStyle.CANNONBALL, 4.8).count(3).spread(30).explode(3.0F)),
 			skill("octopus", "Octopus", "옥토퍼스", ATTACK, 18, 24, zone(4, 6, 0.9).at(12).effect(BLINDNESS, 0)),
 			skill("air_strike", "Air Strike", "에어 스트라이크", ATTACK, 14, 26, strike(20, 3.5, 5, 0.88)),
@@ -133,7 +133,7 @@ public final class PirateContent extends ClassContent {
 			skill("golden_wild_hunt", "Golden Wild Hunt", "황금 사슴과 폭풍의 밤", ULTIMATE, 50, 40, barrage(ProjectileStyle.CANNONBALL, 14, 0.42),
 				delay(1.5, strike(22, 5, 1, 2.45)), loot(25)),
 			skill("golden_rule", "Golden Rule", "황금률", ATTACK, 9, 20, shoot(ProjectileStyle.COIN, 1.6).count(5).spread(40).pierce(1), loot(30)),
-			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, allyBuff(10, STRENGTH, 10, 1), allyBuff(10, DOLPHINS_GRACE, 10, 0)),
+			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, allyBoost(10, DAMAGE, 10, 20), allyBuff(10, DOLPHINS_GRACE, 10, 0)),
 			skill("pioneer_of_the_stars", "Pioneer of the Stars", "별의 개척자", MOVEMENT, 12, 18, dash(10, 1.6), buff(SPEED, 8, 2)));
 
 		weapon("bonny_read_musket", 4, 77, MUSKET, "Anne & Mary's Musket", "앤과 메리의 머스킷",
@@ -142,7 +142,7 @@ public final class PirateContent extends ClassContent {
 				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4)), inflict(VULNERABLE, 5, 1)),
 			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, slash(4.5, 160, 2.2), inflict(BLEEDING, 5, 1)),
 			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22, shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F), inflict(SLOWNESS, 3, 1)),
-			skill("pirates_glory", "Pirate's Glory", "해적의 영광", DEFENSE, 22, 18, stance(EVADE, 6, 45), heal(15)));
+			skill("pirates_glory", "Pirate's Glory", "해적의 영광", DEFENSE, 22, 18, boost(CRIT_CHANCE, 6, 25), heal(15)));
 
 		weapon("dutchman_harpoon", 4, 81, HARPOON, "Flying Dutchman's Harpoon", "플라잉 더치맨의 작살",
 			art(0x5F7F74, 0x2E3B30, 0x3FFFD2), fx(Fx.Kind.BUBBLE, 0x3FC5A8),
@@ -157,27 +157,27 @@ public final class PirateContent extends ClassContent {
 			skill("ikoku_sovereignty", "Ikoku Sovereignty", "이코쿠", ULTIMATE, 50, 40, shoot(ProjectileStyle.WAVE, 6.72).pierce(12), push(6, 2.0)),
 			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), nova(6, 1.8), inflict(WEAKNESS, 6, 1)),
 			skill("zeus_raitei", "Zeus: Raitei", "제우스: 라이테이", ATTACK, 10, 22, lightning(18, 4, 2.6), stun(0.8)),
-			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, heal(25), buff(STRENGTH, 10, 2), buff(SPEED, 10, 1)));
+			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, heal(25), boost(DAMAGE, 10, 30), buff(SPEED, 10, 1)));
 
 		weapon("moby_dick_anchor", 4, 89, ANCHOR, "Moby Dick's Anchor", "모비딕호의 닻",
 			art(0x7E8790, 0x4A3424, 0xF0F0F0), fx(Fx.Kind.RING, 0xE0F0FF),
 			skill("island_shaker", "Island Shaker", "섬 흔들기", ULTIMATE, 55, 40, nova(8, 7.0), stun(1.5), delay(0.5, launch(8, 5))),
 			skill("seaquake", "Seaquake", "카이신", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10)),
 			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, leap(7, 5, 2.6), inflict(SLOWNESS, 3, 2)),
-			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, allyBuff(12, STRENGTH, 12, 1), allyBuff(12, RESISTANCE, 12, 0), allyHeal(12, 15)));
+			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, allyBoost(12, DAMAGE, 12, 20), allyBoost(12, CRIT_CHANCE, 12, 10), allyHeal(12, 15)));
 
 		weapon("nika_knuckles", 4, 94, KNUCKLE, "Nika's Knuckles", "니카의 너클",
 			art(0xF5F5F5, 0xC0392B, 0xFFD54F), fx(Fx.Kind.SPARK, 0xFFF6D5),
 			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바즈랑 건", ULTIMATE, 50, 40, strike(20, 6, 1, 8.1), stun(1.5)),
 			skill("red_hawk", "Gum-Gum Red Hawk", "고무고무 레드 호크", ATTACK, 9, 22, beam(10, 2.6), burn(5)),
 			skill("jet_gatling", "Gum-Gum Jet Gatling", "고무고무 제트 개틀링", ATTACK, 10, 24, buff(SPEED, 6, 1), repeat(5, 3, slash(4, 100, 0.6))),
-			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", DEFENSE, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2), stance(COUNTER, 6, 50)));
+			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", UTILITY, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2), boost(CRIT_DAMAGE, 6, 50)));
 
 		weapon("pirate_kings_sabre", 4, 100, CUTLASS, "Pirate King's Sabre", "해적왕의 검",
 			art(0xF2F2F2, 0x8B0000, 0xFFD700), fx(Fx.Kind.BOLT, 0xD01E2E),
 			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, slash(6, 180, 4.0), shoot(ProjectileStyle.WAVE, 5.0).pierce(15), stun(1.0)),
 			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, nova(6, 3.4), push(8, 3.0)),
-			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), heal(20), stance(GUARD, 6, 50)),
-			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, allyBuff(12, STRENGTH, 12, 2), allyBuff(12, LUCK, 15, 1)));
+			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), heal(20), boost(DAMAGE, 6, 25)),
+			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, allyBoost(12, DAMAGE, 12, 30), allyBoost(12, CRIT_CHANCE, 15, 10)));
 	}
 }

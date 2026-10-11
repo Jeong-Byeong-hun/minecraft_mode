@@ -59,6 +59,14 @@ public final class ModEffects {
 	/** Damage to bosses and named monsters. */
 	public static final Holder<MobEffect> SLAYER = buff("slayer", 0x8E1F1F);
 
+	// skill boosts (job/skill/Boost): their own markers, so a consumable of the same kind still counts
+	/** Damage dealt. */
+	public static final Holder<MobEffect> VALOR = buff("valor", 0xE0662E);
+	/** Critical chance. */
+	public static final Holder<MobEffect> INSIGHT = buff("insight", 0x5FD3E8);
+	/** Critical damage. */
+	public static final Holder<MobEffect> FEROCITY = buff("ferocity", 0xB0203A);
+
 	private static Holder<MobEffect> buff(final String id, final int color) {
 		return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, MinecraftMode.id(id), new MarkerEffect(MobEffectCategory.BENEFICIAL, color));
 	}

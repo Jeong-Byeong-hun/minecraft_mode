@@ -50,6 +50,7 @@ import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
@@ -91,9 +92,12 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
@@ -313,6 +317,44 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			return "pet level " + Companions.petLevel(Companions.data(player).pets().get("ember_fox"));
 		});
 		MinecraftMode.LOGGER.info("[content] companions: {}", report);
+
+		// companions and the caster's own summons never stop a shot (until 0.5.20 the pet caught its owner's arrows, which bounced off)
+		server.runCommand("tp @p 20.5 -60 -6.5 -90 0");
+		context.waitTicks(5);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			PetEntity pet = Companions.summonedPet(player);
+			require(pet != null && !pet.canBeHitByProjectile() && !CombatHooks.canHarm(player, pet), "a pet is no target for shots");
+			MountEntity stag = Companions.mountType(Companions.mount("crystal_stag")).create(level, EntitySpawnReason.COMMAND);
+			require(!stag.canBeHitByProjectile() && !CombatHooks.canHarm(player, stag), "a mount is no target for shots");
+			Zombie summon = EntityTypes.ZOMBIE.create(level, EntitySpawnReason.COMMAND);
+			Actions.markSummon(summon, player, 1.0);
+			require(!CombatHooks.canHarm(player, summon), "the caster's own skill summon is no target for shots");
+			// a real arrow through the pet into a husk behind it
+			pet.setNoAi(true);
+			pet.snapTo(player.getX() + 3.0, player.getY(), player.getZ(), 0, 0);
+			Husk husk = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+			husk.setNoAi(true);
+			husk.snapTo(player.getX() + 8.0, player.getY(), player.getZ(), 0, 0);
+			husk.addTag("pet_shot_target");
+			level.addFreshEntity(husk);
+			Arrow arrow = new Arrow(level, player, new ItemStack(Items.ARROW), new ItemStack(Items.BOW));
+			arrow.setPos(player.getX() + 1.0, player.getY() + 0.4, player.getZ());
+			arrow.setDeltaMovement(2.0, 0.05, 0.0);
+			level.addFreshEntity(arrow);
+		});
+		context.waitTicks(20);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Husk husk = player.level().getEntitiesOfClass(Husk.class, player.getBoundingBox().inflate(16), h -> h.entityTags().contains("pet_shot_target")).getFirst();
+			require(husk.getHealth() < husk.getMaxHealth(), "the arrow should fly through the pet and hit the husk behind it");
+			husk.discard();
+			PetEntity pet = Companions.summonedPet(player);
+			if (pet != null) {
+				pet.setNoAi(false);
+			}
+		});
 
 		// every pet and mount in a lineup
 		server.runCommand("tp @p 20.5 -60 0.5 0 10");

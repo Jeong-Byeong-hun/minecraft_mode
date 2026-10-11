@@ -2,6 +2,7 @@ package com.minecraftmode.consumable;
 
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.skill.Boost;
 import com.minecraftmode.registry.ModEffects;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -13,8 +14,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * The consumable buffs (fury, ironskin, ...) are marker effects; while one is active its stat lines,
- * times the effect level, join the player's totals in {@code GearStats} like gear does.
+ * The consumable buffs (fury, ironskin, ...) and the skill boosts ({@link Boost}) are marker effects; while one is active its stat
+ * lines, times the effect level, join the player's totals in {@code GearStats} like gear does.
  */
 public final class BuffEffects {
 	private static final Map<Holder<MobEffect>, List<StatLine>> PER_LEVEL = new LinkedHashMap<>();
@@ -30,6 +31,9 @@ public final class BuffEffects {
 		PER_LEVEL.put(ModEffects.FORTUNE, List.of(StatLine.of(EngraveStat.ITEM_FIND, 8), StatLine.of(EngraveStat.GOLD_FIND, 4)));
 		PER_LEVEL.put(ModEffects.WISDOM, List.of(StatLine.of(EngraveStat.EXP_BONUS, 15)));
 		PER_LEVEL.put(ModEffects.SLAYER, List.of(StatLine.of(EngraveStat.BOSS_DAMAGE, 8)));
+		for (Boost boost : Boost.values()) {
+			PER_LEVEL.put(boost.effect(), List.of(StatLine.of(boost.stat(), boost.step())));
+		}
 	}
 
 	/** Stat lines of {@code effect} at {@code amplifier} (empty for other effects). */

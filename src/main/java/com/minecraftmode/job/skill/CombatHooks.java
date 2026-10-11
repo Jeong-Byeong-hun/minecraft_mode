@@ -1,6 +1,8 @@
 package com.minecraftmode.job.skill;
 
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.companion.MountEntity;
+import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.entity.boss.RaidBoss;
@@ -20,6 +22,7 @@ import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModEffects;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.WeakHashMap;
 import com.minecraftmode.network.DamageNumberPayload;
 import com.minecraftmode.network.TargetHealthPayload;
@@ -167,12 +170,22 @@ public final class CombatHooks {
 		return entity instanceof Enemy || entity instanceof Mob mob && mob.getTarget() == caster;
 	}
 
-	/** Anything the caster may hurt with a basic shot: not themself, their pets, allies or protected players. */
+	/**
+	 * Anything the caster may hurt with a basic shot: not themself, their pets, companions (never hurt), their own or a party member's
+	 * skill summons, allies or protected players.
+	 */
 	public static boolean canHarm(final Player caster, final Entity entity) {
 		if (!(entity instanceof LivingEntity living) || !living.isAlive() || living == caster || living.isSpectator() || living instanceof ArmorStand && !(living instanceof TrainingDummy)) {
 			return false;
 		}
+		if (living instanceof PetEntity || living instanceof MountEntity) {
+			return false;
+		}
 		if (living instanceof OwnableEntity ownable && ownable.getOwner() == caster) {
+			return false;
+		}
+		UUID summoner = Actions.summoner(living);
+		if (summoner != null && (summoner.equals(caster.getUUID()) || Parties.together(caster.getUUID(), summoner))) {
 			return false;
 		}
 		if (living.isAlliedTo(caster) || CityServices.blocksPvp(living, caster)) {
@@ -326,6 +339,8 @@ public final class CombatHooks {
 		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
 			bonus += 0.25F;
 		}
+		// skill boosts (Boost.DAMAGE): every hit, basic or not
+		bonus += mods.fraction(EngraveStat.DAMAGE);
 		if (victim instanceof EliteMob) {
 			bonus += mods.fraction(EngraveStat.BOSS_DAMAGE);
 		}

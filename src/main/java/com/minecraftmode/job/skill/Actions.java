@@ -164,6 +164,10 @@ public final class Actions {
 	private static final String GUARD = key("guard", "Guard stance for %1$ss: -%2$s%% damage taken", "%1$s초간 방어 태세: 받는 피해 -%2$s%%");
 	private static final String COUNTER = key("counter", "Counter stance for %1$ss: reflect %2$s%% of damage taken", "%1$s초간 반격 태세: 받은 피해의 %2$s%% 반사");
 	private static final String EVADE = key("evade", "Evasion for %1$ss: %2$s%% chance to dodge", "%1$s초간 회피 태세: %2$s%% 확률로 회피");
+	private static final String BOOST_DAMAGE = key("boost_damage", "+%1$s%% damage dealt for %2$ss", "%2$s초간 주는 피해 +%1$s%%");
+	private static final String BOOST_CRIT_CHANCE = key("boost_crit_chance", "+%1$s%% critical chance for %2$ss", "%2$s초간 치명타 확률 +%1$s%%");
+	private static final String BOOST_CRIT_DAMAGE = key("boost_crit_damage", "+%1$s%% critical damage for %2$ss", "%2$s초간 치명타 피해 +%1$s%%");
+	private static final String ALLY_BOOST = key("ally_boost", "You and allies within %1$s blocks: %2$s", "자신과 %1$s블록 내 아군: %2$s");
 	private static final String EMPOWER = key("empower", "Your next %1$s basic attacks within %3$ss deal +%2$s%% damage", "%3$s초 안의 다음 기본 공격 %1$s회 피해 +%2$s%%");
 	private static final String STEALTH = key("stealth", "Turn invisible for %1$ss; your next attack deals +%2$s%% damage", "%1$s초간 은신, 다음 공격 피해 +%2$s%%");
 	private static final String MARK = key("mark", "Mark a target within %1$s blocks: it takes +%3$s%% damage from you for %2$ss", "%1$s블록 내 대상 표식: %2$s초간 내게 받는 피해 +%3$s%%");
@@ -1174,6 +1178,39 @@ public final class Actions {
 			ctx.fx.burst(ctx.level, Fx.Kind.SHARD, ctx.caster.position().add(0, 1, 0), 12, 0.5, 0.05);
 			sound(ctx, SoundEvents.ARMOR_EQUIP_IRON.value(), 1.0F, 0.8F);
 		}, Component.translatable(text, num(seconds), num(value)));
+	}
+
+	/** {@code pct}% more of {@code boost} for {@code seconds} (see {@link Boost}; {@code pct} in its steps). */
+	public static SkillAction boost(final Boost boost, final double seconds, final int pct) {
+		int amplifier = boost.amplifier(pct);
+		return action(ctx -> {
+			ctx.caster.addEffect(new MobEffectInstance(boost.effect(), (int)(seconds * 20), amplifier), ctx.caster);
+			ctx.fx.burst(ctx.level, Fx.Kind.SPARK, ctx.caster.position().add(0, 1.2, 0), 18, 0.5, 0.08);
+			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.6F, 1.7F);
+		}, boostText(boost, seconds, pct));
+	}
+
+	/** {@link #boost} for the caster and every ally within {@code radius}. */
+	public static SkillAction allyBoost(final double radius, final Boost boost, final double seconds, final int pct) {
+		int amplifier = boost.amplifier(pct);
+		return action(ctx -> {
+			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
+				ally.addEffect(new MobEffectInstance(boost.effect(), (int)(seconds * 20), amplifier), ctx.caster);
+				Contribution.buffed(ctx.caster, ally, (int)(seconds * 20));
+				ctx.fx.burst(ctx.level, Fx.Kind.SPARK, ally.position().add(0, 1.2, 0), 10, 0.4, 0.08);
+			}
+			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
+			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.7F, 1.4F);
+		}, Component.translatable(ALLY_BOOST, num(radius), boostText(boost, seconds, pct)));
+	}
+
+	private static Component boostText(final Boost boost, final double seconds, final int pct) {
+		String text = switch (boost) {
+			case DAMAGE -> BOOST_DAMAGE;
+			case CRIT_CHANCE -> BOOST_CRIT_CHANCE;
+			case CRIT_DAMAGE -> BOOST_CRIT_DAMAGE;
+		};
+		return Component.translatable(text, pct, num(seconds));
 	}
 
 	public static SkillAction empower(final int hits, final double bonusPct, final double seconds) {

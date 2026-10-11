@@ -1,7 +1,7 @@
 package com.minecraftmode.job.content;
 
 import static com.minecraftmode.job.skill.Actions.*;
-import static com.minecraftmode.job.skill.CombatState.Stance.*;
+import static com.minecraftmode.job.skill.Boost.*;
 import static com.minecraftmode.job.skill.SkillKind.*;
 import static com.minecraftmode.job.weapon.Archetype.*;
 import static com.minecraftmode.registry.ModEffects.BLEEDING;
@@ -47,7 +47,7 @@ public final class ShinigamiContent extends ClassContent {
 			art(0xE0E4EA, 0x2A2A3A, 0x8A2AC8), fx(Fx.Kind.SLASH, 0xC8A0FF),
 			skill("konso", "Konso", "혼장", UTILITY, 14, 10, execute(4, 1.6, 30, 2.0), heal(8)),
 			skill("hollow_cut", "Hollow Cut", "호로 베기", ATTACK, 7, 12, dash(6, 1.5), inflict(BLEEDING, 4, 0)),
-			skill("reiatsu_flare", "Spiritual Pressure", "영압 해방", DEFENSE, 18, 12, push(5, 1.4), buff(RESISTANCE, 5, 0)));
+			skill("reiatsu_flare", "Spiritual Pressure", "영압 해방", DEFENSE, 18, 12, push(5, 1.4), boost(DAMAGE, 5, 10)));
 
 		// ---------------------------------------------------------------- tier 2: Lieutenant (Shikai)
 		weapon("zabimaru", 2, 25, KUSARIGAMA, "Zabimaru", "사미환",
@@ -66,7 +66,7 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("hozukimaru", 2, 32, SPEAR, "Hozukimaru", "귀등환",
 			art(0xC8A060, 0x6A3A1A, 0xF0F0F0), fx(Fx.Kind.SPARK, 0xFFD27F),
 			skill("split_spear", "Split Spear", "삼절곤 분리", ATTACK, 7, 14, repeat(3, 5, beam(6, 0.68))),
-			skill("battle_lust", "Eleventh's Battle Lust", "11번대의 전투광", UTILITY, 20, 14, buff(STRENGTH, 8, 0), taunt(8)),
+			skill("battle_lust", "Eleventh's Battle Lust", "11번대의 전투광", UTILITY, 20, 14, boost(DAMAGE, 8, 10), taunt(8)),
 			skill("ryumon_hozukimaru", "Ryumon Hozukimaru", "용문귀등환", ATTACK, 15, 22, leap(5, 4, 2.2), inflict(BLEEDING, 5, 1)));
 
 		weapon("haineko", 2, 36, NINJATO, "Haineko", "회묘",
@@ -79,12 +79,12 @@ public final class ShinigamiContent extends ClassContent {
 			art(0xF0E8E8, 0x8A2A2A, 0xFF8A3A), fx(Fx.Kind.ORB, 0xFF8A3A),
 			skill("snap_tobiume", "Snap, Tobiume", "터져라, 비매", ATTACK, 7, 14, shoot(ProjectileStyle.FIREBALL, 1.02).count(3).spread(30).explode(1.5F), burn(3)),
 			skill("hado_63_raikoho", "Hado #63: Raikoho", "파도 63번 뇌후포", ATTACK, 12, 20, beam(14, 2.2), stun(0.6)),
-			skill("bakudo_8_seki", "Bakudo #8: Seki", "박도 8번 척", DEFENSE, 14, 12, stance(COUNTER, 4, 50), push(4, 1.2)));
+			skill("bakudo_8_seki", "Bakudo #8: Seki", "박도 8번 척", DEFENSE, 14, 12, boost(CRIT_DAMAGE, 4, 50), push(4, 1.2)));
 
 		weapon("benihime", 2, 43, KATANA, "Benihime", "홍희",
 			art(0xD8DCE4, 0x2A2A24, 0xC8202A), fx(Fx.Kind.SLASH, 0xFF4A5A),
 			skill("nake_benihime", "Cry, Benihime", "울어라, 홍희", ATTACK, 8, 16, shoot(ProjectileStyle.WAVE, 2.16).pierce(4)),
-			skill("chikasumi_no_tate", "Chikasumi no Tate", "혈하의 방패", DEFENSE, 16, 14, shield(10, 6), stance(GUARD, 3, 40)),
+			skill("chikasumi_no_tate", "Chikasumi no Tate", "혈하의 방패", DEFENSE, 16, 14, shield(10, 6), boost(DAMAGE, 3, 20)),
 			skill("shibari_benihime", "Shibari Benihime", "묶어라, 홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
 
 		// ---------------------------------------------------------------- tier 3: Captain
@@ -117,13 +117,13 @@ public final class ShinigamiContent extends ClassContent {
 			art(0xE8E8E8, 0x8A8A9A, 0x9AA8C0), fx(Fx.Kind.SLASH, 0xE8F0FF),
 			skill("shoot_to_kill", "Shoot to Kill, Shinso", "쏘아 죽여라, 신창", ATTACK, 8, 20, beam(20, 2.4)),
 			skill("butou_renjin", "Butou Renjin", "무답연인", ATTACK, 14, 24, repeat(5, 3, beam(14, 0.8))),
-			skill("fox_smile", "Fox's Smile", "여우의 미소", UTILITY, 18, 16, stance(EVADE, 6, 40), empower(3, 60, 8)));
+			skill("fox_smile", "Fox's Smile", "여우의 미소", UTILITY, 18, 16, boost(CRIT_CHANCE, 6, 20), empower(3, 60, 8)));
 
 		weapon("nozarashi", 3, 66, GREATSWORD, "Nozarashi", "야쇄",
 			art(0x9AA0A8, 0x3A2A1A, 0xE0E040), fx(Fx.Kind.SHARD, 0xE0E040),
 			skill("drink_nozarashi", "Drink, Nozarashi", "삼켜라, 야쇄", ATTACK, 10, 22, slash(6, 180, 2.8), push(5, 1.5)),
 			skill("kendo", "Kendo", "검도", ATTACK, 14, 24, leap(7, 5, 2.6), stun(1.0)),
-			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, buff(STRENGTH, 10, 2), empower(6, 50, 10), taunt(10)));
+			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, boost(DAMAGE, 10, 30), empower(6, 50, 10), taunt(10)));
 
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
 		weapon("tensa_zangetsu", 4, 70, KATANA, "Tensa Zangetsu", "천쇄참월",
@@ -131,13 +131,13 @@ public final class ShinigamiContent extends ClassContent {
 			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10)),
 			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, blink(12), dash(6, 1.66)),
 			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10), inflict(WITHER, 4, 1)),
-			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, buff(STRENGTH, 12, 2), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
+			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, boost(DAMAGE, 12, 30), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
 
 		weapon("senbonzakura_kageyoshi", 4, 75, KATANA, "Senbonzakura Kageyoshi", "천본앵경엄",
 			art(0xFFE0EC, 0x2A2A3A, 0xFF7AA0), fx(Fx.Kind.PETAL, 0xFF9AB8),
 			skill("thousand_blades", "A Thousand Blades", "천 개의 칼날", ATTACK, 10, 24, repeat(6, 4, nova(6, 0.45)), inflict(BLEEDING, 6, 1)),
 			skill("gokei", "Gokei", "항경", ATTACK, 14, 26, pull(8, 1.4), delay(0.5, nova(6, 2.21))),
-			skill("senkei", "Senkei", "섬경", DEFENSE, 22, 24, stance(GUARD, 8, 50), zone(6, 6, 0.59)),
+			skill("senkei", "Senkei", "섬경", ATTACK, 22, 24, boost(DAMAGE, 8, 25), zone(6, 6, 0.59)),
 			skill("shukei_hakuteiken", "Shukei: Hakuteiken", "종경 백제검", ULTIMATE, 55, 45, beam(26, 4.6), dash(8, 1.84)));
 
 		weapon("daiguren_hyorinmaru", 4, 78, KATANA, "Daiguren Hyorinmaru", "대홍련빙륜환",
@@ -158,15 +158,15 @@ public final class ShinigamiContent extends ClassContent {
 			art(0xF0F0F0, 0x8A8A9A, 0xC8D0E0), fx(Fx.Kind.SLASH, 0xE8F0FF),
 			skill("thirteen_kilometers", "Thirteen Kilometers", "13킬로미터", ATTACK, 10, 24, beam(30, 2.58)),
 			skill("butou_renjin_kai", "Butou Renjin", "무답연인", ATTACK, 14, 26, repeat(6, 3, beam(20, 0.66))),
-			skill("dust_to_dust", "Dust to Dust", "먼지로", UTILITY, 18, 20, inflict(WITHER, 6, 2), mark(20, 8, 40)),
+			skill("dust_to_dust", "Dust to Dust", "먼지로", UTILITY, 18, 20, debuff(8, WITHER, 6, 2), mark(20, 8, 40)),
 			skill("korose", "Korose, Kamishini no Yari", "죽여라, 신살창", ULTIMATE, 55, 45, beam(30, 6.62), inflict(WITHER, 8, 3)));
 
 		weapon("kyoka_suigetsu", 4, 88, KATANA, "Kyoka Suigetsu", "경화수월",
 			art(0xE8E4F0, 0x3A2A5A, 0x8A5AFF), fx(Fx.Kind.RUNE, 0xB08AFF),
 			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, stealth(5, 80), debuff(8, BLINDNESS, 5, 0)),
 			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도 90번 흑관", ATTACK, 18, 32, zone(4, 3, 1.6).at(16).pull(0.8), inflict(VULNERABLE, 6, 1)),
-			skill("illusion_step", "Illusion Step", "환영 보법", MOVEMENT, 10, 16, blink(12), stance(EVADE, 3, 60)),
-			skill("hogyoku", "Hogyoku", "붕옥", ULTIMATE, 60, 50, buff(STRENGTH, 15, 2), buff(RESISTANCE, 15, 1), restoreMana(40), nova(6, 6.0)));
+			skill("illusion_step", "Illusion Step", "환영 보법", MOVEMENT, 10, 16, blink(12), boost(CRIT_CHANCE, 3, 30)),
+			skill("hogyoku", "Hogyoku", "붕옥", ULTIMATE, 60, 50, boost(DAMAGE, 15, 30), boost(CRIT_CHANCE, 15, 20), restoreMana(40), nova(6, 6.0)));
 
 		weapon("karamatsu_shinju", 4, 92, TWIN_BLADES, "Katen Kyokotsu: Karamatsu Shinju", "화천광골 고송심중",
 			art(0xC8C0D8, 0x4A2A6A, 0xFF5AA0), fx(Fx.Kind.PETAL, 0xFF5AA0),

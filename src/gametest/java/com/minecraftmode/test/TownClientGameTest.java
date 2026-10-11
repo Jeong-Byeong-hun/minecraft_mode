@@ -211,7 +211,8 @@ public class TownClientGameTest implements FabricClientGameTest {
 			player.setHealth(player.getMaxHealth());
 			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
 			require(SkillCaster.tryCast(player, 1) == SkillCaster.Result.OK && !Engage.guarded(player), "Iron Wall does not guard like a dash");
-			// Iron Wall's guard stance would soften the hits measured next
+			// Iron Wall's damage boost and any combat state must not touch the hits measured next
+			player.removeEffect(ModEffects.VALOR);
 			CombatState.forget(player);
 			zombie.discard();
 		});

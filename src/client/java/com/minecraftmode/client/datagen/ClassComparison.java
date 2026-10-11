@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import static com.minecraftmode.job.engrave.EngraveStat.*;
 
+import com.minecraftmode.entity.combat.PlayerArmor;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -246,15 +247,14 @@ final class ClassComparison {
 		return new Offense(basic, basic5, skill1, skill5, wanted / available);
 	}
 
-	/** Damage left of a {@code hit} after the class's reductions (CombatHooks.incoming) and then vanilla armor. */
+	/** Damage left of a {@code hit} after the class's reductions (CombatHooks.incoming) and then armor ({@code PlayerArmor}). */
 	private static double taken(final double hit, final boolean magic, final EngraveTotals mods, final double armor, final double toughness) {
 		double d = hit * (1.0 - Math.min(0.8, mods.fraction(DAMAGE_REDUCTION))) * (1.0 - mods.fraction(PROTECTION));
 		if (magic) {
 			d *= 1.0 - mods.fraction(MAGIC_DEFENSE);
 		}
 		d *= 1.0 - mods.fraction(MANA_SHIELD);
-		double real = Math.max(armor * 0.2, Math.min(20.0, armor - d / (2.0 + toughness / 4.0)));
-		return d * (1.0 - real / 25.0);
+		return d * (1.0 - PlayerArmor.fraction((float)d, (float)armor, (float)toughness));
 	}
 
 	static void write(final StringBuilder md) {

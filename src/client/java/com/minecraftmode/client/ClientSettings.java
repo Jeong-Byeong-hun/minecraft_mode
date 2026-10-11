@@ -17,11 +17,13 @@ import net.minecraft.network.chat.Component;
 
 /**
  * This client's own display choices, saved in {@code <gamedir>/minecraft_mode/client.properties}: floating damage numbers
- * ({@code /damagenumbers [true|false]}) and the particles of enhanced gear ({@code /enhanceeffects [true|false]}).
+ * ({@code /damagenumbers [true|false]}), the particles of enhanced gear ({@code /enhanceeffects [true|false]}) and the HP/MP bars
+ * instead of vanilla hearts ({@code /hpbar [true|false]}).
  */
 public final class ClientSettings {
 	public static boolean damageNumbers = true;
 	public static boolean enhanceEffects = true;
+	public static boolean hpBar = true;
 
 	private static Path file() {
 		return MapClient.root().resolve("client.properties");
@@ -32,6 +34,7 @@ public final class ClientSettings {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
 			toggle(dispatcher, "damagenumbers", "damage_numbers", () -> damageNumbers, on -> damageNumbers = on);
 			toggle(dispatcher, "enhanceeffects", "enhance_effects", () -> enhanceEffects, on -> enhanceEffects = on);
+			toggle(dispatcher, "hpbar", "hp_bar", () -> hpBar, on -> hpBar = on);
 		});
 	}
 
@@ -76,6 +79,7 @@ public final class ClientSettings {
 			p.load(in);
 			damageNumbers = Boolean.parseBoolean(p.getProperty("damage_numbers", "true"));
 			enhanceEffects = Boolean.parseBoolean(p.getProperty("enhance_effects", "true"));
+			hpBar = Boolean.parseBoolean(p.getProperty("hp_bar", "true"));
 		} catch (IOException | RuntimeException e) {
 			MinecraftMode.LOGGER.warn("Could not read {}", file, e);
 		}
@@ -85,6 +89,7 @@ public final class ClientSettings {
 		Properties p = new Properties();
 		p.setProperty("damage_numbers", String.valueOf(damageNumbers));
 		p.setProperty("enhance_effects", String.valueOf(enhanceEffects));
+		p.setProperty("hp_bar", String.valueOf(hpBar));
 		Path file = file();
 		try {
 			Files.createDirectories(file.getParent());

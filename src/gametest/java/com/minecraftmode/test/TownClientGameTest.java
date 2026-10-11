@@ -6,6 +6,7 @@ import com.minecraftmode.bag.BagKind;
 import com.minecraftmode.bag.BagMenu;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bag.Trash;
+import com.minecraftmode.client.ClientSettings;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
@@ -125,6 +126,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkVitality(server, connection);
 			checkVindicator(context, server, connection);
 			checkClassDefense(context, server, connection);
+			checkVitals(context, server, connection);
 			checkAdvanceKit(server, connection);
 			checkBags(context, server, connection);
 			checkBagGive(server, connection);
@@ -324,6 +326,53 @@ public class TownClientGameTest implements FabricClientGameTest {
 		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio + " (physical " + physical + ", magic " + magic + "; " + detail[0] + ")");
 		MinecraftMode.LOGGER.info("[town] class defense: level 80 mage takes {} from a 20 physical hit, {} from a 20 spell", physical, magic);
 		context.waitTicks(25);
+	}
+
+	/**
+	 * HP and MP bars over the hotbar instead of hearts (a level 100 warrior had four rows of them): a hit leaves its pale trail, absorption
+	 * shows as a gold strip, the MP bar and armor sit on top, and the class panel drops its MP row. The screenshot is for review.
+	 */
+	private static void checkVitals(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		require(ClientSettings.hpBar, "the HP/MP bars should be on by default");
+		float max = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 4).withProgress(100, 0));
+			JobStats.refresh(player);
+			player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
+			// late-game health (gear and potions): four rows of hearts' worth
+			player.addEffect(new MobEffectInstance(MobEffects.HEALTH_BOOST, 400, 9));
+			player.setHealth(player.getMaxHealth() * 0.7F);
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player) * 2 / 3));
+			return player.getMaxHealth();
+		});
+		require(max > 80.0F, "a level 100 warrior should have more than four rows of hearts' worth of health, has " + max);
+		// the achievements of the class change would cover the bars
+		context.waitTicks(10);
+		context.runOnClient(minecraft -> {
+			minecraft.gui.toastManager().clear();
+			minecraft.gui.hud.getChat().clearMessages(false);
+			minecraft.gui.hud.clearTitles();
+		});
+		context.waitTicks(5);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setInvulnerableTime(0);
+			player.hurtServer(s.overworld(), player.damageSources().generic(), max * 0.2F);
+			// after the hit, or it would soak it up
+			player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 400, 1));
+		});
+		context.waitTicks(4);
+		context.takeScreenshot("town_vitals");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.removeEffect(MobEffects.ABSORPTION);
+			player.removeEffect(MobEffects.HEALTH_BOOST);
+			player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST, ItemStack.EMPTY);
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.NONE, 0).withProgress(1, 0));
+			JobStats.refresh(player);
+			player.setHealth(player.getMaxHealth());
+		});
+		MinecraftMode.LOGGER.info("[town] vitals: HP/MP bars at {} max health", max);
 	}
 
 	/** How much of a 20 damage hit from a zombie (physical, or a spell) the player loses. */

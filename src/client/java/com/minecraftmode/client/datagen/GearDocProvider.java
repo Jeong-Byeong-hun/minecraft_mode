@@ -26,6 +26,7 @@ import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.entity.combat.PlayerArmor;
 import com.minecraftmode.entity.named.Ability;
 import com.minecraftmode.entity.named.Habitat;
 import com.minecraftmode.entity.named.NamedDef;
@@ -216,7 +217,9 @@ public class GearDocProvider implements DataProvider {
 			.append(exact(ClassDefense.PROTECTION_PER_LEVEL)).append("%) × 직업 배율, **마법 방어**(마법 공격에 추가 감소) = min(")
 			.append(exact(ClassDefense.MAGIC_MAX)).append("%, 레벨 × ").append(exact(ClassDefense.MAGIC_PER_LEVEL)).append("%) × 마법 배율. 부위마다 1/4씩.\n");
 		md.append("- 마법 공격: 네임드의 브레스·가시 분출·마력탄(칼·총알·돌·금 파편 같은 물체는 물리), 레이드 보스의 주문 패턴(불·공허·영혼·번개·저주 같은 마법 공격; 돌진·내려찍기·꼬리 등은 물리, 기믹 피해는 방어를 무시), 바닐라 마법(물약·소환사 송곳니·가디언 광선·위더·드래곤 브레스·워든 음파·화염구). 마법 공격에도 방어 점수는 적용됩니다.\n");
-		md.append("- 바닐라 비교: 철 15 / 0, 다이아 20 / 8, 다이아 + 보호 IV 20 / 8 / 피해 -64%. 직업 방어구는 바닐라 인챈트를 받지 않습니다.\n\n");
+		md.append("- 바닐라 비교: 철 15 / 0, 다이아 20 / 8, 다이아 + 보호 IV 20 / 8 / 피해 -64%. 직업 방어구는 바닐라 인챈트를 받지 않습니다.\n");
+		md.append("- 방어 점수(플레이어): 보호·마법 방어·받는 피해 감소를 빼고 남은 한 방에 대해 **세는 방어 = 방어 × (0.2 + 0.8 × s ÷ (s + 피해))**, s = 0.8 × 방어 × (2 + 방어 강도 ÷ 4), 최대 ")
+			.append(ClassDocProvider.num(PlayerArmor.MAX_ARMOR)).append("점(1점당 4%). 작은 타격은 바닐라와 같고, 바닐라처럼 직선으로 바닥(방어의 1/5)까지 떨어지지 않고 점점 완만하게 줄어서 큰 타격이 갑자기 아파지지 않습니다. 몬스터의 방어는 바닐라 그대로입니다.\n\n");
 		md.append("| 직업 | 방어 배율 | 마법 배율 | 고유 |\n|---|---|---|---|\n");
 		for (JobClass job : JobClass.PLAYABLE) {
 			ClassDefense d = ClassDefense.of(job);

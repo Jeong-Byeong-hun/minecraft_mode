@@ -2,6 +2,7 @@ package com.minecraftmode.client.job;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.BossBarLayout;
+import com.minecraftmode.client.ClientSettings;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
@@ -30,7 +31,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Top-left: class title, level, experience and MP bars. Right of the hotbar: the held class weapon's
+ * Top-left: class title, level, experience bar and wallet (MP too when {@code /hpbar false} brought the hearts back; otherwise
+ * it is over the hotbar, {@code VitalsHud}). Right of the hotbar: the held class weapon's
  * skill slots with their key, cooldown sweep and seconds left (grey when the weapon is not usable,
  * blue when MP is short).
  */
@@ -52,7 +54,6 @@ public final class JobHud {
 			return;
 		}
 		JobData data = JobProgression.get(player);
-		leftBottom = 44;
 		drawPanel(graphics, minecraft.font, player, data);
 		drawQuest(graphics, minecraft.font, player);
 		drawSkills(graphics, minecraft, player, data);
@@ -61,15 +62,19 @@ public final class JobHud {
 	private static void drawPanel(final GuiGraphicsExtractor g, final Font font, final LocalPlayer player, final JobData data) {
 		int x = 4;
 		int y = 4;
+		// MP lives in the bars over the hotbar (VitalsHud) unless the player went back to vanilla hearts
+		boolean mana = !ClientSettings.hpBar;
+		int h = mana ? 40 : 30;
+		leftBottom = y + h;
 		Component title = Component.translatable(data.job().tierKey(data.tier())).withColor(data.job().color());
 		Paragon.ParagonData paragon = Paragon.get(player);
 		String level = "Lv " + data.level() + (data.level() >= JobProgression.MAX_LEVEL && paragon.level() > 0 ? " ✦" + paragon.level() : "");
 		int w = Math.max(124, font.width(title) + font.width(level) + 18);
 		int color = 0xFF000000 | data.job().color();
 		panelRight = x + w;
-		g.fill(x, y, x + w, y + 40, 0x90000000);
-		BossBarLayout.reserveLeft(x + w, y, y + 40);
-		g.fill(x, y, x + 2, y + 40, color);
+		g.fill(x, y, x + w, y + h, 0x90000000);
+		BossBarLayout.reserveLeft(x + w, y, y + h);
+		g.fill(x, y, x + 2, y + h, color);
 		g.text(font, title, x + 6, y + 3, 0xFFFFFFFF, true);
 		g.text(font, level, x + w - 4 - font.width(level), y + 3, 0xFFFFE08A, true);
 		// experience
@@ -78,13 +83,14 @@ public final class JobHud {
 		float expFraction = capped ? Math.min(1.0F, (float)paragon.exp() / Paragon.expToNext(paragon.level())) : Math.min(1.0F, (float)data.exp() / need);
 		// past the cap the bar fills paragon levels (violet)
 		bar(g, x + 6, y + 14, w - 10, 3, expFraction, capped ? 0xFFC060FF : 0xFFE8C547);
-		// MP
-		int max = Math.max(1, JobStats.maxMana(player));
-		String mp = data.mana() + "/" + max;
-		bar(g, x + 6, y + 21, w - 16 - font.width(mp), 5, Math.min(1.0F, (float)data.mana() / max), 0xFF4A8CFF);
-		g.text(font, mp, x + w - 4 - font.width(mp), y + 19, 0xFF9CC3FF, true);
+		if (mana) {
+			int max = Math.max(1, JobStats.maxMana(player));
+			String mp = data.mana() + "/" + max;
+			bar(g, x + 6, y + 21, w - 16 - font.width(mp), 5, Math.min(1.0F, (float)data.mana() / max), 0xFF4A8CFF);
+			g.text(font, mp, x + w - 4 - font.width(mp), y + 19, 0xFF9CC3FF, true);
+		}
 		// wallet
-		g.text(font, "◎ " + Coins.format(Wallet.balance(player)), x + 6, y + 30, 0xFFFFD27F, true);
+		g.text(font, "◎ " + Coins.format(Wallet.balance(player)), x + 6, y + h - 10, 0xFFFFD27F, true);
 	}
 
 	/** Active trial under the panel: goals and items with counts, green when done. */
@@ -107,7 +113,7 @@ public final class JobHud {
 			counts.add(new int[] {Essence.held(player.getInventory(), material.item()), material.count()});
 		}
 		int x = 4;
-		int y = 48;
+		int y = leftBottom + 4;
 		int w = 150;
 		int h = 13 + labels.size() * 10;
 		leftBottom = y + h;

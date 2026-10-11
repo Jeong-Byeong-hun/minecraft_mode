@@ -2,6 +2,7 @@ package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.entity.SpawnCandidates;
+import com.minecraftmode.entity.combat.PlayerArmor;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
@@ -283,8 +284,12 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			return new float[] {player.getHealth(), player.getItemBySlot(EquipmentSlot.CHEST).getDamageValue()};
 		});
 		float taken = before[2] - after[0];
-		// 10 damage vs 19 armor / 4 toughness: 10 * (1 - max(19 / 5, 19 - 10 / 3) / 25) = 3.73
-		require(taken > 3.5F && taken < 4.0F, "10 damage should be reduced to ~3.73, player took " + taken);
+		// 10 damage vs 19 armor / 4 toughness (PlayerArmor, close to vanilla's 3.73 for a hit this small): about 3.49
+		float expected = 10.0F * (1.0F - PlayerArmor.fraction(10.0F, 19.0F, 4.0F));
+		require(Math.abs(taken - expected) < 0.15F, "10 damage should be reduced to ~" + expected + ", player took " + taken);
+		// a hit far past the plateau loses armor gradually: vanilla's straight line hit the floor (a fifth of the armor) at 46
+		require(PlayerArmor.counted(46.0F, 19.0F, 4.0F) > 19.0F * 0.2F * 2.0F, "a 46 hit should still meet well over the armor floor, counted "
+			+ PlayerArmor.counted(46.0F, 19.0F, 4.0F));
 		require(after[1] > 0, "chestplate did not lose durability");
 		server.runCommand("effect give @p minecraft:instant_health 1 10");
 		server.runCommand("gamemode creative @p");

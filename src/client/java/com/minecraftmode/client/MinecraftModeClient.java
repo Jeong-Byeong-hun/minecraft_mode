@@ -14,6 +14,7 @@ import com.minecraftmode.client.hud.DamageNumbers;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
+import com.minecraftmode.client.hud.VitalsHud;
 import com.minecraftmode.client.entity.CityNpcRenderer;
 import com.minecraftmode.client.entity.ClassTrainerRenderer;
 import com.minecraftmode.client.entity.MineRaiderRenderer;
@@ -102,6 +103,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.CRAFT_SMITHING, CraftScreen::new);
 		JobKeys.init();
 		JobHud.init();
+		VitalsHud.init();
 		BossBarLayout.init();
 		JobTooltips.init();
 		RaidClient.init();

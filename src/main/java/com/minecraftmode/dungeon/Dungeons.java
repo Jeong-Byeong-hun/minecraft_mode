@@ -25,6 +25,7 @@ import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
+import com.minecraftmode.raid.InstanceSweep;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.raid.Raids;
@@ -196,6 +197,9 @@ public final class Dungeons {
 				entity.discard();
 			}
 		});
+		// nor anything an earlier party left in a reused slot, which loads back after the new run is built (InstanceSweep)
+		ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) -> !DungeonDimension.is(level)
+			|| InstanceSweep.admit(entity, runningTagAt(entity.position()), fromDisk));
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> server.execute(() -> {
 			DungeonInstance instance = BY_PLAYER.get(handler.player.getUUID());
 			DungeonInstance.Member member = instance == null ? null : instance.member(handler.player.getUUID());
@@ -298,12 +302,22 @@ public final class Dungeons {
 	}
 
 	private static boolean insideRunning(final Vec3 pos) {
+		return runningTagAt(pos) != null;
+	}
+
+	/** The sweep tag of the running instance whose rooms hold {@code pos}, or null. */
+	private static @Nullable String runningTagAt(final Vec3 pos) {
 		for (DungeonInstance instance : INSTANCES.values()) {
 			if (instance.state != DungeonInstance.State.CLOSED && DungeonLayout.inside(instance.origin, pos, 8.0)) {
-				return true;
+				return instance.sweepTag;
 			}
 		}
-		return false;
+		return null;
+	}
+
+	/** Everything that belongs to the run at {@code origin}: what opening clears and closing removes. */
+	private static AABB area(final BlockPos origin) {
+		return DungeonLayout.bounds(origin).inflate(16);
 	}
 
 	public static List<DungeonInstance> instances() {
@@ -431,6 +445,7 @@ public final class Dungeons {
 		}
 		BlockPos origin = new BlockPos(0, DungeonDimension.FLOOR_Y, (slot + 1) * SLOT_SPACING);
 		DungeonLayout.build(dungeon, origin, def.theme(), RandomSource.create(server.overworld().getGameTime() ^ slot * 31L));
+		InstanceSweep.clear(dungeon, area(origin));
 		List<DungeonAffix> affixes = DungeonAffix.forRun(level, ResetCycle.cycle(server.overworld()));
 		DungeonInstance instance = new DungeonInstance(nextId++, slot, def, origin, leader, level, affixes, keystoneOwner);
 		instance.partySize = players.size();
@@ -1101,8 +1116,7 @@ public final class Dungeons {
 		}
 		ServerLevel level = DungeonDimension.level(server);
 		if (level != null) {
-			AABB box = DungeonLayout.bounds(instance.origin).inflate(16);
-			for (Entity e : level.getEntitiesOfClass(Entity.class, box, e -> !(e instanceof Player))) {
+			for (Entity e : level.getEntitiesOfClass(Entity.class, area(instance.origin), e -> !(e instanceof Player))) {
 				MobPower.clear(e.getUUID());
 				e.discard();
 			}

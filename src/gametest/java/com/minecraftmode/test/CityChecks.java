@@ -11,16 +11,19 @@ import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.client.map.MapScreen;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
+import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.registry.ModBlocks;
+import com.minecraftmode.registry.ModEntities;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -256,7 +259,7 @@ final class CityChecks {
 				if (!level.isLoaded(post.pos()) || !level.shouldTickBlocksAt(post.pos())) {
 					continue;
 				}
-				List<com.minecraftmode.entity.TrainingDummy> found = level.getEntitiesOfClass(com.minecraftmode.entity.TrainingDummy.class, new AABB(post.pos()).inflate(1.5),
+				List<TrainingDummy> found = level.getEntitiesOfClass(TrainingDummy.class, new AABB(post.pos()).inflate(1.5),
 					d -> d.isBossKind() == post.boss());
 				require(found.size() == 1, "the dummy post " + post.pos().toShortString() + " should hold one dummy, found " + found.size());
 				require(!level.getBlockState(post.pos().below()).isAir(), "a dummy stands on air at " + post.pos().toShortString());
@@ -265,6 +268,7 @@ final class CityChecks {
 			return checked + " dummies";
 		});
 		MinecraftMode.LOGGER.info("[city] training dummies: {}", dummies);
+		checkDummiesReturn(context, server, base);
 		String report = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
 			List<String> lines = new ArrayList<>();
@@ -860,6 +864,48 @@ final class CityChecks {
 		context.getInput().lookAt(target);
 		context.waitTicks(60);
 		context.takeScreenshot(name);
+	}
+
+	/**
+	 * Skills knock and pull the dummies about: one pushed off its post goes back (after a while when it was just hit), no post gets a
+	 * second one meanwhile, and an extra dummy in the arena is removed.
+	 */
+	private static void checkDummiesReturn(final ClientGameTestContext context, final TestServerContext server, final int base) {
+		List<CityZone.DummyPost> posts = CityZone.dummies(base);
+		CityZone.DummyPost plain = posts.getFirst();
+		CityZone.DummyPost boss = posts.getLast();
+		UUID hitId = server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			TrainingDummy pushed = dummyAt(level, plain);
+			TrainingDummy hit = dummyAt(level, boss);
+			pushed.teleportTo(plain.pos().getX() + 0.5, base, plain.pos().getZ() + 5.5);
+			hit.hurtServer(level, level.damageSources().playerAttack(s.getPlayerList().getPlayers().getFirst()), 1.0F);
+			hit.teleportTo(boss.pos().getX() + 3.5, base, boss.pos().getZ() + 0.5);
+			TrainingDummy extra = ModEntities.TRAINING_DUMMY.create(level, EntitySpawnReason.COMMAND);
+			extra.snapTo(72.5, base, -71.5, 0.0F, 0.0F);
+			level.addFreshEntity(extra);
+			CityServices.keepDummies(level);
+			require(pushed.isAlive() && pushed.distanceToSqr(Vec3.atBottomCenterOf(plain.pos())) < 0.01, "a dummy pushed off its post should go back to it");
+			require(hit.isAlive() && hit.distanceToSqr(Vec3.atBottomCenterOf(boss.pos())) > 4.0, "a dummy that was just hit should wait before going back");
+			require(extra.isRemoved(), "an extra dummy in the arena should be removed");
+			List<TrainingDummy> all = level.getEntitiesOfClass(TrainingDummy.class, CityZone.dummyArea(base), TrainingDummy::isAlive);
+			require(all.size() == posts.size(), "the arena should hold " + posts.size() + " dummies, holds " + all.size());
+			return hit.getUUID();
+		});
+		context.waitTicks(CityServices.DUMMY_RETURN_TICKS + 5);
+		server.runOnServer(s -> {
+			ServerLevel level = s.overworld();
+			CityServices.keepDummies(level);
+			require(level.getEntity(hitId) instanceof TrainingDummy hit && hit.distanceToSqr(Vec3.atBottomCenterOf(boss.pos())) < 0.01,
+				"a dummy knocked off its post should go back once nobody hits it");
+		});
+		MinecraftMode.LOGGER.info("[city] training dummies go back to their posts, no extras");
+	}
+
+	private static TrainingDummy dummyAt(final ServerLevel level, final CityZone.DummyPost post) {
+		List<TrainingDummy> found = level.getEntitiesOfClass(TrainingDummy.class, new AABB(post.pos()).inflate(1.5), d -> d.isBossKind() == post.boss());
+		require(found.size() == 1, "the dummy post " + post.pos().toShortString() + " should hold one dummy, found " + found.size());
+		return found.getFirst();
 	}
 
 	private static void require(final boolean condition, final String message) {

@@ -67,6 +67,8 @@ public final class RaidInstance {
 	final BossDef boss;
 	final BlockPos center;
 	final UUID leader;
+	/** Carried by everything spawned here while it runs; what loads here without it is left over from earlier (InstanceSweep). */
+	final String sweepTag = InstanceSweep.newTag();
 	final Map<UUID, Member> members = new LinkedHashMap<>();
 	State state = State.COUNTDOWN;
 	/** Ticks spent in the current state. */

@@ -90,6 +90,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -376,9 +377,19 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			require(Dungeons.rewardLevel(20) == 20 && Dungeons.rewardLevel(30) == 25, "rewards grow at half speed past +20");
 		});
 		DungeonDef def = Dungeons.def("fungal_depths");
+		// an item an earlier party left in the run's slot (slot 0 at z 512: the test's first run) is gone when the run opens
+		Vec3 slot = new Vec3(5.5, DungeonDimension.FLOOR_Y + 1, 512.5);
+		server.runOnServer(s -> SweepChecks.hold(DungeonDimension.level(s), slot, true));
+		context.waitTicks(5);
+		ItemEntity litter = server.computeOnServer(s -> SweepChecks.litter(DungeonDimension.level(s), slot));
+		context.waitTicks(1);
 		server.runOnServer(s -> Dungeons.start(s, List.of(connection.getServerPlayer()), def, connection.getServerPlayer().getUUID(), 4,
 			connection.getServerPlayer().getUUID()));
 		DungeonInstance instance = server.computeOnServer(s -> Dungeons.instances().getFirst());
+		server.runOnServer(s -> {
+			SweepChecks.check(DungeonDimension.level(s), litter, slot);
+			SweepChecks.hold(DungeonDimension.level(s), slot, false);
+		});
 		require(server.computeOnServer(s -> DungeonDimension.is(connection.getServerPlayer().level())), "the party arrives in the dungeon dimension");
 		require(instance.affixes().size() == 1 && instance.level() == 4, "a +4 keystone brings one modifier, got " + instance.affixes());
 		waitFor(context, server, s -> instance.state() == DungeonInstance.State.RUN, 200, "the countdown ends");
@@ -804,7 +815,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 	/** Bread in the inventory plus loaves dropped next to the player (a full inventory drops the rest). */
 	private static int bread(final ServerPlayer player) {
 		int dropped = 0;
-		for (net.minecraft.world.entity.item.ItemEntity item : player.level().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
+		for (ItemEntity item : player.level().getEntitiesOfClass(ItemEntity.class,
 			player.getBoundingBox().inflate(4.0), e -> e.getItem().is(net.minecraft.world.item.Items.BREAD))) {
 			dropped += item.getItem().getCount();
 		}

@@ -15,6 +15,7 @@ import com.minecraftmode.residence.ResidenceDimension;
 import com.minecraftmode.residence.ResidenceRules;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -64,6 +65,8 @@ import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.storage.LevelData;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Runtime side of the capital: world spawn on the plaza, first-join welcome (teleport and guide
@@ -227,29 +230,69 @@ public final class CityServices {
 		}
 	}
 
-	/** The warrior arena's training dummies at their posts (put back when missing, extras removed), like the trainers. */
+	/** A dummy knocked off its post goes back once nobody has hit it for this long (3 s; the check runs every 5 s). */
+	public static final int DUMMY_RETURN_TICKS = 60;
+
+	/**
+	 * The warrior arena's training dummies at their posts. Each post keeps the dummy standing on it; an empty post takes the nearest
+	 * stray of its kind anywhere in the arena (a new dummy when there is none), and the rest are removed. A dummy knocked or pulled
+	 * off its post goes back once it has not been hit for {@link #DUMMY_RETURN_TICKS}. Until 0.5.16 only a dummy right on the post
+	 * counted, so every one a skill moved got a new one beside it and they piled up.
+	 */
 	public static void keepDummies(final ServerLevel level) {
 		if (!CityZone.isCityLevel(level)) {
 			return;
 		}
-		for (CityZone.DummyPost post : CityZone.dummies(CityZone.baseY(level))) {
-			BlockPos pos = post.pos();
-			if (!level.isLoaded(pos) || !level.shouldTickBlocksAt(pos)) {
-				continue;
-			}
-			List<TrainingDummy> found = level.getEntitiesOfClass(TrainingDummy.class, new AABB(pos).inflate(1.5), d -> d.isBossKind() == post.boss());
-			if (found.isEmpty()) {
-				TrainingDummy dummy = (post.boss() ? ModEntities.TRAINING_DUMMY_BOSS : ModEntities.TRAINING_DUMMY).create(level, EntitySpawnReason.STRUCTURE);
-				if (dummy != null) {
-					dummy.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0.0F, 0.0F);
-					level.addFreshEntity(dummy);
-				}
-				continue;
-			}
-			for (int i = 1; i < found.size(); i++) {
-				found.get(i).discard();
+		int base = CityZone.baseY(level);
+		List<CityZone.DummyPost> posts = CityZone.dummies(base);
+		for (CityZone.DummyPost post : posts) {
+			if (!level.isLoaded(post.pos()) || !level.shouldTickBlocksAt(post.pos())) {
+				return;
 			}
 		}
+		List<TrainingDummy> loose = new ArrayList<>(level.getEntitiesOfClass(TrainingDummy.class, CityZone.dummyArea(base), Entity::isAlive));
+		TrainingDummy[] held = new TrainingDummy[posts.size()];
+		// first the dummies still on their posts, so a stray never takes a post from one standing there
+		for (int pass = 0; pass < 2; pass++) {
+			for (int i = 0; i < posts.size(); i++) {
+				if (held[i] == null) {
+					held[i] = nearest(loose, posts.get(i), pass == 0 ? 2.25 : Double.MAX_VALUE);
+					loose.remove(held[i]);
+				}
+			}
+		}
+		long now = level.getGameTime();
+		for (int i = 0; i < posts.size(); i++) {
+			CityZone.DummyPost post = posts.get(i);
+			Vec3 home = Vec3.atBottomCenterOf(post.pos());
+			TrainingDummy dummy = held[i];
+			if (dummy == null) {
+				dummy = (post.boss() ? ModEntities.TRAINING_DUMMY_BOSS : ModEntities.TRAINING_DUMMY).create(level, EntitySpawnReason.STRUCTURE);
+				if (dummy != null) {
+					dummy.snapTo(home.x, home.y, home.z, 0.0F, 0.0F);
+					level.addFreshEntity(dummy);
+				}
+			} else if (dummy.distanceToSqr(home) > 0.25 && !dummy.hitWithin(now, DUMMY_RETURN_TICKS)) {
+				dummy.teleportTo(level, home.x, home.y, home.z, Set.of(), 0.0F, 0.0F, false);
+				dummy.setDeltaMovement(Vec3.ZERO);
+			}
+		}
+		loose.forEach(Entity::discard);
+	}
+
+	/** The dummy of {@code post}'s kind nearest to it within {@code maxDistSqr}, or null. */
+	private static @Nullable TrainingDummy nearest(final List<TrainingDummy> dummies, final CityZone.DummyPost post, final double maxDistSqr) {
+		Vec3 home = Vec3.atBottomCenterOf(post.pos());
+		TrainingDummy best = null;
+		double bestDist = maxDistSqr;
+		for (TrainingDummy d : dummies) {
+			double dist = d.distanceToSqr(home);
+			if (d.isBossKind() == post.boss() && dist <= bestDist) {
+				best = d;
+				bestDist = dist;
+			}
+		}
+		return best;
 	}
 
 	/** One NPC of each service role at its post, like the trainers. */

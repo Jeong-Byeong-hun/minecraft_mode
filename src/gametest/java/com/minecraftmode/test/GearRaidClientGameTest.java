@@ -426,6 +426,12 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 
 	private static void checkRaidFlow(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		server.runCommand("effect give @p resistance 999999 4 true");
+		// an item an earlier party left in the arena slot (slot 0 at x 1024: the test's first raid) is gone when the arena opens
+		Vec3 slot = new Vec3(1026.5, RaidDimension.FLOOR_Y + 1, 2.5);
+		server.runOnServer(s -> SweepChecks.hold(RaidDimension.level(s), slot, true));
+		context.waitTicks(5);
+		ItemEntity litter = server.computeOnServer(s -> SweepChecks.litter(RaidDimension.level(s), slot));
+		context.waitTicks(1);
 		String started = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			player.getInventory().clearContent();
@@ -446,6 +452,10 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			return player.level().getBlockState(floor).isAir() ? "no arena floor under the player" : "";
 		});
 		require(arrived.isEmpty(), arrived);
+		server.runOnServer(s -> {
+			SweepChecks.check(RaidDimension.level(s), litter, slot);
+			SweepChecks.hold(RaidDimension.level(s), slot, false);
+		});
 		connection.waitForChunksRender();
 		waitFor(context, server, s -> {
 			RaidInstance instance = Raids.instanceOf(connection.getServerPlayer());
@@ -524,6 +534,8 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		server.runCommand("effect clear @p");
 		server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
+			// a Phoenix Feather among the last raid's supplies would revive the player before the raid catches the fall
+			player.getInventory().clearContent();
 			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 7));
 			return Raids.start(s, List.of(player), RaidBosses.GORVATH, player.getUUID()) != null;
 		});

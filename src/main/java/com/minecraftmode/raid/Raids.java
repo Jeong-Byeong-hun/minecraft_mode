@@ -97,6 +97,9 @@ public final class Raids {
 				entity.discard();
 			}
 		});
+		// nor anything an earlier party left in a reused arena, which loads back after the new one is built (InstanceSweep)
+		ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) -> !RaidDimension.is(level)
+			|| InstanceSweep.admit(entity, runningTagAt(entity.position()), fromDisk));
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> server.execute(() -> onLeave(handler.player.getUUID())));
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			INSTANCES.clear();
@@ -128,12 +131,22 @@ public final class Raids {
 	}
 
 	private static boolean insideRunningArena(final Vec3 pos) {
+		return runningTagAt(pos) != null;
+	}
+
+	/** The sweep tag of the running instance whose arena holds {@code pos}, or null. */
+	private static @Nullable String runningTagAt(final Vec3 pos) {
 		for (RaidInstance instance : INSTANCES.values()) {
 			if (instance.state != RaidInstance.State.CLOSED && Arenas.inside(instance.center, pos, 16.0)) {
-				return true;
+				return instance.sweepTag;
 			}
 		}
-		return false;
+		return null;
+	}
+
+	/** Everything that belongs to the arena at {@code center}: what opening clears and closing removes. */
+	private static AABB area(final BlockPos center) {
+		return new AABB(center).inflate(Arenas.RADIUS + 16, 48, Arenas.RADIUS + 16);
 	}
 
 	public static List<RaidInstance> instances() {
@@ -253,6 +266,7 @@ public final class Raids {
 		}
 		BlockPos center = new BlockPos((slot + 1) * SLOT_SPACING, RaidDimension.FLOOR_Y, 0);
 		Arenas.build(level, center, def.arena(), RandomSource.create(server.overworld().getGameTime() ^ slot));
+		InstanceSweep.clear(level, area(center));
 		RaidInstance instance = new RaidInstance(nextId++, slot, def, center, leader, difficulty);
 		instance.partySize = players.size();
 		instance.practice.addAll(practice);
@@ -500,10 +514,7 @@ public final class Raids {
 		}
 		ServerLevel level = RaidDimension.level(server);
 		if (level != null) {
-			AABB box = new AABB(instance.center).inflate(Arenas.RADIUS + 16, 48, Arenas.RADIUS + 16);
-			for (Entity e : level.getEntitiesOfClass(Entity.class, box, e -> !(e instanceof Player))) {
-				e.discard();
-			}
+			InstanceSweep.clear(level, area(instance.center));
 		}
 	}
 

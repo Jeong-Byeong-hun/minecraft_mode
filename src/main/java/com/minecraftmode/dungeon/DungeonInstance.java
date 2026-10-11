@@ -1,5 +1,6 @@
 package com.minecraftmode.dungeon;
 
+import com.minecraftmode.raid.InstanceSweep;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -66,6 +67,8 @@ public final class DungeonInstance {
 	final DungeonDef def;
 	final BlockPos origin;
 	final UUID leader;
+	/** Carried by everything spawned here while it runs; what loads here without it is left over from earlier (InstanceSweep). */
+	final String sweepTag = InstanceSweep.newTag();
 	/** Keystone level; 0 for a run without a keystone. */
 	final int level;
 	final List<DungeonAffix> affixes;

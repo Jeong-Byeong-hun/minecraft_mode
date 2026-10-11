@@ -20,6 +20,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.phys.AABB;
 
 /**
  * Where the capital (Stormhold) is: a walled square around x = 0, z = 0 in the overworld of
@@ -206,6 +207,11 @@ public final class CityZone {
 	public static List<DummyPost> dummies(final int base) {
 		return List.of(new DummyPost(new BlockPos(67, base, -83), false), new DummyPost(new BlockPos(72, base, -83), false),
 			new DummyPost(new BlockPos(77, base, -83), false), new DummyPost(new BlockPos(69, base, -76), true), new DummyPost(new BlockPos(75, base, -76), true));
+	}
+
+	/** The warrior arena (walls at radius 19.5 around 72, -78) with room around it: dummies knocked anywhere in here are still its own. */
+	public static AABB dummyArea(final int base) {
+		return new AABB(72 - 28, base - 4, -78 - 28, 72 + 29, base + 24, -78 + 29);
 	}
 
 	private CityZone() {

@@ -25,10 +25,14 @@ import net.minecraft.world.level.storage.ValueInput;
 
 /**
  * A straw training dummy in the warrior arena to measure damage on: every skill, shot and summon treats it as an enemy, it never
- * dies or moves, gives nothing, and reports each attacker's damage per second ({@link DummyMeter}). The boss kind counts as a boss
+ * dies, gives nothing, and reports each attacker's damage per second ({@link DummyMeter}). Knockback, pulls and launches still move
+ * it; the city puts it back on its post once nobody has hit it for a while (CityServices.keepDummies). The boss kind counts as a boss
  * ({@link EliteMob}), so boss-damage bonuses apply on it. An armor stand body (pumpkin head, dyed tunic) keeps it light.
  */
 public class TrainingDummy extends ArmorStand implements Enemy {
+	/** Game time of the last hit a player or their summon landed (not saved: a reload counts as long ago). */
+	private long lastHit = Long.MIN_VALUE / 2;
+
 	public TrainingDummy(final EntityType<? extends TrainingDummy> type, final Level level) {
 		super(type, level);
 		this.setShowArms(true);
@@ -39,6 +43,11 @@ public class TrainingDummy extends ArmorStand implements Enemy {
 
 	public boolean isBossKind() {
 		return false;
+	}
+
+	/** Whether someone hit it in the last {@code ticks} ticks (a dummy knocked off its post waits for the fight to end). */
+	public boolean hitWithin(final long now, final int ticks) {
+		return now - this.lastHit < ticks;
 	}
 
 	/** Pumpkin head and a straw-coloured tunic (the boss kind wears gold and red). */
@@ -66,6 +75,7 @@ public class TrainingDummy extends ArmorStand implements Enemy {
 		if (player == null) {
 			return false;
 		}
+		this.lastHit = level.getGameTime();
 		// the same adjustments a monster's hit gets (critical hits, skill and boss bonuses, marks), then nothing is taken off
 		float dealt = CombatHooks.modifyIncoming(this, source, damage);
 		if (dealt <= 0.0F) {

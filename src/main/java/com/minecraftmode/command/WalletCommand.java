@@ -33,7 +33,7 @@ public final class WalletCommand {
 		dispatcher.register(Commands.literal("wallet")
 			.executes(c -> {
 				ServerPlayer player = c.getSource().getPlayerOrException();
-				player.sendSystemMessage(msg("balance", Coins.component(Wallet.balance(player))).withStyle(ChatFormatting.GOLD));
+				player.sendSystemMessage(Wallet.msg("balance", Coins.component(Wallet.balance(player))).withStyle(ChatFormatting.GOLD));
 				return 1;
 			})
 			.then(Commands.literal("pay")
@@ -53,19 +53,7 @@ public final class WalletCommand {
 	private static int pay(final CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		ServerPlayer from = c.getSource().getPlayerOrException();
 		ServerPlayer to = EntityArgument.getPlayer(c, "player");
-		int amount = parse(StringArgumentType.getString(c, "amount"));
-		if (amount <= 0 || to == from) {
-			from.sendSystemMessage(msg("bad_amount").withStyle(ChatFormatting.RED));
-			return 0;
-		}
-		if (!Wallet.take(from, amount)) {
-			from.sendSystemMessage(msg("short", Coins.component(amount), Coins.component(Wallet.balance(from))).withStyle(ChatFormatting.RED));
-			return 0;
-		}
-		Wallet.add(to, amount);
-		from.sendSystemMessage(msg("paid", Coins.component(amount), to.getDisplayName()).withStyle(ChatFormatting.GREEN));
-		to.sendSystemMessage(msg("received", Coins.component(amount), from.getDisplayName()).withStyle(ChatFormatting.GREEN));
-		return 1;
+		return Wallet.pay(from, to, parse(StringArgumentType.getString(c, "amount"))) ? 1 : 0;
 	}
 
 	private static int admin(final CommandContext<CommandSourceStack> c, final boolean set) throws CommandSyntaxException {
@@ -96,10 +84,6 @@ public final class WalletCommand {
 			};
 		}
 		return any ? (int)Math.min(Integer.MAX_VALUE, total) : -1;
-	}
-
-	private static net.minecraft.network.chat.MutableComponent msg(final String key, final Object... args) {
-		return Component.translatable("message.minecraft_mode.wallet." + key, args);
 	}
 
 	private WalletCommand() {

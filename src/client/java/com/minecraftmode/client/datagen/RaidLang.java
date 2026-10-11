@@ -127,8 +127,8 @@ final class RaidLang {
 		b.add("screen.minecraft_mode.raid.enter", ko ? "입장" : "Enter");
 		b.add("screen.minecraft_mode.raid.not_leader", ko ? "파티장만 입장을 시작할 수 있습니다." : "Only the party leader can start the raid.");
 		b.add("screen.minecraft_mode.raid.hint", ko
-			? "%s블록 안의 파티원이 함께 입장합니다. /party invite <이름>"
-			: "Party members within %s blocks come along. /party invite <name>");
+			? "%s블록 안의 파티원이 함께 입장합니다. 초대는 모험가 메뉴의 파티 탭에서"
+			: "Party members within %s blocks come along. Invite from the adventurer's menu, party tab");
 		Map<ArenaTheme, String[]> arenas = Map.of(
 			ArenaTheme.WEB_CAVE, new String[] {"Web Cave", "거미줄 동굴"},
 			ArenaTheme.MOUNTAIN, new String[] {"Mountain Summit", "산 정상"},
@@ -159,14 +159,15 @@ final class RaidLang {
 		b.add(p + "fallen", ko ? "%s님이 쓰러졌습니다!" : "%s has fallen!");
 		b.add(p + "fallen_self", ko ? "쓰러져서 도시로 돌아왔습니다. 아이템은 그대로입니다." : "You fell and were carried back. You kept everything.");
 		b.add(p + "failed", ko ? "%s 토벌 실패. 모두 전투에서 이탈했습니다." : "The raid on %s failed: nobody is left fighting.");
-		b.add(p + "returning", ko ? "%s초 뒤 귀환 (/raid leave: 바로 귀환)" : "Returning in %ss (/raid leave to go now)");
+		b.add(p + "returning", ko ? "%s초 뒤 귀환 (일시정지 메뉴의 '귀환': 바로 귀환)" : "Returning in %ss (\"Return home\" in the pause menu to go now)");
 		b.add(p + "victory", ko ? "%s 토벌 성공! 보상이 지급되었습니다. %s초 뒤 귀환합니다." : "%s is defeated! Rewards handed out. Returning in %s seconds.");
 	}
 
 	private static void party(final TranslationBuilder b, final boolean ko) {
 		String p = "message.minecraft_mode.party.";
 		b.add(p + "already_in", ko ? "이미 파티에 속해 있습니다." : "You are already in a party.");
-		b.add(p + "created", ko ? "파티를 만들었습니다. /party invite <이름>으로 초대하세요." : "Party created. Invite with /party invite <name>.");
+		b.add(p + "created", ko ? "파티를 만들었습니다. 모험가 메뉴의 파티 탭에서 초대하세요." : "Party created. Invite players from the adventurer's menu, party tab.");
+		b.add(p + "not_online", ko ? "%s님은 접속해 있지 않습니다." : "%s is not online.");
 		b.add(p + "not_leader", ko ? "파티장만 할 수 있습니다." : "Only the party leader can do that.");
 		b.add(p + "self", ko ? "자기 자신은 초대할 수 없습니다." : "You cannot invite yourself.");
 		b.add(p + "target_in_party", ko ? "%s님은 이미 다른 파티에 있습니다." : "%s is already in a party.");

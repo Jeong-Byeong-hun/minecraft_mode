@@ -16,7 +16,8 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.network.chat.Component;
 
 /**
- * This client's own display choices, saved in {@code <gamedir>/minecraft_mode/client.properties}: floating damage numbers
+ * This client's own display choices (the settings tab of the adventurer's menu, or a command), saved in
+ * {@code <gamedir>/minecraft_mode/client.properties}: floating damage numbers
  * ({@code /damagenumbers [true|false]}), the particles of enhanced gear ({@code /enhanceeffects [true|false]}) and the HP/MP bars
  * instead of vanilla hearts ({@code /hpbar [true|false]}).
  */
@@ -66,6 +67,11 @@ public final class ClientSettings {
 
 	public static void setEnhanceEffects(final boolean on) {
 		enhanceEffects = on;
+		save();
+	}
+
+	public static void setHpBar(final boolean on) {
+		hpBar = on;
 		save();
 	}
 

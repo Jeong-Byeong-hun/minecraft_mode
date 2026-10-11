@@ -23,7 +23,7 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Parties (server memory only; they end when the server stops). {@code /party} drives them: create,
+ * Parties (server memory only; they end when the server stops). {@code /party} and the adventurer's menu drive them: create,
  * invite (expires after a minute), accept, leave, kick, promote, disband. Members get their party's
  * state twice a second ({@link PartySyncPayload}) for the HUD. A player without a party counts as a
  * party of one for raids.
@@ -124,6 +124,12 @@ public final class Parties {
 			.withStyle(Style.EMPTY.withColor(ChatFormatting.GREEN).withUnderlined(true).withClickEvent(new ClickEvent.RunCommand("/party accept")));
 		target.sendSystemMessage(msg("invite_received", leader.getDisplayName()).withStyle(ChatFormatting.GOLD).append(" ").append(accept));
 		return true;
+	}
+
+	/** {@link #invite} by the name of an online player (the adventurer's menu). */
+	public static boolean invite(final ServerPlayer leader, final String name) {
+		ServerPlayer target = leader.level().getServer().getPlayerList().getPlayerByName(name);
+		return target == null ? fail(leader, "not_online", name) : invite(leader, target);
 	}
 
 	public static boolean accept(final ServerPlayer player) {
@@ -234,7 +240,7 @@ public final class Parties {
 		BY_PLAYER.remove(id);
 		ServerPlayer p = server.getPlayerList().getPlayer(id);
 		if (p != null && ServerPlayNetworking.canSend(p, PartySyncPayload.TYPE)) {
-			ServerPlayNetworking.send(p, new PartySyncPayload(List.of()));
+			ServerPlayNetworking.send(p, PartySyncPayload.NONE);
 		}
 		if (party.size() == 1) {
 			// a party of one is no party
@@ -245,7 +251,7 @@ public final class Parties {
 			if (lastPlayer != null) {
 				lastPlayer.sendSystemMessage(msg("disbanded").withStyle(ChatFormatting.YELLOW));
 				if (ServerPlayNetworking.canSend(lastPlayer, PartySyncPayload.TYPE)) {
-					ServerPlayNetworking.send(lastPlayer, new PartySyncPayload(List.of()));
+					ServerPlayNetworking.send(lastPlayer, PartySyncPayload.NONE);
 				}
 			}
 		}
@@ -282,12 +288,19 @@ public final class Parties {
 						Raids.instanceOf(p) != null));
 				}
 			}
-			PartySyncPayload payload = new PartySyncPayload(members);
+			PartySyncPayload payload = new PartySyncPayload(members, "");
 			for (UUID id : party.members()) {
 				ServerPlayer p = server.getPlayerList().getPlayer(id);
 				if (p != null && ServerPlayNetworking.canSend(p, PartySyncPayload.TYPE)) {
 					ServerPlayNetworking.send(p, payload);
 				}
+			}
+		}
+		// players without a party learn whether an invite waits (the menu's accept button), which also clears one that ran out
+		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+			if (!BY_PLAYER.containsKey(p.getUUID()) && ServerPlayNetworking.canSend(p, PartySyncPayload.TYPE)) {
+				Invite invite = INVITES.get(p.getUUID());
+				ServerPlayNetworking.send(p, invite == null ? PartySyncPayload.NONE : new PartySyncPayload(List.of(), invite.from()));
 			}
 		}
 	}

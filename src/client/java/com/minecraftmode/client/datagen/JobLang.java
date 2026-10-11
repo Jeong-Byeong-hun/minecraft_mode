@@ -222,6 +222,7 @@ final class JobLang {
 		TownLang.add(b, ko);
 		CodexLang.add(b, ko);
 		ResidenceLang.add(b, ko);
+		MenuLang.add(b, ko);
 	}
 
 	private JobLang() {

@@ -24,6 +24,7 @@ import com.minecraftmode.client.guide.NoticeScreen;
 import com.minecraftmode.client.job.EngravingScreen;
 import com.minecraftmode.client.job.JobHud;
 import com.minecraftmode.client.map.MapClient;
+import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.client.job.TrainerScreen;
@@ -127,6 +128,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		TargetHealthHud.init();
 		TrashButton.init();
 		ClientSettings.init();
+		MenuClient.init();
 		DamageNumbers.init();
 		BagTooltips.init();
 		StylistScreen.registerTooltip();

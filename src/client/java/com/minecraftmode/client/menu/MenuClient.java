@@ -1,0 +1,79 @@
+package com.minecraftmode.client.menu;
+
+import com.minecraftmode.client.job.JobKeys;
+import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.network.MenuActionPayload;
+import com.minecraftmode.raid.RaidDimension;
+import com.mojang.blaze3d.platform.InputConstants;
+import java.util.List;
+import java.util.Objects;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+import net.fabricmc.fabric.api.client.screen.v1.Screens;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.network.chat.Component;
+
+/**
+ * Opens the adventurer's menu (semicolon, or a button in the top-left corner of the pause menu, which also offers "return home"
+ * inside a raid or dungeon).
+ */
+public final class MenuClient {
+	public static final KeyMapping MENU = KeyMappingHelper.registerKeyMapping(
+		new KeyMapping("key.minecraft_mode.menu", InputConstants.Type.KEYBOARD, InputConstants.KEY_SEMICOLON, JobKeys.CATEGORY));
+	private static final int PAUSE_BUTTON_W = 110;
+
+	public static void init() {
+		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
+			while (MENU.consumeClick()) {
+				if (minecraft.player != null && minecraft.gui.screen() == null) {
+					minecraft.gui.setScreen(new AdventurerScreen());
+				}
+			}
+		});
+		ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
+			if (!(screen instanceof PauseScreen pause) || !pause.showsPauseMenu() || client.player == null) {
+				return;
+			}
+			Screens.getWidgets(screen).add(Button.builder(Component.translatable("screen.minecraft_mode.menu.title"),
+				b -> client.gui.setScreen(new AdventurerScreen())).bounds(4, 4, PAUSE_BUTTON_W, 20).build());
+			if (inInstance(client)) {
+				Screens.getWidgets(screen).add(Button.builder(Component.translatable("screen.minecraft_mode.menu.return_home").withStyle(ChatFormatting.GOLD), b -> {
+					if (ClientPlayNetworking.canSend(MenuActionPayload.TYPE)) {
+						ClientPlayNetworking.send(new MenuActionPayload(MenuActionPayload.LEAVE));
+					}
+					client.gui.setScreen(null);
+				}).bounds(4, 28, PAUSE_BUTTON_W, 20).build());
+			}
+		});
+	}
+
+	/** In the raid or dungeon dimension, where "return home" ({@code /raid leave}, {@code /dungeon leave}) applies. */
+	static boolean inInstance(final Minecraft minecraft) {
+		return minecraft.level != null && (minecraft.level.dimension() == RaidDimension.LEVEL || minecraft.level.dimension() == DungeonDimension.LEVEL);
+	}
+
+	/** Everyone on the server but this player, sorted by name (from the tab list). */
+	static List<String> onlineNames(final Minecraft minecraft) {
+		if (minecraft.getConnection() == null || minecraft.player == null) {
+			return List.of();
+		}
+		String self = minecraft.player.getGameProfile().name();
+		return minecraft.getConnection().getOnlinePlayers().stream()
+			.map(PlayerInfo::getProfile)
+			.map(profile -> profile.name())
+			.filter(Objects::nonNull)
+			.filter(name -> !name.equals(self))
+			.sorted(String.CASE_INSENSITIVE_ORDER)
+			.toList();
+	}
+
+	private MenuClient() {
+	}
+}

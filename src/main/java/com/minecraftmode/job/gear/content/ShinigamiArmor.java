@@ -17,7 +17,7 @@ public final class ShinigamiArmor extends ArmorContent {
 
 	@Override
 	public void define() {
-		set("academy_uniform", 10, "Academy Uniform", "신오 학원 교복", 0xF0F0F0, 0x3A6AD8, 0xC0262D,
+		set("academy_uniform", 10, "Academy Uniform", "진앙영술원 교복", 0xF0F0F0, 0x3A6AD8, 0xC0262D,
 			two(line(MAX_MANA, 10)),
 			three(line(MOVE_SPEED, 4)),
 			four(line(SKILL_DAMAGE, 8)));
@@ -29,7 +29,7 @@ public final class ShinigamiArmor extends ArmorContent {
 			two(line(SKILL_DAMAGE, 8)),
 			three(line(MANA_REGEN, 1)),
 			four(line(CRIT_CHANCE, 8)));
-		set("onmitsukido", 40, "Onmitsukido Garb", "온미츠키도 복장", 0x101014, 0x2A2A30, 0xE8C040,
+		set("onmitsukido", 40, "Onmitsukido Garb", "은밀기동 복장", 0x101014, 0x2A2A30, 0xE8C040,
 			two(line(MOVE_SPEED, 6)),
 			three(line(BACKSTAB, 20)),
 			four(line(DODGE, 6), line(CRIT_DAMAGE, 20)));
@@ -49,11 +49,11 @@ public final class ShinigamiArmor extends ArmorContent {
 			two(line(MAX_HEALTH, 6)),
 			three(line(SKILL_AREA, 15)),
 			four(line(BOSS_DAMAGE, 20), line(DAMAGE_REDUCTION, 6)));
-		set("tensa_coat", 90, "Coat of Tensa Zangetsu", "텐사 잔게츠의 코트", 0x101014, 0x2A1A1A, 0xC8202A,
+		set("tensa_coat", 90, "Coat of Tensa Zangetsu", "천쇄참월의 코트", 0x101014, 0x2A1A1A, 0xC8202A,
 			two(line(MOVE_SPEED, 8)),
 			three(line(SKILL_DAMAGE, 15)),
 			four(line(DODGE, 8), line(ECHO, 8)));
-		set("mugetsu", 100, "Final Getsuga Tensho", "무게츠", 0x0C0C10, 0x3A1A1A, 0x6AC8FF,
+		set("mugetsu", 100, "Final Getsuga Tensho", "무월", 0x0C0C10, 0x3A1A1A, 0x6AC8FF,
 			two(line(COOLDOWN, 10), line(MAX_MANA, 30)),
 			three(line(SKILL_DAMAGE, 20), line(BASIC_DAMAGE, 20)),
 			four(line(BOSS_DAMAGE, 25), line(CRIT_DAMAGE, 30)));

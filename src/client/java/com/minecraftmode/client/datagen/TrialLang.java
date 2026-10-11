@@ -31,9 +31,9 @@ final class TrialLang {
 			{"shinigami", "Kisuke Urahara", "우라하라 키스케",
 				"Welcome, welcome! Candy, souls, a little Bankai training... What can this humble shopkeeper do for you?",
 				"어서 오세요, 어서 와요! 사탕에 영혼에 만해 수행까지... 이 미천한 상점 주인이 뭘 해 드릴까요?"},
-			{"hunter", "Biscuit Krueger", "비스킷 크루거",
+			{"hunter", "Biscuit Krueger", "비스켓 크루거",
 				"Don't let the cute face fool you - I've trained Nen users for fifty years. Ready to get stronger?",
-				"귀여운 얼굴에 속지 마. 50년 동안 념 능력자를 길러 왔으니까. 강해질 준비 됐어?"},
+				"귀여운 얼굴에 속지 마. 50년 동안 넨 능력자를 길러 왔으니까. 강해질 준비 됐어?"},
 		};
 		for (String[] t : trainers) {
 			JobClass job = JobClass.byId(t[0]);
@@ -53,7 +53,7 @@ final class TrialLang {
 			{"map_scrap", "Treasure Map Scrap", "보물 지도 조각"}, {"bounty_poster", "Bounty Poster", "현상금 전단"},
 			{"haki_crystal", "Haki Crystal", "패기의 결정"}, {"sea_kings_treasure", "Sea King's Treasure", "해왕의 보물"},
 			{"hollow_mask_shard", "Hollow Mask Shard", "호로 가면 조각"}, {"hell_butterfly", "Hell Butterfly", "지옥나비"},
-			{"tenshintai", "Tenshintai", "텐신타이"}, {"hogyoku_fragment", "Hogyoku Fragment", "호교쿠의 파편"},
+			{"tenshintai", "Tenshintai", "전신체"}, {"hogyoku_fragment", "Hogyoku Fragment", "붕옥의 파편"},
 			{"exam_badge", "Exam Number Badge", "수험 번호표"}, {"divination_glass", "Water Divination Glass", "수견식 유리잔"},
 			{"chimera_carapace", "Chimera Ant Carapace", "키메라 앤트 갑각"}, {"dark_continent_relic", "Dark Continent Relic", "암흑대륙의 유물"},
 		};
@@ -117,7 +117,7 @@ final class TrialLang {
 			{"Classes\n\nReach level 10 by defeating monsters and mining iron or better ores, then talk to the trainer of the class you want: you take the class on the spot. The Training Grounds under the park south-east of the fountain give double EXP until then.",
 				"직업\n\n몬스터를 처치하고 철 이상의 광석을 캐서 레벨 10을 달성한 뒤 원하는 직업의 교관과 대화하면 그 자리에서 바로 전직합니다. 그때까지는 분수 남동쪽 공원 지하의 수련장에서 경험치를 2배로 얻습니다."},
 			{"Trainers\n\nBedivere - Warrior\nHanzo - Rogue\nMerlin - Mage\nChiron - Archer\nDrake - Pirate\nUrahara - Soul Reaper\nBiscuit - Hunter",
-				"교관\n\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적\n우라하라 - 사신\n비스킷 - 헌터"},
+				"교관\n\n베디비어 - 전사\n한조 - 도적\n멀린 - 법사\n케이론 - 궁수\n드레이크 - 해적\n우라하라 - 사신\n비스켓 - 헌터"},
 			{"Advancement trials\n\nThe first class needs no trial. From tier 2 on, every advancement is a trial: defeat the listed enemies, collect the trial tokens they drop, and bring them back with essence.\n\nTiers unlock at levels 10, 25, 45 and 70.",
 				"전직 시련\n\n1차 전직은 시련 없이 바로 됩니다. 2차부터는 시련입니다. 목표 적을 처치하고, 그들이 떨어뜨리는 시련 증표를 모아 정수와 함께 교관에게 가져가세요.\n\n레벨 10, 25, 45, 70에 각 차수가 열립니다."},
 			{"Weapons and skills\n\nEvery advancement gives class gear for your level; the Guild sells more. Skills: R, X, V, Z; class screen: K. Skills only work for the weapon's class, tier and level.",

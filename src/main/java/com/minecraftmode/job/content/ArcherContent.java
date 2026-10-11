@@ -86,37 +86,37 @@ public final class ArcherContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 3: Heroic Archer
 		weapon("kanshou_bakuya", 3, 45, TWIN_BLADES, "Kanshou & Bakuya", "간장·막야",
 			art(0x2A2A2A, 0x8B1A1A, 0xF2F2F2), fx(Fx.Kind.SLASH, 0xF0F0F0),
-			skill("crane_wings", "Crane Wings, Three Realms", "카쿠요쿠 산렌", ATTACK, 14, 24,
+			skill("crane_wings", "Crane Wings, Three Realms", "학익삼련", ATTACK, 14, 24,
 				shoot(ProjectileStyle.BLADE, 1.2).count(2).spread(60).homing(), delay(0.6, dash(7, 2.2))),
 			skill("overedge", "Overedge", "오버엣지", ATTACK, 8, 18, repeat(3, 4, slash(4, 170, 0.85)), inflict(BLEEDING, 4, 1)),
-			skill("minds_eye_true", "Mind's Eye (True)", "심안(진)", DEFENSE, 20, 18, stance(COUNTER, 6, 45), buff(RESISTANCE, 6, 0)));
+			skill("minds_eye_true", "Mind's Eye (True)", "심안(진짜)", DEFENSE, 20, 18, stance(COUNTER, 6, 45), buff(RESISTANCE, 6, 0)));
 
 		weapon("emiya_black_bow", 3, 49, LONGBOW, "EMIYA's Black Bow", "에미야의 흑궁",
 			art(0x1E1E1E, 0x7A0F0F, 0xBFC6CF), fx(Fx.Kind.SHARD, 0xFF4A3A),
 			skill("caladbolg_ii", "Caladbolg II", "칼라드볼그 II", ATTACK, 15, 24, shoot(ProjectileStyle.ARROW, 2.6).speed(4.5F).explode(3.5F)),
 			skill("rho_aias", "Rho Aias", "로 아이아스", DEFENSE, 26, 24, stance(GUARD, 6, 60), allyBuff(6, RESISTANCE, 6, 1)),
-			skill("unlimited_blade_works", "Unlimited Blade Works", "언리미티드 블레이드 웍스", ATTACK, 24, 28,
+			skill("unlimited_blade_works", "Unlimited Blade Works", "무한의 검제", ATTACK, 24, 28,
 				rain(ProjectileStyle.BLADE, 18, 5, 16, 0.35), inflict(BLEEDING, 4, 0)));
 
 		weapon("arash_greatbow", 3, 53, GREATBOW, "Arash's Greatbow", "아라쉬의 대궁",
 			art(0xB8864B, 0x4A2C14, 0x6EC6FF), fx(Fx.Kind.BOLT, 0xBDE9FF),
-			skill("stella", "Stella", "스텔라", ATTACK, 30, 28, strike(24, 5.5, 1, 8.4), stun(1.0)),
+			skill("stella", "Stella", "유성일조", ATTACK, 30, 28, strike(24, 5.5, 1, 8.4), stun(1.0)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 18, debuff(18, GLOWING, 10, 0), mark(24, 10, 35)),
-			skill("toughness", "Toughness", "강인함", DEFENSE, 22, 18, buff(RESISTANCE, 8, 1), heal(20), cleanse()));
+			skill("toughness", "Toughness", "강건", DEFENSE, 22, 18, buff(RESISTANCE, 8, 1), heal(20), cleanse()));
 
 		weapon("tauropolos", 3, 57, SHORTBOW, "Tauropolos", "타우로폴로스",
 			art(0x556B2F, 0x2F1E0E, 0xFFD54A), fx(Fx.Kind.FEATHER, 0xFFE27A),
-			skill("phoebus_catastrophe", "Phoebus Catastrophe", "포이보스 카타스트로페", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
-			skill("calydonian_hunt", "Calydonian Hunt", "칼리돈의 사냥", ATTACK, 10, 20,
+			skill("phoebus_catastrophe", "Phoebus Catastrophe", "청원의 화살 편지", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
+			skill("calydonian_hunt", "Calydonian Hunt", "칼리돈 사냥", ATTACK, 10, 20,
 				shoot(ProjectileStyle.ARROW, 1.4).count(3).spread(12).homing(), inflict(VULNERABLE, 6, 0)),
-			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 오버런", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
+			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 너머", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
 
 		weapon("sherwood_yew", 3, 61, CROSSBOW, "Yew Bow of Sherwood", "셔우드의 주목궁",
 			art(0x3E5C2A, 0x2B1D10, 0x9CFF57), fx(Fx.Kind.SMOKE, 0x7BCB4A),
-			skill("yew_bow", "Yew Bow", "기도의 활", ATTACK, 14, 24,
+			skill("yew_bow", "Yew Bow", "기원의 활", ATTACK, 14, 24,
 				shoot(ProjectileStyle.ARROW, 2.0).homing(), inflict(POISON, 8, 2), inflict(WEAKNESS, 6, 0)),
 			skill("no_face_may_king", "No Face May King", "얼굴 없는 왕", UTILITY, 22, 20, stealth(6, 80), buff(SPEED, 6, 1)),
-			skill("sabotage", "Sabotage", "파괴 공작", ATTACK, 16, 20, zone(4.5, 6, 0.6).at(16).effect(WEAKNESS, 1)));
+			skill("sabotage", "Sabotage", "파괴공작", ATTACK, 16, 20, zone(4.5, 6, 0.6).at(16).effect(WEAKNESS, 1)));
 
 		weapon("failnaught", 3, 66, LONGBOW, "Failnaught", "페일노트",
 			art(0xD4AF37, 0x7A1F2B, 0xFFB6C1), fx(Fx.Kind.SPARK, 0xFF8FB1),
@@ -127,14 +127,14 @@ public final class ArcherContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 4: King of Heroes
 		weapon("chiron_greatbow", 4, 70, GREATBOW, "Chiron's Greatbow", "케이론의 대궁",
 			art(0x6D4C41, 0x263238, 0xFF4500), fx(Fx.Kind.BOLT, 0xFF7043),
-			skill("antares_snipe", "Antares Snipe", "안타레스 스나이프", ULTIMATE, 45, 36, mark(24, 6, 40), shoot(ProjectileStyle.ARROW, 6.48).speed(5.0F).pierce(6)),
+			skill("antares_snipe", "Antares Snipe", "천갈일사", ULTIMATE, 45, 36, mark(24, 6, 40), shoot(ProjectileStyle.ARROW, 6.48).speed(5.0F).pierce(6)),
 			skill("pankration", "Pankration", "판크라티온", ATTACK, 10, 20, slash(4, 140, 1.8), stun(1.0), push(4, 1.6)),
-			skill("arrow_protection", "Protection from Arrows", "화살 회피", DEFENSE, 22, 20, stance(EVADE, 6, 55), buff(RESISTANCE, 6, 0)),
+			skill("arrow_protection", "Protection from Arrows", "화살 회피의 가호", DEFENSE, 22, 20, stance(EVADE, 6, 55), buff(RESISTANCE, 6, 0)),
 			skill("centaur_gallop", "Centaur's Gallop", "켄타우로스의 질주", MOVEMENT, 10, 16, buff(SPEED, 6, 2), dash(12, 1.4)));
 
 		weapon("kanshou_bakuya_alter", 4, 73, TWIN_BLADES, "Kanshou & Bakuya (Alter)", "간장·막야 (얼터)",
 			art(0x3A3A42, 0x151515, 0xE03030), fx(Fx.Kind.SPARK, 0xFF5A5A),
-			skill("unlimited_lost_works", "Unlimited Lost Works", "언리미티드 로스트 웍스", ULTIMATE, 48, 38,
+			skill("unlimited_lost_works", "Unlimited Lost Works", "언리미티드 로스트 워크스", ULTIMATE, 48, 38,
 				shoot(ProjectileStyle.BULLET, 0.9).count(8).spread(40).interval(2), delay(0.8, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.45))),
 			skill("gun_kata", "Gun Kata", "건 카타", ATTACK, 8, 22, slash(4, 360, 1.19), shoot(ProjectileStyle.BULLET, 1.02).count(5).spread(60)),
 			skill("counter_guardian", "Counter Guardian", "카운터 가디언", DEFENSE, 22, 22, stance(COUNTER, 6, 50), shield(12, 8)),
@@ -157,24 +157,24 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("gandiva", 4, 83, GREATBOW, "Gandiva", "간디바",
 			art(0xF2F2F2, 0x1E2A44, 0x4AA8FF), fx(Fx.Kind.BOLT, 0x7FB8FF),
-			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 55, 40, lightning(24, 6, 7.6), inflict(WITHER, 6, 1)),
+			skill("pashupata", "Pashupata", "파괴신의 손짓", ULTIMATE, 55, 40, lightning(24, 6, 7.6), inflict(WITHER, 6, 1)),
 			skill("agni_gandiva", "Agni Gandiva", "아그니 간디바", ATTACK, 10, 24, shoot(ProjectileStyle.ARROW, 1.28).count(3).spread(12).explode(2.0F), burn(5)),
-			skill("hero_of_the_endowed", "Hero of the Endowed", "수여의 영웅", UTILITY, 26, 20, restoreMana(25), buff(MANA_FLOW, 12, 0), refresh(30)),
-			skill("flame_burst", "Mana Burst (Flame)", "마력 방출(불꽃)", MOVEMENT, 10, 18, dash(10, 1.8), burn(3)));
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, restoreMana(25), buff(MANA_FLOW, 12, 0), refresh(30)),
+			skill("flame_burst", "Mana Burst (Flame)", "마력방출(불꽃)", MOVEMENT, 10, 18, dash(10, 1.8), burn(3)));
 
 		weapon("maanna", 4, 87, LONGBOW, "Maanna", "마안나",
 			art(0xE8D27A, 0x1A1A2E, 0xD7263D), fx(Fx.Kind.COIN, 0xFFD700),
-			skill("an_gal_ta_kigal_she", "An Gal Ta Kigal Shè", "안갈타 키갈슈", ULTIMATE, 50, 40, stun(1.5), strike(24, 6, 1, 7.98)),
+			skill("an_gal_ta_kigal_she", "An Gal Ta Kigal Shè", "앙갈타 키갈슈", ULTIMATE, 50, 40, stun(1.5), strike(24, 6, 1, 7.98)),
 			skill("gem_shot", "Gem Shot", "보석 사격", ATTACK, 8, 22, shoot(ProjectileStyle.ORB, 1.66).count(5).spread(40).homing(), loot(15)),
-			skill("manifestation_of_beauty", "Manifestation of Beauty", "미의 화신", UTILITY, 24, 24, allyBuff(10, STRENGTH, 10, 1), debuff(10, WEAKNESS, 6, 1)),
+			skill("manifestation_of_beauty", "Manifestation of Beauty", "미의 현현", UTILITY, 24, 24, allyBuff(10, STRENGTH, 10, 1), debuff(10, WEAKNESS, 6, 1)),
 			skill("goddess_flight", "Goddess's Flight", "여신의 비행", MOVEMENT, 12, 18, blink(12), buff(SLOW_FALLING, 8, 0), buff(SPEED, 8, 1)));
 
-		weapon("gate_of_babylon", 4, 92, CROSSBOW, "Gate of Babylon", "게이트 오브 바빌론",
+		weapon("gate_of_babylon", 4, 92, CROSSBOW, "Gate of Babylon", "왕의 재보",
 			art(0xFFD700, 0x5A0A0A, 0x40E0D0), fx(Fx.Kind.RUNE, 0xFFE066),
-			skill("full_open", "Gate of Babylon: Full Open", "게이트 오브 바빌론: 전면 개방", ULTIMATE, 50, 38,
+			skill("full_open", "Gate of Babylon: Full Open", "왕의 재보: 전면 개방", ULTIMATE, 50, 38,
 				barrage(ProjectileStyle.BLADE, 24, 0.28), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.11))),
 			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.3)),
-			skill("enkidu", "Enkidu: Chains of Heaven", "천의 사슬 (엔키두)", UTILITY, 18, 26, pull(10, 1.8), debuff(10, STUN, 1.5, 0), debuff(10, VULNERABLE, 6, 1)),
+			skill("enkidu", "Enkidu: Chains of Heaven", "하늘의 사슬", UTILITY, 18, 26, pull(10, 1.8), debuff(10, STUN, 1.5, 0), debuff(10, VULNERABLE, 6, 1)),
 			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, shield(20, 10), stance(GUARD, 5, 50)));
 
 		weapon("ea_and_merodach", 4, 100, TWIN_BLADES, "Ea & Merodach", "에아 & 메로닥",
@@ -182,6 +182,6 @@ public final class ArcherContent extends ClassContent {
 			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, pull(10, 1.4), delay(0.6, beam(32, 10.0)), inflict(VULNERABLE, 8, 2)),
 			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, slash(5, 200, 1.4), shoot(ProjectileStyle.WAVE, 1.3).pierce(6)),
 			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, debuff(16, GLOWING, 12, 0), mark(24, 12, 45), restoreMana(25)),
-			skill("golden_rule_body", "Golden Rule (Body)", "황금률(체)", DEFENSE, 28, 26, buff(RESISTANCE, 8, 1), buff(REGENERATION, 8, 1), heal(20)));
+			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", DEFENSE, 28, 26, buff(RESISTANCE, 8, 1), buff(REGENERATION, 8, 1), heal(20)));
 	}
 }

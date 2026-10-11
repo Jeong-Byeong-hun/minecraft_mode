@@ -35,8 +35,8 @@ public final class PirateContent extends ClassContent {
 
 		weapon("flintlock_pistol", 1, 15, PISTOL, "Flintlock Pistol", "플린트락 권총",
 			art(0x7A7F87, 0x6B4226, 0xC9A227), fx(Fx.Kind.SMOKE, 0xA8A8A8),
-			skill("lead_star", "Lead Star", "필살 나마리보시", ATTACK, 5, 8, shoot(ProjectileStyle.BULLET, 1.44).pierce(1)),
-			skill("tabasco_star", "Tabasco Star", "필살 타바스코보시", UTILITY, 12, 10, shoot(ProjectileStyle.BULLET, 0.9), inflict(BLINDNESS, 3, 0), inflict(NAUSEA, 5, 0)),
+			skill("lead_star", "Lead Star", "필살 납 총알", ATTACK, 5, 8, shoot(ProjectileStyle.BULLET, 1.44).pierce(1)),
+			skill("tabasco_star", "Tabasco Star", "필살 타바스코 탄", UTILITY, 12, 10, shoot(ProjectileStyle.BULLET, 0.9), inflict(BLINDNESS, 3, 0), inflict(NAUSEA, 5, 0)),
 			skill("tactical_retreat", "Tactical Retreat", "전략적 후퇴", MOVEMENT, 12, 8, push(3.5, 1.2), buff(SPEED, 5, 1)));
 
 		weapon("brawler_knuckles", 1, 20, KNUCKLE, "Brawler's Knuckles", "싸움꾼의 너클",
@@ -46,15 +46,15 @@ public final class PirateContent extends ClassContent {
 			skill("gum_gum_rocket", "Gum-Gum Rocket", "고무고무 로켓", MOVEMENT, 12, 10, grapple(16), empower(2, 30, 6)));
 
 		// ---------------------------------------------------------------- tier 2: Captain
-		weapon("wado_ichimonji", 2, 25, CUTLASS, "Wado Ichimonji", "와도 이치몬지",
+		weapon("wado_ichimonji", 2, 25, CUTLASS, "Wado Ichimonji", "화도일문자",
 			art(0xDDE4EA, 0xEDE8DA, 0x2E8B57), fx(Fx.Kind.SLASH, 0xA8F0C0),
-			skill("oni_giri", "Santoryu: Oni Giri", "산토류 오니기리", MOVEMENT, 9, 14, dash(7, 1.53), inflict(BLEEDING, 4, 0)),
-			skill("shishi_sonson", "Ittoryu: Shishi Sonson", "잇토류 시시손손", ATTACK, 8, 14, slash(5.5, 60, 1.87), inflict(VULNERABLE, 4, 0)),
-			skill("tatsumaki", "Santoryu: Tatsumaki", "산토류 타츠마키", ATTACK, 12, 18, launch(5, 4), repeat(3, 5, nova(4, 0.68))));
+			skill("oni_giri", "Santoryu: Oni Giri", "삼도류 도깨비 참수", MOVEMENT, 9, 14, dash(7, 1.53), inflict(BLEEDING, 4, 0)),
+			skill("shishi_sonson", "Ittoryu: Shishi Sonson", "일도류 사자의 노래", ATTACK, 8, 14, slash(5.5, 60, 1.87), inflict(VULNERABLE, 4, 0)),
+			skill("tatsumaki", "Santoryu: Tatsumaki", "삼도류 드래곤 회오리치기", ATTACK, 12, 18, launch(5, 4), repeat(3, 5, nova(4, 0.68))));
 
 		weapon("soul_solid", 2, 28, RAPIER, "Soul Solid", "소울 솔리드",
 			art(0xCFE4F2, 0x1E1E1E, 0x6FE3FF), fx(Fx.Kind.SHARD, 0xBFF4FF),
-			skill("yahazu_giri", "Yahazu Giri", "야하즈기리", ATTACK, 9, 14, dash(5, 0), delay(0.8, nova(4.5, 1.9))),
+			skill("yahazu_giri", "Yahazu Giri", "오늬 가르기", ATTACK, 9, 14, dash(5, 0), delay(0.8, nova(4.5, 1.9))),
 			skill("soul_parade", "Soul Parade", "소울 퍼레이드", ATTACK, 10, 16, slash(4.5, 120, 1.4), inflict(SLOWNESS, 4, 2)),
 			skill("soul_king_live", "Soul King Live", "소울 킹 라이브", UTILITY, 22, 16, allyBuff(8, SPEED, 8, 1), allyBuff(8, REGENERATION, 6, 0)));
 
@@ -73,7 +73,7 @@ public final class PirateContent extends ClassContent {
 		weapon("black_leg_knuckles", 2, 38, KNUCKLE, "Black Leg Knuckles", "검은 다리 너클",
 			art(0x2E2E33, 0x1B1B2F, 0xFF7A1A), fx(Fx.Kind.SPARK, 0xFF8C1A),
 			skill("diable_jambe", "Diable Jambe", "디아블 잠브", ATTACK, 10, 16, burn(5), repeat(3, 4, slash(3.5, 140, 0.9))),
-			skill("concasse", "Concasse", "콩카세", ATTACK, 12, 16, leap(5, 3.5, 1.9), stun(1.0)),
+			skill("concasse", "Concasse", "깍뚝 다지기", ATTACK, 12, 16, leap(5, 3.5, 1.9), stun(1.0)),
 			skill("sky_walk", "Sky Walk", "스카이 워크", MOVEMENT, 10, 12, blink(8), buff(JUMP_BOOST, 6, 1), buff(SLOW_FALLING, 4, 0)));
 
 		weapon("galleon_cannon", 2, 42, HAND_CANNON, "Galleon Hand Cannon", "갤리온 핸드 캐논",
@@ -85,23 +85,23 @@ public final class PirateContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 3: Emperor of the Sea
 		weapon("buggy_cannon", 3, 45, HAND_CANNON, "Buggy's Hand Cannon", "버기의 핸드 캐논",
 			art(0x4A4E57, 0x1F3A93, 0xE03C31), fx(Fx.Kind.SMOKE, 0xD95040),
-			skill("buggy_ball", "Special Buggy Ball", "특제 버기 볼", ATTACK, 14, 24, shoot(ProjectileStyle.CANNONBALL, 2.6).explode(4.0F), burn(4)),
+			skill("buggy_ball", "Special Buggy Ball", "특제 버기탄", ATTACK, 14, 24, shoot(ProjectileStyle.CANNONBALL, 2.6).explode(4.0F), burn(4)),
 			skill("chop_chop_cannon", "Chop-Chop Cannon", "동강동강 포", ATTACK, 8, 18, shoot(ProjectileStyle.KNIFE, 1.3).count(3).spread(20).homing()),
-			skill("chop_chop_escape", "Chop-Chop Emergency Escape", "동강동강 긴급 탈출", MOVEMENT, 14, 16, blink(10), stance(EVADE, 5, 50)));
+			skill("chop_chop_escape", "Chop-Chop Emergency Escape", "동강동강 긴급탈출", MOVEMENT, 14, 16, blink(10), stance(EVADE, 5, 50)));
 
 		weapon("fire_fist_knuckles", 3, 49, KNUCKLE, "Fire Fist Knuckles", "불주먹 너클",
 			art(0xD35400, 0x2B2B2B, 0xFFC93C), fx(Fx.Kind.ORB, 0xFF7A1A),
-			skill("hiken", "Hiken", "히켄", ATTACK, 10, 20, shoot(ProjectileStyle.FIREBALL, 2.4).pierce(6).explode(2.0F), burn(5)),
-			skill("hotarubi", "Hotarubi: Hidaruma", "호타루비 히다루마", ATTACK, 16, 22, zone(5, 4, 1.0).at(12), burn(3)),
+			skill("hiken", "Hiken", "불주먹", ATTACK, 10, 20, shoot(ProjectileStyle.FIREBALL, 2.4).pierce(6).explode(2.0F), burn(5)),
+			skill("hotarubi", "Hotarubi: Hidaruma", "반디 불덩이", ATTACK, 16, 22, zone(5, 4, 1.0).at(12), burn(3)),
 			skill("flame_logia", "Flame Logia", "불꽃 자연계", DEFENSE, 20, 18, stance(EVADE, 6, 55), buff(FIRE_RESISTANCE, 10, 0)));
 
 		weapon("blackbeard_flintlock", 3, 53, PISTOL, "Blackbeard's Flintlock", "검은 수염의 플린트락",
 			art(0x2A2A2A, 0x4B2E1A, 0x6A0DAD), fx(Fx.Kind.SMOKE, 0x3A1F5C),
 			skill("black_hole", "Black Hole", "블랙홀", ATTACK, 18, 26, zone(5, 5, 0.8).at(14).pull(1.2).effect(SLOWNESS, 1)),
-			skill("black_vortex", "Black Vortex", "쿠로우즈", UTILITY, 12, 20, pull(9, 2.0), debuff(6, WEAKNESS, 6, 1)),
+			skill("black_vortex", "Black Vortex", "암수", UTILITY, 12, 20, pull(9, 2.0), debuff(6, WEAKNESS, 6, 1)),
 			skill("three_flintlocks", "Three Flintlocks", "세 자루 권총", ATTACK, 8, 18, shoot(ProjectileStyle.BULLET, 1.6).count(3).spread(10).interval(4).pierce(1)));
 
-		weapon("yasopp_rifle", 3, 57, MUSKET, "Yasopp's Rifle", "야소프의 장총",
+		weapon("yasopp_rifle", 3, 57, MUSKET, "Yasopp's Rifle", "야솝의 장총",
 			art(0x6B6F75, 0x8B5A2B, 0xB22222), fx(Fx.Kind.SPARK, 0xFFE6A0),
 			skill("ants_eye", "Ant's Eye Shot", "개미 눈 저격", ATTACK, 9, 20, mark(24, 8, 30), shoot(ProjectileStyle.BULLET, 2.6).pierce(2).speed(5.0F)),
 			skill("observation_haki", "Observation Haki", "견문색 패기", DEFENSE, 20, 18, stance(EVADE, 6, 45), debuff(16, GLOWING, 8, 0)),
@@ -109,15 +109,15 @@ public final class PirateContent extends ClassContent {
 
 		weapon("hassaikai", 3, 61, ANCHOR, "Hassaikai", "핫사이카이",
 			art(0x4A4F57, 0x3B2F2F, 0x3FA7D6), fx(Fx.Kind.BOLT, 0x9FD8FF),
-			skill("thunder_bagua", "Thunder Bagua", "라이메이 핫케", ATTACK, 14, 26, dash(8, 2.6), stun(1.2)),
-			skill("bolo_breath", "Bolo Breath", "볼로 브레스", ATTACK, 12, 22, shoot(ProjectileStyle.FIREBALL, 1.5).count(3).spread(30).explode(2.5F), burn(4)),
+			skill("thunder_bagua", "Thunder Bagua", "뇌명팔괘", ATTACK, 14, 26, dash(8, 2.6), stun(1.2)),
+			skill("bolo_breath", "Bolo Breath", "보로브레스", ATTACK, 12, 22, shoot(ProjectileStyle.FIREBALL, 1.5).count(3).spread(30).explode(2.5F), burn(4)),
 			skill("strongest_creature", "World's Strongest Creature", "이 세상 최강의 생물", DEFENSE, 24, 22, buff(RESISTANCE, 8, 2), shield(12, 8), taunt(8)));
 
 		weapon("gryphon_sabre", 3, 66, CUTLASS, "Gryphon", "그리폰",
 			art(0xE1E6EC, 0x1E1E1E, 0xC0392B), fx(Fx.Kind.SLASH, 0xFF4B3E),
 			skill("haki_burst", "Conqueror's Haki Burst", "패왕색 패기 방출", UTILITY, 22, 24, debuff(10, STUN, 1.5, 0), debuff(10, WEAKNESS, 6, 1)),
 			skill("armament_slash", "Armament Slash", "무장색 참격", ATTACK, 9, 22, slash(5, 160, 3.12), inflict(VULNERABLE, 5, 1)),
-			skill("end_this_war", "I Came to End This War", "전쟁을 끝내러 왔다", DEFENSE, 26, 22, stance(COUNTER, 6, 50), allyBuff(10, RESISTANCE, 8, 1)));
+			skill("end_this_war", "I Came to End This War", "이 전쟁을 끝내러 왔다", DEFENSE, 26, 22, stance(COUNTER, 6, 50), allyBuff(10, RESISTANCE, 8, 1)));
 
 		// ---------------------------------------------------------------- tier 4: Pirate King
 		weapon("battleship_cannon", 4, 70, HAND_CANNON, "Battleship Cannon", "배틀쉽 캐논",
@@ -138,7 +138,7 @@ public final class PirateContent extends ClassContent {
 
 		weapon("bonny_read_musket", 4, 77, MUSKET, "Anne & Mary's Musket", "앤과 메리의 머스킷",
 			art(0x8A9099, 0x5D3A1A, 0x29B6F6), fx(Fx.Kind.FEATHER, 0x7FDBFF),
-			skill("caribbean_free_bird", "Caribbean Free Bird", "카리비안 프리 버드", ULTIMATE, 45, 38, shadowstep(16, 2.0),
+			skill("caribbean_free_bird", "Caribbean Free Bird", "비익이자 연리", ULTIMATE, 45, 38, shadowstep(16, 2.0),
 				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4)), inflict(VULNERABLE, 5, 1)),
 			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, slash(4.5, 160, 2.2), inflict(BLEEDING, 5, 1)),
 			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22, shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F), inflict(SLOWNESS, 3, 1)),
@@ -168,7 +168,7 @@ public final class PirateContent extends ClassContent {
 
 		weapon("nika_knuckles", 4, 94, KNUCKLE, "Nika's Knuckles", "니카의 너클",
 			art(0xF5F5F5, 0xC0392B, 0xFFD54F), fx(Fx.Kind.SPARK, 0xFFF6D5),
-			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바지랑 건", ULTIMATE, 50, 40, strike(20, 6, 1, 8.1), stun(1.5)),
+			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바즈랑 건", ULTIMATE, 50, 40, strike(20, 6, 1, 8.1), stun(1.5)),
 			skill("red_hawk", "Gum-Gum Red Hawk", "고무고무 레드 호크", ATTACK, 9, 22, beam(10, 2.6), burn(5)),
 			skill("jet_gatling", "Gum-Gum Jet Gatling", "고무고무 제트 개틀링", ATTACK, 10, 24, buff(SPEED, 6, 1), repeat(5, 3, slash(4, 100, 0.6))),
 			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", DEFENSE, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2), stance(COUNTER, 6, 50)));

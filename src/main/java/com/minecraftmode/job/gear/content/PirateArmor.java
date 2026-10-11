@@ -31,7 +31,7 @@ public final class PirateArmor extends ArmorContent {
 			two(line(DAMAGE_REDUCTION, 5)),
 			three(line(SHOT_DAMAGE, 12)),
 			four(line(EXTRA_SHOT, 1)));
-		set("blackbeard_garb", 50, "Blackbeard's Garb", "검은수염의 의복", 0x1E1A1A, 0x5A3A26, 0x7A4AC8,
+		set("blackbeard_garb", 50, "Blackbeard's Garb", "검은 수염의 의복", 0x1E1A1A, 0x5A3A26, 0x7A4AC8,
 			two(line(LIFESTEAL, 3)),
 			three(line(BOSS_DAMAGE, 10)),
 			four(line(GOLD_FIND, 10), line(ITEM_FIND, 15)));
@@ -43,7 +43,7 @@ public final class PirateArmor extends ArmorContent {
 			two(line(KNOCKBACK_RES, 30)),
 			three(line(SKILL_DAMAGE, 12)),
 			four(line(CHAIN_LIGHTNING, 12)));
-		set("whitebeard_mantle", 80, "Whitebeard's Mantle", "흰수염의 망토", 0xF0F0F0, 0x6B4A2B, 0xE8C45A,
+		set("whitebeard_mantle", 80, "Whitebeard's Mantle", "흰 수염의 망토", 0xF0F0F0, 0x6B4A2B, 0xE8C45A,
 			two(line(MAX_HEALTH, 6)),
 			three(line(SKILL_AREA, 15)),
 			four(line(BOSS_DAMAGE, 20), line(DAMAGE_REDUCTION, 6)));

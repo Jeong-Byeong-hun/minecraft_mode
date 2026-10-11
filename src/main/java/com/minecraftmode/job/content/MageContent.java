@@ -35,7 +35,7 @@ public final class MageContent extends ClassContent {
 
 		weapon("holly_wand", 1, 15, WAND, "Holly Wand", "호랑가시나무 지팡이",
 			art(0xC8A060, 0x7B4A2D, 0xFF8A3D), fx(Fx.Kind.BOLT, 0xFF5050),
-			skill("stupefy", "Stupefy", "스투페파이", ATTACK, 7, 10, shoot(ProjectileStyle.ORB, 1.82).speed(2.4F), stun(1.0)),
+			skill("stupefy", "Stupefy", "스튜페파이", ATTACK, 7, 10, shoot(ProjectileStyle.ORB, 1.82).speed(2.4F), stun(1.0)),
 			skill("expelliarmus", "Expelliarmus", "엑스펠리아르무스", UTILITY, 12, 10, push(5, 1.6), debuff(5, WEAKNESS, 5, 0)),
 			skill("protego", "Protego", "프로테고", DEFENSE, 15, 12, stance(COUNTER, 5, 40)));
 
@@ -61,7 +61,7 @@ public final class MageContent extends ClassContent {
 		weapon("fern_staff", 2, 31, STAFF, "Fern's Staff", "페른의 지팡이",
 			art(0xE6E6F0, 0x8A6A52, 0x9A7BFF), fx(Fx.Kind.ORB, 0xC8B8FF),
 			skill("rapid_zoltraak", "Rapid-Fire Zoltraak", "졸트라크 속사", ATTACK, 7, 14, shoot(ProjectileStyle.ORB, 0.38).count(6).speed(2.6F).interval(3)),
-			skill("mana_suppression", "Mana Suppression", "마력 제한", UTILITY, 20, 14, stealth(6, 60), buff(MANA_FLOW, 6, 0)),
+			skill("mana_suppression", "Mana Suppression", "마력 억제", UTILITY, 20, 14, stealth(6, 60), buff(MANA_FLOW, 6, 0)),
 			skill("flight_magic", "Flight Magic", "비행 마법", MOVEMENT, 11, 12, blink(10), buff(SLOW_FALLING, 5, 0)));
 
 		weapon("nursery_rhyme", 2, 35, GRIMOIRE, "Nursery Rhyme", "너서리 라임",
@@ -75,7 +75,7 @@ public final class MageContent extends ClassContent {
 			skill("urano_metria", "Urano Metria", "우라노 메트리아", ATTACK, 12, 18, strike(16, 3.5, 6, 0.65)),
 			skill("gate_of_sagittarius", "Gate of the Archer: Sagittarius", "인마궁의 문: 사지타리우스", ATTACK, 8, 14,
 				shoot(ProjectileStyle.ARROW, 1.0).count(5).spread(24)),
-			skill("gate_of_aquarius", "Gate of the Water Bearer: Aquarius", "보병궁의 문: 아쿠아리우스", DEFENSE, 16, 16, nova(6, 1.0), push(7, 2.4)));
+			skill("gate_of_aquarius", "Gate of the Water Bearer: Aquarius", "보병궁의 문: 아쿠에리어스", DEFENSE, 16, 16, nova(6, 1.0), push(7, 2.4)));
 
 		weapon("yggdrasil_seed", 2, 43, ORB, "Seed of Yggdrasil", "이그드라실의 씨앗",
 			art(0x7A5A34, 0x4A3A22, 0x7FE36B), fx(Fx.Kind.PETAL, 0x8CE36B),
@@ -87,25 +87,25 @@ public final class MageContent extends ClassContent {
 		weapon("elder_wand", 3, 45, WAND, "Elder Wand", "딱총나무 지팡이",
 			art(0x9A9A9A, 0xBFAE8E, 0x4CE06A), fx(Fx.Kind.SPARK, 0x5CFF7A),
 			skill("avada_kedavra", "Avada Kedavra", "아바다 케다브라", ATTACK, 14, 24, execute(18, 3.08, 30, 2.5)),
-			skill("expecto_patronum", "Expecto Patronum", "익스펙토 패트로눔", DEFENSE, 26, 22, cleanse(), summon(Summon.WOLF, 2, 15)),
-			skill("apparate", "Apparate", "순간이동술", MOVEMENT, 10, 16, blink(13), buff(SPEED, 4, 1)));
+			skill("expecto_patronum", "Expecto Patronum", "엑스펙토 패트로눔", DEFENSE, 26, 22, cleanse(), summon(Summon.WOLF, 2, 15)),
+			skill("apparate", "Apparate", "순간이동", MOVEMENT, 10, 16, blink(13), buff(SPEED, 4, 1)));
 
-		weapon("mystogan_staves", 3, 49, STAFF, "Mystogan's Staves", "미스트간의 지팡이",
+		weapon("mystogan_staves", 3, 49, STAFF, "Mystogan's Staves", "미스트건의 지팡이",
 			art(0x6E7B8C, 0x2B3A4F, 0xB59CFF), fx(Fx.Kind.RUNE, 0xC4A8FF),
 			skill("sleep_magic", "Sleep Magic", "수면 마법", UTILITY, 22, 20, debuff(8, STUN, 2, 0), debuff(8, BLINDNESS, 4, 0)),
 			skill("skyscraper", "Skyscraper", "마천루", ATTACK, 14, 22, launch(7, 5), debuff(7, NAUSEA, 5, 0), delay(0.8, nova(7, 2.56))),
-			skill("mikagura", "Five-Layered Magic Circle: Mikagura", "오중 마법진: 미카구라", ATTACK, 18, 26, strike(18, 4.5, 1, 3.9), stun(1.0)));
+			skill("mikagura", "Five-Layered Magic Circle: Mikagura", "5중 마법진: 미카구라", ATTACK, 18, 26, strike(18, 4.5, 1, 3.9), stun(1.0)));
 
 		weapon("heavenly_body_orb", 3, 53, ORB, "Orb of the Heavenly Bodies", "천체 마법의 오브",
 			art(0xC0C0D8, 0x1A1B40, 0x5A4FD8), fx(Fx.Kind.SPARK, 0xB0A4FF),
 			skill("meteor", "Meteor", "유성", MOVEMENT, 10, 16, dash(11, 1.4), buff(SPEED, 5, 1)),
-			skill("altairis", "Altairis", "알테어리스", ATTACK, 15, 24, zone(4.5, 3, 1.15).at(16).pull(2.0)),
-			skill("grand_chariot", "Grand Chariot", "그랑 샤리오", ATTACK, 18, 26, strike(20, 3.5, 7, 0.66)));
+			skill("altairis", "Altairis", "알테아리스", ATTACK, 15, 24, zone(4.5, 3, 1.15).at(16).pull(2.0)),
+			skill("grand_chariot", "Grand Chariot", "그랑샤리오", ATTACK, 18, 26, strike(20, 3.5, 7, 0.66)));
 
 		weapon("prelati_spellbook", 3, 57, GRIMOIRE, "Prelati's Spellbook", "프렐라티즈 스펠북",
 			art(0xB8A888, 0x5E6B4E, 0x2EE6A8), fx(Fx.Kind.SMOKE, 0x2FBF8F),
 			skill("abyssal_horrors", "Summon Abyssal Horrors", "심해의 마물 소환", UTILITY, 28, 26, summon(Summon.WOLF, 3, 18)),
-			skill("mental_pollution", "Mental Pollution", "정신 오염", UTILITY, 18, 18, debuff(9, VULNERABLE, 6, 1), debuff(9, NAUSEA, 6, 0)),
+			skill("mental_pollution", "Mental Pollution", "정신오염", UTILITY, 18, 18, debuff(9, VULNERABLE, 6, 1), debuff(9, NAUSEA, 6, 0)),
 			skill("tentacle_bind", "Tentacle Bind", "촉수 구속", ATTACK, 13, 24, pull(7, 1.6), delay(0.3, zone(4.5, 4, 1.02).effect(SLOWNESS, 2))));
 
 		weapon("laevateinn", 3, 62, WAND, "Laevateinn", "레바테인",
@@ -124,16 +124,16 @@ public final class MageContent extends ClassContent {
 		weapon("colchis_scepter", 4, 70, SCEPTER, "Scepter of Colchis", "콜키스의 홀",
 			art(0x5B3A8C, 0x2A1A3A, 0xC77DFF), fx(Fx.Kind.ORB, 0xD070FF),
 			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 0.56, 2.0F), inflict(SLOWNESS, 3, 1)),
-			skill("rule_breaker", "Rule Breaker", "룰 브레이커", ATTACK, 14, 24, shadowstep(10, 2.87), inflict(VULNERABLE, 8, 2)),
+			skill("rule_breaker", "Rule Breaker", "파계해야 할 모든 부적", ATTACK, 14, 24, shadowstep(10, 2.87), inflict(VULNERABLE, 8, 2)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, refresh(50), buff(MANA_FLOW, 10, 0)),
 			skill("argon_coin", "Argon Coin", "아르곤 코인", DEFENSE, 26, 22, heal(25), shield(8, 10)));
 
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
-			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "스이텐닛코 아마테라스 야노시즈이시", ULTIMATE, 50, 36,
+			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "수천일광천조팔야진석", ULTIMATE, 50, 36,
 				allyHeal(12, 35), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)),
-			skill("enten", "Enten: Blazing Heaven", "엔텐", ATTACK, 9, 20, strike(18, 3.5, 3, 1.01), burn(4)),
-			skill("hyoten", "Hyoten: Frozen Heaven", "효텐", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.34), inflict(SLOWNESS, 4, 2)),
+			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, strike(18, 3.5, 3, 1.01), burn(4)),
+			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.34), inflict(SLOWNESS, 4, 2)),
 			skill("shapeshift", "Shapeshift", "변화", DEFENSE, 24, 20, stance(GUARD, 7, 50), cleanse()));
 
 		weapon("megumin_staff", 4, 78, STAFF, "Megumin's Staff", "메구밍의 지팡이",
@@ -154,22 +154,22 @@ public final class MageContent extends ClassContent {
 
 		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 히스토리아",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
-			skill("fairy_law", "Fairy Law", "페어리 로우", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
+			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
 			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28, shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing(), inflict(VULNERABLE, 6, 1)),
 			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", DEFENSE, 30, 30, stance(GUARD, 8, 60), allyBuff(10, RESISTANCE, 8, 2)),
 			skill("fairy_tactician", "Fairy Tactician", "요정군사", UTILITY, 20, 20, allyBuff(12, SPEED, 10, 1), allyBuff(12, MANA_FLOW, 10, 0), refresh(20)));
 
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
-			skill("garden_of_avalon", "Garden of Avalon", "가든 오브 아발론", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBuff(10, RESISTANCE, 10, 1)),
-			skill("hero_creation", "Hero Creation", "영웅작성", UTILITY, 24, 24, allyBuff(10, STRENGTH, 12, 1), allyBuff(10, ABSORPTION, 12, 1)),
+			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBuff(10, RESISTANCE, 10, 1)),
+			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBuff(10, STRENGTH, 12, 1), allyBuff(10, ABSORPTION, 12, 1)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing(), inflict(WEAKNESS, 4, 0)),
 			skill("illusion", "Illusion", "환술", DEFENSE, 18, 18, stance(EVADE, 7, 50), blink(8)));
 
 		weapon("frieren_staff", 4, 95, STAFF, "Frieren's Staff", "프리렌의 지팡이",
 			art(0xD4AF37, 0xEDEAE0, 0xD9304A), fx(Fx.Kind.BOLT, 0xE8F0FF),
 			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40, barrage(ProjectileStyle.ORB, 30, 0.31)),
-			skill("judradjim", "Judradjim", "쥬드라질름", ATTACK, 10, 26, lightning(22, 4.5, 2.91), stun(0.8)),
+			skill("judradjim", "Judradjim", "쥬드라질룸", ATTACK, 10, 26, lightning(22, 4.5, 2.91), stun(0.8)),
 			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, stance(GUARD, 6, 55), shield(12, 6)),
 			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24, sanctuary(7, 8, 4), cleanse()));
 

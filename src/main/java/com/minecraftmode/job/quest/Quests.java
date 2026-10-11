@@ -226,9 +226,9 @@ public final class Quests {
 			List.of(kill("Mythril Golem", "미스릴 골렘", Set.of(ModEntities.MYTHRIL_GOLEM), 1), kill("Strays", "스트레이", Set.of(EntityTypes.STRAY), 8)),
 			TENSHINTAI, 3, List.of(source(Set.of(EntityTypes.STRAY), 0.5F, 1), source(Set.of(ModEntities.MYTHRIL_GOLEM), 1.0F, 2)),
 			List.of(mat(ModItems.CONDENSED_ESSENCE, 2)));
-		add("shinigami_4", JobClass.SHINIGAMI, 4, "Hueco Mundo", "후에코 문도",
+		add("shinigami_4", JobClass.SHINIGAMI, 4, "Hueco Mundo", "우에코 문도",
 			"Beyond the white desert, a traitor waits with the Hogyoku. Destroy the Wither and the husks of the sands.",
-			"하얀 사막 너머에서 배신자가 호교쿠와 함께 기다린다. 위더와 모래의 허스크를 쓰러뜨려라.",
+			"하얀 사막 너머에서 배신자가 붕옥과 함께 기다린다. 위더와 모래의 허스크를 쓰러뜨려라.",
 			List.of(kill("The Wither", "위더", Set.of(EntityTypes.WITHER), 1), kill("Husks", "허스크", Set.of(EntityTypes.HUSK), 12)),
 			HOGYOKU_FRAGMENT, 3, List.of(source(Set.of(EntityTypes.WITHER), 1.0F, 3), source(Set.of(EntityTypes.HUSK), 0.2F, 1)),
 			List.of(mat(ModItems.CONDENSED_ESSENCE, 4)));
@@ -240,7 +240,7 @@ public final class Quests {
 			EXAM_BADGE);
 		add("hunter_2", JobClass.HUNTER, 2, "Water Divination", "수견식",
 			"A glass of water and a leaf will tell what kind of Nen you have. Train hard enough to make it move.",
-			"물이 든 유리잔과 잎 한 장이 네 념의 계통을 알려 줄 거야. 잎이 움직일 만큼 수련해.",
+			"물이 든 유리잔과 잎 한 장이 네 넨의 계통을 알려 줄 거야. 잎이 움직일 만큼 수련해.",
 			List.of(kill("Skeletons", "스켈레톤", SKELETONS, 8), kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 3)),
 			DIVINATION_GLASS, 4, List.of(source(SKELETONS, 0.5F, 1), source(Set.of(EntityTypes.ENDERMAN), 0.6F, 1)),
 			List.of(mat(ModItems.ESSENCE, 8)));

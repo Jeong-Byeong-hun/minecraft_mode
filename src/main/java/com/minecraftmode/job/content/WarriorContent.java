@@ -101,7 +101,7 @@ public final class WarriorContent extends ClassContent {
 		weapon("sky_piercer", 3, 55, HALBERD, "Sky Piercer", "방천화극",
 			art(0xE0C060, 0x7A1E1E, 0xFF4040), fx(Fx.Kind.SLASH, 0xFF5A36),
 			skill("heaven_thrust", "Heaven Thrust", "천공 찌르기", ATTACK, 9, 20, beam(10, 2.16), inflict(BLEEDING, 4, 1)),
-			skill("god_force", "God Force", "갓 포스", ATTACK, 16, 28, strike(14, 3.5, 5, 0.96)),
+			skill("god_force", "God Force", "군신오병", ATTACK, 16, 28, strike(14, 3.5, 5, 0.96)),
 			skill("red_hare", "Red Hare", "적토마", MOVEMENT, 14, 14, buff(SPEED, 8, 2), dash(8, 1.2)));
 
 		weapon("muramasa", 3, 60, KATANA, "Muramasa", "무라마사",
@@ -121,7 +121,7 @@ public final class WarriorContent extends ClassContent {
 			art(0xF0F4FF, 0x1F3A93, 0xFFD700), fx(Fx.Kind.SLASH, 0xFFE680),
 			skill("promised_victory", "Sword of Promised Victory", "약속된 승리의 검", ULTIMATE, 45, 40, beam(24, 9.0)),
 			skill("strike_air", "Strike Air", "스트라이크 에어", ATTACK, 16, 18, push(5, 2.0), shoot(ProjectileStyle.WAVE, 2.0).pierce(10)),
-			skill("mana_burst", "Mana Burst", "마력 방출", MOVEMENT, 10, 16, dash(8, 1.6)),
+			skill("mana_burst", "Mana Burst", "마력방출", MOVEMENT, 10, 16, dash(8, 1.6)),
 			skill("avalon_guard", "Avalon's Protection", "아발론의 가호", DEFENSE, 30, 25, stance(GUARD, 6, 60), heal(25)));
 
 		weapon("excalibur_morgan", 4, 74, GREATSWORD, "Excalibur Morgan", "엑스칼리버 모르간",
@@ -133,28 +133,28 @@ public final class WarriorContent extends ClassContent {
 
 		weapon("rhongomyniad", 4, 78, SPEAR, "Rhongomyniad", "롱고미니아드",
 			art(0xEAF2FF, 0xD4AF37, 0x00BFFF), fx(Fx.Kind.BOLT, 0xBFEFFF),
-			skill("pillar_of_light", "Pillar of Light", "최후의 탑", ULTIMATE, 50, 40, lightning(20, 5, 3.5), strike(20, 4, 3, 1.8)),
+			skill("pillar_of_light", "Pillar of Light", "땅끝의 탑", ULTIMATE, 50, 40, lightning(20, 5, 3.5), strike(20, 4, 3, 1.8)),
 			skill("storm_thrust", "Storm Thrust", "폭풍 찌르기", ATTACK, 7, 18, beam(12, 2.04)),
 			skill("lion_kings_charge", "Lion King's Charge", "사자왕의 돌격", MOVEMENT, 12, 18, dash(10, 1.8)),
 			skill("holy_lance_ward", "Holy Lance Ward", "성창의 가호", DEFENSE, 24, 22, allyBuff(8, RESISTANCE, 8, 1), allyHeal(8, 20)));
 
 		weapon("arondight", 4, 82, LONGSWORD, "Arondight", "아론다이트",
 			art(0xBFC9D9, 0x16213E, 0x4169E1), fx(Fx.Kind.SLASH, 0x7FA7FF),
-			skill("overload", "Arondight Overload", "아론다이트 오버로드", ULTIMATE, 40, 36, lifesteal(10), repeat(5, 4, slash(5, 200, 1.4))),
+			skill("overload", "Arondight Overload", "박쇄전단・과중호광", ULTIMATE, 40, 36, lifesteal(10), repeat(5, 4, slash(5, 200, 1.4))),
 			skill("knight_of_the_lake", "Knight of the Lake", "호수의 기사", DEFENSE, 20, 20, stance(EVADE, 6, 40), buff(SPEED, 6, 1)),
 			skill("lake_slash", "Lake Slash", "호수 베기", ATTACK, 7, 18, shoot(ProjectileStyle.WAVE, 1.65).count(3).spread(30).pierce(4)),
 			skill("unblemished", "Unblemished", "무결", UTILITY, 26, 18, cleanse(), heal(20), buff(REGENERATION, 6, 1)));
 
-		weapon("clarent", 4, 86, GREATSWORD, "Clarent", "클래런트",
+		weapon("clarent", 4, 86, GREATSWORD, "Clarent", "클라렌트",
 			art(0xD9D9D9, 0x8B0000, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF4040),
-			skill("blood_arthur", "Clarent Blood Arthur", "아버지에게 바치는 반역", ULTIMATE, 45, 40, lightning(16, 5, 3.9), beam(18, 3.9)),
+			skill("blood_arthur", "Clarent Blood Arthur", "클라렌트 블러드 아서", ULTIMATE, 45, 40, lightning(16, 5, 3.9), beam(18, 3.9)),
 			skill("red_lightning", "Red Lightning", "붉은 번개", ATTACK, 9, 20, chain(12, 5, 1.8)),
 			skill("rebels_charge", "Rebel's Charge", "반역의 돌진", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)),
-			skill("secret_of_pedigree", "Secret of Pedigree", "불명의 투구", UTILITY, 25, 20, stealth(4, 80), buff(SPEED, 4, 2)));
+			skill("secret_of_pedigree", "Secret of Pedigree", "부정을 숨기는 투구", UTILITY, 25, 20, stealth(4, 80), buff(SPEED, 4, 2)));
 
 		weapon("galatine", 4, 90, LONGSWORD, "Galatine", "갈라틴",
 			art(0xFFF2CC, 0x8B5A2B, 0xFF8C00), fx(Fx.Kind.ORB, 0xFFB347),
-			skill("excalibur_galatine", "Excalibur Galatine", "전승의 태양검", ULTIMATE, 45, 40, burn(6), strike(16, 5, 1, 8.1)),
+			skill("excalibur_galatine", "Excalibur Galatine", "전륜하는 승리의 검", ULTIMATE, 45, 40, burn(6), strike(16, 5, 1, 8.1)),
 			skill("sunlight_blessing", "Sunlight Blessing", "태양의 축복", UTILITY, 28, 22, allyBuff(10, STRENGTH, 12, 1), allyBuff(10, REGENERATION, 6, 0)),
 			skill("solar_flare", "Solar Flare", "태양 폭발", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
 			skill("noon_strike", "Noon Strike", "정오의 일격", ATTACK, 7, 16, slash(5, 150, 2.04)));

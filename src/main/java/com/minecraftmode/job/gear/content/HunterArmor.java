@@ -45,7 +45,7 @@ public final class HunterArmor extends ArmorContent {
 			two(line(SKILL_DAMAGE, 10)),
 			three(line(COOLDOWN, 8)),
 			four(line(CRIT_CHANCE, 10), line(ITEM_FIND, 15)));
-		set("godspeed_gear", 80, "Godspeed Gear", "칸무루의 장비", 0xE8F4FF, 0x5AA0FF, 0xF0F0F0,
+		set("godspeed_gear", 80, "Godspeed Gear", "신속의 장비", 0xE8F4FF, 0x5AA0FF, 0xF0F0F0,
 			two(line(MOVE_SPEED, 8)),
 			three(line(ATTACK_SPEED, 12)),
 			four(line(CHAIN_LIGHTNING, 12), line(DODGE, 8)));

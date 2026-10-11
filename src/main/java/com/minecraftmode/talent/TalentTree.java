@@ -132,15 +132,15 @@ public final class TalentTree {
 		tree(JobClass.HUNTER,
 			branch("enhancer", "Enhancer", "강화계", 0xF5862B,
 				n("Reinforced Fists", "강화된 주먹", l(BASIC_DAMAGE, 2)), n("Tough Body", "단련된 몸", l(MAX_HEALTH, 1)),
-				n("Ko", "경", l(DOUBLE_STRIKE, 1.5F)), n("Ken", "견", l(DAMAGE_REDUCTION, 1)),
+				n("Ko", "코", l(DOUBLE_STRIKE, 1.5F)), n("Ken", "켄", l(DAMAGE_REDUCTION, 1)),
 				n("Rock!", "바위!", l(BASIC_DAMAGE, 12), l(CRIT_DAMAGE, 20))),
 			branch("emitter", "Emitter", "방출계", 0x5AA0FF,
-				n("Nen Bullet", "념탄", l(SHOT_DAMAGE, 2.5F)), n("Release", "방출", l(SKILL_DAMAGE, 2)),
-				n("Scatter", "확산", l(SKILL_AREA, 2)), n("Lightning Palm", "낙뢰", l(CHAIN_LIGHTNING, 1)),
-				n("Nen Storm", "념탄 폭풍", l(SKILL_DAMAGE, 10), l(SHOT_DAMAGE, 10))),
+				n("Nen Bullet", "넨탄", l(SHOT_DAMAGE, 2.5F)), n("Release", "방출", l(SKILL_DAMAGE, 2)),
+				n("Scatter", "확산", l(SKILL_AREA, 2)), n("Lightning Palm", "뇌장", l(CHAIN_LIGHTNING, 1)),
+				n("Nen Storm", "넨탄 폭풍", l(SKILL_DAMAGE, 10), l(SHOT_DAMAGE, 10))),
 			branch("manipulator", "Manipulator", "조작계", 0x8A2AC8,
-				n("Gyo", "응", l(CRIT_CHANCE, 1.5F)), n("Thread Snare", "실 올가미", l(SLOW, 0.4F)),
-				n("Zetsu", "절", l(MANA_REGEN, 0.2F)), n("Hatsu", "발", l(COOLDOWN, 1.5F)),
+				n("Gyo", "교", l(CRIT_CHANCE, 1.5F)), n("Thread Snare", "실 올가미", l(SLOW, 0.4F)),
+				n("Zetsu", "제츠", l(MANA_REGEN, 0.2F)), n("Hatsu", "하츠", l(COOLDOWN, 1.5F)),
 				n("Limitation and Vow", "제약과 서약", l(COOLDOWN, 6), l(CRIT_REFUND, 0.6F))));
 	}
 

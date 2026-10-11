@@ -10,6 +10,15 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.Transl
 final class RaidLang {
 	/** Boss lines shown under "Phase N" when a phase starts: id -> {en2, ko2, en3, ko3, (en4, ko4)}. */
 	private static final Map<String, String[]> PHASES = Map.of(
+		"verdessa", new String[] {
+			"Spores drift from her branches...", "그녀의 가지에서 포자가 흩날린다...",
+			"Verdessa tears free of her roots - brambles everywhere!", "베르데사가 뿌리를 뜯어냈다 - 사방에 가시덤불!"},
+		"nefrekhet", new String[] {
+			"The sands rise and the guard wakes.", "모래가 일어나고 근위대가 깨어난다.",
+			"The Judgment of Ra burns across the hall!", "라의 심판이 홀을 가로질러 불탄다!"},
+		"raijin", new String[] {
+			"Storm spirits ride the wind.", "폭풍의 정령들이 바람을 탄다.",
+			"Raijin descends with the thunder!", "라이진이 천둥과 함께 내려온다!"},
 		"arachne", new String[] {
 			"The brood stirs in the walls...", "벽 속에서 새끼들이 꿈틀거린다...",
 			"Arachne is frenzied! Beware the Silk Storm!", "아라크네가 광분했다! 비단 폭풍을 조심하라!"},
@@ -33,6 +42,14 @@ final class RaidLang {
 
 	/** Mechanic id -> {en name, ko name, en hint, ko hint}. */
 	static final String[][] MECHANICS = {
+		{"verdessa_seed_trees", "Seed Trees", "씨앗나무", "Seed trees are growing. Cut every one down within 18 seconds before they bloom!",
+			"씨앗나무가 자란다. 꽃피기 전에 18초 안에 모두 베어라!"},
+		{"nefrekhet_quicksand", "Quicksand", "유사", "The floor sinks! Get onto a pedestal - two of the four will crumble (red).",
+			"바닥이 꺼진다! 받침대 위로 - 넷 중 둘은 무너진다(빨강)."},
+		{"raijin_storm_eye", "Eye of the Storm", "폭풍의 눈", "Stay inside the drifting calm (green circle). Lightning finds everyone outside it.",
+			"움직이는 고요한 원(초록) 안에 머물러라. 원 밖은 번개가 내리친다."},
+		{"raijin_thunder_drums", "Thunder Drums", "뇌고", "Silence every thunder drum within 18 seconds, or the thunderclap ends the fight.",
+			"18초 안에 뇌고를 모두 잠재워라. 아니면 천둥소리가 싸움을 끝낸다."},
 		{"arachne_venom_deluge", "Venom Deluge", "독의 홍수", "The floor floods with venom! Get inside a silk cocoon (green circle).", "바닥이 독으로 잠긴다! 거미줄 고치(초록 원) 안으로!"},
 		{"gorvath_rockslide", "Rockslide", "산사태", "The peak comes down on everyone Gorvath can see. Hide behind a pillar!", "고르바스의 눈에 보이는 자에게 산이 무너진다. 기둥 뒤로 숨어라!"},
 		{"gorvath_shoulder", "Shoulder the Mountain", "산을 떠받쳐라", "A peak is falling: 60% of the party must stand in the green circle together.",
@@ -87,6 +104,8 @@ final class RaidLang {
 		b.add("raid.minecraft_mode.mechanic.cleared", ko ? "%s 성공!" : "%s cleared!");
 		b.add("raid.minecraft_mode.ember_warden", ko ? "불씨 수호 정령" : "Ember Warden");
 		b.add("raid.minecraft_mode.phylactery_guard", ko ? "성물 수호자" : "Phylactery Guardian");
+		b.add("raid.minecraft_mode.seed_tree", ko ? "가시 씨앗나무" : "Thorn Seed Tree");
+		b.add("raid.minecraft_mode.thunder_drum", ko ? "뇌고 정령" : "Thunder Drum Spirit");
 		b.add("death.attack.minecraft_mode.raid_mechanic", ko ? "%1$s은(는) 레이드 기믹에 휘말렸다" : "%1$s was caught by a raid mechanic");
 		b.add("death.attack.minecraft_mode.monster_magic", ko ? "%1$s은(는) 마법에 쓰러졌다" : "%1$s was slain by magic");
 		b.add("death.attack.minecraft_mode.monster_magic.player", ko ? "%1$s은(는) %2$s의 마법에 쓰러졌다" : "%1$s was slain by %2$s's magic");
@@ -116,7 +135,10 @@ final class RaidLang {
 			ArenaTheme.SUNKEN_SHIP, new String[] {"Sunken Flagship", "침몰한 기함"},
 			ArenaTheme.VOLCANO, new String[] {"Volcanic Crater", "화산 분화구"},
 			ArenaTheme.NECROPOLIS, new String[] {"Sanctum of the Dead", "망자의 성소"},
-			ArenaTheme.VOID_ISLES, new String[] {"Void Isles", "공허의 부유섬"});
+			ArenaTheme.VOID_ISLES, new String[] {"Void Isles", "공허의 부유섬"},
+			ArenaTheme.FOREST_GROVE, new String[] {"Overgrown Grove", "우거진 숲의 유적"},
+			ArenaTheme.DESERT_TOMB, new String[] {"Pharaoh's Tomb", "파라오의 무덤"},
+			ArenaTheme.SKY_SHRINE, new String[] {"Shrine Above the Clouds", "구름 위 신전"});
 		for (ArenaTheme theme : ArenaTheme.values()) {
 			b.add("screen.minecraft_mode.raid.arena." + theme.name().toLowerCase(), arenas.get(theme)[ko ? 1 : 0]);
 		}

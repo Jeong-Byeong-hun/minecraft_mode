@@ -10,10 +10,81 @@ import com.minecraftmode.client.creature.BodyPlan.Role;
 import com.minecraftmode.client.creature.PlanKit.Humanoid;
 import java.util.List;
 
-/** Body plans of the six raid bosses (ids match their entity types). */
+/** Body plans of the nine raid bosses (ids match their entity types). */
 final class BossPlans {
 	static List<BodyPlan> all() {
-		return List.of(arachne(), gorvath(), kraken(), ignis(), malachar(), aethryx());
+		return List.of(verdessa(), arachne(), gorvath(), nefrekhet(), kraken(), ignis(), raijin(), malachar(), aethryx());
+	}
+
+	/** Verdessa, the Thornmother: a tall dryad of bark and leaves with a crown of branches and thorny vine arms. */
+	private static BodyPlan verdessa() {
+		Builder b = BodyPlan.builder("verdessa", Rig.BIPED).scale(1.65F)
+			.skin("bark", Skin.of(0x5A3E26, 0x8A6A3A, BARK))
+			.skin("leaf", Skin.of(0x4E8A2E, 0x8AD04A, FUR))
+			.skin("face", Skin.of(0xA8C878, 0x6A8A3A, SMOOTH))
+			.skin("bloom", Skin.glowing(0xC84A8A, 0xFFB0D8, CRYSTAL));
+		PlanKit.humanoid(b, new Humanoid(7, 8, 7, 9, 13, 6, 3, 15, 4, 15), "face", "bark", "bark", "bark", 2, 0xB8FF6A);
+		b.part("leaf_skirt", "body", Role.EXTRA, 0, 10, 0, "leaf", box(-6, 0, -4, 12, 7, 8));
+		b.part("leaf_hair", "head", Role.EXTRA, 0, -8, 1, "leaf", box(-4.5F, 0, -2, 9, 11, 6));
+		for (int i = 0; i < 4; i++) {
+			Part branch = b.part("branch" + i, "head", Role.EXTRA, -3 + i * 2, -8, 0, "bark", box(-0.5F, -7 + (i % 2) * 2, -0.5F, 1, 7 - (i % 2) * 2, 1));
+			branch.zRot = (i - 1.5F) * 0.35F;
+		}
+		b.part("bloom", "head", Role.EXTRA, 2, -9, -2, "bloom", box(-1.5F, -3, -1.5F, 3, 3, 3));
+		b.part("vine_r", "arm_r", Role.EXTRA, 0, 13, 0, "leaf", box(-1, 0, -1, 2, 8, 2));
+		b.part("vine_l", "arm_l", Role.EXTRA, 0, 13, 0, "leaf", box(-1, 0, -1, 2, 8, 2));
+		b.part("roots", "body", Role.EXTRA, 0, 14, 0, "bark", box(-5, 0, -3, 10, 2, 6));
+		return b.build();
+	}
+
+	/** Nefrekhet, the Sand Pharaoh: a tall mummy king in linen wraps, a striped gold headdress, crook and flail. */
+	private static BodyPlan nefrekhet() {
+		Builder b = BodyPlan.builder("nefrekhet", Rig.BIPED).scale(1.6F)
+			.skin("wrap", Skin.of(0xD8C8A0, 0x8A7A5A, CLOTH))
+			.skin("gold", Skin.of(0xE0B030, 0x2A4AA0, METAL))
+			.skin("lapis", Skin.of(0x2A4AA0, 0xE0B030, STONE))
+			.skin("gem", Skin.glowing(0x3A8A6A, 0x7CFFD0, CRYSTAL));
+		PlanKit.humanoid(b, new Humanoid(8, 8, 8, 8, 12, 5, 3, 13, 4, 14), "wrap", "wrap", "wrap", "wrap", 2, 0x7CFFD0);
+		b.part("nemes", "head", Role.EXTRA, 0, -8, 0, "gold", box(-5, -1, -5, 10, 6, 10), box(-5.5F, 5, -3, 2, 7, 4), box(3.5F, 5, -3, 2, 7, 4));
+		b.part("uraeus", "nemes", Role.EXTRA, 0, -1, -5, "gem", box(-1, -3, -1, 2, 3, 1));
+		b.part("beard", "head", Role.EXTRA, 0, 0, -3, "lapis", box(-1, 0, -1, 2, 4, 1));
+		b.part("collar", "body", Role.EXTRA, 0, 0, 0, "gold", box(-6, -1, -3.5F, 12, 3, 7));
+		b.part("belt", "body", Role.EXTRA, 0, 10, 0, "gold", box(-4.5F, 0, -3, 9, 2, 6));
+		b.part("kilt", "body", Role.EXTRA, 0, 12, 0, "lapis", box(-4.5F, 0, -3, 9, 5, 6));
+		b.part("crook", "arm_r", Role.EXTRA, 0, 11, -1, "gold", box(-0.5F, -6, -0.5F, 1, 14, 1), box(-0.5F, -8, -3, 1, 2, 3));
+		b.part("flail", "arm_l", Role.EXTRA, 0, 11, -1, "gold", box(-0.5F, -4, -0.5F, 1, 10, 1), box(-2, -6, -0.5F, 4, 2, 1));
+		return b.build();
+	}
+
+	/** Raijin, Lord of the Thunderclouds: a horned storm god on a cloud with a ring of drums behind him. */
+	private static BodyPlan raijin() {
+		Builder b = BodyPlan.builder("raijin", Rig.FLOATER).scale(1.8F)
+			.skin("skin", Skin.of(0x3A6AC8, 0x8AB8FF, SMOOTH))
+			.skin("cloud", Skin.of(0xE8EEF8, 0xB8C8E0, FUR))
+			.skin("tiger", Skin.of(0xE8A030, 0x1A1A1A, SPOTS))
+			.skin("drum", Skin.of(0x8A2A1A, 0xE0B030, METAL))
+			.skin("bolt", Skin.glowing(0xC8A020, 0xFFF080, CRYSTAL));
+		b.part("body", null, Role.BODY, 0, -6, 0, "skin", box(-6, 0, -3.5F, 12, 13, 7));
+		b.part("loincloth", "body", Role.EXTRA, 0, 13, 0, "tiger", box(-6.5F, 0, -4, 13, 6, 8));
+		b.part("cloud", "body", Role.EXTRA, 0, 19, 0, "cloud", box(-9, 0, -7, 18, 5, 14), box(-6, 3, -5, 12, 3, 10));
+		Part head = b.part("head", null, Role.HEAD, 0, -6, 0, "skin", box(-4, -8, -4, 8, 8, 8));
+		head.eyes = 2;
+		head.eyeColor = 0xFFF080;
+		b.part("horn_r", "head", Role.EXTRA, -2.5F, -8, -1, "bolt", box(-0.5F, -4, -0.5F, 1, 4, 1)).zRot = -0.3F;
+		b.part("horn_l", "head", Role.EXTRA, 2.5F, -8, -1, "bolt", box(-0.5F, -4, -0.5F, 1, 4, 1)).zRot = 0.3F;
+		b.part("hair", "head", Role.EXTRA, 0, -8, 2, "cloud", box(-5, -2, -2, 10, 6, 5));
+		b.part("jaw", "head", Role.JAW, 0, -1, -1, "skin", box(-3, 0, -3, 6, 2, 4));
+		b.part("arm_r", null, Role.ARM_RIGHT, -7.5F, -4, 0, "skin", box(-2, -1, -2, 4, 14, 4));
+		b.part("arm_l", null, Role.ARM_LEFT, 7.5F, -4, 0, "skin", box(-2, -1, -2, 4, 14, 4));
+		b.part("drumstick_r", "arm_r", Role.EXTRA, 0, 12, 0, "drum", box(-0.5F, 0, -0.5F, 1, 7, 1));
+		b.part("drumstick_l", "arm_l", Role.EXTRA, 0, 12, 0, "drum", box(-0.5F, 0, -0.5F, 1, 7, 1));
+		b.part("orbit", "body", Role.ORBIT, 0, 4, 6, "drum");
+		for (int i = 0; i < 6; i++) {
+			double a = Math.PI * 2 * i / 6;
+			Part drum = b.part("drum" + i, "orbit", Role.EXTRA, (float)Math.cos(a) * 13, 0, (float)Math.sin(a) * 13, "drum", box(-2.5F, -2.5F, -1.5F, 5, 5, 3));
+			drum.yRot = (float)(-a);
+		}
+		return b.build();
 	}
 
 	/** Arachne, Brood Queen: a drider — a huge spider body with a pale queen's torso, crown and fangs. */

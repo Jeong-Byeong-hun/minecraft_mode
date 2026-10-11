@@ -49,14 +49,14 @@ public class Malachar extends RaidBoss {
 	@Override
 	protected List<Pattern> patterns() {
 		return List.of(
-			pattern("shadow_bolts", 1, 64, 0, 10, this::shadowBolts),
-			pattern("bone_spikes", 1, 140, 0, 14, this::boneSpikes),
-			pattern("soul_drain", 1, 190, 26, 24, this::soulDrain),
+			spell("shadow_bolts", 1, 64, 0, 10, this::shadowBolts),
+			spell("bone_spikes", 1, 140, 0, 14, this::boneSpikes),
+			spell("soul_drain", 1, 190, 26, 24, this::soulDrain),
 			pattern("raise_dead", 2, 400, 0, 24, this::raiseDead),
 			pattern("blink", 2, 170, 0, 6, this::blink),
-			pattern("curse", 2, 320, 0, 16, this::curse),
-			pattern("death_nova", 3, 280, 0, 44, this::deathNova),
-			pattern("requiem", 3, 320, 0, 60, this::requiem)
+			spell("curse", 2, 320, 0, 16, this::curse),
+			spell("death_nova", 3, 280, 0, 44, this::deathNova),
+			spell("requiem", 3, 320, 0, 60, this::requiem)
 		);
 	}
 
@@ -159,7 +159,7 @@ public class Malachar extends RaidBoss {
 		float start = this.random.nextFloat() * 90.0F;
 		for (int wave = 0; wave < 3; wave++) {
 			final float base = start + wave * 30.0F;
-			SkillScheduler.schedule(wave * 14 + 1, () -> {
+			SkillScheduler.schedule(wave * 14 + 1, this.asSpell(() -> {
 				if (!this.alive()) {
 					return;
 				}
@@ -169,7 +169,7 @@ public class Malachar extends RaidBoss {
 					this.line(level, from, to, 2.4, 22, Telegraph.PURPLE, 1.4F, e -> this.effect(e, MobEffects.WITHER, 60, 1),
 						() -> new Fx(Fx.Kind.ORB, SOUL).line(level, from.add(0, 1.0, 0), to.add(0, 1.0, 0), 0.8));
 				}
-			});
+			}));
 		}
 	}
 

@@ -47,12 +47,12 @@ public class Ignis extends RaidBoss {
 	@Override
 	protected List<Pattern> patterns() {
 		return List.of(
-			pattern("fireball_volley", 1, 70, 0, 8, this::fireballs),
+			spell("fireball_volley", 1, 70, 0, 8, this::fireballs),
 			pattern("flame_dive", 1, 190, 0, 40, this::flameDive),
-			pattern("fire_breath", 1, 160, 18, 34, this::breath),
-			pattern("meteor_rain", 2, 230, 0, 20, this::meteors),
-			pattern("burning_ground", 2, 210, 0, 10, this::burningGround),
-			pattern("supernova", 3, 520, 0, 50, (level, target) -> this.supernova(level))
+			spell("fire_breath", 1, 160, 18, 34, this::breath),
+			spell("meteor_rain", 2, 230, 0, 20, this::meteors),
+			spell("burning_ground", 2, 210, 0, 10, this::burningGround),
+			spell("supernova", 3, 520, 0, 50, (level, target) -> this.supernova(level))
 		);
 	}
 
@@ -180,7 +180,7 @@ public class Ignis extends RaidBoss {
 						}
 						level.sendParticles(ParticleTypes.FLAME, at.x, at.y + 0.2, at.z, 20, 1.5, 0.1, 1.5, 0.01);
 						Telegraph.ring(level, at, 3.0, FLAME, 0.8F);
-						Attacks.hitAll(this, Attacks.inCircle(level, at, 3.0, 2.0), this.dmg(0.35F), e -> e.igniteForSeconds(2.0F));
+						Attacks.hitAll(this, Attacks.inCircle(level, at, 3.0, 2.0), this.dmg(0.35F), true, e -> e.igniteForSeconds(2.0F));
 					});
 				}
 			});

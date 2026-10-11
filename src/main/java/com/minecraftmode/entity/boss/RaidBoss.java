@@ -550,11 +550,51 @@ public abstract class RaidBoss extends CreatureMob {
 	 * One attack. Available from {@code phase} on, every {@code cooldown} ticks, while the target is
 	 * within {@code range} blocks (0 = any distance); the boss stands still for {@code busy} ticks.
 	 */
-	protected record Pattern(String id, int phase, int cooldown, double range, int busy, Action action) {
+	protected record Pattern(String id, int phase, int cooldown, double range, int busy, Action action, boolean magic) {
 	}
 
 	protected static Pattern pattern(final String id, final int phase, final int cooldown, final double range, final int busy, final Action action) {
-		return new Pattern(id, phase, cooldown, range, busy, action);
+		return new Pattern(id, phase, cooldown, range, busy, action, false);
+	}
+
+	/**
+	 * A spell: like {@link #pattern}, but its circles, rings, strips, cones, rain and volleys deal magic damage
+	 * ({@code entity/combat/MagicDamage}), which class armor's magic defense reduces. Breaths, curses, bolts and
+	 * elemental blasts are spells; claws, slams, charges and thrown rocks stay physical.
+	 */
+	protected static Pattern spell(final String id, final int phase, final int cooldown, final double range, final int busy, final Action action) {
+		return new Pattern(id, phase, cooldown, range, busy, action, true);
+	}
+
+	/** True while a spell's action runs: the area helpers it calls capture it for their delayed hits. */
+	private boolean casting;
+
+	/** Runs {@code pattern} with its damage kind (spell or not). */
+	private void cast(final Pattern pattern, final ServerLevel level, final LivingEntity target) {
+		this.casting = pattern.magic();
+		try {
+			pattern.action().run(level, target);
+		} finally {
+			this.casting = false;
+		}
+	}
+
+	/** Runs {@code later} as part of a spell (for steps a spell schedules itself, so their hits stay magic). */
+	protected Runnable asSpell(final Runnable later) {
+		return () -> {
+			boolean was = this.casting;
+			this.casting = true;
+			try {
+				later.run();
+			} finally {
+				this.casting = was;
+			}
+		};
+	}
+
+	/** Pattern ids that are spells (tests). */
+	public List<String> spellIds() {
+		return this.patternList().stream().filter(Pattern::magic).map(Pattern::id).toList();
 	}
 
 	/** The boss's patterns, built once per instance. */
@@ -581,7 +621,7 @@ public abstract class RaidBoss extends CreatureMob {
 		}
 		for (Pattern p : this.patternList()) {
 			if (p.id().equals(id)) {
-				p.action().run(level, target);
+				this.cast(p, level, target);
 				return true;
 			}
 		}
@@ -873,7 +913,7 @@ public abstract class RaidBoss extends CreatureMob {
 			if (boss.flies()) {
 				boss.getLookControl().setLookAt(target, 40.0F, 40.0F);
 			}
-			pick.action().run(level, target);
+			boss.cast(pick, level, target);
 		}
 	}
 
@@ -917,11 +957,13 @@ public abstract class RaidBoss extends CreatureMob {
 	/** A telegraphed circle: after {@code delay} ticks everyone in it takes {@code power} x attack. */
 	protected void circle(final ServerLevel level, final Vec3 at, final double radius, final int delay, final int color, final float power,
 		final @Nullable Consumer<LivingEntity> extra, final @Nullable Runnable fx) {
+		// spells stay spells when the telegraph goes off later
+		final boolean magic = this.casting;
 		Telegraph.circle(level, at, radius, delay, color, () -> {
 			if (!this.alive()) {
 				return;
 			}
-			Attacks.hitAll(this, Attacks.inCircle(level, at, radius, 4.0), this.dmg(power), extra);
+			Attacks.hitAll(this, Attacks.inCircle(level, at, radius, 4.0), this.dmg(power), magic, extra);
 			if (fx != null) {
 				fx.run();
 			}
@@ -931,6 +973,8 @@ public abstract class RaidBoss extends CreatureMob {
 	/** A telegraphed ring with a safe middle. */
 	protected void donut(final ServerLevel level, final Vec3 at, final double inner, final double outer, final int delay, final int color, final float power,
 		final @Nullable Consumer<LivingEntity> extra) {
+		// spells stay spells when the telegraph goes off later
+		final boolean magic = this.casting;
 		Telegraph.donut(level, at, inner, outer, delay, color, () -> {
 			if (!this.alive()) {
 				return;
@@ -941,7 +985,7 @@ public abstract class RaidBoss extends CreatureMob {
 					hit.add(e);
 				}
 			}
-			Attacks.hitAll(this, hit, this.dmg(power), extra);
+			Attacks.hitAll(this, hit, this.dmg(power), magic, extra);
 			new Fx(Fx.Kind.RING, color).circle(level, Fx.Kind.RING, at.add(0, 0.3, 0), outer * 0.7);
 			level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y + 0.5, at.z, 12, outer * 0.5, 0.2, outer * 0.5, 0.0);
 		});
@@ -950,11 +994,13 @@ public abstract class RaidBoss extends CreatureMob {
 	/** A telegraphed strip. */
 	protected void line(final ServerLevel level, final Vec3 from, final Vec3 to, final double width, final int delay, final int color, final float power,
 		final @Nullable Consumer<LivingEntity> extra, final @Nullable Runnable fx) {
+		// spells stay spells when the telegraph goes off later
+		final boolean magic = this.casting;
 		Telegraph.line(level, from, to, width, delay, color, () -> {
 			if (!this.alive()) {
 				return;
 			}
-			Attacks.hitAll(this, Attacks.inLine(level, from, to, width, 4.0), this.dmg(power), extra);
+			Attacks.hitAll(this, Attacks.inLine(level, from, to, width, 4.0), this.dmg(power), magic, extra);
 			if (fx != null) {
 				fx.run();
 			}
@@ -975,6 +1021,8 @@ public abstract class RaidBoss extends CreatureMob {
 		final float power, final int pulses, final Fx fx, final @Nullable Consumer<LivingEntity> extra) {
 		Vec3 to = target.subtract(origin);
 		float yaw = (float)Math.toDegrees(Math.atan2(-to.x, to.z));
+		// spells stay spells when the telegraph goes off later
+		final boolean magic = this.casting;
 		Telegraph.cone(level, origin, yaw, range, halfAngle, delay, color, () -> {
 			for (int i = 0; i < pulses; i++) {
 				SkillScheduler.schedule(i * 5, () -> {
@@ -986,7 +1034,7 @@ public abstract class RaidBoss extends CreatureMob {
 						float a = (float)(yaw - halfAngle + 2 * halfAngle * this.random.nextFloat());
 						fx.moving(level, fx.kind(), mouth, Vec3.directionFromRotation(10.0F, a).scale(range / 12.0));
 					}
-					Attacks.hitAll(this, Attacks.inCone(level, origin, yaw, range, halfAngle), this.dmg(power), extra);
+					Attacks.hitAll(this, Attacks.inCone(level, origin, yaw, range, halfAngle), this.dmg(power), magic, extra);
 				});
 			}
 		});
@@ -1024,7 +1072,7 @@ public abstract class RaidBoss extends CreatureMob {
 		for (int k = 0; k < count; k++) {
 			float offset = count == 1 ? 0.0F : -spread / 2 + spread * k / (count - 1);
 			Vec3 dir = aim.yRot((float)Math.toRadians(offset));
-			MobProjectile p = MobProjectile.of(this, display, trail, color, gravity, this.dmg(power)).launch(eye, dir, speed);
+			MobProjectile p = MobProjectile.of(this, display, trail, color, gravity, this.dmg(power)).magic(this.casting).launch(eye, dir, speed);
 			if (homing) {
 				p.homing(target);
 			}

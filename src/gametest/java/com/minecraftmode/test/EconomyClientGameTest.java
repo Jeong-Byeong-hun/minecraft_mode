@@ -390,7 +390,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			server.runCommand("kill @e[type=!player]");
 			context.waitTicks(10);
 		}
-		require(total == 13, "expected 13 mechanics, got " + total);
+		require(total == 17, "expected 17 mechanics, got " + total);
 		server.runCommand("tick rate 20");
 		server.runCommand("gamemode survival @p");
 	}

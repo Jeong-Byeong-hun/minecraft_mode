@@ -45,18 +45,18 @@ public class Aethryx extends RaidBoss {
 	@Override
 	protected List<Pattern> patterns() {
 		return List.of(
-			pattern("void_breath", 1, 150, 0, 34, this::voidBreath),
+			spell("void_breath", 1, 150, 0, 34, this::voidBreath),
 			pattern("wing_buffet", 1, 170, 14, 22, this::wingBuffet),
 			pattern("tail_lash", 1, 110, 0, 18, this::tailLash),
-			pattern("void_orbs", 2, 160, 0, 10, this::voidOrbs),
+			spell("void_orbs", 2, 160, 0, 10, this::voidOrbs),
 			pattern("dive_bomb", 2, 220, 0, 40, this::diveBomb),
-			pattern("rifts", 3, 260, 0, 20, this::rifts),
+			spell("rifts", 3, 260, 0, 20, this::rifts),
 			pattern("vex_swarm", 3, 420, 0, 20, (level, target) -> {
 				this.playAnim(CreatureAnim.SUMMON);
 				this.summonMinions(level, EntityTypes.VEX, 3, 6, target);
 			}),
-			pattern("starfall", 4, 210, 0, 20, this::starfall),
-			pattern("collapse", 4, 380, 0, 50, this::collapse)
+			spell("starfall", 4, 210, 0, 20, this::starfall),
+			spell("collapse", 4, 380, 0, 50, this::collapse)
 		);
 	}
 

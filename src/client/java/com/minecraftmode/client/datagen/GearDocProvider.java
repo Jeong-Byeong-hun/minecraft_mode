@@ -215,7 +215,7 @@ public class GearDocProvider implements DataProvider {
 			.append(" × 직업 배율, **물리 보호**(모든 피해 감소, 보호 인챈트 역할) = min(").append(exact(ClassDefense.PROTECTION_MAX)).append("%, 레벨 × ")
 			.append(exact(ClassDefense.PROTECTION_PER_LEVEL)).append("%) × 직업 배율, **마법 방어**(마법 공격에 추가 감소) = min(")
 			.append(exact(ClassDefense.MAGIC_MAX)).append("%, 레벨 × ").append(exact(ClassDefense.MAGIC_PER_LEVEL)).append("%) × 마법 배율. 부위마다 1/4씩.\n");
-		md.append("- 마법 공격: 네임드의 브레스·가시 분출·마력탄(칼·총알·돌·금 파편 같은 물체는 물리), 바닐라 마법(물약·소환사 송곳니·가디언 광선·위더·드래곤 브레스·워든 음파·화염구). 마법 공격에도 방어 점수는 적용됩니다.\n");
+		md.append("- 마법 공격: 네임드의 브레스·가시 분출·마력탄(칼·총알·돌·금 파편 같은 물체는 물리), 레이드 보스의 주문 패턴(불·공허·영혼·번개·저주 같은 마법 공격; 돌진·내려찍기·꼬리 등은 물리, 기믹 피해는 방어를 무시), 바닐라 마법(물약·소환사 송곳니·가디언 광선·위더·드래곤 브레스·워든 음파·화염구). 마법 공격에도 방어 점수는 적용됩니다.\n");
 		md.append("- 바닐라 비교: 철 15 / 0, 다이아 20 / 8, 다이아 + 보호 IV 20 / 8 / 피해 -64%. 직업 방어구는 바닐라 인챈트를 받지 않습니다.\n\n");
 		md.append("| 직업 | 방어 배율 | 마법 배율 | 고유 |\n|---|---|---|---|\n");
 		for (JobClass job : JobClass.PLAYABLE) {

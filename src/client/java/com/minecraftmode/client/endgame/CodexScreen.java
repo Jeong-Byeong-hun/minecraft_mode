@@ -401,10 +401,13 @@ public class CodexScreen extends Screen {
 	/** Raid bosses have no spawn eggs; each gets an item that fits it. */
 	private static ItemStack raidIcon(final BossDef boss) {
 		return new ItemStack(switch (boss.id()) {
+			case "verdessa" -> Items.FLOWERING_AZALEA;
 			case "arachne" -> Items.COBWEB;
 			case "gorvath" -> Items.IRON_BLOCK;
+			case "nefrekhet" -> Items.CHISELED_SANDSTONE;
 			case "kraken" -> Items.HEART_OF_THE_SEA;
 			case "ignis" -> Items.BLAZE_POWDER;
+			case "raijin" -> Items.NOTE_BLOCK;
 			case "malachar" -> Items.WITHER_SKELETON_SKULL;
 			case "aethryx" -> Items.DRAGON_HEAD;
 			default -> Items.NETHER_STAR;

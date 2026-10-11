@@ -1,6 +1,7 @@
 package com.minecraftmode.raid;
 
 import java.util.List;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
@@ -8,6 +9,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.LightBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -98,6 +100,9 @@ public final class Arenas {
 			case VOLCANO -> volcano(level, center, random);
 			case NECROPOLIS -> necropolis(level, center, random);
 			case VOID_ISLES -> voidIsles(level, center, random);
+			case FOREST_GROVE -> forestGrove(level, center, random);
+			case DESERT_TOMB -> desertTomb(level, center, random);
+			case SKY_SHRINE -> skyShrine(level, center, random);
 		}
 	}
 
@@ -264,6 +269,108 @@ public final class Arenas {
 				}
 			}
 			set(level, x, y + 1, z, Blocks.END_ROD.defaultBlockState());
+		}
+	}
+
+	/** Flowers and grass on the green floor, old oaks crowding outside the rim. */
+	private static void forestGrove(final ServerLevel level, final BlockPos c, final RandomSource random) {
+		Block[] plants = {Blocks.SHORT_GRASS, Blocks.SHORT_GRASS, Blocks.FERN, Blocks.POPPY, Blocks.DANDELION, Blocks.AZURE_BLUET, Blocks.OXEYE_DAISY};
+		forDisc(c, RADIUS - 1.0, (x, z) -> {
+			BlockState below = level.getBlockState(new BlockPos(x, c.getY() - 1, z));
+			if (random.nextFloat() < 0.22F && (below.is(Blocks.GRASS_BLOCK) || below.is(Blocks.MOSS_BLOCK) || below.is(Blocks.PODZOL))
+				&& level.getBlockState(new BlockPos(x, c.getY(), z)).isAir()) {
+				set(level, x, c.getY(), z, plants[random.nextInt(plants.length)].defaultBlockState());
+			}
+		});
+		BlockState leaves = Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+		BlockState moss = Blocks.AZALEA_LEAVES.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+		for (int i = 0; i < 14; i++) {
+			double a = Math.PI * 2 * i / 14 + random.nextDouble() * 0.3;
+			int r = RADIUS + 3 + random.nextInt(4);
+			int x = c.getX() + (int)(Math.cos(a) * r);
+			int z = c.getZ() + (int)(Math.sin(a) * r);
+			int h = 7 + random.nextInt(6);
+			for (int y = -4; y < h; y++) {
+				set(level, x, c.getY() + y, z, Blocks.OAK_LOG.defaultBlockState());
+			}
+			int crown = 3 + random.nextInt(2);
+			for (int dx = -crown; dx <= crown; dx++) {
+				for (int dz = -crown; dz <= crown; dz++) {
+					for (int dy = -1; dy <= 2; dy++) {
+						if (dx * dx + dz * dz + dy * dy * 2 <= crown * crown + 1 && !(dx == 0 && dz == 0 && dy < 1)) {
+							set(level, x + dx, c.getY() + h + dy, z + dz, (random.nextFloat() < 0.25F ? moss : leaves));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/** An inlaid ring on the sandstone floor and obelisks outside the walls. */
+	private static void desertTomb(final ServerLevel level, final BlockPos c, final RandomSource random) {
+		forRing(c, 8.5, 9.5, (x, z) -> set(level, x, c.getY() - 1, z, Blocks.DYED_TERRACOTTA.pick(DyeColor.ORANGE).defaultBlockState()));
+		forRing(c, 2.5, 3.5, (x, z) -> set(level, x, c.getY() - 1, z, Blocks.DYED_TERRACOTTA.pick(DyeColor.BLUE).defaultBlockState()));
+		forDisc(c, 1.5, (x, z) -> set(level, x, c.getY() - 1, z, Blocks.GOLD_BLOCK.defaultBlockState()));
+		for (int i = 0; i < 8; i++) {
+			double a = Math.PI * 2 * i / 8;
+			int r = RADIUS + 4;
+			int x = c.getX() + (int)Math.round(Math.cos(a) * r);
+			int z = c.getZ() + (int)Math.round(Math.sin(a) * r);
+			int h = 10 + random.nextInt(4);
+			for (int y = -4; y < h; y++) {
+				Block block = y >= h - 1 ? Blocks.GOLD_BLOCK : y % 4 == 3 ? Blocks.CHISELED_SANDSTONE : Blocks.SMOOTH_SANDSTONE;
+				set(level, x, c.getY() + y, z, block.defaultBlockState());
+				if (y < 2) {
+					set(level, x + 1, c.getY() + y, z, Blocks.CUT_SANDSTONE.defaultBlockState());
+					set(level, x - 1, c.getY() + y, z, Blocks.CUT_SANDSTONE.defaultBlockState());
+					set(level, x, c.getY() + y, z + 1, Blocks.CUT_SANDSTONE.defaultBlockState());
+					set(level, x, c.getY() + y, z - 1, Blocks.CUT_SANDSTONE.defaultBlockState());
+				}
+			}
+		}
+	}
+
+	/** Clouds below and around the shrine, red gates at the four winds and rods on the pillars. */
+	private static void skyShrine(final ServerLevel level, final BlockPos c, final RandomSource random) {
+		for (int i = 0; i < 22; i++) {
+			double a = random.nextDouble() * Math.PI * 2;
+			int r = RADIUS + 2 + random.nextInt(9);
+			int x = c.getX() + (int)(Math.cos(a) * r);
+			int z = c.getZ() + (int)(Math.sin(a) * r);
+			int y = c.getY() - 7 + random.nextInt(12);
+			int size = 2 + random.nextInt(3);
+			for (int dx = -size; dx <= size; dx++) {
+				for (int dz = -size; dz <= size; dz++) {
+					for (int dy = -1; dy <= 1; dy++) {
+						if (dx * dx + dz * dz + dy * dy * 4 <= size * size) {
+							set(level, x + dx, y + dy, z + dz, Blocks.WOOL.pick(DyeColor.WHITE).defaultBlockState());
+						}
+					}
+				}
+			}
+		}
+		for (int k = 0; k < 4; k++) {
+			double a = Math.PI / 2 * k;
+			int r = RADIUS + 3;
+			int gx = c.getX() + (int)Math.round(Math.cos(a) * r);
+			int gz = c.getZ() + (int)Math.round(Math.sin(a) * r);
+			// posts stand apart along the rim's tangent
+			int tx = (int)Math.round(-Math.sin(a));
+			int tz = (int)Math.round(Math.cos(a));
+			for (int side = -1; side <= 1; side += 2) {
+				for (int y = -2; y < 7; y++) {
+					set(level, gx + tx * 3 * side, c.getY() + y, gz + tz * 3 * side, Blocks.DYED_TERRACOTTA.pick(DyeColor.RED).defaultBlockState());
+				}
+			}
+			for (int s = -4; s <= 4; s++) {
+				set(level, gx + tx * s, c.getY() + 7, gz + tz * s, Blocks.RED_NETHER_BRICKS.defaultBlockState());
+				if (Math.abs(s) <= 3) {
+					set(level, gx + tx * s, c.getY() + 5, gz + tz * s, Blocks.DYED_TERRACOTTA.pick(DyeColor.RED).defaultBlockState());
+				}
+			}
+		}
+		for (BlockPos p : pillars(c)) {
+			set(level, p.getX(), c.getY() + PILLAR_HEIGHT + 1, p.getZ(), Blocks.LIGHTNING_ROD.waxed().unaffected().defaultBlockState());
 		}
 	}
 

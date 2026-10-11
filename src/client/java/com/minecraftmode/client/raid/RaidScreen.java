@@ -83,13 +83,14 @@ public class RaidScreen extends Screen {
 		this.top = (this.height - H) / 2;
 		this.shownParty = RaidClient.party();
 		List<BossDef> all = RaidBosses.all();
+		// nine bosses: rows of 15 px fit the left column above the records button
 		for (int i = 0; i < all.size(); i++) {
 			BossDef def = all.get(i);
 			final int index = i;
 			Button b = Button.builder(Component.translatable(def.nameKey()), button -> {
 				selected = index;
 				this.rebuildWidgets();
-			}).bounds(this.left + 8, this.top + 26 + i * 22, 100, 20).build();
+			}).bounds(this.left + 8, this.top + 24 + i * 15, 100, 14).build();
 			b.active = i != Math.floorMod(selected, all.size());
 			this.addRenderableWidget(b);
 		}
@@ -107,7 +108,7 @@ public class RaidScreen extends Screen {
 		this.addRenderableWidget(Button.builder(Component.translatable(records ? "screen.minecraft_mode.raid.show_info" : "screen.minecraft_mode.raid.show_records"), b -> {
 			records = !records;
 			this.rebuildWidgets();
-		}).bounds(this.left + 8, this.top + 160, 100, 20).build());
+		}).bounds(this.left + 8, this.top + 162, 100, 20).build());
 		Button enter = Button.builder(Component.translatable("screen.minecraft_mode.raid.enter").withStyle(ChatFormatting.BOLD), b -> this.enter())
 			.bounds(this.left + 8, this.top + H - 52, 100, 20).build();
 		enter.active = this.canEnter();

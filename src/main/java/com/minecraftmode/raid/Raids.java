@@ -588,7 +588,7 @@ public final class Raids {
 			give(player, new ItemStack(ModItems.PROTECTION_SCROLL));
 		}
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
-		for (ItemStack supply : Consumables.raidRewards(RaidBosses.index(def), def == RaidBosses.AETHRYX, random)) {
+		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);
 		}
 		// a share of a level by difficulty, measured at the boss's top level (the boss kill itself pays nothing: its health is a raid scale)

@@ -120,10 +120,19 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			require(pieces.equals(List.of(2, 3, 4)), set.id() + " should have 2/3/4 piece bonuses, got " + pieces);
 		}
 		require(NamedMobs.all().size() >= 20, "expected at least 20 named monsters, got " + NamedMobs.all().size());
-		require(RaidBosses.all().size() == 6, "expected 6 raid bosses");
+		require(RaidBosses.all().size() == 9, "expected 9 raid bosses");
+		int lastLo = 0;
+		java.util.Set<com.minecraftmode.raid.ArenaTheme> arenas = new java.util.HashSet<>();
 		for (BossDef def : RaidBosses.all()) {
 			require(def.phaseCount() >= 3, def.id() + " needs at least 3 phases");
+			require(def.lo() > lastLo, def.id() + " should come after the bosses below its level");
+			require(arenas.add(def.arena()), def.id() + " needs its own arena");
+			lastLo = def.lo();
 		}
+		require(RaidBosses.all().getFirst() == RaidBosses.VERDESSA && RaidBosses.VERDESSA.lo() == 10, "the first raid opens at level 10");
+		// supplies follow the level, so the old bosses kept theirs when new ones joined the list
+		require(RaidBosses.supplyTier(RaidBosses.ARACHNE) == 0 && RaidBosses.supplyTier(RaidBosses.MALACHAR) == 4 && RaidBosses.supplyTier(RaidBosses.AETHRYX) == 5,
+			"raid supply tiers by level");
 		require(RaidBosses.AETHRYX.phaseCount() == 4, "Aethryx has 4 phases");
 		// every bracket offers one weapon (some classes have none at Lv 100) and one armor piece per class
 		for (JobClass job : JobClass.PLAYABLE) {
@@ -377,6 +386,12 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 				return boss.patternIds();
 			});
 			require(ids.size() >= 6, def.id() + " should have at least 6 patterns, got " + ids);
+			// breaths, curses and elemental blasts are spells (magic damage); the casters and the three new bosses have some
+			List<String> spells = server.computeOnServer(s -> connection.getServerPlayer().level()
+				.getEntitiesOfClass(RaidBoss.class, connection.getServerPlayer().getBoundingBox().inflate(40), b -> b.isAlive() && b.def() == def).getFirst().spellIds());
+			boolean caster = def == RaidBosses.IGNIS || def == RaidBosses.MALACHAR || def == RaidBosses.AETHRYX || def == RaidBosses.VERDESSA || def == RaidBosses.NEFREKHET
+				|| def == RaidBosses.RAIJIN;
+			require(caster == !spells.isEmpty() && spells.size() < ids.size(), def.id() + " spells " + spells + " of " + ids);
 			for (String id : ids) {
 				boolean ran = server.computeOnServer(s -> {
 					ServerPlayer player = connection.getServerPlayer();

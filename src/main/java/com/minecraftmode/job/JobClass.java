@@ -39,7 +39,7 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Bowman", "궁수", "Eagle Eye", "매의 눈", "Basic shot damage +15%.", "기본 사격 피해 +15%."),
 		new Tier("Ranger", "레인저", "Wind Walker", "바람 걸음", "Movement speed +8%.", "이동 속도 +8%."),
 		new Tier("Heroic Archer", "아처", "Deadeye", "필중", "+2% damage per 4 blocks of distance (max +40%).", "거리 4블록마다 피해 +2% (최대 +40%)."),
-		new Tier("King of Heroes", "영웅왕", "Gate of Babylon", "왕의 재보",
+		new Tier("King of Heroes", "영웅왕", "Gate of Babylon", "게이트 오브 바빌론",
 			"Basic shots have a 20% chance to launch 2 treasure blades.", "기본 사격 시 20% 확률로 보구 2자루를 함께 발사합니다.")
 	}),
 	PIRATE("pirate", 0xE8B730, "Pirate", "해적", new Tier[] {
@@ -52,7 +52,7 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Soul Reaper", "사신", "Flash Step", "순보", "Movement speed +8% and 5% dodge chance.", "이동 속도 +8%, 회피 확률 5%."),
 		new Tier("Lieutenant", "부대장", "Shikai", "시해", "Skill damage +12%.", "스킬 피해 +12%."),
 		new Tier("Captain", "대장", "Bankai", "만해", "Basic attack damage +15% and attack speed +10%.", "기본 공격 피해 +15%, 공격 속도 +10%."),
-		new Tier("Captain-Commander", "총대장", "Mugetsu", "무월",
+		new Tier("Captain-Commander", "총대장", "Mugetsu", "무게츠",
 			"Skill cooldowns -15% and +15% damage to bosses and named monsters.", "스킬 재사용 대기시간 -15%, 보스·네임드에게 주는 피해 +15%.")
 	}),
 	HUNTER("hunter", 0xF5862B, "Hunter", "헌터", new Tier[] {

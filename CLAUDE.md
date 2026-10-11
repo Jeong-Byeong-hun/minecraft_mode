@@ -50,6 +50,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - Guild shop offers depend on the visitor (`ShopOffers.trades(ShopType, Player)`); trade keys stay stable for market pressure.
 - `docs/CLASSES.md` is written by `ClassDocProvider` during `runDatagen`; do not edit it by hand.
 - `JobClientGameTest` casts every skill of every weapon once; keep it passing when adding or changing skills.
+- Skill balance (0.4.4): in each tier a weapon's skills add up (damage per cast ÷ cooldown, 1 target, as in CLASSES.md "스킬 피해 비교") to about 0.7–1.4× the tier's weapon median (support weapons may sit lower); one skill stays under about 2× the skill median for 1 target and 2.5× for 5; ultimates hit 450–1000% per cast at 45–60 s (less when they also shield or buff) and 1100–1300% at 75–90 s. Check new or changed skills against those numbers after `runDatagen`.
 
 ## Trials and trainers (`job/quest/`, `entity/ClassTrainer`)
 
@@ -112,7 +113,7 @@ Player-facing summary and numbers: `docs/CONTENT.md` (written by `GearDocProvide
 
 ## Content direction
 
-- New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece, Fate, Bleach — Soul Reaper — and Hunter x Hunter — Hunter — are already used; Naruto is already mixed into Rogue and stays there, so the 8th class needs another source the user picks). Keep Korean names faithful to the official Korean translations.
+- New classes, skills and weapons should come mainly from anime/light novels the user likes: **Hunter x Hunter, Bleach, Naruto, Type-Moon (Fate)** (One Piece, Fate, Bleach — Soul Reaper — and Hunter x Hunter — Hunter — are already used; Naruto is already mixed into Rogue and stays there, so the 8th class needs another source the user picks). Korean names: proper nouns of techniques and weapons from Japanese works use the Japanese reading (카무사리, 게츠가텐쇼, 라센간, 자비마루, 스트라이크 에어), never the sino-Korean reading of the kanji (0.4.4); work terms (분신술, 순보, 파도/박도, 만해, 패기, 념, 참백도), plain words, the class name 사신 and Chinese proper nouns (방천화극, 석병팔진) keep their Korean forms; descriptive translations (약속된 승리의 검) are fine.
 - Planned later (not started): an 8th class (source to be chosen), player guilds, a PvP arena with seasons, more raid bosses (the stylist covers transmog; title colours and pet skins are not done).
 
 ## Gear, named monsters, raids

@@ -53,7 +53,7 @@ final class TrialLang {
 			{"map_scrap", "Treasure Map Scrap", "보물 지도 조각"}, {"bounty_poster", "Bounty Poster", "현상금 전단"},
 			{"haki_crystal", "Haki Crystal", "패기의 결정"}, {"sea_kings_treasure", "Sea King's Treasure", "해왕의 보물"},
 			{"hollow_mask_shard", "Hollow Mask Shard", "호로 가면 조각"}, {"hell_butterfly", "Hell Butterfly", "지옥나비"},
-			{"tenshintai", "Tenshintai", "전신체"}, {"hogyoku_fragment", "Hogyoku Fragment", "붕옥의 파편"},
+			{"tenshintai", "Tenshintai", "텐신타이"}, {"hogyoku_fragment", "Hogyoku Fragment", "호교쿠의 파편"},
 			{"exam_badge", "Exam Number Badge", "수험 번호표"}, {"divination_glass", "Water Divination Glass", "수견식 유리잔"},
 			{"chimera_carapace", "Chimera Ant Carapace", "키메라 앤트 갑각"}, {"dark_continent_relic", "Dark Continent Relic", "암흑대륙의 유물"},
 		};

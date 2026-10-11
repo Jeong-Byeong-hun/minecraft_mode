@@ -321,7 +321,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 		});
 		require(physical > 0.5F && physical < 4.0F, "a 20 damage hit on a level 80 mage in full robe takes about 2.5, took " + physical + " (" + detail[0] + ")");
 		float ratio = magic / physical;
-		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio);
+		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio + " (physical " + physical + ", magic " + magic + "; " + detail[0] + ")");
 		MinecraftMode.LOGGER.info("[town] class defense: level 80 mage takes {} from a 20 physical hit, {} from a 20 spell", physical, magic);
 		context.waitTicks(25);
 	}
@@ -332,6 +332,8 @@ public class TownClientGameTest implements FabricClientGameTest {
 		zombie.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0.0F, 0.0F);
 		zombie.setNoAi(true);
 		level.addFreshEntity(zombie);
+		// a lagging test server may not have ticked the last hit's invulnerability away yet; this check measures armor, not that
+		player.setInvulnerableTime(0);
 		float before = player.getHealth();
 		player.hurtServer(level, magic ? MagicDamage.source(level, zombie, zombie) : level.damageSources().mobAttack(zombie), 20.0F);
 		zombie.discard();

@@ -228,7 +228,7 @@ public final class Quests {
 			List.of(mat(ModItems.CONDENSED_ESSENCE, 2)));
 		add("shinigami_4", JobClass.SHINIGAMI, 4, "Hueco Mundo", "후에코 문도",
 			"Beyond the white desert, a traitor waits with the Hogyoku. Destroy the Wither and the husks of the sands.",
-			"하얀 사막 너머에서 배신자가 붕옥과 함께 기다린다. 위더와 모래의 허스크를 쓰러뜨려라.",
+			"하얀 사막 너머에서 배신자가 호교쿠와 함께 기다린다. 위더와 모래의 허스크를 쓰러뜨려라.",
 			List.of(kill("The Wither", "위더", Set.of(EntityTypes.WITHER), 1), kill("Husks", "허스크", Set.of(EntityTypes.HUSK), 12)),
 			HOGYOKU_FRAGMENT, 3, List.of(source(Set.of(EntityTypes.WITHER), 1.0F, 3), source(Set.of(EntityTypes.HUSK), 0.2F, 1)),
 			List.of(mat(ModItems.CONDENSED_ESSENCE, 4)));

@@ -19,7 +19,7 @@ public enum Archetype {
 	DAGGER("dagger", "Dagger", "단검", BasicMode.MELEE, 0.70F, 2.2F, -0.5F),
 	CLAW("claw", "Claw", "클로", BasicMode.MELEE, 0.65F, 2.5F, -0.5F),
 	NINJATO("ninjato", "Ninjato", "닌자도", BasicMode.MELEE, 0.90F, 1.8F, 0.0F),
-	KUSARIGAMA("kusarigama", "Kusarigama", "쇄겸", BasicMode.MELEE, 0.85F, 1.4F, 1.5F),
+	KUSARIGAMA("kusarigama", "Kusarigama", "쿠사리가마", BasicMode.MELEE, 0.85F, 1.4F, 1.5F),
 	SHURIKEN("shuriken", "Shuriken", "표창", 0.55F, 2.0F, -0.5F, ProjectileStyle.SHURIKEN, 10, 0.70F),
 	KUNAI("kunai", "Kunai", "쿠나이", 0.60F, 2.0F, -0.5F, ProjectileStyle.KUNAI, 12, 0.80F),
 	// Mage

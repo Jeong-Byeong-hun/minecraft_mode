@@ -588,7 +588,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(cast == SkillCaster.Result.OK, "Twin Getsuga could not be cast: " + cast);
 		context.waitTicks(15);
 		float farTaken = farBefore - server.computeOnServer(s -> far[0].getHealth());
-		float wave = server.computeOnServer(s -> (float)(JobWeapons.def("true_zangetsu").power() * 3.0));
+		// one wave = power x the shot multiplier of twin_getsuga (1.24 since the 0.4.4 balance pass)
+		float wave = server.computeOnServer(s -> (float)(JobWeapons.def("true_zangetsu").power() * 1.24));
 		require(farTaken >= wave * 1.5F, "both Twin Getsuga waves should hit a monster 15 blocks ahead, it took " + farTaken + " of " + wave + " per wave");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] point blank: bolt from inside a husk, lightning on a husk in front and Getsuga over a spider all hit");

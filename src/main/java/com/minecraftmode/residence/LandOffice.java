@@ -1,5 +1,6 @@
 package com.minecraftmode.residence;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.network.LandActionPayload;
 import com.minecraftmode.network.OpenLandPayload;
 import com.minecraftmode.registry.ModItems;
@@ -14,7 +15,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 
@@ -68,7 +68,7 @@ public final class LandOffice {
 				ServerLevel residence = ResidenceDimension.level(player.level().getServer());
 				if (residence != null && claims.abandon(owner, claim.chunk(), claim.minY())) {
 					int returned = LandRestore.restore(residence, claim, player);
-					player.getInventory().placeItemBackInInventory(new ItemStack(ModItems.LAND_DEED), Prediction.SERVER_ONLY);
+					Bags.give(player, new ItemStack(ModItems.LAND_DEED));
 					tell(player, "abandoned", ChatFormatting.YELLOW, returned);
 				}
 			}

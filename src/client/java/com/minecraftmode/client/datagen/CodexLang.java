@@ -85,6 +85,7 @@ final class CodexLang {
 			{"gear_bag", "보급관 브람 (처음 1회)", "Quartermaster Bram (once)"},
 			{"supply_bag", "보급관 브람 (처음 1회)", "Quartermaster Bram (once)"},
 			{"ore_bag", "보급관 브람 (처음 1회)", "Quartermaster Bram (once)"},
+			{"land_deed", "현상금 공적 상점 (살 때마다 비싸짐)", "Bounty merit shop (dearer with every deed)"},
 			{"sunleaf", "풀·꽃 베기 (따뜻한 곳, 낮)", "Cutting grass and flowers (warm places, by day)"},
 			{"moonpetal", "꽃 베기 (밤)", "Cutting flowers at night"},
 			{"frostroot", "풀·꽃 베기 (눈 내리는 추운 곳)", "Cutting grass and flowers where it snows"},

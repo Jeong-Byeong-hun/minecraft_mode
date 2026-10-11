@@ -1,11 +1,11 @@
 package com.minecraftmode.residence;
 
+import com.minecraftmode.bag.Bags;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Prediction;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,7 +23,8 @@ import net.minecraft.world.phys.AABB;
 /**
  * Gives abandoned land its first look back: every block of the 16x16x16 box becomes what the flat generator put there
  * ({@link ResidenceDimension#natural}), frames, paintings, armor stands, boats and minecarts in it are removed, and whatever they or
- * the containers held goes to the owner (dropped at their feet when the inventory is full). Players inside are lifted onto the grass.
+ * the containers held goes to the owner ({@link Bags#give}: bags, then inventory, then at their feet). Players inside are lifted
+ * onto the grass.
  */
 public final class LandRestore {
 	/** No drops, no container spill (they are emptied first), clients told. */
@@ -63,7 +64,7 @@ public final class LandRestore {
 			}
 		}
 		for (ItemStack stack : back) {
-			owner.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
+			Bags.give(owner, stack);
 		}
 		return back.size();
 	}

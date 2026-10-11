@@ -2196,6 +2196,7 @@
   "screen.minecraft_mode.codex.source.golem_core": "Mythril golems",
   "screen.minecraft_mode.codex.source.guild": "Adventurers' Guild shop (Lv %s bracket, for its class)",
   "screen.minecraft_mode.codex.source.lair_map": "Bounty merit",
+  "screen.minecraft_mode.codex.source.land_deed": "Bounty merit shop (dearer with every deed)",
   "screen.minecraft_mode.codex.source.moonpetal": "Cutting flowers at night",
   "screen.minecraft_mode.codex.source.ore_bag": "Quartermaster Bram (once)",
   "screen.minecraft_mode.codex.source.protection_scroll": "Lair lords (10%), raids (chance by difficulty), bounty merit",

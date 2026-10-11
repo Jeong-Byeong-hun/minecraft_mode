@@ -188,6 +188,7 @@ public class ClassDocProvider implements DataProvider {
 			md.append("\n");
 		}
 		this.balance(md);
+		ClassComparison.write(md);
 		try {
 			Path root = this.output.getOutputFolder().getParent().getParent().getParent();
 			Path file = root.resolve("docs/CLASSES.md");

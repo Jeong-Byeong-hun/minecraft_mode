@@ -7,6 +7,7 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.skill.SkillContext;
 import com.minecraftmode.job.skill.SkillProjectile;
 import com.minecraftmode.job.skill.SkillScheduler;
@@ -25,6 +26,21 @@ import net.minecraft.world.phys.Vec3;
  * passives, extra projectiles) only apply when the weapon is active for the shooter.
  */
 public final class BasicAttacks {
+	/** King of Heroes (archer tier 4): chance that two treasure blades join a basic shot. */
+	public static final float BABYLON_CHANCE = 0.15F;
+
+	/**
+	 * Damage bonus (fraction) of an active weapon's basic shot: the shot damage stat and, for mages, their skill damage too (Mana
+	 * Affinity: a mage's orbs are spells, so whatever strengthens the spells strengthens them).
+	 */
+	public static float shotBonus(final JobData data, final EngraveTotals mods) {
+		float bonus = mods.fraction(EngraveStat.SHOT_DAMAGE);
+		if (CombatHooks.has(data, JobClass.MAGE, 1)) {
+			bonus += mods.fraction(EngraveStat.SKILL_DAMAGE) + (CombatHooks.has(data, JobClass.MAGE, 3) ? SkillCaster.ARCANE_MASTERY : 0.0F);
+		}
+		return bonus;
+	}
+
 	public static void shoot(final ServerPlayer player, final ItemStack stack, final WeaponDef def) {
 		fire(player, stack, def, 1.0F);
 	}
@@ -37,7 +53,7 @@ public final class BasicAttacks {
 		JobData data = JobProgression.get(player);
 		boolean active = JobWeapons.isActive(data, def);
 		EngraveTotals mods = active ? JobWeapons.activeTotals(player) : EngraveTotals.EMPTY;
-		float damage = def.power() * def.archetype().shotMultiplier() * power * (1.0F + mods.fraction(EngraveStat.SHOT_DAMAGE));
+		float damage = def.power() * def.archetype().shotMultiplier() * power * (1.0F + (active ? shotBonus(data, mods) : 0.0F));
 		if (CombatHooks.has(data, JobClass.ARCHER, 1)) {
 			damage *= 1.15F;
 		}
@@ -53,7 +69,7 @@ public final class BasicAttacks {
 		ServerLevel level = player.level();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), style.sound(), SoundSource.PLAYERS, 0.6F, 1.0F + player.getRandom().nextFloat() * 0.2F);
 		// King of Heroes: treasure blades join the shot
-		if (CombatHooks.has(data, JobClass.ARCHER, 4) && player.getRandom().nextFloat() < 0.2F) {
+		if (CombatHooks.has(data, JobClass.ARCHER, 4) && player.getRandom().nextFloat() < BABYLON_CHANCE) {
 			// they start beside the archer, so they meet on the target in the crosshair (or 30 blocks out)
 			LivingEntity aimed = SkillContext.aimed(player, 30.0, e -> CombatHooks.canHarm(player, e));
 			Vec3 target = aimed != null ? aimed.getBoundingBox().getCenter() : player.getEyePosition().add(player.getLookAngle().scale(30));

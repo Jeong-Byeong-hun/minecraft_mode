@@ -51,6 +51,8 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - `docs/CLASSES.md` is written by `ClassDocProvider` during `runDatagen`; do not edit it by hand.
 - `JobClientGameTest` casts every skill of every weapon once; keep it passing when adding or changing skills.
 - Skill balance (0.4.4): in each tier a weapon's skills add up (damage per cast ÷ cooldown, 1 target, as in CLASSES.md "스킬 피해 비교") to about 0.7–1.4× the tier's weapon median (support weapons may sit lower); one skill stays under about 2× the skill median for 1 target and 2.5× for 5; ultimates hit 450–1000% per cast at 45–60 s (less when they also shield or buff) and 1100–1300% at 75–90 s. Check new or changed skills against those numbers after `runDatagen`.
+- Class balance (0.5.1): CLASSES.md "직업 비교" (`client/datagen/ClassComparison`) estimates each class's damage and survival at the last level of every tier from the real definitions (passives, level rewards, vitality, the best armor set, talents spent for damage; no engravings, random options, enhancement or skill support effects). Keep every class's 1-target total within about 90–110% of the mean at each level; survival may differ by role (warrior/hunter tanky, archer/mage fragile, archer a glass cannon up to ~110%). Rule passives the calculator copies (`BasicAttacks.BABYLON_CHANCE`, `SkillCaster.ARCANE_MASTERY`, `BasicAttacks.shotBonus`, the rogue/warrior/archer numbers in `CombatHooks`) must stay in step with it. MP never runs out in a minute of fighting, so MP stats are not damage.
+- Melee and the hurt cooldown: a fully charged swing (`CombatState.fullSwing`, set by `PlayerMixin` around `Player.attack`, vanilla's > 90%) of a class weapon resets the target's hurt cooldown in `CombatHooks.modifyIncoming`, like shots and skills, so attack speed above 2/s counts and a skill hit or double strike never swallows the next swing; uncharged spam still bounces.
 
 ## Trials and trainers (`job/quest/`, `entity/ClassTrainer`)
 
@@ -90,7 +92,7 @@ Fabric mod for Minecraft Java **26.3**. Mod id `minecraft_mode`, package `com.mi
 - Coin sinks scale with `GearShop.bracketPrice` (raid fee, engraving/reroll/removal, evolution, armor reroll), so they grow with level. Keep new sinks on that curve; coin sources too (gold-find procs pay `JobEvents.goldFindCopper`).
 - `consumable/Consumables` defines the 40 consumables (`ConsumableDef`, tiers 1-5; lasting effects are 10 minutes = `Consumables.LONG`); buffs are marker effects whose stats `BuffEffects` feeds into `GearStats`. Icons are drawn by `client/datagen/art/ConsumableArtist`. Item ids are saved keys. `docs/CONSUMABLES.md` is generated.
 - Raid bosses declare their mechanics in `RaidBoss.mechanics()` (first at an HP fraction, then on an interval, never closer than `MECHANIC_GAP` = 45 s). Mechanic damage uses `RaidDamage` (bypasses armor and resistance, not totems/feather/Avalon). Team mechanics must scale their requirement with party size so solo players can clear them.
-- Soul Reaper and Hunter passives are stat lines in `job/gear/ClassPassives` (added up by `GearStats`); the first five classes keep theirs as rules in `CombatHooks`/`JobStats`.
+- Soul Reaper and Hunter passives, and the damage parts of Mage's and Pirate's (0.5.1), are stat lines in `job/gear/ClassPassives` (added up by `GearStats`); the rest of the first five classes' passives stay rules in `CombatHooks`/`JobStats`/`SkillCaster`/`BasicAttacks`. A mage's basic shots (orbs) also get the mage's skill damage (`BasicAttacks.shotBonus`).
 
 ## Named lairs (`worldgen/lair/`)
 

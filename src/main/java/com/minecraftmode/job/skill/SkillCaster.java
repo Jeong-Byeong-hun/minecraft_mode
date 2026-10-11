@@ -17,6 +17,9 @@ import net.minecraft.world.item.ItemStack;
 
 /** Validates and casts a weapon skill for a player (from the skill keys or commands/tests). */
 public final class SkillCaster {
+	/** Arcane Mastery (mage tier 3): skill damage bonus, which a mage's orbs get too ({@code BasicAttacks.shotBonus}). */
+	public static final float ARCANE_MASTERY = 0.15F;
+
 	public enum Result {
 		OK,
 		NO_WEAPON,
@@ -80,7 +83,7 @@ public final class SkillCaster {
 			updated = updated.withCooldown(skill.id(), now + cooldown).withCooldown(slotKey(data.job(), slot), now + cooldown);
 		}
 		JobProgression.set(player, updated);
-		double powerBonus = CombatHooks.has(data, JobClass.MAGE, 3) ? 0.15 : 0.0;
+		double powerBonus = CombatHooks.has(data, JobClass.MAGE, 3) ? ARCANE_MASTERY : 0.0;
 		SkillContext ctx = new SkillContext(player, def, skill, stack, mods, powerBonus);
 		player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 		skill.cast(ctx);

@@ -30,8 +30,9 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Shadow Monarch", "그림자 군주", "Shadow Veil", "그림자 장막", "15% chance to dodge an attack.", "15% 확률로 공격을 회피합니다.")
 	}),
 	MAGE("mage", 0x4A8CFF, "Mage", "법사", new Tier[] {
-		new Tier("Mage", "마법사", "Mana Affinity", "마나 친화", "Max MP +30.", "최대 MP +30."),
-		new Tier("Caster", "캐스터", "Mana Circulation", "마나 순환", "MP regeneration x2.", "MP 회복 속도 2배."),
+		new Tier("Mage", "마법사", "Mana Affinity", "마나 친화", "Max MP +30 and skill damage +25%. Your orbs (basic shots) get your skill damage bonuses too.",
+			"최대 MP +30, 스킬 피해 +25%. 마력탄(기본 사격)도 스킬 피해 보너스를 받습니다."),
+		new Tier("Caster", "캐스터", "Mana Circulation", "마나 순환", "MP regeneration x2 and skill damage +15%.", "MP 회복 속도 2배, 스킬 피해 +15%."),
 		new Tier("Archmage", "대마도사", "Arcane Mastery", "비전 숙련", "Skill damage +15%.", "스킬 피해 +15%."),
 		new Tier("Grand Caster", "그랜드 캐스터", "Akashic Record", "아카식 레코드", "Skill cooldowns -20%.", "스킬 재사용 대기시간 -20%.")
 	}),
@@ -40,27 +41,31 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Ranger", "레인저", "Wind Walker", "바람 걸음", "Movement speed +8%.", "이동 속도 +8%."),
 		new Tier("Heroic Archer", "아처", "Deadeye", "필중", "+2% damage per 4 blocks of distance (max +40%).", "거리 4블록마다 피해 +2% (최대 +40%)."),
 		new Tier("King of Heroes", "영웅왕", "Gate of Babylon", "왕의 재보",
-			"Basic shots have a 20% chance to launch 2 treasure blades.", "기본 사격 시 20% 확률로 보구 2자루를 함께 발사합니다.")
+			"Basic shots have a 15% chance to launch 2 treasure blades.", "기본 사격 시 15% 확률로 보구 2자루를 함께 발사합니다.")
 	}),
 	PIRATE("pirate", 0xE8B730, "Pirate", "해적", new Tier[] {
 		new Tier("Pirate", "해적", "Plunderer", "약탈 본능", "Hostile kills have a 15% chance to drop coins.", "적대적 몹 처치 시 15% 확률로 동전을 떨어뜨립니다."),
-		new Tier("Captain", "선장", "Sea Legs", "바다 사나이", "In water: Dolphin's Grace and Water Breathing.", "물속에서 돌고래의 우아함과 수중 호흡."),
-		new Tier("Emperor of the Sea", "사황", "Conqueror's Haki", "패왕색 패기", "10% chance on hit to stun the enemy for 1.5s.", "공격 시 10% 확률로 1.5초 기절."),
-		new Tier("Pirate King", "해적왕", "The One Piece", "원피스", "Shop prices -20% and Luck +2.", "상점 가격 -20%, 행운 +2.")
+		new Tier("Captain", "선장", "Sea Legs", "바다 사나이", "Critical chance +10%. In water: Dolphin's Grace and Water Breathing.",
+			"치명타 확률 +10%. 물속에서 돌고래의 우아함과 수중 호흡."),
+		new Tier("Emperor of the Sea", "사황", "Conqueror's Haki", "패왕색 패기", "Basic attack, shot and skill damage +15%, and a 10% chance on hit to stun the enemy for 1.5s.",
+			"기본 공격·사격·스킬 피해 +15%, 공격 시 10% 확률로 1.5초 기절."),
+		new Tier("Pirate King", "해적왕", "The One Piece", "원피스",
+			"Basic attack and shot damage +10%, +20% damage to bosses and named monsters, shop prices -20% and Luck +2.",
+			"기본 공격·사격 피해 +10%, 보스·네임드에게 주는 피해 +20%, 상점 가격 -20%, 행운 +2.")
 	}),
 	SHINIGAMI("shinigami", 0x9FD8E8, "Soul Reaper", "사신", new Tier[] {
 		new Tier("Soul Reaper", "사신", "Flash Step", "순보", "Movement speed +8% and 5% dodge chance.", "이동 속도 +8%, 회피 확률 5%."),
 		new Tier("Lieutenant", "부대장", "Shikai", "시해", "Skill damage +12%.", "스킬 피해 +12%."),
-		new Tier("Captain", "대장", "Bankai", "만해", "Basic attack damage +15% and attack speed +10%.", "기본 공격 피해 +15%, 공격 속도 +10%."),
+		new Tier("Captain", "대장", "Bankai", "만해", "Basic attack damage +10% and attack speed +5%.", "기본 공격 피해 +10%, 공격 속도 +5%."),
 		new Tier("Captain-Commander", "총대장", "Mugetsu", "무월",
-			"Skill cooldowns -15% and +15% damage to bosses and named monsters.", "스킬 재사용 대기시간 -15%, 보스·네임드에게 주는 피해 +15%.")
+			"Skill cooldowns -8% and +15% damage to bosses and named monsters.", "스킬 재사용 대기시간 -8%, 보스·네임드에게 주는 피해 +15%.")
 	}),
 	HUNTER("hunter", 0xF5862B, "Hunter", "헌터", new Tier[] {
 		new Tier("Hunter", "헌터", "Ten", "텐", "Damage taken -5% and max health +2.", "받는 피해 -5%, 최대 체력 +2."),
 		new Tier("Nen User", "넨 능력자", "Gyo", "교", "Critical chance +10%.", "치명타 확률 +10%."),
 		new Tier("Pro Hunter", "프로 헌터", "Ko", "코", "15% chance for basic attacks to hit twice.", "15% 확률로 기본 공격이 두 번 적중합니다."),
 		new Tier("Triple-Star Hunter", "트리플 헌터", "Limitation and Vow", "제약과 서약",
-			"Skill damage +20% and +2 MP per second.", "스킬 피해 +20%, 초당 MP 회복 +2.")
+			"Skill damage +15% and +2 MP per second.", "스킬 피해 +15%, 초당 MP 회복 +2.")
 	});
 
 	public static final Codec<JobClass> CODEC = StringRepresentable.fromEnum(JobClass::values);

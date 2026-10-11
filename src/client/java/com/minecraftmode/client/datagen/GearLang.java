@@ -49,6 +49,7 @@ final class GearLang {
 		b.add("message.minecraft_mode.ability.en", ko ? "엔: 적 %s명의 기척을 느꼈습니다" : "En: you sense %s enemies");
 
 		b.add("screen.minecraft_mode.job.level_bonus", ko ? "레벨 보너스" : "Level bonus");
+		b.add("screen.minecraft_mode.job.level_bonus_attack_shot", ko ? "기본 공격·사격 피해 +%s%%" : "+%s%% basic attack and shot damage");
 		b.add("screen.minecraft_mode.job.innate", ko ? "고유 기술 [%s] %s" : "Innate [%s] %s");
 		b.add("screen.minecraft_mode.job.innate_locked", ko ? "고유 기술: Lv %s에 해금" : "Innate ability: unlocks at Lv %s");
 		b.add("screen.minecraft_mode.job.sets", ko ? "세트 효과" : "Set bonuses");

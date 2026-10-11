@@ -4,6 +4,7 @@ import com.minecraftmode.city.CityServices;
 import com.minecraftmode.job.skill.CombatState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
@@ -22,6 +23,18 @@ public abstract class PlayerMixin {
 		if (CityServices.blocksBuilding((Player)(Object)this, pos)) {
 			cir.setReturnValue(true);
 		}
+	}
+
+	/** Marks a fully charged swing: a class weapon's full-strength hit lands through the target's hurt cooldown ({@code CombatHooks}). */
+	@Inject(method = "attack", at = @At("HEAD"))
+	private void minecraftMode$swingStart(final Entity entity, final CallbackInfo ci) {
+		Player self = (Player)(Object)this;
+		CombatState.of(self).fullSwing = self.getAttackStrengthScale(0.5F) > 0.9F;
+	}
+
+	@Inject(method = "attack", at = @At("RETURN"))
+	private void minecraftMode$swingEnd(final Entity entity, final CallbackInfo ci) {
+		CombatState.of((Player)(Object)this).fullSwing = false;
 	}
 
 	/** Marks the hits of a sweep attack so the class system treats them as plain damage (no basic-hit procs). */

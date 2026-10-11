@@ -9,6 +9,7 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.gear.LevelRewards;
 import com.minecraftmode.job.gear.StatLine;
@@ -134,7 +135,7 @@ public class JobScreen extends Screen {
 					tip.add(Component.translatable("screen.minecraft_mode.job.requires_level", JobProgression.levelForTier(tier)).withStyle(ChatFormatting.DARK_GRAY));
 					g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 				}
-				ty += 24;
+				ty += 21;
 			}
 			this.levelBonus(g, data, x + 12, ty + 2);
 		}
@@ -183,7 +184,15 @@ public class JobScreen extends Screen {
 				if (i > 0) {
 					text.append(", ");
 				}
-				text.append(Component.translatable(rewards.get(i).stat().key(data.job()), JobTooltips.num(rewards.get(i).value())));
+				StatLine reward = rewards.get(i);
+				// equal basic attack and shot damage read as one phrase (pirates), so four rewards still fit above the buttons
+				if (reward.stat() == EngraveStat.BASIC_DAMAGE && i + 1 < rewards.size() && rewards.get(i + 1).stat() == EngraveStat.SHOT_DAMAGE
+					&& rewards.get(i + 1).value() == reward.value()) {
+					text.append(Component.translatable("screen.minecraft_mode.job.level_bonus_attack_shot", JobTooltips.num(reward.value())));
+					i++;
+					continue;
+				}
+				text.append(Component.translatable(reward.stat().key(data.job()), JobTooltips.num(reward.value())));
 			}
 			ty = g.textWithWordWrap(this.font, text, x, ty, COL, 0xFF9CE89C) + 1;
 		}

@@ -43,6 +43,7 @@ import com.minecraftmode.job.weapon.ProjectileStyle;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.mixin.LivingEntityAccessor;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.network.QuestActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
@@ -121,13 +122,14 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkProgression(context, server, connection);
 			checkSkillKey(context, server, connection);
 			checkGating(server, connection);
+			checkFullSwings(server, connection);
 			checkNewClasses(server, connection);
 			checkSafeMovement(context, server, connection);
 			checkEngravingStacks(context, server, connection);
 			checkEngravingTable(context, server, connection);
 			checkBasicShot(context, server, connection);
 			checkGuildAndDrops(context, server, connection);
-			jobScreen(context, server);
+			jobScreen(context, server, connection);
 			checkPointBlank(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
@@ -408,6 +410,38 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(results[2] == SkillCaster.Result.WRONG_CLASS, "a rogue with a warrior weapon should be WRONG_CLASS, got " + results[2]);
 		require(results[3] == SkillCaster.Result.OK, "basic attack with someone else's class weapon did no damage");
 		MinecraftMode.LOGGER.info("[job] requirements: tier, level and class block skills; basic attacks still work");
+	}
+
+	/**
+	 * A fully charged swing of a class weapon lands through the target's hurt cooldown (claws swing faster than its half second, and a
+	 * double strike or skill hit no longer swallows the next swing), while an uncharged one still bounces off it.
+	 */
+	private static void checkFullSwings(final TestServerContext server, final TestServerConnection connection) {
+		float[] dealt = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ItemStack held = player.getMainHandItem().copy();
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("phantom_thief_claws"))));
+			LivingEntity target = spawnTarget(player.level(), 0.5, -60, -1.5);
+			LivingEntityAccessor swing = (LivingEntityAccessor)player;
+			float before = target.getHealth();
+			swing.minecraftMode$setAttackStrengthTicker(100);
+			player.attack(target);
+			float first = target.getHealth();
+			// same tick, deep inside the hurt cooldown the first hit started
+			swing.minecraftMode$setAttackStrengthTicker(100);
+			player.attack(target);
+			float second = target.getHealth();
+			player.resetAttackStrengthTicker();
+			player.attack(target);
+			float third = target.getHealth();
+			target.discard();
+			player.setItemInHand(InteractionHand.MAIN_HAND, held);
+			return new float[] {before - first, first - second, second - third};
+		});
+		require(dealt[0] > 0.0F, "a fully charged claw swing should hurt the target");
+		require(dealt[1] > 0.0F, "a second fully charged swing inside the hurt cooldown should land, dealt " + dealt[1]);
+		require(dealt[2] == 0.0F, "an uncharged swing inside the hurt cooldown should still bounce, dealt " + dealt[2]);
+		MinecraftMode.LOGGER.info("[job] full swings land through the hurt cooldown ({} then {}), uncharged spam bounces", dealt[0], dealt[1]);
 	}
 
 	private static void checkEngravingStacks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
@@ -938,12 +972,30 @@ public class JobClientGameTest implements FabricClientGameTest {
 		return total;
 	}
 
-	private static void jobScreen(final ClientGameTestContext context, final TestServerContext server) {
+	private static void jobScreen(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		context.getInput().pressKey(JobKeys.OPEN_SCREEN);
 		context.waitForScreen(JobScreen.class);
 		context.waitTicks(3);
 		context.takeScreenshot("job_screen");
 		context.setScreen(() -> null);
+		context.waitTicks(2);
+		// the longest level bonus (a Lv 100 pirate: four rewards) still fits above the buttons
+		JobData saved = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobData data = JobProgression.get(player);
+			JobProgression.set(player, data.withJob(JobClass.PIRATE, 4).withProgress(100, 0));
+			return data;
+		});
+		context.waitTicks(3);
+		context.getInput().pressKey(JobKeys.OPEN_SCREEN);
+		context.waitForScreen(JobScreen.class);
+		context.waitTicks(3);
+		context.takeScreenshot("job_screen_pirate");
+		context.setScreen(() -> null);
+		server.runOnServer(s -> {
+			JobProgression.set(connection.getServerPlayer(), saved);
+			JobStats.refresh(connection.getServerPlayer());
+		});
 		context.waitTicks(2);
 	}
 
@@ -1022,7 +1074,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			EngraveTotals reaper = GearStats.of(player);
 			require(reaper.get(EngraveStat.BOSS_DAMAGE) >= 15 && reaper.get(EngraveStat.SKILL_DAMAGE) >= 12 && reaper.get(EngraveStat.DODGE) >= 5,
 				"Soul Reaper tier passives should add boss damage, skill damage and dodge");
-			require(reaper.get(EngraveStat.COOLDOWN) >= 15 + 12, "Mugetsu (15%) plus the Lv 80 bonus (12%) should cut cooldowns, got " + reaper.get(EngraveStat.COOLDOWN));
+			require(reaper.get(EngraveStat.COOLDOWN) >= 8 + 8, "Mugetsu (8%) plus the Lv 80 bonus (8%) should cut cooldowns, got " + reaper.get(EngraveStat.COOLDOWN));
 			player.teleportTo(20.5, -60, 20.5);
 			player.snapTo(20.5, -60, 20.5, 0.0F, 0.0F);
 			Vec3 before = player.position();
@@ -1038,8 +1090,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 			EngraveTotals hunter = GearStats.of(player);
 			require(hunter.get(EngraveStat.DOUBLE_STRIKE) >= 15 && hunter.get(EngraveStat.CRIT_CHANCE) >= 10 && hunter.get(EngraveStat.DAMAGE_REDUCTION) >= 5,
 				"Hunter tier passives should add double strike, crit chance and damage reduction");
-			require(hunter.get(EngraveStat.SKILL_DAMAGE) < 20, "Limitation and Vow belongs to tier 4 only");
-			require(hunter.get(EngraveStat.CRIT_DAMAGE) >= 20, "the Lv 50 hunter bonus should add 20% crit damage, got " + hunter.get(EngraveStat.CRIT_DAMAGE));
+			require(hunter.get(EngraveStat.SKILL_DAMAGE) < 15, "Limitation and Vow belongs to tier 4 only");
+			require(hunter.get(EngraveStat.CRIT_DAMAGE) >= 15, "the Lv 50 hunter bonus should add 15% crit damage, got " + hunter.get(EngraveStat.CRIT_DAMAGE));
 			LivingEntity hidden = spawnTarget(player.level(), player.getX() + 12, player.getY(), player.getZ());
 			ClassAbilities.use(player);
 			boolean glowing = hidden.hasEffect(MobEffects.GLOWING);

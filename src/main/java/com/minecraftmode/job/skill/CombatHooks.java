@@ -171,6 +171,14 @@ public final class CombatHooks {
 		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
 			victim.damageCooldownTime = 0;
 		}
+		// a fully charged swing of a class weapon lands too: the hurt cooldown capped melee at two hits a second (faster weapons and
+		// attack speed were wasted) and swallowed the swing after a skill hit or a double strike; uncharged spam still bounces
+		if (kind == null && source.getDirectEntity() instanceof ServerPlayer swinger && source.getEntity() == swinger && !victim.isInvulnerableTo(level, source)) {
+			CombatState swing = CombatState.of(swinger);
+			if (swing.fullSwing && !swing.sweep && JobWeapons.def(swinger.getMainHandItem()) != null) {
+				victim.damageCooldownTime = 0;
+			}
+		}
 		// Vanilla hits (melee, arrows) that vanilla is about to discard - damage cooldown, invulnerability - must not trigger crit
 		// refunds, consume empower/stealth, drain mana shields or reflect; skills reset the cooldown themselves before dealing.
 		if (kind == null && (victim.isInvulnerableTo(level, source)

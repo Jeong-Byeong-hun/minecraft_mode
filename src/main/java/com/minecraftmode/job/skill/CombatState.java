@@ -38,6 +38,9 @@ public final class CombatState {
 	/** Set by {@code PlayerMixin} while the player's sweep attack hits its extra victims (plain damage, no basic-hit procs). */
 	public boolean sweep;
 
+	/** Set by {@code PlayerMixin} during a fully charged melee swing (vanilla's full-strength attack, over 90%). */
+	public boolean fullSwing;
+
 	/** target -> mark */
 	public final Map<UUID, Mark> marks = new HashMap<>();
 

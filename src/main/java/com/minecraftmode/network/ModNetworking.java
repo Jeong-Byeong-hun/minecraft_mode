@@ -65,6 +65,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenTravelPayload.TYPE, OpenTravelPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TravelPayload.TYPE, TravelPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(FieldBossPayload.TYPE, FieldBossPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(

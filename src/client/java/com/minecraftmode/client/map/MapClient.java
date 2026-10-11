@@ -3,6 +3,8 @@ package com.minecraftmode.client.map;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.network.CityInfoPayload;
+import com.minecraftmode.network.FieldBossPayload;
+import com.minecraftmode.network.MapMarkPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,6 +25,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -58,9 +61,30 @@ public final class MapClient {
 		ClientTickEvents.END_CLIENT_TICK.register(MapClient::tick);
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> {
 			CityPlaces.cityWorld = false;
+			FieldBosses.clear();
 			leave();
 		}));
 		ClientPlayNetworking.registerGlobalReceiver(CityInfoPayload.TYPE, (payload, context) -> context.client().execute(() -> CityPlaces.cityWorld = payload.city()));
+		ClientPlayNetworking.registerGlobalReceiver(MapMarkPayload.TYPE, (payload, context) -> context.client().execute(() -> mark(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(FieldBossPayload.TYPE,
+			(payload, context) -> context.client().execute(() -> FieldBosses.receive(payload, context.client().level)));
+	}
+
+	/**
+	 * A waypoint from the server (the lair map's find), unless one is already within a few blocks of it; the next big map opens
+	 * there.
+	 */
+	private static void mark(final MapMarkPayload payload) {
+		List<Waypoints.Waypoint> list = waypoints.of(payload.dimension());
+		BlockPos pos = payload.pos();
+		boolean known = list.stream().anyMatch(w -> !w.isDeath() && Math.abs(w.x - pos.getX()) <= 4 && Math.abs(w.z - pos.getZ()) <= 4);
+		if (!known) {
+			waypoints.add(payload.dimension(), new Waypoints.Waypoint(payload.name().getString(), pos.getX(), pos.getY(), pos.getZ(), payload.color()));
+			save();
+		}
+		if (payload.dimension().equals(dimensionKey())) {
+			MapScreen.focus(pos.getX(), pos.getZ());
+		}
 	}
 
 	public static MapData data() {

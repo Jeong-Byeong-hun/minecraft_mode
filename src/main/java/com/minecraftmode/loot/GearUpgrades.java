@@ -50,9 +50,13 @@ public final class GearUpgrades {
 	/** Condensed essence to roll an armor piece's extra options again (on top of {@link #rerollCost} coins). */
 	public static final int REROLL_CONDENSED = 3;
 
-	/** Coins to roll an armor piece's extra options again: half its bracket's guild price. */
+	/** Coins to roll an armor piece's extra options again: a quarter of its bracket's guild price (2G 7S 7C at Lv 100). */
 	public static int rerollCost(final ClassGear gear) {
-		return Math.max(1, GearShop.bracketPrice(gear.bracket()) / 2);
+		return rerollCost(gear.bracket());
+	}
+
+	public static int rerollCost(final int bracket) {
+		return Math.max(1, GearShop.bracketPrice(bracket) / 4);
 	}
 	/** Targets may be up to this many levels above the first piece above the current one. */
 	private static final int WINDOW = 12;

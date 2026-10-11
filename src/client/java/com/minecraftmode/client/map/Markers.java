@@ -9,7 +9,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
-/** Draws the things on top of the terrain: waypoints, other players, the capital and its NPCs, and the player's own arrow. */
+/**
+ * Draws the things on top of the terrain: waypoints, named monsters and bosses ({@link FieldBosses}), other players, the capital and
+ * its NPCs, and the player's own arrow.
+ */
 final class Markers {
 	/** From this zoom on the big map names every NPC; below it only the hovered and the selected one are named. */
 	static final float NPC_LABEL_ZOOM = 8.0F;
@@ -94,6 +97,22 @@ final class Markers {
 			if (labels) {
 				String name = wp.isDeath() ? Component.translatable("screen.minecraft_mode.map.death").getString() : wp.name;
 				g.text(font, name, sx + 5, sy - 4, 0xFFFFFFFF, true);
+			}
+		}
+		// named monsters, mini-bosses and bosses (off the minimap: pinned to the edge, like waypoints)
+		for (FieldBosses.Mark boss : FieldBosses.all(player.level())) {
+			int sx = cx + (int)Math.round((boss.x() - centerX) * zoom);
+			int sy = cy + (int)Math.round((boss.z() - centerZ) * zoom);
+			if (!inside(sx, sy, x, y, w, h)) {
+				if (labels) {
+					continue;
+				}
+				sx = Mth.clamp(sx, x + 3, x + w - 4);
+				sy = Mth.clamp(sy, y + 3, y + h - 4);
+			}
+			FieldBosses.icon(g, sx, sy, boss.big());
+			if (labels) {
+				g.text(font, boss.name(), sx + 7, sy - 4, 0xFFFFFFFF, true);
 			}
 		}
 		// other players

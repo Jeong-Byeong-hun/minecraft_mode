@@ -160,6 +160,16 @@ public class MapScreen extends Screen {
 		return false;
 	}
 
+	/** Opens the next map on the waypoint list centred on {@code x, z} (a lair just found), zoomed out to at most 2 px a block. */
+	public static void focus(final int x, final int z) {
+		npcTab = false;
+		centered = true;
+		selected = null;
+		centerX = x + 0.5;
+		centerZ = z + 0.5;
+		zoom = Math.min(zoom, 2.0F);
+	}
+
 	private void select(final CityPlaces.Place place) {
 		selected = place;
 		centerX = place.x() + 0.5;

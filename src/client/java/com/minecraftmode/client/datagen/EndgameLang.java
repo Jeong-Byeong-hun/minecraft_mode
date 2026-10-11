@@ -39,7 +39,10 @@ final class EndgameLang {
 		b.add("container.minecraft_mode.lair_cache", ko ? "소굴 보급품 (이번 주기 개인 보상)" : "Lair Cache (yours this cycle)");
 		b.add(ModItems.LAIR_MAP, ko ? "소굴 지도" : "Lair Map");
 		b.add("item.minecraft_mode.lair_map.filled", ko ? "소굴 지도 (%s, %s)" : "Lair Map (%s, %s)");
-		b.add("item.minecraft_mode.lair_map.tooltip", ko ? "사용하면 가장 가까운 네임드 소굴을 표시한 지도가 됩니다." : "Use it to mark the nearest named lair on a map.");
+		b.add("item.minecraft_mode.lair_map.tooltip", ko ? "사용하면 가장 가까운 네임드 소굴을 지도(M)와 미니맵에 표시하고, 그곳을 그린 지도를 줍니다."
+			: "Use it to mark the nearest named lair on your map (M) and minimap, and get a map of the place.");
+		b.add("message.minecraft_mode.lair.map_found", ko ? "소굴 지도: %s (%s, Lv %s-%s) — X %s, Z %s. 지도(M)에 표시했습니다."
+			: "Lair map: %s (%s, Lv %s-%s) at X %s, Z %s. Marked on your map (M).");
 		b.add("entity.minecraft_mode.lair_lord", ko ? "소굴의 군주 %s" : "Lair Lord %s");
 		b.add("message.minecraft_mode.lair.sealed", ko ? "보물이 봉인되어 있다. 소굴의 군주 %s을(를) 쓰러뜨린 사람만 열 수 있다!" : "The treasure is sealed: only those who defeat the lair lord %s may open it!");
 		b.add("message.minecraft_mode.lair.lord_defeated", ko ? "소굴의 군주 %s이(가) 쓰러졌다! 이번 주기 동안 보물 상자가 당신에게 열립니다." : "The lair lord %s falls! The treasure opens for you this cycle.");

@@ -13,6 +13,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.network.FieldBossPayload;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModItems;
@@ -29,6 +30,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -306,6 +308,9 @@ public final class WorldEvents {
 				mob.setTarget(null);
 			}
 		}
+		if (titanAge % 20 == 0) {
+			showTitan(level, entity);
+		}
 		if (titanAge > TITAN_LIFETIME) {
 			if (entity != null) {
 				entity.discard();
@@ -317,6 +322,19 @@ public final class WorldEvents {
 			titan = null;
 			titanDef = null;
 			DEALT.clear();
+		}
+	}
+
+	/** Tells the overworld's players where the titan is (where it rose while its chunk is not loaded), for their maps. */
+	private static void showTitan(final ServerLevel level, final @Nullable Entity entity) {
+		BlockPos at = entity != null ? entity.blockPosition() : titanHome;
+		if (at == null || titanDef == null) {
+			return;
+		}
+		FieldBossPayload payload = new FieldBossPayload(List.of(new FieldBossPayload.Boss(entity == null ? -1 : entity.getId(), at.getX(), at.getZ(),
+			Component.translatable("entity.minecraft_mode.world_boss", Component.translatable(titanDef.nameKey())))));
+		for (ServerPlayer p : level.players()) {
+			ServerPlayNetworking.send(p, payload);
 		}
 	}
 

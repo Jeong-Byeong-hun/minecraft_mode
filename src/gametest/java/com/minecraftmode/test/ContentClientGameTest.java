@@ -12,6 +12,7 @@ import com.minecraftmode.client.endgame.CodexScreen;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.endgame.TalentScreen;
 import com.minecraftmode.client.guide.GuideScreen;
+import com.minecraftmode.client.map.FieldBosses;
 import com.minecraftmode.client.map.MapClient;
 import com.minecraftmode.client.map.MapScreen;
 import com.minecraftmode.client.map.MapSettings;
@@ -517,6 +518,14 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		require(server.computeOnServer(s -> WorldEvents.spawnTitan(s.overworld(), connection.getServerPlayer(), null)) == null, "only one titan at a time");
 		context.getInput().lookAt(titan.blockPosition().above(3));
 		context.waitTicks(30);
+		// the map marks it: as a boss the client sees, and through the server's report (which reaches the whole overworld)
+		context.runOnClient(minecraft -> {
+			MapSettings.minimap = true;
+			Entity seen = minecraft.level.getEntity(titan.getId());
+			require(seen != null && FieldBosses.all(minecraft.level).stream().anyMatch(m -> m.big() && m.x() == seen.getX() && m.z() == seen.getZ()),
+				"the titan is a boss mark on the map");
+			require(FieldBosses.reported().size() == 1, "the server reports the titan for the map, got " + FieldBosses.reported().size());
+		});
 		shot(context, "content_titan");
 		requireBossBarsClear(context, "titan");
 		int shards = server.computeOnServer(s -> JobProgression.count(connection.getServerPlayer().getInventory(), ModItems.TITAN_SHARD));

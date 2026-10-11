@@ -11,8 +11,8 @@ import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The minimap in the top-right corner: explored terrain around the player (north up), other players, waypoints, the capital,
- * the player's own arrow and the coordinates underneath.
+ * The minimap in the top-right corner: explored terrain around the player (north up), other players, waypoints, named monsters and
+ * bosses, the capital, the player's own arrow and the coordinates underneath.
  */
 public final class MinimapHud {
 	private static final int MARGIN = 6;

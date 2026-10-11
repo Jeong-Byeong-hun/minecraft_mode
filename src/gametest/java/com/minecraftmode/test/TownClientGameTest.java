@@ -44,6 +44,7 @@ import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.registry.ModDataComponents;
@@ -668,6 +669,48 @@ public class TownClientGameTest implements FabricClientGameTest {
 			require(bought.contains(junk), "the general store buys " + junk);
 		}
 		require(sold.containsAll(Bags.items()), "the general store sells bags");
+		// raw ores sell too, a little under the ingot they smelt into
+		for (Item raw : List.of(Items.RAW_IRON, Items.RAW_GOLD, Items.RAW_COPPER, ModItems.RAW_ALUMINUM, ModItems.RAW_MYTHRIL, Items.ANCIENT_DEBRIS)) {
+			require(bought.contains(raw), "the general store buys " + raw);
+		}
+		Item[][] smelted = {{Items.RAW_IRON, Items.IRON_INGOT}, {Items.RAW_GOLD, Items.GOLD_INGOT}, {Items.RAW_COPPER, Items.COPPER_INGOT},
+			{ModItems.RAW_ALUMINUM, ModItems.ALUMINUM_INGOT}, {ModItems.RAW_MYTHRIL, ModItems.MYTHRIL_INGOT}, {Items.ANCIENT_DEBRIS, Items.NETHERITE_SCRAP}};
+		for (Item[] pair : smelted) {
+			float raw = paid(trades, pair[0]);
+			float ingot = paid(trades, pair[1]);
+			require(raw > 0.0F && raw < ingot && raw >= ingot * 0.6F, pair[0] + " pays " + raw + "C, a little under " + pair[1] + " at " + ingot + "C");
+		}
+		require(paid(trades, Items.DIAMOND) > paid(trades, ModItems.MYTHRIL_INGOT) && paid(trades, Items.NETHERITE_SCRAP) > paid(trades, Items.DIAMOND),
+			"rarer finds pay more: diamond over mythril, netherite scrap over diamond");
+		// no shop buys anything back for more than any shop sells it for
+		for (ShopType seller : ShopType.values()) {
+			for (ShopOffers.Trade sale : ShopOffers.trades(seller)) {
+				if (coinValue(sale.cost().asItem()) == 0 || coinValue(sale.result().asItem()) > 0) {
+					continue;
+				}
+				float price = (coinValue(sale.cost().asItem()) * sale.costCount()
+					+ (sale.extra() == null ? 0 : coinValue(sale.extra().asItem()) * sale.extraCount())) / (float)sale.resultCount();
+				for (ShopType buyer : ShopType.values()) {
+					float pays = paid(ShopOffers.trades(buyer), sale.result().asItem());
+					require(pays < price, buyer + " pays " + pays + "C for " + sale.result() + " that " + seller + " sells for " + price + "C");
+				}
+			}
+		}
+	}
+
+	/** Copper one {@code item} sells for in {@code trades} (the best line), 0 when nobody buys it. */
+	private static float paid(final List<ShopOffers.Trade> trades, final Item item) {
+		float best = 0.0F;
+		for (ShopOffers.Trade trade : trades) {
+			if (trade.cost().asItem() == item && coinValue(trade.result().asItem()) > 0) {
+				best = Math.max(best, coinValue(trade.result().asItem()) * trade.resultCount() / (float)trade.costCount());
+			}
+		}
+		return best;
+	}
+
+	private static int coinValue(final Item item) {
+		return item == ModItems.COPPER_COIN ? 1 : item == ModItems.SILVER_COIN ? Coins.SILVER : item == ModItems.GOLD_COIN ? Coins.GOLD : 0;
 	}
 
 	// ------------------------------------------------------------------ target health bar

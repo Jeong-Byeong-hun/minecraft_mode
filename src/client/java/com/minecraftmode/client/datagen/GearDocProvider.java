@@ -269,7 +269,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("\n## 방어구 기본 옵션과 추가 옵션\n\n");
 		md.append("- 부위마다 고정 기본 옵션 1줄 + 무작위 추가 옵션(Lv 30 미만 1줄, Lv 60 미만 2줄, 그 이상 3줄). 추가 옵션 수치는 레벨 최대치의 60–100%.\n");
 		md.append("- 대장장이의 **추가 옵션** 탭에서 다시 굴립니다: 응축된 정수 ").append(GearUpgrades.REROLL_CONDENSED)
-			.append("개(정수 9개 = 1개) + 구간 길드 가격의 절반. 새 옵션은 기존 옵션 옆에 보관되고, ✔(적용) 또는 ✖(기존 유지)를 고를 때까지 기존 옵션이 그대로 적용됩니다.\n\n");
+			.append("개(정수 9개 = 1개) + 구간 길드 가격의 4분의 1(Lv 100 구간 ").append(Coins.format(GearUpgrades.rerollCost(100)))
+			.append("). 새 옵션은 기존 옵션 옆에 보관되고, ✔(적용) 또는 ✖(기존 유지)를 고를 때까지 기존 옵션이 그대로 적용됩니다.\n\n");
 		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
 		ArmorSetDef sample = ClassArmor.sets().stream().filter(s -> s.level() == 50).findFirst().orElseThrow();
 		for (GearSlot slot : GearSlot.ARMOR) {

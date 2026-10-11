@@ -1,12 +1,16 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.map.MapClient;
+import com.minecraftmode.client.map.MapScreen;
+import com.minecraftmode.client.map.Waypoints;
 import com.minecraftmode.entity.SpawnCandidates;
 import com.minecraftmode.entity.combat.PlayerArmor;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.LairMapItem;
 import com.minecraftmode.worldgen.lair.LairPiece;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
@@ -26,8 +30,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
@@ -36,6 +42,8 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -383,6 +391,58 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 		server.runOnServer(s -> s.getPlayerList().setViewDistance(5));
 		server.runCommand("gamemode creative @p");
 		MinecraftMode.LOGGER.info("[normal] natural lair {} near {}", lair, center);
+		checkLairMap(context, server, connection, center);
+	}
+
+	/**
+	 * Reading a lair map near that lair gives an explorer map of it and marks it on the player's own map: one waypoint at its
+	 * middle with its name, which a second map of the same lair does not repeat.
+	 */
+	private static void checkLairMap(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection,
+		final BlockPos center) {
+		context.runOnClient(minecraft -> MapClient.currentWaypoints().removeIf(w -> w.color == LairMapItem.MARK_COLOR));
+		String key = null;
+		for (int i = 0; i < 2; i++) {
+			key = server.computeOnServer(s -> {
+				ServerPlayer player = connection.getServerPlayer();
+				player.getInventory().clearContent();
+				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.LAIR_MAP));
+				require(player.getItemInHand(InteractionHand.MAIN_HAND).use(player.level(), player, InteractionHand.MAIN_HAND).consumesAction(),
+					"reading a lair map works next to a lair");
+				require(player.getInventory().hasAnyMatching(stack -> stack.is(Items.FILLED_MAP)), "the lair map gives an explorer map of the place");
+				LairMapItem.Found found = LairMapItem.find(player.level(), player.blockPosition());
+				require(found != null && found.pos().getX() == center.getX() && found.pos().getZ() == center.getZ(),
+					"the lair map finds the lair at " + center + ", got " + (found == null ? "none" : found.pos()));
+				return found.lair().nameKey();
+			});
+			context.waitTicks(10);
+		}
+		String name = key;
+		String report = context.computeOnClient(minecraft -> {
+			List<Waypoints.Waypoint> marks = MapClient.currentWaypoints().stream().filter(w -> w.color == LairMapItem.MARK_COLOR).toList();
+			require(marks.size() == 1, "one lair waypoint after reading two maps of the same lair, got " + marks.size());
+			Waypoints.Waypoint mark = marks.getFirst();
+			require(mark.x == center.getX() && mark.z == center.getZ(), "the waypoint marks the lair's middle " + center + ", got " + mark.x + ", " + mark.z);
+			require(mark.name.equals(Component.translatable(name).getString()), "the waypoint is named after the lair, got " + mark.name);
+			return mark.name + " @ " + mark.x + ", " + mark.y + ", " + mark.z;
+		});
+		// the next big map opens on the lair, whatever it showed before
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(new MapScreen()));
+		context.waitForScreen(MapScreen.class);
+		context.runOnClient(minecraft -> {
+			MapScreen map = (MapScreen)minecraft.gui.screen();
+			require(map.centerX() == center.getX() + 0.5 && map.centerZ() == center.getZ() + 0.5,
+				"the map opens on the lair " + center + ", got " + map.centerX() + ", " + map.centerZ());
+		});
+		context.waitTicks(20);
+		context.takeScreenshot("lair_map_waypoint");
+		context.runOnClient(minecraft -> {
+			minecraft.gui.setScreen(null);
+			MapClient.currentWaypoints().removeIf(w -> w.color == LairMapItem.MARK_COLOR);
+			MapClient.waypoints().touch();
+		});
+		server.runOnServer(s -> connection.getServerPlayer().getInventory().clearContent());
+		MinecraftMode.LOGGER.info("[normal] lair map: {}", report);
 	}
 
 	/** An underground lair: the maze is sealed far below, a shaft with a spiral stair leads up into a beacon tower. */

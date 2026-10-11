@@ -10,8 +10,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /**
- * Server -> client: open the raid screen of the raid marshal {@code entityId}, with the current cycle (for lockouts), the ticks
- * until it renews, the cycle's raid modifiers and the fastest clears of every boss and difficulty.
+ * Server -> client: open the raid screen of the raid marshal {@code entityId}, with the current real-time raid cycle (for lockouts), the ticks
+ * (50 ms) until it renews, the cycle's raid modifiers and the fastest clears of every boss and difficulty.
  */
 public record OpenRaidPayload(int entityId, long cycle, long cycleLeft, List<String> affixes, Map<String, List<RaidRecordsData.Entry>> records)
 	implements CustomPacketPayload {

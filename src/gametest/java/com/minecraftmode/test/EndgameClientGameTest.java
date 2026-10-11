@@ -41,6 +41,7 @@ import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.progress.Titles;
 import com.minecraftmode.raid.BossDef;
@@ -92,7 +93,7 @@ import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.scores.PlayerTeam;
 
 /**
- * The endgame loop: the three-day reset cycle, personal lair chests (one roll per player and cycle, kept until taken) and the lair
+ * The endgame loop: the resets (lairs on Minecraft days, raids and bounties on real days), personal lair chests (one roll per player and cycle, kept until taken) and the lair
  * lord that seals them, raid difficulties (unlock order, fee, health and damage, modifiers, reward lockout and practice runs, the
  * record table), guild bounties (progress, hand-in, deliveries, the merit shop, the daily renewal), enhancement (costs, levels,
  * stats, the "+N" name, evolution keeps it), the market (fees, buyout, cancel, mailbox, expiry; other sellers are fake players),
@@ -271,7 +272,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			require(RaidDifficulty.HEROIC.fee(BOSS) > BOSS.fee() && RaidDifficulty.NIGHTMARE.fee(BOSS) > RaidDifficulty.HEROIC.fee(BOSS), "harder raids cost more");
 			require(!Raids.tryEnter(player, marshal, BOSS, RaidDifficulty.HEROIC), "Heroic needs a Normal clear first");
 			require(!Raids.tryEnter(player, marshal, BOSS, RaidDifficulty.NIGHTMARE), "Nightmare needs a Heroic clear first");
-			long cycle = ResetCycle.cycle(player.level());
+			long cycle = RealReset.cycle(s);
 			Progress.set(player, Progress.get(player).withRaidClear(PlayerRecords.raidKey(BOSS.id(), RaidDifficulty.NORMAL.id()), cycle - 1));
 			int wallet = Wallet.balance(player);
 			require(Raids.tryEnter(player, marshal, BOSS, RaidDifficulty.HEROIC), "Heroic should open after a Normal clear");
@@ -309,7 +310,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			ServerPlayer player = connection.getServerPlayer();
 			RaidInstance instance = Raids.instanceOf(player);
 			require(instance != null && instance.state() == RaidInstance.State.VICTORY, "the Heroic raid should be won");
-			long cycle = ResetCycle.cycle(player.level());
+			long cycle = RealReset.cycle(s);
 			String key = PlayerRecords.raidKey(BOSS.id(), RaidDifficulty.HEROIC.id());
 			PlayerRecords records = Progress.get(player);
 			require(records.raidClears(key) == 1 && records.raidLocked(key, cycle), "the Heroic clear should be recorded and locked for the cycle");
@@ -893,26 +894,48 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ the next cycle
 
 	private static void checkNewCycle(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
-		long[] before = server.computeOnServer(s -> new long[] {ResetCycle.day(s.overworld()), ResetCycle.cycle(s.overworld()), Bounties.get(connection.getServerPlayer()).day()});
+		String heroic = PlayerRecords.raidKey(BOSS.id(), RaidDifficulty.HEROIC.id());
+		// lairs follow the Minecraft calendar: three Minecraft days refill the lair chest, while raids and bounties wait for real time
+		long[] before = server.computeOnServer(s -> new long[] {ResetCycle.day(s.overworld()), ResetCycle.cycle(s.overworld()), RealReset.day(s), RealReset.cycle(s),
+			Bounties.get(connection.getServerPlayer()).day()});
 		server.runCommand("time add " + ResetCycle.CYCLE_TICKS);
 		context.waitTicks(5);
-		String report = server.computeOnServer(s -> {
+		String lairs = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
 			ServerPlayer player = connection.getServerPlayer();
 			long cycle = ResetCycle.cycle(level);
-			require(cycle == before[1] + 1 && ResetCycle.day(level) == before[0] + ResetCycle.DAYS, "three days later is the next cycle: day " + before[0] + " -> "
-				+ ResetCycle.day(level) + ", cycle " + before[1] + " -> " + cycle);
-			require(!Progress.get(player).raidLocked(PlayerRecords.raidKey(BOSS.id(), RaidDifficulty.HEROIC.id()), cycle), "raid rewards open again in a new cycle");
-			Bounties.ensure(player);
-			BountyData data = Bounties.get(player);
-			require(data.day() > before[2] && data.daily().stream().noneMatch(BountyData.Bounty::claimed), "daily bounties renew");
-			require(data.cycle() == cycle, "the cycle bounty renews");
+			require(cycle == before[1] + 1 && ResetCycle.day(level) == before[0] + ResetCycle.DAYS, "three Minecraft days later is the next lair cycle: day "
+				+ before[0] + " -> " + ResetCycle.day(level) + ", cycle " + before[1] + " -> " + cycle);
 			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(GOAL);
 			require(goal.fresh(player, cycle) && !goal.victor(player, cycle), "the lair chest refills and has to be won again next cycle");
-			require(RaidAffix.forCycle(cycle).size() == RaidAffix.PER_CYCLE, "every cycle has its modifiers");
-			return "cycle " + before[1] + " -> " + cycle + ", modifiers " + RaidAffix.forCycle(before[1]) + " -> " + RaidAffix.forCycle(cycle);
+			require(RealReset.cycle(s) == before[3] && Progress.get(player).raidLocked(heroic, RealReset.cycle(s)), "Minecraft days must not reset raid rewards");
+			Bounties.ensure(player);
+			require(Bounties.get(player).day() == before[4], "Minecraft days must not renew the bounties");
+			// a clock turned back hands out nothing again
+			RealReset.skipDays(s, -2);
+			require(RealReset.day(s) == before[2] && RealReset.cycle(s) == before[3], "a clock turned back must not move the reset day back");
+			RealReset.skipDays(s, 0);
+			return "lair cycle " + before[1] + " -> " + cycle;
 		});
-		MinecraftMode.LOGGER.info("[endgame] next cycle: {}", report);
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			RealReset.skipDays(s, RealReset.DAYS);
+			long cycle = RealReset.cycle(s);
+			require(cycle == before[3] + 1 && RealReset.day(s) == before[2] + RealReset.DAYS, "three real days later is the next raid cycle: day " + before[2] + " -> "
+				+ RealReset.day(s) + ", cycle " + before[3] + " -> " + cycle);
+			long day = RealReset.ticksToNextDay(s);
+			long next = RealReset.ticksToNextCycle(s);
+			require(day > 0 && day <= 25 * 72000L && next >= day && next <= RealReset.DAYS * 25 * 72000L, "time to the resets: " + day + ", " + next);
+			require(!Progress.get(player).raidLocked(heroic, cycle), "raid rewards open again in a new cycle");
+			Bounties.ensure(player);
+			BountyData data = Bounties.get(player);
+			require(data.day() > before[4] && data.daily().stream().noneMatch(BountyData.Bounty::claimed), "daily bounties renew");
+			require(data.cycle() == cycle, "the three-day bounty renews");
+			require(RaidAffix.forCycle(cycle).size() == RaidAffix.PER_CYCLE, "every cycle has its modifiers");
+			return "raid cycle " + before[3] + " -> " + cycle + ", modifiers " + RaidAffix.forCycle(before[3]) + " -> " + RaidAffix.forCycle(cycle) + ", next day in "
+				+ RealReset.remaining(day).getString() + ", next cycle in " + RealReset.remaining(next).getString();
+		});
+		MinecraftMode.LOGGER.info("[endgame] next cycle: {}; {}", lairs, report);
 	}
 
 	// ------------------------------------------------------------------ helpers

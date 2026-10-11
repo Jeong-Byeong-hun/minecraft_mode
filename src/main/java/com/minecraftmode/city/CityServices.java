@@ -92,6 +92,7 @@ public final class CityServices {
 				keepNpcs(server.overworld());
 				keepDummies(server.overworld());
 				keepAnvils(server.overworld());
+				keepGrindstones(server.overworld());
 				CityFixtures.ensure(server.overworld());
 				TrainingGrounds.ensureBuilt(server.overworld());
 			}
@@ -301,6 +302,18 @@ public final class CityServices {
 			}
 			if (state.isAir() || state.is(BlockTags.ANVIL)) {
 				level.setBlockAndUpdate(pos, fresh);
+			}
+		}
+	}
+
+	/** The grindstones beside the hall's enchanting tables: cities built before they existed get them, and a missing one comes back. */
+	public static void keepGrindstones(final ServerLevel level) {
+		if (!CityZone.isCityLevel(level)) {
+			return;
+		}
+		for (BlockPos pos : CityZone.grindstones(CityZone.baseY(level))) {
+			if (level.isLoaded(pos) && level.getBlockState(pos).isAir()) {
+				level.setBlockAndUpdate(pos, CityZone.grindstone());
 			}
 		}
 	}

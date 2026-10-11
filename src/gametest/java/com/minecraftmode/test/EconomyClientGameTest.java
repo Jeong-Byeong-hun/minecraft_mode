@@ -3,6 +3,7 @@ package com.minecraftmode.test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -16,12 +17,14 @@ import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
+import com.minecraftmode.loot.Coins;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.RaidInstance;
 import com.minecraftmode.raid.Raids;
+import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
@@ -38,6 +41,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -51,6 +55,7 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
@@ -82,6 +87,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 
 			checkWallet(context, server, connection);
 			checkShop(context, server, connection);
+			checkSellFromBags(context, server, connection);
 			checkEssence(context, server, connection);
 			GearCareChecks.run(context, server, connection);
 			checkConsumables(context, server, connection);
@@ -218,6 +224,82 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			return paid > 0 && paid % 9 == 0 ? "" : "wallet should pay whole silver, paid " + paid + " (price " + price + ")";
 		});
 		require(report.isEmpty(), report);
+		server.runCommand("setblock 0 -60 -3 minecraft:air");
+		context.waitTicks(2);
+	}
+
+	/**
+	 * Selling to a shop also takes the same plain item out of the bags, as many as make whole trades up to a stack; a named stack in
+	 * the bag stays where it is.
+	 */
+	private static void checkSellFromBags(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("setblock 0 -60 -3 minecraft_mode:shop_block");
+		context.waitTicks(2);
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ItemStack bag = new ItemStack(ModItems.ORE_BAG);
+			Bags.insert(bag, new ItemStack(Items.NETHERRACK, 64));
+			Bags.insert(bag, new ItemStack(Items.NETHERRACK, 40));
+			ItemStack named = new ItemStack(Items.NETHERRACK, 5);
+			named.set(DataComponents.CUSTOM_NAME, Component.literal("keepsake"));
+			Bags.insert(bag, named.copy());
+			player.getInventory().add(bag);
+			player.getInventory().add(new ItemStack(Items.NETHERRACK, 10));
+			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL)
+				.openTradingScreen(player, Component.translatable(ShopType.GENERAL.titleKey()), 1);
+			MerchantMenu menu = (MerchantMenu)player.containerMenu;
+			int index = -1;
+			for (int i = 0; i < menu.getOffers().size(); i++) {
+				if (menu.getOffers().get(i).getCostA().is(Items.NETHERRACK)) {
+					index = i;
+				}
+			}
+			if (index < 0) {
+				return "the general store should buy netherrack";
+			}
+			int need = menu.getOffers().get(index).getCostA().getCount();
+			if (need > 64) {
+				return "netherrack should sell by the stack or less, asks " + need;
+			}
+			int coins = Coins.total(player);
+			menu.setSelectionHint(index);
+			menu.tryMoveItems(index);
+			int loaded = menu.getSlot(0).getItem().getCount();
+			int whole = 64 - 64 % need;
+			if (loaded != whole) {
+				return "the payment slot should hold " + whole + " (10 from the inventory, the rest from the bag), got " + loaded;
+			}
+			// browsing to another trade puts the netherrack back into the bag, not the inventory
+			int other = index == 0 ? 1 : 0;
+			menu.setSelectionHint(other);
+			menu.tryMoveItems(other);
+			if (player.getInventory().countItem(Items.NETHERRACK) != 0 || Bags.countInBags(player, new ItemStack(Items.NETHERRACK)) != 114) {
+				return "switching trades should put the netherrack into the bag: inventory " + player.getInventory().countItem(Items.NETHERRACK) + ", bag "
+					+ Bags.countInBags(player, new ItemStack(Items.NETHERRACK));
+			}
+			menu.setSelectionHint(index);
+			menu.tryMoveItems(index);
+			if (menu.getSlot(0).getItem().getCount() != whole) {
+				return "picking the trade again should load " + whole + " from the bag, got " + menu.getSlot(0).getItem().getCount();
+			}
+			menu.quickMoveStack(player, 2);
+			player.closeContainer();
+			int earned = Coins.total(player) - coins;
+			int inBag = Bags.countInBags(player, new ItemStack(Items.NETHERRACK));
+			int left = player.getInventory().countItem(Items.NETHERRACK);
+			if (earned != whole / need || inBag != 114 - whole) {
+				return "wrong sale: " + earned + " trades, bag keeps " + inBag + " (expected " + whole / need + " and " + (114 - whole) + ")";
+			}
+			if (left != 0 || Bags.countInBags(player, named) != 5) {
+				return "the inventory netherrack should be sold (" + left + " left) and the named stack stay in the bag";
+			}
+			player.getInventory().clearContent();
+			// the buyback checks later count their own sales only
+			player.removeAttached(ModAttachments.SOLD);
+			return "sold " + whole + " netherrack (" + earned + " copper), " + inBag + " left in the bag, inventory " + left;
+		});
+		require(report.startsWith("sold"), report);
+		MinecraftMode.LOGGER.info("[economy] selling from bags: {}", report);
 		server.runCommand("setblock 0 -60 -3 minecraft:air");
 		context.waitTicks(2);
 	}

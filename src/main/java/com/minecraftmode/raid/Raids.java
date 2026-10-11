@@ -14,6 +14,7 @@ import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.registry.ModDataComponents;
@@ -164,7 +165,7 @@ public final class Raids {
 		List<ServerPlayer> going = new ArrayList<>();
 		Set<UUID> practice = new HashSet<>();
 		List<Component> problems = new ArrayList<>();
-		long cycle = ResetCycle.cycle(leader.level());
+		long cycle = RealReset.cycle(leader.level().getServer());
 		String key = PlayerRecords.raidKey(def.id(), difficulty.id());
 		int fee = difficulty.fee(def);
 		for (ServerPlayer p : Parties.onlineMembers(leader)) {
@@ -200,7 +201,7 @@ public final class Raids {
 		}
 		for (ServerPlayer p : going) {
 			if (practice.contains(p.getUUID())) {
-				p.sendSystemMessage(msg("practice", ResetCycle.remaining(ResetCycle.ticksToNextCycle(p.level()))).withStyle(ChatFormatting.YELLOW));
+				p.sendSystemMessage(msg("practice", RealReset.remaining(RealReset.ticksToNextCycle(p.level().getServer()))).withStyle(ChatFormatting.YELLOW));
 			} else {
 				Coins.take(p, fee);
 				p.sendSystemMessage(msg("fee_paid", Coins.component(fee)).withStyle(ChatFormatting.GRAY));
@@ -245,7 +246,7 @@ public final class Raids {
 		RaidInstance instance = new RaidInstance(nextId++, slot, def, center, leader, difficulty);
 		instance.partySize = players.size();
 		instance.practice.addAll(practice);
-		instance.affixes = difficulty.modified() ? RaidAffix.forCycle(ResetCycle.cycle(server.overworld())) : List.of();
+		instance.affixes = difficulty.modified() ? RaidAffix.forCycle(RealReset.cycle(server)) : List.of();
 		INSTANCES.put(instance.id, instance);
 		for (int i = 0; i < players.size(); i++) {
 			ServerPlayer p = players.get(i);
@@ -516,7 +517,7 @@ public final class Raids {
 		BossDef def = instance.boss;
 		RaidDifficulty difficulty = instance.difficulty;
 		RandomSource random = level.getRandom();
-		long cycle = ResetCycle.cycle(level);
+		long cycle = RealReset.cycle(server);
 		Map<UUID, String> participants = new LinkedHashMap<>();
 		List<String> names = new ArrayList<>();
 		List<JobData> classes = new ArrayList<>();

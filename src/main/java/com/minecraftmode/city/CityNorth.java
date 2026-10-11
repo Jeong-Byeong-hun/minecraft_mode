@@ -236,7 +236,8 @@ final class CityNorth {
 	/**
 	 * The Enchanter's Hall east of the mage tower: a stone hall with a purpur roof and four enchanting
 	 * stations, each table ringed by bookshelves two blocks out (open toward the aisle) for full level 30
-	 * enchanting, plus anvils and a grindstone for books. A paved path leads south to the road.
+	 * enchanting with a grindstone in the opening of each ring, plus anvils and grindstones along the walls. A paved path leads south
+	 * to the road.
 	 */
 	private static void enchanterHall(final Build b) {
 		int x0 = CityZone.HALL_X0;
@@ -294,6 +295,10 @@ final class CityNorth {
 			b.set(tx - 2, 2, tz - 2, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 3).setValue(CandleBlock.LIT, true));
 			b.set(tx + 2, 2, tz - 2, Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.CANDLES, 2).setValue(CandleBlock.LIT, true));
 			b.lantern(tx, 5, tz, true, false);
+		}
+		// a grindstone in the opening of every ring, to strip enchantments right where they are put on
+		for (var grindstone : CityZone.grindstones(0)) {
+			b.set(grindstone.getX(), 0, grindstone.getZ(), CityZone.grindstone());
 		}
 		// anvils and a grindstone along the side walls, a lectern at the back
 		for (var anvil : CityZone.anvils(0)) {

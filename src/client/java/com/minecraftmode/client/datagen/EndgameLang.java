@@ -19,6 +19,10 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.Transl
 final class EndgameLang {
 	static void add(final TranslationBuilder b, final boolean ko) {
 		b.add("time.minecraft_mode.remaining", ko ? "%s일 %s시간" : "%sd %sh");
+		// real time (raids and bounties, RealReset)
+		b.add("time.minecraft_mode.real.days", ko ? "%s일 %s시간" : "%sd %sh");
+		b.add("time.minecraft_mode.real.hours", ko ? "%s시간 %s분" : "%sh %sm");
+		b.add("time.minecraft_mode.real.minutes", ko ? "%s분" : "%sm");
 		lairs(b, ko);
 		raids(b, ko);
 		bounties(b, ko);
@@ -78,7 +82,7 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.raid.show_records", ko ? "기록 보기" : "Records");
 		b.add("screen.minecraft_mode.raid.show_info", ko ? "정보 보기" : "Details");
 		b.add("screen.minecraft_mode.raid.practice_fee", ko ? "참가비: 없음 (연습)" : "Fee: none (practice)");
-		b.add("screen.minecraft_mode.raid.reset", ko ? "초기화 %s" : "Resets in %s");
+		b.add("screen.minecraft_mode.raid.reset", ko ? "보상 초기화 %s 뒤 (%s시)" : "Rewards reset in %s (%s:00)");
 		b.add("screen.minecraft_mode.raid.needs", ko ? "먼저 %s 난이도를 클리어해야 열립니다." : "Clear %s first to unlock this difficulty.");
 		b.add("screen.minecraft_mode.raid.reward_open", ko ? "이번 주기 보상을 받을 수 있습니다." : "Reward available this cycle.");
 		b.add("screen.minecraft_mode.raid.reward_taken", ko ? "이번 주기 보상을 이미 받았습니다 — 연습으로 참가 (참가비·보상 없음)."
@@ -133,8 +137,8 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.bounty.reward_stones", ko ? " ◆ 강화석 %s개" : " ◆ %s Enhancement Stones");
 		b.add("screen.minecraft_mode.bounty.deliver_hint", ko ? "보고할 때 인벤토리에서 가져갑니다." : "The items are taken from your inventory when you hand it in.");
 		b.add("screen.minecraft_mode.bounty.kind_hint", ko ? "플레이하는 동안 자동으로 집계됩니다." : "Counts on its own while you play.");
-		b.add("screen.minecraft_mode.bounty.daily_reset", ko ? "일일 갱신 %s" : "Dailies renew in %s");
-		b.add("screen.minecraft_mode.bounty.cycle_reset", ko ? "★ 주기 갱신 %s" : "★ Cycle bounty in %s");
+		b.add("screen.minecraft_mode.bounty.daily_reset", ko ? "일일 갱신 %s 뒤" : "Dailies renew in %s");
+		b.add("screen.minecraft_mode.bounty.cycle_reset", ko ? "★ 사흘 의뢰 갱신 %s 뒤" : "★ Three-day bounty in %s");
 		b.add("screen.minecraft_mode.bounty.shop", ko ? "공적 상점" : "Merit Shop");
 		b.add("screen.minecraft_mode.bounty.cost", ko ? "공적 %s 필요" : "Costs %s merit");
 		b.add("screen.minecraft_mode.bounty.legend", ko ? "◎ 코인  ★ 공적  ✦ 에테르  ◆ 강화석" : "◎ coins  ★ merit  ✦ ether  ◆ stones");

@@ -171,7 +171,7 @@ final class CityChecks {
 		});
 	}
 
-	/** Every hall table has the full 15 bookshelves, the anvils are there, and a worn anvil is put back as new. */
+	/** Every hall table has the full 15 bookshelves and a grindstone beside it, the anvils are there, and a worn anvil is put back as new. */
 	private static void checkEnchanterHall(final TestServerContext server, final int base) {
 		String report = server.computeOnServer(s -> {
 			ServerLevel level = s.overworld();
@@ -198,10 +198,23 @@ final class CityChecks {
 			if (!level.getBlockState(worn).is(Blocks.ANVIL)) {
 				return "a damaged city anvil should be replaced";
 			}
+			// a grindstone right beside every table, and a city built before them gets them
+			for (int i = 0; i < CityZone.grindstones(base).size(); i++) {
+				BlockPos grindstone = CityZone.grindstones(base).get(i);
+				if (!level.getBlockState(grindstone).is(Blocks.GRINDSTONE) || grindstone.distManhattan(CityZone.enchantingTables(base).get(i)) != 3) {
+					return "no grindstone beside the table at " + CityZone.enchantingTables(base).get(i);
+				}
+			}
+			BlockPos missing = CityZone.grindstones(base).getFirst();
+			level.setBlockAndUpdate(missing, Blocks.AIR.defaultBlockState());
+			CityServices.keepGrindstones(level);
+			if (!level.getBlockState(missing).is(Blocks.GRINDSTONE)) {
+				return "a missing hall grindstone should come back";
+			}
 			return "shelves per table: " + out.toString().trim();
 		});
 		require(report.startsWith("shelves"), report);
-		MinecraftMode.LOGGER.info("[city] enchanter's hall: 4 tables at level 30 ({}), anvils kept in repair", report);
+		MinecraftMode.LOGGER.info("[city] enchanter's hall: 4 tables at level 30 ({}) with grindstones, anvils kept in repair", report);
 	}
 
 	// ------------------------------------------------------------ trainers
@@ -645,6 +658,8 @@ final class CityChecks {
 		view(context, server, "city_keep", new BlockPos(0, base + 8, -22), new BlockPos(0, base + 12, -75));
 		view(context, server, "city_mage_quarter", new BlockPos(-35, base + 14, -30), new BlockPos(-66, base + 18, -62));
 		view(context, server, "city_enchanter_hall", new BlockPos(-44, base + 2, -63), new BlockPos(-48, base, -72));
+		BlockPos station = CityZone.enchantingTables(base).get(2);
+		view(context, server, "city_enchanter_grindstone", station.offset(-2, 0, 4), station);
 		view(context, server, "city_warrior_quarter", new BlockPos(40, base + 16, -40), new BlockPos(72, base + 2, -78));
 		view(context, server, "city_old_town", new BlockPos(-36, base + 9, 22), new BlockPos(-68, base + 4, 24));
 		view(context, server, "city_market_guild", new BlockPos(17, base + 7, 28), new BlockPos(17, base + 3, 60));

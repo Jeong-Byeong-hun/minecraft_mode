@@ -7,10 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator;
@@ -171,6 +176,21 @@ public final class CityZone {
 	/** The hall's four enchanting tables; each has a full ring of bookshelves (level 30 enchanting). */
 	public static List<BlockPos> enchantingTables(final int base) {
 		return List.of(new BlockPos(-48, base, -74), new BlockPos(-40, base, -74), new BlockPos(-48, base, -66), new BlockPos(-40, base, -66));
+	}
+
+	/**
+	 * A grindstone beside each hall table, in the open side of its bookshelf ring toward the hall's middle aisle (never between
+	 * the table and a bookshelf, so every table keeps level 30).
+	 */
+	public static List<BlockPos> grindstones(final int base) {
+		int middle = (HALL_X0 + HALL_X1) / 2;
+		return enchantingTables(base).stream().map(t -> t.offset(t.getX() < middle ? 1 : -1, 0, 2)).toList();
+	}
+
+	/** How the hall grindstones stand: on the floor, the wheel turning toward whoever steps up to the table. */
+	public static BlockState grindstone() {
+		return Blocks.GRINDSTONE.defaultBlockState().setValue(BlockStateProperties.ATTACH_FACE, AttachFace.FLOOR)
+			.setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH);
 	}
 
 	/** Anvils the city keeps in repair (the forge and the Enchanter's Hall); players cannot replace broken ones there. */

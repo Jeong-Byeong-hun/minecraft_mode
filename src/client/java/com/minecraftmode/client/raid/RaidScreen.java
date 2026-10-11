@@ -9,7 +9,7 @@ import com.minecraftmode.network.PartySyncPayload;
 import com.minecraftmode.network.RaidEnterPayload;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
-import com.minecraftmode.progress.ResetCycle;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidAffix;
@@ -129,7 +129,8 @@ public class RaidScreen extends Screen {
 
 	/** Whether {@code player} already took this boss and difficulty's reward this cycle. */
 	private boolean locked(final LocalPlayer player) {
-		return Progress.get(player).raidLocked(PlayerRecords.raidKey(this.boss().id(), difficulty().id()), cycle());
+		// before the server sent the cycle (-1) nothing counts as locked: raidLocked would match every key never cleared
+		return cycle() >= 0 && Progress.get(player).raidLocked(PlayerRecords.raidKey(this.boss().id(), difficulty().id()), cycle());
 	}
 
 	/** The difficulty this player must clear first, or null when it is open. */
@@ -222,7 +223,7 @@ public class RaidScreen extends Screen {
 			: Component.translatable("screen.minecraft_mode.raid.fee", Coins.format(fee));
 		g.text(this.font, feeText, rx, ty, locked || Coins.total(player) >= fee ? 0xFFFFD27F : 0xFFFF6B6B, false);
 		ty += 10;
-		g.text(this.font, Component.translatable("screen.minecraft_mode.raid.reset", ResetCycle.remaining(this.cycleLeft())), rx, ty, 0xFF8A8A8A, false);
+		g.text(this.font, Component.translatable("screen.minecraft_mode.raid.reset", RealReset.remaining(this.cycleLeft()), RealReset.RESET_HOUR), rx, ty, 0xFF8A8A8A, false);
 		ty += 11;
 		RaidDifficulty missing = this.missing(player);
 		Component status = missing != null ? Component.translatable("screen.minecraft_mode.raid.needs", Component.translatable(missing.nameKey()))

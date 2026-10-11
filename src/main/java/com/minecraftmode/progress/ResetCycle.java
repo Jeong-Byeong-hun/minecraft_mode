@@ -4,9 +4,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 
 /**
- * Repeatable content resets on the Minecraft calendar, not real time: a day is 24000 ticks of the
- * overworld clock (sleeping skips ahead too) and a cycle is {@link #DAYS} days. Lair rewards and lair
- * lords, raid lockouts, the cycle bounty and raid modifiers renew every cycle; daily bounties every day.
+ * Repeatable content that resets on the Minecraft calendar: a day is 24000 ticks of the overworld clock
+ * (sleeping skips ahead too) and a cycle is {@link #DAYS} days. Lair rewards and lair lords, dungeon
+ * modifiers and free keystones renew every cycle; the daily bread every day. Raids and guild bounties
+ * reset on real time instead ({@link RealReset}).
  */
 public final class ResetCycle {
 	public static final int DAYS = 3;

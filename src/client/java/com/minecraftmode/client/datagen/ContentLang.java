@@ -7,6 +7,7 @@ import com.minecraftmode.dungeon.DungeonAffix;
 import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.job.Paragon;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
@@ -84,17 +85,17 @@ final class ContentLang {
 				"Named monsters ([Lv.N] name tags) appear now and then in their biomes and drop gear, Evolution Ether and coins. Each has a lair: defeat its lair lord and the treasure is yours again every three days. A lair map points to the nearest one.\n\nLairs are the main way to level: walking into a lair for the first time pays 30%% of a level, its lord 50%%, the treasure 30%% every cycle and the first clear another 100%% (measured at the lair's top level).",
 				"네임드 몬스터([Lv.N] 이름표)는 서식 바이옴에 가끔 나타나 장비·진화의 에테르·동전을 줍니다. 네임드마다 소굴이 있어서, 소굴의 군주를 쓰러뜨리면 보물 상자를 사흘마다 개인 보상으로 엽니다. 소굴 지도로 가장 가까운 소굴을 찾으세요.\n\n소굴은 성장의 중심입니다: 처음 들어가면 레벨의 30%%, 군주 50%%, 보물 상자 주기마다 30%%, 첫 공략은 100%%를 더 받습니다(소굴 최고 레벨 기준)."},
 			{"dungeons", "Raids & dungeons", "레이드와 던전",
-				"Raids: Raid Marshal Aldric by the keep, parties of up to 6, six bosses on Normal, Heroic and Nightmare; rewards once every three days.\n\nDungeons: Dungeon Warden Kael in the keep courtyard, 2-4 players, nine dungeons from level 10 to 90. Your first clear gives a keystone for harder, timed runs. You lose nothing when you fall in a raid or dungeon. Dungeons are for gear and currency: a run gives 12%% of a level and its monsters give no class EXP; a raid clear gives 60-120%% of a level by difficulty.\n\nHunting together (/party create, /party invite <name>): everyone with at least 5% of the contribution shares the class EXP by contribution, with a bonus for each extra hunter. Damage counts, and so do healing allies, buffing them and debuffing the monster. The top contributor rolls the gear and pet drops.",
-				"레이드: 왕성 앞 토벌 사령관 알드릭, 파티 최대 6명, 보스 6종, 일반·영웅·악몽. 보상은 사흘에 한 번.\n\n던전: 성 안뜰의 던전 관리인 카엘, 2~4명, 레벨 10~90의 9곳. 처음 깨면 쐐기돌을 받아 더 어렵고 시간 제한이 있는 도전을 합니다. 레이드·던전에서는 쓰러져도 잃는 것이 없습니다. 던전은 장비·재화용이라 한 판에 레벨의 12%%만 주고 던전 몬스터는 경험치가 없습니다. 레이드 클리어는 난이도에 따라 레벨의 60~120%%.\n\n함께 사냥(/party create, /party invite <이름>): 기여도 5% 이상인 사람은 모두 기여한 만큼 직업 경험치를 나눠 받고, 사람이 늘수록 보너스가 붙습니다. 피해뿐 아니라 아군 치유·강화와 적 약화도 기여로 칩니다. 장비·펫 드롭 판정은 가장 많이 기여한 사람에게 갑니다."},
+				"Raids: Raid Marshal Aldric by the keep, parties of up to 6, nine bosses on Normal, Heroic and Nightmare; rewards once every three real days (" + RealReset.RESET_HOUR + ":00).\n\nDungeons: Dungeon Warden Kael in the keep courtyard, 2-4 players, nine dungeons from level 10 to 90. Your first clear gives a keystone for harder, timed runs. You lose nothing when you fall in a raid or dungeon. Dungeons are for gear and currency: a run gives 12%% of a level and its monsters give no class EXP; a raid clear gives 180-360%% of a level by difficulty.\n\nHunting together (/party create, /party invite <name>): everyone with at least 5% of the contribution shares the class EXP by contribution, with a bonus for each extra hunter. Damage counts, and so do healing allies, buffing them and debuffing the monster. The top contributor rolls the gear and pet drops.",
+				"레이드: 왕성 앞 토벌 사령관 알드릭, 파티 최대 6명, 보스 9종, 일반·영웅·악몽. 보상은 현실 시간으로 사흘에 한 번(" + RealReset.RESET_HOUR + "시 초기화).\n\n던전: 성 안뜰의 던전 관리인 카엘, 2~4명, 레벨 10~90의 9곳. 처음 깨면 쐐기돌을 받아 더 어렵고 시간 제한이 있는 도전을 합니다. 레이드·던전에서는 쓰러져도 잃는 것이 없습니다. 던전은 장비·재화용이라 한 판에 레벨의 12%%만 주고 던전 몬스터는 경험치가 없습니다. 레이드 클리어는 난이도에 따라 레벨의 180~360%%.\n\n함께 사냥(/party create, /party invite <이름>): 기여도 5% 이상인 사람은 모두 기여한 만큼 직업 경험치를 나눠 받고, 사람이 늘수록 보너스가 붙습니다. 피해뿐 아니라 아군 치유·강화와 적 약화도 기여로 칩니다. 장비·펫 드롭 판정은 가장 많이 기여한 사람에게 갑니다."},
 			{"bounties", "Bounties & story", "의뢰·업적·스토리",
-				"Guild Clerk Lina hands out three daily bounties and one three-day bounty; they pay merit for the merit shop.\n\nAchievements give merit and titles; wear titles from the codex (J). Royal Herald Elric here on the plaza tells the main story.",
-				"길드 접수원 리나가 일일 의뢰 3개와 사흘 의뢰 1개를 줍니다. 보상으로 받는 공적은 공적 상점에서 씁니다.\n\n업적은 공적과 칭호를 주고, 칭호는 도감(J)에서 착용합니다. 이 광장의 왕실 전령 엘릭이 메인 스토리를 들려줍니다."},
+				"Guild Clerk Lina hands out three daily bounties every real day and one three-day bounty (both renew at " + RealReset.RESET_HOUR + ":00); they pay merit for the merit shop.\n\nAchievements give merit and titles; wear titles from the codex (J). Royal Herald Elric here on the plaza tells the main story.",
+				"길드 접수원 리나가 현실 시간으로 하루에 일일 의뢰 3개, 사흘에 큰 의뢰 1개를 줍니다(" + RealReset.RESET_HOUR + "시 갱신). 보상으로 받는 공적은 공적 상점에서 씁니다.\n\n업적은 공적과 칭호를 주고, 칭호는 도감(J)에서 착용합니다. 이 광장의 왕실 전령 엘릭이 메인 스토리를 들려줍니다."},
 			{"companions", "Pets & crafts", "펫·탈것·생활 기술",
 				"Pet charms and mount whistles come from the merit shop, named monsters, lairs, dungeons, raids and the story. U opens your collection, H calls your mount.\n\nCook and brew at the stations in the market and smith at the forge; herbs drop from grass and flowers.",
 				"펫 부적과 탈것 호루라기는 공적 상점, 네임드, 소굴, 던전, 레이드, 스토리에서 얻습니다. U로 수집 창, H로 탈것을 부릅니다.\n\n시장의 작업대에서 요리와 연금술, 대장간에서 대장 기술을 익히세요. 약초는 풀과 꽃을 부수면 나옵니다."},
 			{"events", "Events & resets", "월드 이벤트와 초기화",
-				"Every day at dusk a titan rises in the wilds (two days of three) or the capital is invaded (the third). Everyone who fights is rewarded.\n\nLair treasure, raid rewards and the three-day bounty renew every three Minecraft days.",
-				"매일 해 질 녘에 황야에 거신이 나타나거나(사흘 중 이틀), 수도가 침공당합니다(셋째 날). 함께 싸운 모두가 보상을 받습니다.\n\n소굴 보물·레이드 보상·사흘 의뢰는 마인크래프트 날짜로 3일마다 초기화됩니다."},
+				"Every day at dusk a titan rises in the wilds (two days of three) or the capital is invaded (the third). Everyone who fights is rewarded.\n\nLair treasure renews every three Minecraft days. Raid rewards and the three-day bounty renew every three real days and the daily bounties every real day, at " + RealReset.RESET_HOUR + ":00 (the notice board on the plaza shows when).",
+				"매일 해 질 녘에 황야에 거신이 나타나거나(사흘 중 이틀), 수도가 침공당합니다(셋째 날). 함께 싸운 모두가 보상을 받습니다.\n\n소굴 보물은 마인크래프트 날짜로 3일마다, 레이드 보상과 사흘 의뢰는 현실 시간으로 사흘마다, 일일 의뢰는 매일 " + RealReset.RESET_HOUR + "시에 초기화됩니다(광장 알림판에서 확인)."},
 		};
 		for (String[] t : topics) {
 			b.add("guide.minecraft_mode." + t[0], ko ? t[2] : t[1]);

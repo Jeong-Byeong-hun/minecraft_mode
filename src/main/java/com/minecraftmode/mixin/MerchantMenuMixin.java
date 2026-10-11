@@ -1,5 +1,6 @@
 package com.minecraftmode.mixin;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.Wallet;
@@ -25,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  * would crash for a block-backed merchant, so the sound plays at the shop block instead. And since
  * coins live in the {@link Wallet}, picking a trade that costs coins pays them out of the wallet into
  * the payment slot (enough for several trades; what is left goes back to the wallet when the shop closes).
- * Essence costs take either kind of essence, with change ({@link Essence}).
+ * Essence costs take either kind of essence, with change ({@link Essence}). Items sold to a shop come out of the bags too.
  */
 @Mixin(MerchantMenu.class)
 public abstract class MerchantMenuMixin {
@@ -65,6 +66,30 @@ public abstract class MerchantMenuMixin {
 				this.tradeContainer.setItem(slot, ItemStack.EMPTY);
 			}
 		}
+		this.minecraftMode$paymentBackToBags(serverPlayer);
+	}
+
+	/**
+	 * Picking another trade: vanilla moves what is left in the payment slots into the inventory first. Plain stackable items the bags
+	 * take go back into them instead (as a pickup would), so browsing the sell trades does not move bag items into the inventory;
+	 * gear goes back to the inventory as before.
+	 */
+	@Inject(method = "tryMoveItems", at = @At("HEAD"))
+	private void minecraftMode$paymentBackToBagsOnSwitch(final int selectedOffer, final CallbackInfo ci) {
+		if (this.trader instanceof ShopMerchant && this.trader.getTradingPlayer() instanceof ServerPlayer player) {
+			this.minecraftMode$paymentBackToBags(player);
+		}
+	}
+
+	@Unique
+	private void minecraftMode$paymentBackToBags(final ServerPlayer player) {
+		for (int slot = 0; slot < 2; slot++) {
+			ItemStack stack = this.tradeContainer.getItem(slot);
+			boolean plain = stack.getMaxStackSize() > 1 && ItemStack.isSameItemSameComponents(stack, new ItemStack(stack.getItem()));
+			if (plain && Wallet.value(stack.getItem()) <= 0 && Bags.absorb(player, stack) > 0) {
+				this.tradeContainer.setItem(slot, stack.isEmpty() ? ItemStack.EMPTY : stack);
+			}
+		}
 	}
 
 	@Inject(method = "moveFromInventoryToPaymentSlot", at = @At("TAIL"))
@@ -74,20 +99,12 @@ public abstract class MerchantMenuMixin {
 		}
 		Item coin = cost.item().value();
 		if (Essence.is(coin)) {
-			// what the trade asks now: market pressure can raise the base count (6 essence -> 7 and up)
-			int need = cost.count();
-			for (MerchantOffer offer : this.trader.getOffers()) {
-				if (offer.getItemCostA() == cost) {
-					need = offer.getCostA().getCount();
-				} else if (offer.getItemCostB().orElse(null) == cost) {
-					need = offer.getCostB().getCount();
-				}
-			}
-			this.minecraftMode$essenceChange(player, paymentSlot, coin, need);
+			this.minecraftMode$essenceChange(player, paymentSlot, coin, this.minecraftMode$need(cost));
 			return;
 		}
 		int each = Wallet.value(coin);
 		if (each <= 0) {
+			this.minecraftMode$sellFromBags(player, paymentSlot, cost);
 			return;
 		}
 		ItemStack current = this.tradeContainer.getItem(paymentSlot);
@@ -99,6 +116,48 @@ public abstract class MerchantMenuMixin {
 		int add = Math.min(want - have, Wallet.balance(player) / each);
 		if (add > 0 && Wallet.take(player, add * each)) {
 			this.tradeContainer.setItem(paymentSlot, new ItemStack(coin, have + add));
+		}
+	}
+
+	/** What the trade asks now: market pressure can raise the base count (6 essence -> 7 and up, 32 sticks -> 40). */
+	@Unique
+	private int minecraftMode$need(final ItemCost cost) {
+		int need = cost.count();
+		for (MerchantOffer offer : this.trader.getOffers()) {
+			if (offer.getItemCostA() == cost) {
+				need = offer.getCostA().getCount();
+			} else if (offer.getItemCostB().orElse(null) == cost) {
+				need = offer.getCostB().getCount();
+			}
+		}
+		return Math.max(1, need);
+	}
+
+	/**
+	 * Selling to a shop: vanilla only filled the payment slot from the inventory, so the bags top it up with the same plain item
+	 * (stackable, no enchantments, damage or name: gear never leaves a bag this way), as many as make whole trades up to a full
+	 * stack. Shift-clicking the result then sells them like inventory items.
+	 */
+	@Unique
+	private void minecraftMode$sellFromBags(final ServerPlayer player, final int paymentSlot, final ItemCost cost) {
+		ItemStack plain = new ItemStack(cost.item());
+		if (plain.getMaxStackSize() <= 1 || !cost.test(plain)) {
+			return;
+		}
+		ItemStack current = this.tradeContainer.getItem(paymentSlot);
+		if (!current.isEmpty() && !ItemStack.isSameItemSameComponents(current, plain)) {
+			return;
+		}
+		int need = this.minecraftMode$need(cost);
+		int have = current.getCount();
+		int total = Math.min(plain.getMaxStackSize(), have + Bags.countInBags(player, plain));
+		int take = total - total % need - have;
+		if (take <= 0) {
+			return;
+		}
+		int taken = Bags.takeFromBags(player, plain, take);
+		if (taken > 0) {
+			this.tradeContainer.setItem(paymentSlot, plain.copyWithCount(have + taken));
 		}
 	}
 

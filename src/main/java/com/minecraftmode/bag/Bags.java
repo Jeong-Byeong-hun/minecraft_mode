@@ -124,6 +124,43 @@ public final class Bags {
 		}
 	}
 
+	/** How many items the carried bags hold that are {@link ItemStack#isSameItemSameComponents the same as} {@code like}. */
+	public static int countInBags(final Player player, final ItemStack like) {
+		int total = 0;
+		for (ItemStack bag : carried(player)) {
+			for (ItemStack stack : contents(bag)) {
+				if (ItemStack.isSameItemSameComponents(stack, like)) {
+					total += stack.getCount();
+				}
+			}
+		}
+		return total;
+	}
+
+	/** Takes up to {@code amount} items the same as {@code like} out of the carried bags only (shops selling what the bags hold); returns how many. */
+	public static int takeFromBags(final Player player, final ItemStack like, final int amount) {
+		int left = amount;
+		for (ItemStack bag : carried(player)) {
+			if (left <= 0) {
+				break;
+			}
+			NonNullList<ItemStack> items = contents(bag);
+			boolean changed = false;
+			for (ItemStack stack : items) {
+				if (left > 0 && ItemStack.isSameItemSameComponents(stack, like)) {
+					int take = Math.min(left, stack.getCount());
+					stack.shrink(take);
+					left -= take;
+					changed = true;
+				}
+			}
+			if (changed) {
+				store(bag, items);
+			}
+		}
+		return amount - left;
+	}
+
 	/** Puts what it can of a picked-up {@code stack} into the player's bags that take it; returns how many went in. */
 	public static int absorb(final Player player, final ItemStack stack) {
 		Inventory inventory = player.getInventory();

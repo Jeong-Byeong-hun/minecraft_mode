@@ -6,7 +6,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-/** Server -> client: open the bounty board of the clerk {@code entityId}; ticks until the daily and the cycle bounties renew. */
+/** Server -> client: open the bounty board of the clerk {@code entityId}; real-time ticks (50 ms) until the daily and the cycle bounties renew. */
 public record OpenBountyPayload(int entityId, long dayLeft, long cycleLeft) implements CustomPacketPayload {
 	public static final Type<OpenBountyPayload> TYPE = new Type<>(MinecraftMode.id("open_bounty"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, OpenBountyPayload> CODEC = StreamCodec.composite(

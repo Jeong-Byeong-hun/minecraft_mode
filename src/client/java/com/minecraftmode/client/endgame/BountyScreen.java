@@ -7,7 +7,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.BountyActionPayload;
 import com.minecraftmode.network.OpenBountyPayload;
-import com.minecraftmode.progress.ResetCycle;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,8 +168,8 @@ public class BountyScreen extends Screen {
 		int ty = y + ROWS_Y + 4 * ROW;
 		long dayLeft = Math.max(0L, this.info.dayLeft() - this.age);
 		long cycleLeft = Math.max(0L, this.info.cycleLeft() - this.age);
-		g.text(this.font, Component.translatable("screen.minecraft_mode.bounty.daily_reset", ResetCycle.remaining(dayLeft)), x + 10, ty + 1, 0xFF8A8A8A, false);
-		Component cycle = Component.translatable("screen.minecraft_mode.bounty.cycle_reset", ResetCycle.remaining(cycleLeft));
+		g.text(this.font, Component.translatable("screen.minecraft_mode.bounty.daily_reset", RealReset.remaining(dayLeft)), x + 10, ty + 1, 0xFF8A8A8A, false);
+		Component cycle = Component.translatable("screen.minecraft_mode.bounty.cycle_reset", RealReset.remaining(cycleLeft));
 		g.text(this.font, cycle, x + W - 10 - this.font.width(cycle), ty + 1, 0xFF8A8A8A, false);
 
 		g.fill(x + 8, y + SHOP_Y - 4, x + W - 8, y + SHOP_Y - 3, 0x40FFFFFF);

@@ -57,8 +57,9 @@ final class TownLang {
 		b.add("screen.minecraft_mode.guide.handbook", ko ? "안내서 새로 받기" : "New handbook");
 		// the town crier's notice board
 		b.add("screen.minecraft_mode.notice.title", ko ? "스톰홀드 알림판" : "Stormhold Notice Board");
-		b.add("screen.minecraft_mode.notice.day", ko ? "하루 초기화(일일 의뢰·빵): %s 뒤" : "New day (daily bounties, bread) in %s");
-		b.add("screen.minecraft_mode.notice.cycle", ko ? "주기 초기화(레이드·소굴·사흘 의뢰): %s 뒤" : "New cycle (raids, lairs, three-day bounty) in %s");
+		b.add("screen.minecraft_mode.notice.day", ko ? "일일 의뢰: %s 뒤 (매일 %s시)" : "Daily bounties in %s (daily at %s:00)");
+		b.add("screen.minecraft_mode.notice.cycle", ko ? "레이드 보상·사흘 의뢰: %s 뒤 (사흘마다 %s시)" : "Raids & 3-day bounty in %s (every 3 days, %s:00)");
+		b.add("screen.minecraft_mode.notice.lairs", ko ? "마크 날짜 — 소굴 보물: %s 뒤, 빵: %s 뒤" : "Minecraft days - lair treasure in %s, bread in %s");
 		b.add("screen.minecraft_mode.notice.next_titan", ko ? "다음 해 질 녘(%s 뒤): 황야에 거신이 나타납니다" : "Next dusk (in %s): a titan rises in the wilds");
 		b.add("screen.minecraft_mode.notice.next_invasion", ko ? "다음 해 질 녘(%s 뒤): 수도가 침공당합니다" : "Next dusk (in %s): the capital will be invaded");
 		b.add("screen.minecraft_mode.notice.titan_now", ko ? "지금 거신 %s이(가) 걷고 있습니다: %s, %s" : "A titan walks now: %s at %s, %s");

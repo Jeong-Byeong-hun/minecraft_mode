@@ -9,12 +9,13 @@ import org.jspecify.annotations.Nullable;
  * @param extraLots      gear lots on top of Normal
  * @param enhanceMin     gear from the lots comes enhanced by this much at least
  * @param scrollChance   chance per player of a protection scroll
- * @param exp            class experience of a clear, as a share of a level (see {@code JobProgression.levelExp})
+ * @param exp            class experience of a clear, as a share of a level (see {@code JobProgression.levelExp}); three times the
+ *                       0.5.4 values since lockouts last three real days ({@code RealReset})
  */
 public enum RaidDifficulty {
-	NORMAL("normal", 1.0F, 1.0F, 1.0F, 0, 1.0F, 1, 0.0F, 0, 0, 0.6F),
-	HEROIC("heroic", 1.8F, 1.3F, 1.5F, 1, 1.5F, 2, 0.15F, 1, 2, 0.9F),
-	NIGHTMARE("nightmare", 3.0F, 1.6F, 2.0F, 2, 2.0F, 3, 0.40F, 2, 4, 1.2F);
+	NORMAL("normal", 1.0F, 1.0F, 1.0F, 0, 1.0F, 1, 0.0F, 0, 0, 1.8F),
+	HEROIC("heroic", 1.8F, 1.3F, 1.5F, 1, 1.5F, 2, 0.15F, 1, 2, 2.7F),
+	NIGHTMARE("nightmare", 3.0F, 1.6F, 2.0F, 2, 2.0F, 3, 0.40F, 2, 4, 3.6F);
 
 	private final String id;
 	public final float health;

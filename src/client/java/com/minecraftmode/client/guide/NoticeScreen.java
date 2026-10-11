@@ -4,6 +4,7 @@ import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.progress.PlayerRecords;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidAffix;
@@ -20,13 +21,14 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /**
- * The town crier's notice board: when the day and the three-day cycle renew, what rises at the next dusk (a titan or an invasion)
+ * The town crier's notice board: when the daily bounties and the raid cycle renew (real time) and the lair treasure and the bread
+ * (Minecraft days), what rises at the next dusk (a titan or an invasion)
  * and what is going on now, this cycle's raid modifiers (hover for details) and the fastest clear of every raid boss on the hardest
  * difficulty anyone has beaten. Countdowns keep running while the board is open.
  */
 public class NoticeScreen extends Screen {
 	private static final int W = 340;
-	private static final int H = 232;
+	private static final int H = 244;
 	private static final int LINE = 11;
 
 	private final OpenNoticePayload notice;
@@ -64,10 +66,16 @@ public class NoticeScreen extends Screen {
 		g.text(this.font, this.title.copy().withStyle(ChatFormatting.GOLD), x + 10, y + 9, 0xFFFFFFFF, true);
 		int tx = x + 12;
 		int ty = y + 26;
-		// resets
-		g.text(this.font, Component.translatable("screen.minecraft_mode.notice.day", ResetCycle.remaining(this.left(this.notice.dayLeft()))), tx, ty, 0xFFDDDDDD, false);
+		// resets: bounties and raids on real time, lairs and bread on the Minecraft calendar
+		OpenNoticePayload.Resets resets = this.notice.resets();
+		g.text(this.font, Component.translatable("screen.minecraft_mode.notice.day", RealReset.remaining(this.left(resets.day())), RealReset.RESET_HOUR), tx, ty,
+			0xFFDDDDDD, false);
 		ty += LINE;
-		g.text(this.font, Component.translatable("screen.minecraft_mode.notice.cycle", ResetCycle.remaining(this.left(this.notice.cycleLeft()))), tx, ty, 0xFFDDDDDD, false);
+		g.text(this.font, Component.translatable("screen.minecraft_mode.notice.cycle", RealReset.remaining(this.left(resets.cycle())), RealReset.RESET_HOUR), tx, ty,
+			0xFFDDDDDD, false);
+		ty += LINE;
+		g.text(this.font, Component.translatable("screen.minecraft_mode.notice.lairs", ResetCycle.remaining(this.left(resets.lairs())),
+			ResetCycle.remaining(this.left(resets.bread()))), tx, ty, 0xFFDDDDDD, false);
 		ty += LINE + 4;
 		// tonight and now
 		Component next = Component.translatable(this.notice.invasionNext() ? "screen.minecraft_mode.notice.next_invasion" : "screen.minecraft_mode.notice.next_titan",

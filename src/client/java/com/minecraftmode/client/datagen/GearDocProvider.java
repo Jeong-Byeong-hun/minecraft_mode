@@ -60,6 +60,7 @@ import com.minecraftmode.progress.Codex;
 import com.minecraftmode.progress.CollectionBonuses;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
@@ -426,9 +427,10 @@ public class GearDocProvider implements DataProvider {
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`GearDocProvider`). 직접 고치지 마세요. 설계 배경: `docs/DESIGN-endgame.md`.\n\n");
 
 		md.append("## 초기화 주기\n\n");
-		md.append("- 마인크래프트 날짜 기준: 하루 = 오버월드 시계 ").append(ResetCycle.DAY_TICKS).append("틱, **주기 = ").append(ResetCycle.DAYS)
-			.append("일**. 잠을 자서 아침이 와도 날짜가 넘어갑니다.\n");
-		md.append("- 주기마다: 소굴 개인 보상과 소굴의 군주, 레이드 보상 귀속, 주기 의뢰, 레이드 변형. 하루마다: 일일 의뢰.\n\n");
+		md.append("- **현실 시간** (서버 PC의 시계와 시간대, 싱글은 내 PC): 하루는 매일 ").append(RealReset.RESET_HOUR).append("시에 시작하고 **레이드 주기 = ")
+			.append(RealReset.DAYS).append("일**. 주기마다: 레이드 보상 귀속, 레이드 변형, 사흘 의뢰. 하루마다: 일일 의뢰. 월드가 본 가장 늦은 날을 저장하므로 시계를 되돌려도 지난 초기화가 다시 오지 않습니다. 다른 시간대의 서버는 JVM 옵션(`-Duser.timezone=Asia/Seoul`)으로 맞춥니다.\n");
+		md.append("- **마인크래프트 날짜**: 하루 = 오버월드 시계 ").append(ResetCycle.DAY_TICKS).append("틱, 주기 = ").append(ResetCycle.DAYS)
+			.append("일. 잠을 자서 아침이 와도 날짜가 넘어갑니다. 주기마다: 소굴 개인 보상과 소굴의 군주, 던전 변형과 무료 쐐기돌. 하루마다: 제빵사의 빵.\n\n");
 
 		md.append("## 소굴 — 개인 보상과 소굴의 군주\n\n");
 		md.append("- 보물 상자와 보급품은 **개인 상자**입니다. 플레이어마다 내용물이 따로 굴려지고, 주기마다 다시 채워집니다. 가져가지 않은 물건은 그 주기 동안 남아 있습니다.\n");
@@ -450,7 +452,7 @@ public class GearDocProvider implements DataProvider {
 				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" |\n");
 		}
 		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
-		md.append("- **보상 귀속**: 보스·난이도마다 주기에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
+		md.append("- **보상 귀속**: 보스·난이도마다 레이드 주기(현실 3일)에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
 		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
 		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");
 		for (RaidAffix a : RaidAffix.values()) {
@@ -458,8 +460,8 @@ public class GearDocProvider implements DataProvider {
 		}
 
 		md.append("\n## 모험가 길드 의뢰\n\n");
-		md.append("- 길드 접수원 리나(모험가 길드)에게서 **일일 의뢰 ").append(Bounties.DAILY).append("개**(하루마다)와 **주기 의뢰 1개**(").append(ResetCycle.DAYS)
-			.append("일마다). 처치·채굴·소굴·레이드는 자동으로 집계되고, 납품은 보고할 때 인벤토리에서 가져갑니다.\n");
+		md.append("- 길드 접수원 리나(모험가 길드)에게서 **일일 의뢰 ").append(Bounties.DAILY).append("개**(현실 하루마다)와 **사흘 의뢰 1개**(").append(RealReset.DAYS)
+			.append("일마다). 처치·채굴·소굴·레이드는 자동으로 집계되고, 납품은 보고할 때 인벤토리와 가방에서 가져갑니다.\n");
 		md.append("- 종류: 적대 몬스터 처치, 특정 몬스터 처치, 네임드 처치, 소굴 정복, 광석 채굴, 레이드 클리어(Lv 20+ 주기 의뢰), 물품 납품.\n\n");
 		md.append("| 레벨 | 일일 보상 | 주기 보상 |\n|---|---|---|\n");
 		for (int level : new int[] {10, 30, 50, 70, 100}) {
@@ -603,9 +605,9 @@ public class GearDocProvider implements DataProvider {
 			.append(", z ").append(Homestead.CENTER_Z).append("). 우클릭하면 서로 이동합니다(3초 재사용 대기). 귀환 주문서로도 광장에 돌아올 수 있습니다.\n");
 		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");
 		md.append("- **가방**: 보급관 브람이 장비·소비·재료 가방을 한 번씩 줍니다(잡화점에서 은화 ").append(ShopOffers.BAG_PRICE / Coins.SILVER).append("개에 추가 구매). 가방마다 ")
-			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·거신 파편(강화대·제작대는 가방 속 재료도 씀). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
+			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
 			.append("동전·정수·진화의 에테르·시련 증표·쐐기돌·화살·불사의 토템은 가방에 들어가지 않습니다(상점과 교관이 인벤토리에서 찾음). 들고 우클릭하거나 인벤토리에서 우클릭하면 열리고, 아이템을 든 채 가방을 우클릭하면 넣습니다. 가방에는 가방·셜커 상자를 넣을 수 없습니다.\n");
-		md.append("- **쓰레기통**: 인벤토리 오른쪽의 \"버림\" 버튼. 커서에 든 아이템을 없애고, 빈 커서로 누르면 마지막에 버린 것을 한 번 되돌립니다. 잡템(막대기·씨앗·켈프·네더랙·석영 등)은 잡화점이 싸게 사 줍니다.\n");
+		md.append("- **쓰레기통**: 인벤토리 오른쪽의 \"버림\" 버튼. 커서에 든 아이템을 없애고, 빈 커서로 누르면 마지막에 버린 것을 한 번 되돌립니다. 잡템(막대기·씨앗·켈프·네더랙·석영 등)은 잡화점이 싸게 사 줍니다(가방에 든 것도 판매 거래를 고르면 함께 팔림).\n");
 		md.append("- **대상 체력 바**: 마지막으로 때린 몬스터의 이름과 체력이 화면 위(보스 바 아래)에 ").append(TargetHealthHud.SHOW_TICKS / 20).append("초 동안 보입니다.\n");
 		md.append("- **시련 사냥터**: 광장의 **사냥터지기 개릭**에게 말을 걸면, 진행 중인 시련에 아직 필요한 몬스터만 나오는 개인 사냥터(던전 차원)로 갑니다. 동시에 최대 ")
 			.append(TrialHunts.CAP).append("마리(보스는 한 마리씩, 엔더 드래곤은 엔드에서), 필요한 처치·증표를 다 채우면 ").append("몬스터가 더 나오지 않고 잠시 뒤 돌아옵니다. 입구의 자석석을 우클릭하면 언제든 나갑니다. 쓰러지면 광장으로 돌아옵니다.\n");

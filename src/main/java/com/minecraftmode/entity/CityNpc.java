@@ -14,6 +14,7 @@ import com.minecraftmode.network.OpenDungeonPayload;
 import com.minecraftmode.network.OpenGuidePayload;
 import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.network.OpenRaidPayload;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.raid.RaidAffix;
 import com.minecraftmode.raid.RaidRecordsData;
@@ -30,6 +31,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -197,26 +199,29 @@ public class CityNpc extends PathfinderMob {
 
 	/** The raid screen data: this cycle, its modifiers and the fastest clears. */
 	public static OpenRaidPayload raidScreen(final ServerPlayer player, final int entityId) {
-		long cycle = ResetCycle.cycle(player.level());
+		MinecraftServer server = player.level().getServer();
+		long cycle = RealReset.cycle(server);
 		List<String> affixes = RaidAffix.forCycle(cycle).stream().map(RaidAffix::id).toList();
-		return new OpenRaidPayload(entityId, cycle, ResetCycle.ticksToNextCycle(player.level()), affixes,
-			RaidRecordsData.get(player.level().getServer()).snapshot(5));
+		return new OpenRaidPayload(entityId, cycle, RealReset.ticksToNextCycle(server), affixes, RaidRecordsData.get(server).snapshot(5));
 	}
 
 	/** The town crier's board: resets, the next dusk event, a running titan or invasion, this cycle's raid modifiers and records. */
 	public static OpenNoticePayload noticeBoard(final ServerPlayer player, final int entityId) {
-		ServerLevel overworld = player.level().getServer().overworld();
-		long cycle = ResetCycle.cycle(overworld);
+		MinecraftServer server = player.level().getServer();
+		ServerLevel overworld = server.overworld();
 		NamedDef titan = WorldEvents.titanDef();
 		BlockPos home = WorldEvents.titanHome();
-		return new OpenNoticePayload(entityId, ResetCycle.ticksToNextDay(overworld), ResetCycle.ticksToNextCycle(overworld), WorldEvents.ticksToNextEvent(overworld),
+		OpenNoticePayload.Resets resets = new OpenNoticePayload.Resets(RealReset.ticksToNextDay(server), RealReset.ticksToNextCycle(server),
+			ResetCycle.ticksToNextCycle(overworld), ResetCycle.ticksToNextDay(overworld));
+		return new OpenNoticePayload(entityId, resets, WorldEvents.ticksToNextEvent(overworld),
 			WorldEvents.nextEventIsInvasion(overworld), titan == null ? "" : titan.id(), home == null ? 0 : home.getX(), home == null ? 0 : home.getZ(),
-			WorldEvents.invasionWave(), RaidAffix.forCycle(cycle).stream().map(RaidAffix::id).toList(), RaidRecordsData.get(player.level().getServer()).snapshot(1));
+			WorldEvents.invasionWave(), RaidAffix.forCycle(RealReset.cycle(server)).stream().map(RaidAffix::id).toList(), RaidRecordsData.get(server).snapshot(1));
 	}
 
 	public static OpenBountyPayload bountyBoard(final ServerPlayer player, final int entityId) {
 		Bounties.ensure(player);
-		return new OpenBountyPayload(entityId, ResetCycle.ticksToNextDay(player.level()), ResetCycle.ticksToNextCycle(player.level()));
+		MinecraftServer server = player.level().getServer();
+		return new OpenBountyPayload(entityId, RealReset.ticksToNextDay(server), RealReset.ticksToNextCycle(server));
 	}
 
 	@Override

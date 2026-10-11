@@ -10,7 +10,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.progress.Progress;
-import com.minecraftmode.progress.ResetCycle;
+import com.minecraftmode.progress.RealReset;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
@@ -30,8 +30,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.Rarity;
 
 /**
- * Guild bounties. Every Minecraft day a player gets three daily bounties and every three-day cycle one
- * bigger bounty, rolled for their level. They count on their own (deliveries are checked when handed
+ * Guild bounties. Every real day a player gets three daily bounties and every three-day raid cycle one
+ * bigger bounty ({@link RealReset}), rolled for their level. They count on their own (deliveries are checked when handed
  * in); finished ones are claimed at the guild's bounty clerk for coins, merit, Evolution Ether and
  * enhancement stones. Merit buys from the {@link #SHOP merit shop}.
  */
@@ -111,8 +111,8 @@ public final class Bounties {
 	 */
 	public static void ensure(final ServerPlayer player) {
 		BountyData data = get(player);
-		long day = ResetCycle.day(player.level());
-		long cycle = ResetCycle.cycle(player.level());
+		long day = RealReset.day(player.level().getServer());
+		long cycle = RealReset.cycle(player.level().getServer());
 		boolean changed = false;
 		if (data.day() != day) {
 			List<Bounty> daily = rollDaily(player, day);
@@ -245,9 +245,10 @@ public final class Bounties {
 		return bounty.type() == BountyKind.DELIVER ? delivered(player, bounty) >= bounty.need() : bounty.complete();
 	}
 
+	/** Three times what a bounty paid while they renewed every Minecraft day (0.5.5): an hour of play a day earns as much as before. */
 	public static Reward reward(final boolean special, final int level) {
-		int coins = Math.max(2, Math.round(GearShop.bracketPrice(Math.max(10, level)) * (special ? 1.5F : 0.4F)));
-		return special ? new Reward(coins, 40, 8, 3) : new Reward(coins, 10, 2, 1);
+		int coins = Math.max(6, Math.round(GearShop.bracketPrice(Math.max(10, level)) * (special ? 4.5F : 1.2F)));
+		return special ? new Reward(coins, 120, 24, 9) : new Reward(coins, 30, 6, 3);
 	}
 
 	/** Hands in bounty {@code index} (0..2 daily, 3 the cycle bounty) and pays it. */

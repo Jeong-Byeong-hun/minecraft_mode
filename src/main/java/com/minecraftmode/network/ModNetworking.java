@@ -1,5 +1,6 @@
 package com.minecraftmode.network;
 
+import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
@@ -73,6 +74,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(FieldBossPayload.TYPE, FieldBossPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(MenuActionPayload.TYPE, MenuActionPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(AdminActionPayload.TYPE, AdminActionPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(AdminStatePayload.TYPE, AdminStatePayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -121,6 +124,9 @@ public final class ModNetworking {
 		}));
 		ServerPlayNetworking.registerGlobalReceiver(LandActionPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> LandOffice.act(context.player(), payload)
+		));
+		ServerPlayNetworking.registerGlobalReceiver(AdminActionPayload.TYPE, (payload, context) -> context.server().execute(
+			() -> Admin.handle(context.player(), payload)
 		));
 		ServerPlayNetworking.registerGlobalReceiver(MenuActionPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> handleMenu(context.player(), payload)

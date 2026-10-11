@@ -1,16 +1,19 @@
 package com.minecraftmode.residence;
 
 import com.minecraftmode.bag.Bags;
+import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.network.LandActionPayload;
 import com.minecraftmode.network.OpenLandPayload;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -67,7 +70,7 @@ public final class LandOffice {
 				LandClaims.Claim claim = new LandClaims.Claim(ChunkPos.pack(action.chunkX(), action.chunkZ()), action.minY(), owner);
 				ServerLevel residence = ResidenceDimension.level(player.level().getServer());
 				if (residence != null && claims.abandon(owner, claim.chunk(), claim.minY())) {
-					int returned = LandRestore.restore(residence, claim, player);
+					int returned = LandRestore.restore(residence, claim, stack -> Bags.give(player, stack));
 					Bags.give(player, new ItemStack(ModItems.LAND_DEED));
 					tell(player, "abandoned", ChatFormatting.YELLOW, returned);
 				}
@@ -77,6 +80,25 @@ public final class LandOffice {
 			}
 		}
 		open(player);
+	}
+
+	/**
+	 * Operator release (admin screen): frees {@code claim} like its owner giving it up. Items and the deed go to the owner, or to
+	 * their market mailbox when they are offline, so nothing is lost.
+	 */
+	public static boolean release(final MinecraftServer server, final LandClaims.Claim claim) {
+		ServerLevel residence = ResidenceDimension.level(server);
+		if (residence == null || !LandClaims.get(server).abandon(claim.owner(), claim.chunk(), claim.minY())) {
+			return false;
+		}
+		ServerPlayer owner = server.getPlayerList().getPlayer(claim.owner());
+		Consumer<ItemStack> back = owner != null ? stack -> Bags.give(owner, stack) : stack -> AuctionHouse.get(server).sendItem(claim.owner(), stack);
+		int returned = LandRestore.restore(residence, claim, back);
+		back.accept(new ItemStack(ModItems.LAND_DEED));
+		if (owner != null) {
+			tell(owner, "released", ChatFormatting.YELLOW, returned);
+		}
+		return true;
 	}
 
 	/** Shows the 12 edges of a freshly claimed box with sparks. */

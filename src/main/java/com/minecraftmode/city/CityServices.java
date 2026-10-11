@@ -7,6 +7,7 @@ import com.minecraftmode.entity.TrainingDummy;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.admin.Admin;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModEntities;
@@ -329,7 +330,8 @@ public final class CityServices {
 	/**
 	 * City guards: hostile mobs that get inside the walls anyway (spiders climbing them, mobs walking
 	 * in through caves or the gates, eggs and summons) are driven off. Skill summons, NoAI
-	 * decorations, invaders and the monsters of the Training Grounds (inside the hall) are left alone.
+	 * decorations, invaders, what an operator summoned from the admin screen and the monsters of the
+	 * Training Grounds (inside the hall) are left alone.
 	 */
 	public static void driveOffHostiles(final ServerLevel level) {
 		if (!CityZone.isCityLevel(level)) {
@@ -338,7 +340,7 @@ public final class CityServices {
 		int w = CityZone.WALL;
 		AABB city = new AABB(-w, level.getMinY(), -w, w + 1, level.getMaxY(), w + 1);
 		for (Mob mob : level.getEntitiesOfClass(Mob.class, city,
-			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG)
+			m -> m.getType().getCategory() == MobCategory.MONSTER && !m.isNoAi() && !m.entityTags().contains(Actions.SUMMON_TAG) && !m.entityTags().contains(Admin.KEEP_TAG)
 				&& !m.entityTags().contains(WorldEvents.INVADER_TAG) && !m.getUUID().equals(WorldEvents.titan()) && CityZone.inside(m.blockPosition())
 				&& !TrainingGrounds.holds(m))) {
 			level.sendParticles(ParticleTypes.POOF, mob.getX(), mob.getY() + mob.getBbHeight() / 2.0, mob.getZ(), 12, 0.3, 0.4, 0.3, 0.02);

@@ -140,6 +140,16 @@ public final class Raids {
 		return List.copyOf(INSTANCES.values());
 	}
 
+	/** Operator stop (admin screen): instance {@code id} closes on the next tick, which sends its players home. */
+	public static boolean stop(final int id) {
+		RaidInstance instance = INSTANCES.get(id);
+		if (instance == null) {
+			return false;
+		}
+		instance.state = RaidInstance.State.CLOSED;
+		return true;
+	}
+
 	// ------------------------------------------------------------------ entering
 
 	/**

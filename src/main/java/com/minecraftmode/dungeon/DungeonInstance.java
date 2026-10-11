@@ -102,6 +102,10 @@ public final class DungeonInstance {
 		this.keystoneOwner = keystoneOwner;
 	}
 
+	public int id() {
+		return this.id;
+	}
+
 	public DungeonDef def() {
 		return this.def;
 	}

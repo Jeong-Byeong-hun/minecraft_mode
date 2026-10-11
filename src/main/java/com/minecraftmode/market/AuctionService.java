@@ -214,6 +214,17 @@ public final class AuctionService {
 		return true;
 	}
 
+	/** Operator removal (admin screen): listing {@code id} leaves the market and the item goes to its seller's mailbox. */
+	public static boolean adminCancel(final MinecraftServer server, final int id) {
+		AuctionHouse house = AuctionHouse.get(server);
+		AuctionHouse.Listing listing = house.listing(id);
+		if (listing == null || !house.remove(listing)) {
+			return false;
+		}
+		house.sendItem(listing.seller(), listing.item());
+		return true;
+	}
+
 	/**
 	 * Empties the mailbox: proceeds into the wallet, returned items into the inventory (as many as have a free slot; the rest
 	 * stays in the mailbox instead of landing on the floor); sales count toward the records.

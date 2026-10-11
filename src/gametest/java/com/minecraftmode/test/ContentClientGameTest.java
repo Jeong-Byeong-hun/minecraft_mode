@@ -159,10 +159,23 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			require(Paragon.spend(player, Paragon.Stat.MIGHT.id), "a point goes into Might");
 			GearStats.invalidate(player);
 			float after = GearStats.of(player).get(EngraveStat.BASIC_DAMAGE);
-			require(Paragon.get(player).rank(Paragon.Stat.MIGHT) == 1 && Math.abs(after - before - 0.3F) < 0.001F, "Might adds 0.3% basic damage, got " + (after - before));
+			require(Paragon.get(player).rank(Paragon.Stat.MIGHT) == 1 && Math.abs(after - before - 1.0F) < 0.001F, "Might adds 1% basic damage, got " + (after - before));
 			require(Paragon.reset(player) && Paragon.get(player).available() == 2, "a reset refunds every point");
+			// past the top rank: Precision stops, Might (endless) goes on at half a rank per point
+			player.setAttached(ModAttachments.PARAGON, new Paragon.ParagonData(102, 0,
+				Map.of(Paragon.Stat.PRECISION.id, Paragon.MAX_RANK, Paragon.Stat.MIGHT.id, Paragon.MAX_RANK)));
+			require(!Paragon.spend(player, Paragon.Stat.PRECISION.id), "Precision stops at rank " + Paragon.MAX_RANK);
+			GearStats.invalidate(player);
+			float atMax = GearStats.of(player).get(EngraveStat.SKILL_DAMAGE);
+			require(Paragon.spend(player, Paragon.Stat.MIGHT.id) && Paragon.get(player).rank(Paragon.Stat.MIGHT) == Paragon.MAX_RANK + 1,
+				"Might keeps taking points past rank " + Paragon.MAX_RANK);
+			GearStats.invalidate(player);
+			float past = GearStats.of(player).get(EngraveStat.SKILL_DAMAGE) - atMax;
+			require(Math.abs(past - 0.5F) < 0.001F, "a Might rank past the top adds 0.5% skill damage, got " + past);
+			player.setAttached(ModAttachments.PARAGON, new Paragon.ParagonData(data.level(), data.exp(), Map.of()));
+			GearStats.invalidate(player);
 			Paragon.spend(player, Paragon.Stat.MIGHT.id);
-			return "paragon " + data.level() + ", might +" + (after - before);
+			return "paragon " + data.level() + ", might +" + (after - before) + ", past the top +" + past;
 		});
 		MinecraftMode.LOGGER.info("[content] {}", report);
 	}

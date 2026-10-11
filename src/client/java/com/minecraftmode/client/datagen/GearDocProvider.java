@@ -10,6 +10,7 @@ import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.city.Homestead;
 import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.hud.TargetHealthHud;
+import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.client.map.MapSettings;
 import com.minecraftmode.client.residence.LandBorders;
 import com.minecraftmode.companion.Companions;
@@ -641,10 +642,15 @@ public class GearDocProvider implements DataProvider {
 		md.append("## 초월 (레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후)\n\n");
 		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append("부터 경험치가 **초월 레벨**로 쌓입니다. 다음 초월 레벨까지 4000 + 40 × 초월 레벨.\n");
 		md.append("- 초월 레벨마다 포인트 1개를 능력치 하나에 넣습니다(능력치마다 최대 ").append(Paragon.MAX_RANK)
-			.append("랭크). 특성 창(N)의 초월 탭. 초기화는 동전(Lv 100 구간 가격).\n\n");
-		md.append("| 능력치 | 랭크당 |\n|---|---|\n");
+			.append("랭크). 특성 창(N)의 초월 탭. 초기화는 동전(Lv 100 구간 가격).\n");
+		md.append("- **위력·활력은 무한**: ").append(Paragon.MAX_RANK).append("랭크 이후에도 포인트를 계속 넣을 수 있고, 그 뒤 랭크는 효과가 ")
+			.append(Math.round(Paragon.PAST_MAX_SHARE * 100)).append("%입니다. 쐐기돌에 단계 상한이 없어서 초월도 끝없이 자랍니다.\n");
+		md.append("- 받는 피해 감소·재사용 대기시간 감소·동전 획득 확률은 장비 등과 합친 전체 상한이 그대로 적용됩니다.\n\n");
+		md.append("| 능력치 | 랭크당 | ").append(Paragon.MAX_RANK).append("랭크 | ").append(Paragon.MAX_RANK + 1).append("랭크부터 랭크당 |\n|---|---|---|---|\n");
 		for (Paragon.Stat stat : Paragon.Stat.values()) {
-			md.append("| ").append(stat.ko).append(" | ").append(stat.lines(1).stream().map(this::stat).collect(Collectors.joining(", "))).append(" |\n");
+			md.append("| ").append(stat.ko).append(" | ").append(paragonLines(stat.lines(1)))
+				.append(" | ").append(paragonLines(stat.lines(Paragon.MAX_RANK)))
+				.append(" | ").append(stat.endless ? paragonLines(stat.next(Paragon.MAX_RANK)) : "—").append(" |\n");
 		}
 
 		md.append("\n## 각성 (+").append(Enhancement.MAX).append(" 이후)\n\n");
@@ -845,6 +851,12 @@ public class GearDocProvider implements DataProvider {
 
 	private String stat(final StatLine line) {
 		return this.stat(line.stat(), line.value());
+	}
+
+	/** Paragon steps are small (MP regen +0.05 a rank): two decimals. */
+	private static String paragonLines(final List<StatLine> lines) {
+		return lines.stream().map(l -> String.format(Locale.ROOT, l.stat().ko(null), JobTooltips.fine(l.value())).replace("%%", "%"))
+			.collect(Collectors.joining(", "));
 	}
 
 	private String stat(final EngraveStat stat, final float value) {

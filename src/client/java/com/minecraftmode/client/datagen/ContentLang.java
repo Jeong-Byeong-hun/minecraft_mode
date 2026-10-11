@@ -114,6 +114,7 @@ final class ContentLang {
 		b.add("screen.minecraft_mode.paragon.locked", ko ? "레벨 %s에 도달하면 경험치가 초월 레벨로 쌓입니다. 초월 레벨마다 능력치 하나에 포인트를 줄 수 있습니다."
 			: "At level %s experience goes into paragon levels; every paragon level gives a point for one of these stats.");
 		b.add("screen.minecraft_mode.paragon.level", ko ? "초월 레벨 %s" : "Paragon level %s");
+		b.add("screen.minecraft_mode.paragon.endless", ko ? "%s랭크 이후에도 계속 올릴 수 있습니다(랭크당 효과 절반)." : "Keeps taking points past rank %s (half effect per rank).");
 		b.add("message.minecraft_mode.paragon.level_up", ko ? "초월 레벨 %s! 특성 창(N)의 초월 탭에서 포인트를 쓰세요." : "Paragon level %s! Spend the point in the Paragon tab (N).");
 		b.add("message.minecraft_mode.paragon.reset", ko ? "초월 포인트를 모두 돌려받았습니다." : "Your paragon points were refunded.");
 

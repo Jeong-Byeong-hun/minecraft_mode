@@ -2557,6 +2557,7 @@
   "screen.minecraft_mode.notice.records": "레이드 최고 기록 (가장 높은 난이도)",
   "screen.minecraft_mode.notice.titan_now": "지금 거신 %s이(가) 걷고 있습니다: %s, %s",
   "screen.minecraft_mode.notice.title": "스톰홀드 알림판",
+  "screen.minecraft_mode.paragon.endless": "%s랭크 이후에도 계속 올릴 수 있습니다(랭크당 효과 절반).",
   "screen.minecraft_mode.paragon.level": "초월 레벨 %s",
   "screen.minecraft_mode.paragon.locked": "레벨 %s에 도달하면 경험치가 초월 레벨로 쌓입니다. 초월 레벨마다 능력치 하나에 포인트를 줄 수 있습니다.",
   "screen.minecraft_mode.paragon.tab": "초월",

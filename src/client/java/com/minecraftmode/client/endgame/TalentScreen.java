@@ -181,7 +181,7 @@ public class TalentScreen extends Screen {
 			Paragon.Stat stat = stats[i];
 			Button plus = Button.builder(Component.literal("+"), b -> EndgameClient.progress(ProgressActionPayload.PARAGON, stat.id))
 				.bounds(this.left + W - 30, this.top + ROWS_Y + i * ROW, 20, 16).build();
-			plus.active = data.available() > 0 && data.rank(stat) < Paragon.MAX_RANK;
+			plus.active = data.available() > 0 && !stat.maxed(data.rank(stat));
 			this.addRenderableWidget(plus);
 		}
 		Button reset = Button.builder(Component.translatable("screen.minecraft_mode.talent.reset", Coins.format(Paragon.resetCost())),
@@ -214,13 +214,19 @@ public class TalentScreen extends Screen {
 			int rank = data.rank(stat);
 			g.fill(x + 8, ry, x + W - 34, ry + 16, rank > 0 ? 0x50C060FF : 0x40000000);
 			g.text(this.font, Component.translatable(stat.nameKey()), x + 12, ry + 4, 0xFFFFFFFF, false);
-			g.text(this.font, rank + "/" + Paragon.MAX_RANK, x + 80, ry + 4, rank >= Paragon.MAX_RANK ? 0xFFFFD27F : 0xFFBBBBBB, false);
-			String now = stat.lines(Math.max(1, rank)).stream().map(l -> Component.translatable(l.stat().key(), JobTooltips.num(rank == 0 ? 0 : l.value())).getString())
+			g.text(this.font, rank + "/" + (stat.endless ? "∞" : Paragon.MAX_RANK), x + 80, ry + 4, rank >= Paragon.MAX_RANK ? 0xFFFFD27F : 0xFFBBBBBB, false);
+			String now = stat.lines(Math.max(1, rank)).stream().map(l -> Component.translatable(l.stat().key(), JobTooltips.fine(rank == 0 ? 0 : l.value())).getString())
 				.reduce((p, q) -> p + ", " + q).orElse("");
 			g.text(this.font, this.font.plainSubstrByWidth(now, W - 160), x + 124, ry + 4, rank > 0 ? 0xFF7CFC7C : 0xFF707070, false);
 			if (mouseX >= x + 8 && mouseX < x + W - 34 && mouseY >= ry && mouseY < ry + 16) {
-				tip = List.of(Component.translatable(stat.nameKey()).withStyle(ChatFormatting.LIGHT_PURPLE),
-					Component.translatable("screen.minecraft_mode.talent.next").withStyle(ChatFormatting.AQUA), lines(stat.lines(1), ChatFormatting.AQUA));
+				tip = new ArrayList<>(List.of(Component.translatable(stat.nameKey()).withStyle(ChatFormatting.LIGHT_PURPLE)));
+				if (!stat.maxed(rank)) {
+					tip.add(Component.translatable("screen.minecraft_mode.talent.next").withStyle(ChatFormatting.AQUA));
+					tip.add(lines(stat.next(rank), ChatFormatting.AQUA));
+				}
+				if (stat.endless) {
+					tip.add(Component.translatable("screen.minecraft_mode.paragon.endless", Paragon.MAX_RANK).withStyle(ChatFormatting.GRAY));
+				}
 			}
 		}
 		if (tip != null) {
@@ -253,7 +259,8 @@ public class TalentScreen extends Screen {
 				out.append(", ");
 			}
 			StatLine line = lines.get(i);
-			out.append(Component.translatable(line.stat().key(this.shownJob == null ? null : this.shownJob.job()), JobTooltips.num(line.value())));
+			String value = paragonTab ? JobTooltips.fine(line.value()) : JobTooltips.num(line.value());
+			out.append(Component.translatable(line.stat().key(this.shownJob == null ? null : this.shownJob.job()), value));
 		}
 		return out.withStyle(color);
 	}

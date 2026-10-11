@@ -60,6 +60,12 @@ public final class JobTooltips {
 		return r == Math.rint(r) ? Long.toString((long)r) : String.format(Locale.ROOT, "%.1f", r);
 	}
 
+	/** Like {@link #num} with two decimals, for small per-rank steps (paragon MP regen +0.05). */
+	public static String fine(final double v) {
+		String s = String.format(Locale.ROOT, "%.2f", Math.round(v * 100.0) / 100.0);
+		return s.replaceAll("\\.?0+$", "");
+	}
+
 	public static List<Component> build(final ItemStack stack, final WeaponDef def) {
 		List<Component> lines = new ArrayList<>();
 		Player player = Minecraft.getInstance().player;

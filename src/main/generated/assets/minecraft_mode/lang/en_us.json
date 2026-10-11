@@ -2557,6 +2557,7 @@
   "screen.minecraft_mode.notice.records": "Fastest raids (hardest difficulty beaten)",
   "screen.minecraft_mode.notice.titan_now": "A titan walks now: %s at %s, %s",
   "screen.minecraft_mode.notice.title": "Stormhold Notice Board",
+  "screen.minecraft_mode.paragon.endless": "Keeps taking points past rank %s (half effect per rank).",
   "screen.minecraft_mode.paragon.level": "Paragon level %s",
   "screen.minecraft_mode.paragon.locked": "At level %s experience goes into paragon levels; every paragon level gives a point for one of these stats.",
   "screen.minecraft_mode.paragon.tab": "Paragon",

@@ -26,32 +26,41 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Paragon levels (초월): growth past level 100. Experience earned at the cap fills paragon levels (each a little longer than the
- * last); every paragon level is one point for the paragon board, eight small stats of {@link #MAX_RANK} ranks each. The board
- * is shared by every class and can be reset for coins.
+ * last); every paragon level is one point for the paragon board, eight stats of {@link #MAX_RANK} ranks each. Might and
+ * Vitality are endless: past {@link #MAX_RANK} they keep taking points at {@link #PAST_MAX_SHARE} of a rank, so the board keeps
+ * pace with keystones, which have no top level. The board is shared by every class and can be reset for coins.
+ * <p>
+ * 0.5.17 raised the ranks about 2-3x: fifty ranks of a stat used to be worth one armor option line, and fifty paragon levels
+ * (about 84 timed +24 keystones) about one keystone level.
  */
 public final class Paragon {
 	public static final int MAX_RANK = 50;
+	/** What a rank past {@link #MAX_RANK} of an endless stat is worth. */
+	public static final float PAST_MAX_SHARE = 0.5F;
 
 	/** One stat of the board: what one rank adds. Ids are saved keys. */
 	public enum Stat {
-		MIGHT("might", "Might", "위력", List.of(StatLine.of(EngraveStat.BASIC_DAMAGE, 0.3F), StatLine.of(EngraveStat.SKILL_DAMAGE, 0.3F))),
-		VITALITY("vitality", "Vitality", "활력", List.of(StatLine.of(EngraveStat.MAX_HEALTH, 0.2F))),
-		PRECISION("precision", "Precision", "정밀", List.of(StatLine.of(EngraveStat.CRIT_CHANCE, 0.1F))),
-		FEROCITY("ferocity", "Ferocity", "흉포", List.of(StatLine.of(EngraveStat.CRIT_DAMAGE, 0.6F))),
-		GUARD("guard", "Guard", "수호", List.of(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.1F))),
-		HASTE("haste", "Haste", "가속", List.of(StatLine.of(EngraveStat.COOLDOWN, 0.1F))),
-		SPIRIT("spirit", "Spirit", "정신", List.of(StatLine.of(EngraveStat.MAX_MANA, 1.0F), StatLine.of(EngraveStat.MANA_REGEN, 0.02F))),
-		FORTUNE("fortune", "Fortune", "행운", List.of(StatLine.of(EngraveStat.ITEM_FIND, 0.4F), StatLine.of(EngraveStat.GOLD_FIND, 0.4F)));
+		MIGHT("might", "Might", "위력", true, List.of(StatLine.of(EngraveStat.BASIC_DAMAGE, 1.0F), StatLine.of(EngraveStat.SKILL_DAMAGE, 1.0F))),
+		VITALITY("vitality", "Vitality", "활력", true, List.of(StatLine.of(EngraveStat.MAX_HEALTH, 0.4F))),
+		PRECISION("precision", "Precision", "정밀", false, List.of(StatLine.of(EngraveStat.CRIT_CHANCE, 0.3F))),
+		FEROCITY("ferocity", "Ferocity", "흉포", false, List.of(StatLine.of(EngraveStat.CRIT_DAMAGE, 1.5F))),
+		GUARD("guard", "Guard", "수호", false, List.of(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.3F))),
+		HASTE("haste", "Haste", "가속", false, List.of(StatLine.of(EngraveStat.COOLDOWN, 0.2F))),
+		SPIRIT("spirit", "Spirit", "정신", false, List.of(StatLine.of(EngraveStat.MAX_MANA, 2.0F), StatLine.of(EngraveStat.MANA_REGEN, 0.05F))),
+		FORTUNE("fortune", "Fortune", "행운", false, List.of(StatLine.of(EngraveStat.ITEM_FIND, 1.0F), StatLine.of(EngraveStat.GOLD_FIND, 1.0F)));
 
 		public final String id;
 		public final String en;
 		public final String ko;
+		/** Takes points past {@link #MAX_RANK} (at {@link #PAST_MAX_SHARE} each). */
+		public final boolean endless;
 		public final List<StatLine> perRank;
 
-		Stat(final String id, final String en, final String ko, final List<StatLine> perRank) {
+		Stat(final String id, final String en, final String ko, final boolean endless, final List<StatLine> perRank) {
 			this.id = id;
 			this.en = en;
 			this.ko = ko;
+			this.endless = endless;
 			this.perRank = perRank;
 		}
 
@@ -59,10 +68,29 @@ public final class Paragon {
 			return "paragon.minecraft_mode." + this.id;
 		}
 
+		/** Whether {@code rank} ranks leave no room for another point. */
+		public boolean maxed(final int rank) {
+			return !this.endless && rank >= MAX_RANK;
+		}
+
+		/** How many full ranks {@code ranks} points are worth. */
+		public float worth(final int ranks) {
+			return Math.min(ranks, MAX_RANK) + Math.max(0, ranks - MAX_RANK) * PAST_MAX_SHARE;
+		}
+
 		public List<StatLine> lines(final int ranks) {
+			return scaled(this.worth(ranks));
+		}
+
+		/** What the point after {@code rank} adds. */
+		public List<StatLine> next(final int rank) {
+			return scaled(this.worth(rank + 1) - this.worth(rank));
+		}
+
+		private List<StatLine> scaled(final float worth) {
 			List<StatLine> out = new ArrayList<>();
 			for (StatLine line : this.perRank) {
-				out.add(StatLine.of(line.stat(), Math.round(line.value() * ranks * 100.0F) / 100.0F));
+				out.add(StatLine.of(line.stat(), Math.round(line.value() * worth * 100.0F) / 100.0F));
 			}
 			return out;
 		}
@@ -138,7 +166,7 @@ public final class Paragon {
 	public static boolean spend(final ServerPlayer player, final String statId) {
 		Stat stat = Stat.byId(statId);
 		ParagonData data = get(player);
-		if (stat == null || data.available() <= 0 || data.rank(stat) >= MAX_RANK) {
+		if (stat == null || data.available() <= 0 || stat.maxed(data.rank(stat))) {
 			return false;
 		}
 		Map<String, Integer> ranks = new HashMap<>(data.ranks());

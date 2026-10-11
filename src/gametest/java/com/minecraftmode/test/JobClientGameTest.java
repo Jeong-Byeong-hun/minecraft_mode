@@ -938,16 +938,21 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(offers[0] == warriorItems + 3, "a Lv 25 warrior should see " + warriorItems + " gear offers + 3 extras (essence, condensed essence, reset scroll), got " + offers[0]);
 		require(offers[1] == starterItems + 3, "players without a class should see " + starterItems + " starter offers + 3 extras, got " + offers[1]);
 
-		// a boss kill: condensed essence, golem core, double experience
+		// a boss kill: condensed essence, golem core, a share of a level measured at its trial's level (every trial boss has one)
+		for (var type : Quests.BOSSES) {
+			require(JobEvents.trialBoss(type) != null, "trial boss " + type + " has no experience share");
+		}
 		server.runCommand("summon minecraft_mode:mythril_golem 0.5 -60 -6.5 {NoAI:1b}");
 		context.waitTicks(3);
 		int[] drops = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			Mob golem = player.level().getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(12), e -> e.getType() == com.minecraftmode.registry.ModEntities.MYTHRIL_GOLEM).getFirst();
+			JobEvents.TrialBossExp trial = JobEvents.trialBoss(golem.getType());
+			int expected = JobProgression.levelExp(player, trial.level(), trial.share());
 			int before = JobProgression.get(player).exp() + totalExp(JobProgression.get(player));
 			golem.hurtServer(player.level(), player.damageSources().playerAttack(player), 10000.0F);
 			int after = JobProgression.get(player).exp() + totalExp(JobProgression.get(player));
-			return new int[] {after - before};
+			return new int[] {after - before, expected};
 		});
 		context.waitTicks(5);
 		int[] items = server.computeOnServer(s -> {
@@ -964,7 +969,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			}
 			return new int[] {condensed, core};
 		});
-		require(drops[0] == 300, "a 150 health boss should give 300 class exp, got " + drops[0]);
+		require(drops[0] == drops[1] && drops[0] < 300, "a mythril golem should give " + drops[1] + " class exp (a share of a level, not twice its health), got " + drops[0]);
 		require(items[0] >= 2 && items[1] == 1, "mythril golem drops: condensed essence " + items[0] + ", golem core " + items[1]);
 		server.runCommand("kill @e[type=minecraft:item]");
 
@@ -998,7 +1003,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 		});
 		server.runCommand("kill @e[type=minecraft:item]");
 		MinecraftMode.LOGGER.info("[job] growth: {}", growth);
-		MinecraftMode.LOGGER.info("[job] guild offers follow class/tier; golem kill: 300 exp, {} condensed essence, golem core", items[0]);
+		MinecraftMode.LOGGER.info("[job] guild offers follow class/tier; golem kill: {} exp, {} condensed essence, golem core", drops[0], items[0]);
 	}
 
 	private static int totalExp(final JobData data) {

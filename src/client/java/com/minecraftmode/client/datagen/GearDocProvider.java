@@ -767,13 +767,21 @@ public class GearDocProvider implements DataProvider {
 		int[] levels = {15, 45, 90};
 		md.append("\n## 성장 경험치\n\n");
 		md.append("- 레벨을 올리는 주된 길은 **소굴 탐험**입니다. 소굴·레이드·던전·네임드는 \"레벨분\"(다음 레벨까지 필요한 경험치의 비율)으로 주므로 레벨이 올라도 비중이 같고, ")
-			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다. 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음), 보스는 두 배입니다.\n");
+			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다. 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음) 주고, ")
+			.append("시련 보스(위더·엔더 드래곤·워든·엘더 가디언·미스릴 골렘)도 레벨분으로 그 보스를 잡는 시련의 레벨까지 셉니다.\n");
 		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후에는 경험치가 파라곤 레벨로 들어갑니다.\n\n");
 		md.append("| 활동 | Lv ").append(levels[0]).append(" | Lv ").append(levels[1]).append(" | Lv ").append(levels[2]).append(" |\n|---|---|---|---|\n");
 		this.growthRow(md, "다음 레벨까지", levels, l -> String.valueOf(JobProgression.expToNext(l)));
 		this.growthRow(md, "좀비 (체력 20)", levels, l -> exp(20, l));
 		this.growthRow(md, "철광석 / 다이아몬드 광석", levels, l -> exp(JobEvents.IRON.exp(l), l) + " / " + exp(JobEvents.DIAMOND.exp(l), l));
 		this.growthRow(md, "네임드 처치", levels, l -> exp(JobProgression.levelExp(l, JobEvents.NAMED_SHARE), l));
+		Map<String, String> bossNames = Map.of("wither", "위더", "ender_dragon", "엔더 드래곤", "warden", "워든", "elder_guardian", "엘더 가디언",
+			"mythril_golem", "미스릴 골렘");
+		for (JobEvents.TrialBossExp boss : JobEvents.TRIAL_BOSSES) {
+			String id = net.minecraft.world.entity.EntityType.getKey(boss.type()).getPath();
+			this.growthRow(md, bossNames.getOrDefault(id, id) + " (레벨의 " + Math.round(boss.share() * 100) + "%, Lv " + boss.level() + "까지)", levels,
+				l -> exp(JobProgression.levelExp(Math.min(l, boss.level()), boss.share()), l));
+		}
 		this.growthRow(md, "소굴 첫 발견 (소굴마다 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.DISCOVER), l));
 		this.growthRow(md, "소굴 군주 처치", levels, l -> exp(JobProgression.levelExp(l, JobEvents.LORD_SHARE), l));
 		this.growthRow(md, "소굴 보물 상자 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CHEST), l));

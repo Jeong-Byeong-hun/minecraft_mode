@@ -18,6 +18,7 @@ import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
 import java.util.List;
 import com.minecraftmode.registry.ModBlocks;
+import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -39,6 +40,8 @@ import net.minecraft.tags.BlockItemTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -61,6 +64,26 @@ public final class JobEvents {
 	/** A named monster's kill is worth this share of a level to each of its killers (lords, titans and warlords: {@link #LORD_SHARE}). */
 	public static final float NAMED_SHARE = 0.25F;
 	public static final float LORD_SHARE = 0.5F;
+
+	/**
+	 * A trial boss ({@link Quests#BOSSES}) pays {@code share} of a level measured at the level of the trial tier that hunts it (or the
+	 * killer's own level when lower), like named monsters. Twice their health paid five levels for a Warden at level 10, and shriekers
+	 * call Wardens back as soon as one dies.
+	 */
+	public record TrialBossExp(EntityType<?> type, int tier, float share) {
+		public int level() {
+			return JobProgression.levelForTier(this.tier);
+		}
+	}
+
+	public static final List<TrialBossExp> TRIAL_BOSSES = List.of(
+		new TrialBossExp(EntityTypes.WITHER, 4, LORD_SHARE), // three wither skulls a fight
+		new TrialBossExp(EntityTypes.ENDER_DRAGON, 4, LORD_SHARE), // four end crystals to bring it back
+		new TrialBossExp(EntityTypes.WARDEN, 4, 0.3F), // shriekers summon another one right away
+		new TrialBossExp(EntityTypes.ELDER_GUARDIAN, 4, NAMED_SHARE), // three per monument, never back
+		new TrialBossExp(ModEntities.MYTHRIL_GOLEM, 3, 0.2F) // spawns on its own below Y 0
+	);
+
 	/** Cooldown key of Avalon in {@link JobData#cooldowns()}. */
 	public static final String AVALON_COOLDOWN = "passive.avalon";
 
@@ -122,11 +145,12 @@ public final class JobEvents {
 		boolean boss = isBoss(entity);
 		// dungeon runs and raids pay at the end, so their monsters (made tough by keystones and party size) pay nothing per kill
 		boolean event = Dungeons.isRunMob(entity) || entity instanceof RaidBoss;
+		TrialBossExp trial = trialBoss(entity.getType());
 		for (int i = 0; i < shares.size() && !event; i++) {
 			Contribution.Share share = shares.get(i);
 			int solo = entity instanceof NamedMob named
 				? JobProgression.levelExp(share.player(), named.namedLevel(), named.isLord() || named.isChampion() ? LORD_SHARE : NAMED_SHARE)
-				: Math.max(3, Math.round(health * (boss ? 2 : 1)));
+				: trial != null ? JobProgression.levelExp(share.player(), trial.level(), trial.share()) : Math.max(3, Math.round(health));
 			int exp = Contribution.portion(solo, share, shares.size()) * TrainingGrounds.expMultiplier(entity, share.player());
 			gainExp(share.player(), exp);
 			if (shares.size() > 1) {
@@ -165,9 +189,18 @@ public final class JobEvents {
 		return attr == null ? entity.getMaxHealth() : (float)attr.getBaseValue();
 	}
 
-	/** Bosses (double experience, always condensed essence): named monsters, raid bosses and the trial bosses (Wither, Warden, golem...). */
+	/** Bosses (always condensed essence; experience in shares of a level): named monsters, raid bosses and the trial bosses (Wither, Warden, golem...). */
 	public static boolean isBoss(final LivingEntity entity) {
 		return entity instanceof NamedMob || entity instanceof RaidBoss || Quests.BOSSES.contains(entity.getType());
+	}
+
+	public static @Nullable TrialBossExp trialBoss(final EntityType<?> type) {
+		for (TrialBossExp boss : TRIAL_BOSSES) {
+			if (boss.type() == type) {
+				return boss;
+			}
+		}
+		return null;
 	}
 
 	/**

@@ -26,6 +26,8 @@ public final class ConsumableTooltips {
 				lines.addAll(1, build(item.def()));
 			} else if (stack.is(ModItems.RETURN_SCROLL)) {
 				lines.add(1, Component.translatable("item.minecraft_mode.return_scroll.tooltip").withStyle(ChatFormatting.GRAY));
+			} else if (stack.is(ModItems.LAND_DEED)) {
+				lines.add(1, Component.translatable("item.minecraft_mode.land_deed.tooltip").withStyle(ChatFormatting.GRAY));
 			}
 		});
 	}

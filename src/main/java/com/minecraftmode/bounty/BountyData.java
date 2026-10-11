@@ -10,10 +10,11 @@ import net.minecraft.network.codec.StreamCodec;
 
 /**
  * A player's guild bounties: three daily ones (rolled for {@code day}), one bigger bounty for the
- * three-day {@code cycle}, and the merit earned (spent in the merit shop). Kept on death, synced.
+ * three-day {@code cycle}, the merit earned (spent in the merit shop) and how many land deeds were bought there (each one costs
+ * more). Kept on death, synced.
  */
-public record BountyData(long day, List<Bounty> daily, long cycle, Bounty special, int merit) {
-	public static final BountyData DEFAULT = new BountyData(-1L, List.of(), -1L, Bounty.EMPTY, 0);
+public record BountyData(long day, List<Bounty> daily, long cycle, Bounty special, int merit, int deeds) {
+	public static final BountyData DEFAULT = new BountyData(-1L, List.of(), -1L, Bounty.EMPTY, 0, 0);
 
 	/**
 	 * One bounty: what to do ({@code kind} + {@code target}, empty target = any), how many, and how far along. A finished but
@@ -69,7 +70,8 @@ public record BountyData(long day, List<Bounty> daily, long cycle, Bounty specia
 		Bounty.CODEC.listOf().optionalFieldOf("daily", List.of()).forGetter(BountyData::daily),
 		Codec.LONG.optionalFieldOf("cycle", -1L).forGetter(BountyData::cycle),
 		Bounty.CODEC.optionalFieldOf("special", Bounty.EMPTY).forGetter(BountyData::special),
-		Codec.INT.optionalFieldOf("merit", 0).forGetter(BountyData::merit)
+		Codec.INT.optionalFieldOf("merit", 0).forGetter(BountyData::merit),
+		Codec.INT.optionalFieldOf("deeds", 0).forGetter(BountyData::deeds)
 	).apply(i, BountyData::new));
 
 	public static final StreamCodec<ByteBuf, BountyData> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
@@ -88,14 +90,18 @@ public record BountyData(long day, List<Bounty> daily, long cycle, Bounty specia
 
 	public BountyData with(final int index, final Bounty bounty) {
 		if (index == 3) {
-			return new BountyData(this.day, this.daily, this.cycle, bounty, this.merit);
+			return new BountyData(this.day, this.daily, this.cycle, bounty, this.merit, this.deeds);
 		}
 		List<Bounty> list = new ArrayList<>(this.daily);
 		list.set(index, bounty);
-		return new BountyData(this.day, list, this.cycle, this.special, this.merit);
+		return new BountyData(this.day, list, this.cycle, this.special, this.merit, this.deeds);
 	}
 
 	public BountyData withMerit(final int merit) {
-		return new BountyData(this.day, this.daily, this.cycle, this.special, Math.max(0, merit));
+		return new BountyData(this.day, this.daily, this.cycle, this.special, Math.max(0, merit), this.deeds);
+	}
+
+	public BountyData withDeeds(final int deeds) {
+		return new BountyData(this.day, this.daily, this.cycle, this.special, this.merit, deeds);
 	}
 }

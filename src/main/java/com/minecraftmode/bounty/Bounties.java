@@ -64,12 +64,27 @@ public final class Bounties {
 		ItemStack make(Player player, int level, RandomSource random);
 	}
 
-	/** One merit shop offer: the merit price and what it gives. */
-	public record Offer(String id, int cost, Gift item) {
+	/**
+	 * One merit shop offer: the merit price and what it gives. {@code raise} is added to the price for every land deed the player
+	 * has bought ({@link BountyData#deeds}); only the deed has one.
+	 */
+	public record Offer(String id, int cost, int raise, Gift item) {
+		public Offer(final String id, final int cost, final Gift item) {
+			this(id, cost, 0, item);
+		}
+
+		public int price(final BountyData data) {
+			return this.cost + this.raise * data.deeds();
+		}
+
 		public String nameKey() {
 			return "merit.minecraft_mode." + this.id;
 		}
 	}
+
+	/** The first land deed in merit, and how much dearer each further one gets. */
+	public static final int DEED_MERIT = 500;
+	public static final int DEED_RAISE = 250;
 
 	public static final List<Offer> SHOP = List.of(
 		new Offer("enhancement_stone", 12, (p, level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE)),
@@ -84,7 +99,9 @@ public final class Bounties {
 		// a pet the buyer does not own yet; nothing (and no charge) once they have them all
 		new Offer("pet_charm", 50, (p, level, r) -> Companions.randomPet(Rarity.UNCOMMON, r, Companions.data(p))),
 		new Offer("mount_whistle", 40, (p, level, r) -> Companions.data(p).hasMount("swift_stallion") ? ItemStack.EMPTY
-			: new ItemStack(Companions.mountItem("swift_stallion"))));
+			: new ItemStack(Companions.mountItem("swift_stallion"))),
+		// residence land: 500 merit, then 250 more for every deed bought before
+		new Offer("land_deed", DEED_MERIT, DEED_RAISE, (p, level, r) -> new ItemStack(ModItems.LAND_DEED)));
 
 	private static ItemStack random(final int tier, final int count, final RandomSource random) {
 		List<ConsumableDef> pool = Consumables.tier(tier);
@@ -121,12 +138,12 @@ public final class Bounties {
 					daily.set(i, data.daily().get(i).asCarried());
 				}
 			}
-			data = new BountyData(day, daily, data.cycle(), data.special(), data.merit());
+			data = new BountyData(day, daily, data.cycle(), data.special(), data.merit(), data.deeds());
 			changed = true;
 		}
 		if (data.cycle() != cycle) {
 			Bounty special = data.special().keeps() ? data.special().asCarried() : rollSpecial(player, cycle);
-			data = new BountyData(data.day(), data.daily(), cycle, special, data.merit());
+			data = new BountyData(data.day(), data.daily(), cycle, special, data.merit(), data.deeds());
 			changed = true;
 		}
 		if (changed) {
@@ -290,7 +307,8 @@ public final class Bounties {
 		}
 		Offer offer = SHOP.get(index);
 		BountyData data = get(player);
-		if (data.merit() < offer.cost()) {
+		int price = offer.price(data);
+		if (data.merit() < price) {
 			return false;
 		}
 		ItemStack stack = offer.item().make(player, level(player), player.getRandom());
@@ -298,7 +316,8 @@ public final class Bounties {
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.bounty.shop_owned").withStyle(ChatFormatting.RED));
 			return false;
 		}
-		set(player, data.withMerit(data.merit() - offer.cost()));
+		BountyData paid = data.withMerit(data.merit() - price);
+		set(player, offer.raise() > 0 ? paid.withDeeds(data.deeds() + 1) : paid);
 		give(player, stack);
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.VILLAGER_TRADE, SoundSource.PLAYERS, 0.6F, 1.1F);
 		return true;

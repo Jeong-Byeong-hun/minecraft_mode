@@ -21,7 +21,10 @@ import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.residence.LandOffice;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.travel.Destination;
+import com.minecraftmode.travel.Travel;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -57,6 +60,11 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DamageNumberPayload.TYPE, DamageNumberPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenLandPayload.TYPE, OpenLandPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(LandBordersPayload.TYPE, LandBordersPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenTravelPayload.TYPE, OpenTravelPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TravelPayload.TYPE, TravelPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -101,6 +109,15 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(GuideBookPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			if (npc(context.player(), payload.entityId(), CityNpc.Role.GUIDE) != null) {
 				CityServices.reissueGuideBook(context.player());
+			}
+		}));
+		ServerPlayNetworking.registerGlobalReceiver(LandActionPayload.TYPE, (payload, context) -> context.server().execute(
+			() -> LandOffice.act(context.player(), payload)
+		));
+		ServerPlayNetworking.registerGlobalReceiver(TravelPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			Destination destination = Destination.byOrdinal(payload.destination());
+			if (destination != null && npc(context.player(), payload.entityId(), CityNpc.Role.WAYMASTER) != null) {
+				Travel.go(context.player(), destination);
 			}
 		}));
 	}

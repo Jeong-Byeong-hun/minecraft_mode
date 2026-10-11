@@ -21,6 +21,7 @@ import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.style.StylistMenu;
+import com.minecraftmode.travel.Travel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,10 @@ public class CityNpc extends PathfinderMob {
 			"알립니다, 알립니다! 초기화 시각, 오늘 밤의 위험, 레이드 변이와 최고 기록까지 전부 제 알림판에 있습니다!"),
 		STYLIST("stylist", 0x7A4AA8, "Stylist Celeste", "재단사 셀레스트",
 			"Love the stats but not the look? Bring me the piece and one whose look you like better, and I will make it wear that look.",
-			"능력치는 좋은데 모양이 마음에 안 드세요? 그 장비와 원하는 모양의 장비를 가져오시면 겉모습을 바꿔 드릴게요.");
+			"능력치는 좋은데 모양이 마음에 안 드세요? 그 장비와 원하는 모양의 장비를 가져오시면 겉모습을 바꿔 드릴게요."),
+		WAYMASTER("waymaster", 0x3AA8C8, "Waymaster Orin", "이동술사 오린",
+			"Where to, traveller? Pick a place and I will open the way.",
+			"어디로 모실까요, 여행자님? 갈 곳을 고르시면 길을 열어 드리지요.");
 
 		private final String id;
 		private final int color;
@@ -194,6 +198,7 @@ public class CityNpc extends PathfinderMob {
 			case HUNT_MASTER -> Items.CROSSBOW;
 			case CRIER -> Items.BELL;
 			case STYLIST -> Items.SHEARS;
+			case WAYMASTER -> Items.ENDER_PEARL;
 		}));
 	}
 
@@ -274,6 +279,7 @@ public class CityNpc extends PathfinderMob {
 				}
 				case STYLIST -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new StylistMenu(id, inventory, this),
 					Component.translatable("container.minecraft_mode.stylist")));
+				case WAYMASTER -> Travel.open(serverPlayer, this.getId());
 			}
 		}
 		return InteractionResult.SUCCESS;

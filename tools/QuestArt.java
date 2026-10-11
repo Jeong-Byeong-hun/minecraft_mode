@@ -59,6 +59,7 @@ final class QuestArt {
 		TextureGen.write("entity/npc/hunt_master", garrick());
 		TextureGen.write("entity/npc/crier", odo());
 		TextureGen.write("entity/npc/stylist", celeste());
+		TextureGen.write("entity/npc/waymaster", orin());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1356,6 +1357,50 @@ final class QuestArt {
 		legs(trousers);
 		fill(0, 28, 16, 4, shoe);
 		fill(8, 16, 4, 4, shoe);
+		return img;
+	}
+
+	/** Waymaster Orin: a silver-bearded traveller in a deep teal hooded cloak with a star clasp, a satchel strap and dusty boots. */
+	static BufferedImage orin() {
+		BufferedImage img = newSkin(120);
+		int skin = 0xE2B898, hair = 0xC8C8D0, cloak = 0x1E6A80, cloakDark = 0x144A5A, trim = 0x7AD8E8, clasp = 0xF0D060, strap = 0x7A5230,
+			shirt = 0xD8D0B8, boot = 0x4A3A2A, dust = 0x8A7A62;
+		head(skin, hair);
+		hair(hair, 1, 2, 3);
+		eyes(12, 0xFFFFFF, 0x3A9AB0);
+		fill(9, 13, 6, 3, hair);             // full silver beard
+		fill(10, 15, 4, 1, hair);
+		px(11, 14, 0x9A7A6A);                // mouth in the beard
+		px(12, 14, 0x9A7A6A);
+		fill(40, 0, 8, 8, cloak);            // hood on the hat layer, trimmed round the face
+		fill(32, 8, 8, 8, cloak);
+		fill(48, 8, 8, 8, cloak);
+		fill(56, 8, 8, 8, cloak);
+		fill(40, 8, 8, 1, trim);
+		fill(40, 9, 1, 7, trim);
+		fill(47, 9, 1, 7, trim);
+
+		body(cloak);
+		fill(22, 20, 4, 12, shirt);          // open cloak over a pale shirt, star clasp at the throat
+		px(23, 20, clasp);
+		px(24, 20, clasp);
+		px(23, 21, clasp);
+		px(24, 21, clasp);
+		for (int i = 0; i < 8; i++) {        // satchel strap across the chest
+			px(27 - i, 20 + i, strap);
+		}
+		fill(20, 31, 8, 1, trim);            // trimmed hem
+		fill(16, 30, 24, 2, cloakDark);
+
+		arms(cloak);
+		fill(40, 29, 16, 1, trim);           // trimmed sleeves and hands
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(cloakDark);
+		fill(0, 26, 16, 6, boot);            // dusty travelling boots
+		fill(0, 26, 16, 1, dust);
+		fill(8, 16, 4, 4, boot);
 		return img;
 	}
 

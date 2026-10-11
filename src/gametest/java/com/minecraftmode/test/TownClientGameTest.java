@@ -138,6 +138,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkTargetHealth(context, server, connection);
 			checkInvasionNumbers();
 			checkTrialHunt(context, server, connection);
+			ResidenceChecks.run(context, server, connection);
 			checkBedRespawn(context, server, connection);
 			WorldClose.prepare(context, server);
 		}

@@ -119,6 +119,7 @@ final class EndgameLang {
 				case "return_scrolls" -> ko ? "귀환 주문서 3개" : "3 Return Scrolls";
 				case "pet_charm" -> ko ? "펫 부적 (무작위)" : "Pet Charm (random)";
 				case "mount_whistle" -> ko ? "질풍마 호루라기" : "Swift Stallion Whistle";
+				case "land_deed" -> ko ? "토지 소유권 증서 (살 때마다 비싸짐)" : "Land Deed (dearer each time)";
 				default -> offer.id();
 			});
 		}

@@ -129,6 +129,7 @@ public final class CityZone {
 			case HUNT_MASTER -> new BlockPos(9, base, 13);
 			case CRIER -> new BlockPos(-9, base, 13);
 			case STYLIST -> new BlockPos(-9, base, 53);
+			case WAYMASTER -> new BlockPos(-9, base, 0);
 		};
 	}
 

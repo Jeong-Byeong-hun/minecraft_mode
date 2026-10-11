@@ -24,7 +24,7 @@ public enum JobClass implements StringRepresentable {
 			"Once every 3 minutes, survive a lethal blow and recover 30% health.", "3분마다 한 번, 치명상을 버티고 체력 30%를 회복합니다.")
 	}),
 	ROGUE("rogue", 0x9B59D0, "Rogue", "도적", new Tier[] {
-		new Tier("Thief", "도적", "Light Feet", "가벼운 발놀림", "Movement speed +10%.", "이동 속도 +10%."),
+		new Tier("Thief", "도적", "Light Feet", "가벼운 발놀림", "Movement speed +10% and critical chance +5%.", "이동 속도 +10%, 치명타 확률 +5%."),
 		new Tier("Ninja", "닌자", "Vital Strike", "급소 찌르기", "15% chance to land a critical hit (+50% damage).", "15% 확률로 치명타(피해 +50%)."),
 		new Tier("Assassin", "어쌔신", "Assassination Arts", "암살술", "Damage from behind +30%.", "뒤에서 공격하면 피해 +30%."),
 		new Tier("Shadow Monarch", "그림자 군주", "Shadow Veil", "그림자 장막", "15% chance to dodge an attack.", "15% 확률로 공격을 회피합니다.")
@@ -55,7 +55,7 @@ public enum JobClass implements StringRepresentable {
 	}),
 	SHINIGAMI("shinigami", 0x9FD8E8, "Soul Reaper", "사신", new Tier[] {
 		new Tier("Soul Reaper", "사신", "Flash Step", "순보", "Movement speed +8% and 5% dodge chance.", "이동 속도 +8%, 회피 확률 5%."),
-		new Tier("Lieutenant", "부대장", "Shikai", "시해", "Skill damage +12%.", "스킬 피해 +12%."),
+		new Tier("Lieutenant", "부대장", "Shikai", "시해", "Skill damage +8%.", "스킬 피해 +8%."),
 		new Tier("Captain", "대장", "Bankai", "만해", "Basic attack damage +10% and attack speed +5%.", "기본 공격 피해 +10%, 공격 속도 +5%."),
 		new Tier("Captain-Commander", "총대장", "Mugetsu", "무월",
 			"Skill cooldowns -8% and +15% damage to bosses and named monsters.", "스킬 재사용 대기시간 -8%, 보스·네임드에게 주는 피해 +15%.")
@@ -65,7 +65,7 @@ public enum JobClass implements StringRepresentable {
 		new Tier("Nen User", "넨 능력자", "Gyo", "교", "Critical chance +10%.", "치명타 확률 +10%."),
 		new Tier("Pro Hunter", "프로 헌터", "Ko", "코", "15% chance for basic attacks to hit twice.", "15% 확률로 기본 공격이 두 번 적중합니다."),
 		new Tier("Triple-Star Hunter", "트리플 헌터", "Limitation and Vow", "제약과 서약",
-			"Skill damage +15% and +2 MP per second.", "스킬 피해 +15%, 초당 MP 회복 +2.")
+			"Skill damage +10% and +2 MP per second.", "스킬 피해 +10%, 초당 MP 회복 +2.")
 	});
 
 	public static final Codec<JobClass> CODEC = StringRepresentable.fromEnum(JobClass::values);

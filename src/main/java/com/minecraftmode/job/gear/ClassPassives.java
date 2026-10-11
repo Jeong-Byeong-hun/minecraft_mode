@@ -20,6 +20,11 @@ public final class ClassPassives {
 			List.of(StatLine.of(SKILL_DAMAGE, 15)),
 			List.of(),
 			List.of()),
+		JobClass.ROGUE, List.of(
+			List.of(StatLine.of(CRIT_CHANCE, 5)),
+			List.of(),
+			List.of(),
+			List.of()),
 		JobClass.PIRATE, List.of(
 			List.of(),
 			List.of(StatLine.of(CRIT_CHANCE, 10)),
@@ -27,14 +32,14 @@ public final class ClassPassives {
 			List.of(StatLine.of(BASIC_DAMAGE, 10), StatLine.of(SHOT_DAMAGE, 10), StatLine.of(BOSS_DAMAGE, 20))),
 		JobClass.SHINIGAMI, List.of(
 			List.of(StatLine.of(MOVE_SPEED, 8), StatLine.of(DODGE, 5)),
-			List.of(StatLine.of(SKILL_DAMAGE, 12)),
+			List.of(StatLine.of(SKILL_DAMAGE, 8)),
 			List.of(StatLine.of(BASIC_DAMAGE, 10), StatLine.of(ATTACK_SPEED, 5)),
 			List.of(StatLine.of(COOLDOWN, 8), StatLine.of(BOSS_DAMAGE, 15))),
 		JobClass.HUNTER, List.of(
 			List.of(StatLine.of(DAMAGE_REDUCTION, 5), StatLine.of(MAX_HEALTH, 2)),
 			List.of(StatLine.of(CRIT_CHANCE, 10)),
 			List.of(StatLine.of(DOUBLE_STRIKE, 15)),
-			List.of(StatLine.of(SKILL_DAMAGE, 15), StatLine.of(MANA_REGEN, 2))));
+			List.of(StatLine.of(SKILL_DAMAGE, 10), StatLine.of(MANA_REGEN, 2))));
 
 	public static List<StatLine> of(final JobData data) {
 		List<List<StatLine>> tiers = TIERS.get(data.job());

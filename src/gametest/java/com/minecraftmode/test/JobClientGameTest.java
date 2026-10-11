@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
+import com.minecraftmode.client.mixin.AbstractContainerScreenAccessor;
 import com.minecraftmode.client.job.JobScreen;
 import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.economy.ShopOffers;
@@ -58,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -66,6 +68,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -90,8 +93,10 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.inventory.ContainerLevelAccess;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -130,6 +135,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkBasicShot(context, server, connection);
 			checkGuildAndDrops(context, server, connection);
 			jobScreen(context, server, connection);
+			weaponTooltip(context, server, connection);
 			checkPointBlank(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
@@ -622,8 +628,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(cast == SkillCaster.Result.OK, "Twin Getsuga could not be cast: " + cast);
 		context.waitTicks(15);
 		float farTaken = farBefore - server.computeOnServer(s -> far[0].getHealth());
-		// one wave = power x the shot multiplier of twin_getsuga (1.24 since the 0.4.4 balance pass)
-		float wave = server.computeOnServer(s -> (float)(JobWeapons.def("true_zangetsu").power() * 1.24));
+		// one wave = skill power x the shot multiplier of twin_getsuga (1.24 since the 0.4.4 balance pass)
+		float wave = server.computeOnServer(s -> (float)(JobWeapons.def("true_zangetsu").skillPower() * 1.24));
 		require(farTaken >= wave * 1.5F, "both Twin Getsuga waves should hit a monster 15 blocks ahead, it took " + farTaken + " of " + wave + " per wave");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] point blank: bolt from inside a husk, lightning on a husk in front and Getsuga over a spider all hit");
@@ -693,7 +699,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 		});
 		require(cast == SkillCaster.Result.OK, "Unlimited Blade Works could not be cast: " + cast);
 		context.waitTicks(50);
-		float[] blades = server.computeOnServer(s -> new float[] {400.0F - roofed[0].getHealth(), JobWeapons.def("emiya_black_bow").power() * 0.35F});
+		float[] blades = server.computeOnServer(s -> new float[] {400.0F - roofed[0].getHealth(), JobWeapons.def("emiya_black_bow").skillPower() * 0.35F});
 		require(blades[0] >= 4 * blades[1], "Unlimited Blade Works under a roof took " + blades[0] + " health, less than 4 blades of " + blades[1]);
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		server.runCommand("fill 14 -55 14 26 -55 26 minecraft:air");
@@ -1030,6 +1036,37 @@ public class JobClientGameTest implements FabricClientGameTest {
 		context.waitTicks(2);
 	}
 
+	/** A class weapon's tooltip names its skill power and gives every damaging skill's damage per cast (the effect lines are percentages). */
+	private static void weaponTooltip(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		ItemStack saved = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ItemStack old = player.getInventory().getItem(0).copy();
+			player.getInventory().setItem(0, new ItemStack(JobWeapons.item(JobWeapons.def("gladiator_longsword"))));
+			return old;
+		});
+		context.waitTicks(5);
+		String text = context.computeOnClient(minecraft -> minecraft.player.getInventory().getItem(0)
+			.getTooltipLines(Item.TooltipContext.of(minecraft.level), minecraft.player, TooltipFlag.NORMAL).stream().map(Component::getString)
+			.collect(Collectors.joining("\n")));
+		require(text.contains("Skill power") && text.contains("dmg/cast"), "the weapon tooltip should show the skill power and each skill's damage per cast:\n" + text);
+		context.setScreen(() -> new InventoryScreen(Minecraft.getInstance().player));
+		context.waitForScreen(InventoryScreen.class);
+		context.waitTicks(5);
+		// the middle of hotbar slot 0 (8, 142 in the inventory panel)
+		double[] pos = context.computeOnClient(minecraft -> {
+			AbstractContainerScreenAccessor screen = (AbstractContainerScreenAccessor)minecraft.gui.screen();
+			double scale = minecraft.getWindow().getGuiScale();
+			return new double[] {(screen.minecraftMode$leftPos() + 16) * scale, (screen.minecraftMode$topPos() + 150) * scale};
+		});
+		context.getInput().setCursorPos(pos[0], pos[1]);
+		context.waitTicks(5);
+		context.takeScreenshot("job_weapon_tooltip");
+		context.setScreen(() -> null);
+		server.runOnServer(s -> connection.getServerPlayer().getInventory().setItem(0, saved));
+		context.waitTicks(2);
+		MinecraftMode.LOGGER.info("[job] weapon tooltip shows skill power and damage per cast");
+	}
+
 	// ------------------------------------------------------------------ every skill
 
 	private static void castEverySkill(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
@@ -1103,7 +1140,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			JobStats.refresh(player);
 			GearStats.invalidate(player);
 			EngraveTotals reaper = GearStats.of(player);
-			require(reaper.get(EngraveStat.BOSS_DAMAGE) >= 15 && reaper.get(EngraveStat.SKILL_DAMAGE) >= 12 && reaper.get(EngraveStat.DODGE) >= 5,
+			require(reaper.get(EngraveStat.BOSS_DAMAGE) >= 15 && reaper.get(EngraveStat.SKILL_DAMAGE) >= 8 && reaper.get(EngraveStat.DODGE) >= 5,
 				"Soul Reaper tier passives should add boss damage, skill damage and dodge");
 			require(reaper.get(EngraveStat.COOLDOWN) >= 8 + 8, "Mugetsu (8%) plus the Lv 80 bonus (8%) should cut cooldowns, got " + reaper.get(EngraveStat.COOLDOWN));
 			player.teleportTo(20.5, -60, 20.5);
@@ -1121,7 +1158,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			EngraveTotals hunter = GearStats.of(player);
 			require(hunter.get(EngraveStat.DOUBLE_STRIKE) >= 15 && hunter.get(EngraveStat.CRIT_CHANCE) >= 10 && hunter.get(EngraveStat.DAMAGE_REDUCTION) >= 5,
 				"Hunter tier passives should add double strike, crit chance and damage reduction");
-			require(hunter.get(EngraveStat.SKILL_DAMAGE) < 15, "Limitation and Vow belongs to tier 4 only");
+			require(hunter.get(EngraveStat.SKILL_DAMAGE) < 10, "Limitation and Vow belongs to tier 4 only");
 			require(hunter.get(EngraveStat.CRIT_DAMAGE) >= 15, "the Lv 50 hunter bonus should add 15% crit damage, got " + hunter.get(EngraveStat.CRIT_DAMAGE));
 			LivingEntity hidden = spawnTarget(player.level(), player.getX() + 12, player.getY(), player.getZ());
 			ClassAbilities.use(player);

@@ -67,7 +67,7 @@ public final class SkillContext {
 		Fx base = weapon.fx();
 		Fx own = skill.fx();
 		this.fx = own == null ? base : own.color() < 0 ? new Fx(own.kind(), base.color()) : own;
-		this.power = weapon.power() * (1.0 + mods.fraction(EngraveStat.SKILL_DAMAGE) + powerBonus);
+		this.power = weapon.skillPower() * (1.0 + mods.fraction(EngraveStat.SKILL_DAMAGE) + powerBonus);
 		this.areaScale = 1.0 + mods.fraction(EngraveStat.SKILL_AREA);
 		this.castEye = caster.getEyePosition();
 		this.castLook = caster.getLookAngle();

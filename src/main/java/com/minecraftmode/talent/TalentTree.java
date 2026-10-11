@@ -141,7 +141,7 @@ public final class TalentTree {
 			branch("manipulator", "Manipulator", "조작계", 0x8A2AC8,
 				n("Gyo", "교", l(CRIT_CHANCE, 1.5F)), n("Thread Snare", "실 올가미", l(SLOW, 0.4F)),
 				n("Zetsu", "제츠", l(MANA_REGEN, 0.2F)), n("Hatsu", "하츠", l(COOLDOWN, 1.5F)),
-				n("Limitation and Vow", "제약과 서약", l(COOLDOWN, 6), l(CRIT_REFUND, 0.6F))));
+				n("Limitation and Vow", "제약과 서약", l(COOLDOWN, 6), l(CRIT_REFUND, 0.3F))));
 	}
 
 	private record Draft(String en, String ko, List<StatLine> lines) {

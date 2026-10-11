@@ -165,6 +165,7 @@ final class JobLang {
 		b.add("tooltip.minecraft_mode.weapon.level", ko ? "요구 Lv %s" : "Req. Lv %s");
 		b.add("tooltip.minecraft_mode.weapon.locked", ko ? "조건 미충족: 기본 공격만 가능" : "Requirements not met: basic attacks only");
 		b.add("tooltip.minecraft_mode.weapon.power", ko ? "위력 %s" : "Power %s");
+		b.add("tooltip.minecraft_mode.weapon.skill_power", ko ? "스킬 위력 %s" : "Skill power %s");
 		b.add("tooltip.minecraft_mode.weapon.shot", ko ? "우클릭 %s: 피해 %s, %s초" : "Right-click %s: %s damage, %ss");
 		b.add("tooltip.minecraft_mode.weapon.draw", ko ? "당겨 쏘기 %s: 피해 %s, %s초 충전" : "Draw %s: %s damage, %ss full draw");
 		b.add("tooltip.minecraft_mode.weapon.skills", ko ? "스킬" : "Skills");
@@ -172,6 +173,7 @@ final class JobLang {
 		b.add("tooltip.minecraft_mode.weapon.engravings", ko ? "각인 %s/%s" : "Engravings %s/%s");
 		b.add("tooltip.minecraft_mode.weapon.no_engravings", ko ? " 정수 각인대에서 각인할 수 있습니다" : " Engrave it at an Essence Engraving Table");
 		b.add("tooltip.minecraft_mode.skill.cost", ko ? "MP %s · %s초" : "MP %s · %ss");
+		b.add("tooltip.minecraft_mode.skill.damage", ko ? "1회 피해 약 %s" : "~%s dmg/cast");
 
 		// class screen
 		b.add("screen.minecraft_mode.job", ko ? "직업" : "Class");

@@ -84,11 +84,13 @@ public final class JobTooltips {
 		Archetype type = def.archetype();
 		MutableComponent basic = Component.translatable(type.nameKey()).withStyle(ChatFormatting.GOLD)
 			.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
-			.append(Component.translatable("tooltip.minecraft_mode.weapon.power", num(def.power())).withStyle(ChatFormatting.GRAY));
+			.append(Component.translatable("tooltip.minecraft_mode.weapon.power", num(def.power())).withStyle(ChatFormatting.GRAY))
+			.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
+			.append(Component.translatable("tooltip.minecraft_mode.weapon.skill_power", num(def.skillPower())).withStyle(ChatFormatting.GRAY));
 		if (type.isRanged()) {
 			String key = type.mode() == Archetype.BasicMode.DRAW ? "tooltip.minecraft_mode.weapon.draw" : "tooltip.minecraft_mode.weapon.shot";
 			basic.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
-				.append(Component.translatable(key, Component.translatable(type.shot().nameKey()), num(def.power() * type.shotMultiplier()), num(type.shotCooldown() / 20.0))
+				.append(Component.translatable(key, Component.translatable(type.shot().nameKey()), num(def.shotDamage()), num(type.shotCooldown() / 20.0))
 					.withStyle(ChatFormatting.GRAY));
 		}
 		lines.add(basic);
@@ -101,10 +103,17 @@ public final class JobTooltips {
 			Skill skill = def.skills().get(i);
 			String key = JobKeys.SKILLS[i].getTranslatedKeyMessage().getString();
 			int cooldown = SkillCaster.cooldown(data, skill, mods);
-			lines.add(Component.literal(" [" + key + "] ").withStyle(ChatFormatting.WHITE)
+			MutableComponent line = Component.literal(" [" + key + "] ").withStyle(ChatFormatting.WHITE)
 				.append(Component.translatable(skill.nameKey()).withColor(skill.kind().color()))
 				.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
-				.append(Component.translatable("tooltip.minecraft_mode.skill.cost", SkillCaster.manaCost(skill, mods), num(cooldown / 20.0)).withStyle(ChatFormatting.AQUA)));
+				.append(Component.translatable("tooltip.minecraft_mode.skill.cost", SkillCaster.manaCost(skill, mods), num(cooldown / 20.0)).withStyle(ChatFormatting.AQUA));
+			// what one cast deals to one monster with the current bonuses, in the same units as the basic attack (the lines below are percentages)
+			double damage = skill.estimate(1) * SkillCaster.castPower(data, def, mods);
+			if (damage > 0.0) {
+				line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
+					.append(Component.translatable("tooltip.minecraft_mode.skill.damage", Math.round(damage)).withStyle(ChatFormatting.RED));
+			}
+			lines.add(line);
 			if (detail) {
 				for (SkillAction action : skill.actions()) {
 					lines.add(Component.literal("    - ").withStyle(ChatFormatting.DARK_GRAY).append(action.describe().copy().withStyle(ChatFormatting.GRAY)));

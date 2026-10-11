@@ -21,8 +21,25 @@ public record WeaponDef(String id, JobClass job, int tier, int level, Archetype 
 		return 4.0F + 2.2F * this.tier + 0.06F * this.level;
 	}
 
+	/** Skills hit this many times harder than the weapon power (their multipliers are of {@link #skillPower}). */
+	public static final float SKILL_POWER = 1.5F;
+
+	/** Base number every skill multiplier scales from. */
+	public float skillPower() {
+		return this.power() * SKILL_POWER;
+	}
+
+	/** Basic attacks and shots hit for this share of what their archetype multipliers say, so skills carry more of the damage. */
+	public static final float BASIC_POWER = 1.0F;
+
+	/** Melee damage of a full-strength basic attack. */
 	public float attackDamage() {
-		return this.power() * this.archetype.damageMultiplier();
+		return this.power() * this.archetype.damageMultiplier() * BASIC_POWER;
+	}
+
+	/** Damage of a fully drawn or loaded basic shot, before class bonuses. */
+	public float shotDamage() {
+		return this.power() * this.archetype.shotMultiplier() * BASIC_POWER;
 	}
 
 	public String nameKey() {

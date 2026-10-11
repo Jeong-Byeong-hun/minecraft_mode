@@ -21,6 +21,8 @@ public final class SkillCaster {
 	public static final float ARCANE_MASTERY = 0.15F;
 	/** The most percent and flat cooldown reductions together take off a skill's cooldown. */
 	public static final float MAX_COOLDOWN_CUT = 0.6F;
+	/** Akashic Record (mage tier 4): skill cooldown reduction. */
+	public static final float AKASHIC_RECORD = 0.20F;
 
 	public enum Result {
 		OK,
@@ -113,6 +115,11 @@ public final class SkillCaster {
 		return Math.max(data.readyAt(skill.id()), data.readyAt(slotKey(data.job(), slot)));
 	}
 
+	/** What a skill of {@code def} multiplies its percentages with ({@code SkillContext.power}): skill power, skill damage and Arcane Mastery. */
+	public static double castPower(final JobData data, final WeaponDef def, final EngraveTotals mods) {
+		return def.skillPower() * (1.0 + mods.fraction(EngraveStat.SKILL_DAMAGE) + (CombatHooks.has(data, JobClass.MAGE, 3) ? ARCANE_MASTERY : 0.0));
+	}
+
 	/**
 	 * Percent reductions first, then flat seconds from armor; together they take at most {@link #MAX_COOLDOWN_CUT} off a skill (flat
 	 * seconds on top of 50% took 6-9 s skills down to 1-2.5 s, so mana was the only limit left), and a skill never drops below 1 second
@@ -120,7 +127,7 @@ public final class SkillCaster {
 	 */
 	public static int cooldown(final JobData data, final Skill skill, final EngraveTotals mods) {
 		int base = skill.cooldownTicks();
-		float reduction = mods.fraction(EngraveStat.COOLDOWN) + (CombatHooks.has(data, JobClass.MAGE, 4) ? 0.20F : 0.0F);
+		float reduction = mods.fraction(EngraveStat.COOLDOWN) + (CombatHooks.has(data, JobClass.MAGE, 4) ? AKASHIC_RECORD : 0.0F);
 		int ticks = Math.round(base * (1.0F - Math.min(MAX_COOLDOWN_CUT, reduction)));
 		ticks -= Math.round(mods.get(EngraveStat.COOLDOWN_FLAT) * 20.0F);
 		ticks = Math.max(ticks, Math.round(base * (1.0F - MAX_COOLDOWN_CUT)));

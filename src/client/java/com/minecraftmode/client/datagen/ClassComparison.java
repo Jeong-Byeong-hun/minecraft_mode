@@ -203,7 +203,7 @@ final class ClassComparison {
 			shotRate = 20.0 / ticks;
 			double distance = mods.fraction(RANGE_BONUS) * SHOT_DISTANCE / 10.0
 				+ (CombatHooks.has(data, JobClass.ARCHER, 3) ? Math.min(0.40, 0.02 * (int)(SHOT_DISTANCE / 4.0)) : 0.0);
-			double hit = w.power() * type.shotMultiplier() * (1.0 + BasicAttacks.shotBonus(data, mods)) * (CombatHooks.has(data, JobClass.ARCHER, 1) ? 1.15 : 1.0)
+			double hit = w.shotDamage() * (1.0 + BasicAttacks.shotBonus(data, mods)) * (CombatHooks.has(data, JobClass.ARCHER, 1) ? 1.15 : 1.0)
 				* (1.0 + execute + first + distance) * crit * (CombatHooks.has(data, JobClass.ARCHER, 4) ? 1.0 + BasicAttacks.BABYLON_CHANCE * 2 : 1.0);
 			shot = hit * shotRate;
 			double extra = Math.min(4.0, mods.get(EXTRA_SHOT)) * 0.5;
@@ -215,7 +215,7 @@ final class ClassComparison {
 		// chain lightning jumps to three more monsters for half the hit
 		double basic5 = (shoots ? shot5 : melee5) + basic * Math.min(0.5, mods.fraction(CHAIN_LIGHTNING)) * 3 * 0.5;
 		// skills: cast on cooldown; critical basic hits wind cooldowns down (crit refund); an echo skips the cooldown
-		double skillPower = w.power() * (1.0 + mods.fraction(SKILL_DAMAGE) + (CombatHooks.has(data, JobClass.MAGE, 3) ? SkillCaster.ARCANE_MASTERY : 0.0) + first) * crit;
+		double skillPower = w.skillPower() * (1.0 + mods.fraction(SKILL_DAMAGE) + (CombatHooks.has(data, JobClass.MAGE, 3) ? SkillCaster.ARCANE_MASTERY : 0.0) + first) * crit;
 		double speedUp = 1.0 + basicHits * critChance * mods.get(CRIT_REFUND);
 		double echo = mods.fraction(ECHO);
 		record Use(double dps1, double dps5, double mpPerSecond) {
@@ -274,10 +274,11 @@ final class ClassComparison {
 			double mean1 = results.stream().mapToDouble(Result::total1).average().orElse(1.0);
 			double meanEhp = results.stream().mapToDouble(Result::ehp).average().orElse(1.0);
 			md.append("\n### Lv ").append(level).append(" (").append(tierAt(level)).append("차)\n\n");
-			md.append("| 직업 | 평타 | 스킬 1마리 | 합계 1마리 | 평균 대비 | 합계 5마리 | 보스 상대 | 최고 무기 | MP 소모 | 특성 |\n|---|---|---|---|---|---|---|---|---|---|\n");
+			md.append("| 직업 | 평타 | 스킬 1마리 | 스킬 비중 | 합계 1마리 | 평균 대비 | 합계 5마리 | 보스 상대 | 최고 무기 | MP 소모 | 특성 |\n|---|---|---|---|---|---|---|---|---|---|---|\n");
 			for (Result r : results) {
 				md.append("| ").append(r.job().ko()).append(" | ").append(ClassDocProvider.num(r.basic())).append(" | ").append(ClassDocProvider.num(r.skill1()))
-					.append(" | ").append(ClassDocProvider.num(r.total1())).append(" | ").append(Math.round(r.total1() / mean1 * 100)).append("% | ")
+					.append(" | ").append(Math.round(r.skill1() / r.total1() * 100)).append("% | ")
+					.append(ClassDocProvider.num(r.total1())).append(" | ").append(Math.round(r.total1() / mean1 * 100)).append("% | ")
 					.append(ClassDocProvider.num(r.total5())).append(" | ").append(ClassDocProvider.num(r.boss())).append(" | ").append(r.bestWeapon()).append(' ')
 					.append(ClassDocProvider.num(r.best())).append(" | ").append(Math.round(r.mpLoad() * 100)).append("% | ").append(r.talents().isEmpty() ? "-" : r.talents())
 					.append(" |\n");

@@ -74,10 +74,12 @@ public class ClassDocProvider implements DataProvider {
 		md.append("- 직업 ").append(JobClass.PLAYABLE.size()).append("종 × 4차 전직, 직업마다 무기 23종(1차 3 · 2차 6 · 3차 6 · 4차 8), 무기마다 스킬 3개(4차는 4개).\n");
 		md.append("- 스킬 키: R / X / V / Z (4번째는 4차 무기만), 직업 창: K. 키는 설정 > 조작에서 바꿀 수 있습니다.\n");
 		md.append("- 직업 무기는 누구나 들 수 있지만, **직업·차수·레벨 조건을 모두 만족해야** 스킬과 각인이 작동합니다. 그 외에는 기본 공격만 됩니다.\n");
-		md.append("- 피해 수치는 무기 위력(차수·레벨로 증가)에 대한 배율입니다. 위력 = 4 + 2.2 × 차수 + 0.06 × 요구 레벨.\n");
+		md.append("- 위력 = 4 + 2.2 × 차수 + 0.06 × 요구 레벨. 스킬의 피해 배율은 **스킬 위력**(위력 × ").append(num(WeaponDef.SKILL_POWER))
+			.append(")에 대한 값이고, 기본 공격·사격은 위력 × 무기 종류 배율").append(WeaponDef.BASIC_POWER == 1.0F ? "" : " × " + num(WeaponDef.BASIC_POWER))
+			.append("입니다(무기 표의 근접 피해·기본 사격). 무기 툴팁의 스킬 줄에는 지금 보너스로 1마리에게 들어가는 \"1회 피해\"가 같이 나옵니다.\n");
 		md.append("- 스킬과 스킬 소환수도 치명타가 터집니다(치명 확률·치명 피해 옵션). 치명타 쿨타임 감소는 기본 공격 치명타에만 붙습니다.\n");
 		md.append("- 범위 공격(부채꼴·원·장판·낙뢰·빔·폭발)의 배율은 0.85배가 이미 적용된 값이고, 한 번에 5마리를 넘게 맞히면 마리당 √(5/마리 수)로 줄어듭니다.\n");
-		md.append("- \"피해 1마리 / 5마리\"는 한 번 쓸 때 모여 있는 적 1마리·5마리에게 들어가는 위력 배율의 합입니다(치명타·보너스 제외 추정치). 맨 아래 \"스킬 피해 비교\" 참고.\n\n");
+		md.append("- \"피해 1마리 / 5마리\"는 한 번 쓸 때 모여 있는 적 1마리·5마리에게 들어가는 스킬 위력 배율의 합입니다(치명타·보너스 제외 추정치). 맨 아래 \"스킬 피해 비교\" 참고.\n\n");
 
 		md.append("## 레벨과 전직\n\n");
 		md.append("| 차수 | 요구 레벨 |\n|---|---|\n");
@@ -166,10 +168,10 @@ public class ClassDocProvider implements DataProvider {
 						continue;
 					}
 					md.append("\n#### ").append(def.ko()).append(" (").append(def.en()).append(")\n\n");
-					md.append(def.archetype().ko()).append(" · 요구 Lv ").append(def.level()).append(" · 위력 ").append(num(def.power()))
+					md.append(def.archetype().ko()).append(" · 요구 Lv ").append(def.level()).append(" · 위력 ").append(num(def.power())).append(" · 스킬 위력 ").append(num(def.skillPower()))
 						.append(" · 근접 피해 ").append(num(def.attackDamage()));
 					if (def.archetype().isRanged()) {
-						md.append(" · ").append(this.ko.get(def.archetype().shot().nameKey())).append(" 기본 사격 ").append(num(def.power() * def.archetype().shotMultiplier()));
+						md.append(" · ").append(this.ko.get(def.archetype().shot().nameKey())).append(" 기본 사격 ").append(num(def.shotDamage()));
 					}
 					md.append("\n\n| 키 | 스킬 | 종류 | MP | 대기 | 피해 1마리 / 5마리 | 효과 |\n|---|---|---|---|---|---|---|\n");
 					String[] keys = {"R", "X", "V", "Z"};
@@ -206,7 +208,7 @@ public class ClassDocProvider implements DataProvider {
 	 */
 	private void balance(final StringBuilder md) {
 		md.append("\n## 스킬 피해 비교\n\n");
-		md.append("- 한 번 쓸 때의 위력 배율 합을 대기 시간으로 나눈 값(초당)입니다. 치명타·보너스·MP는 빼고 계산한 추정치라 비교용으로만 보세요.\n");
+		md.append("- 한 번 쓸 때의 스킬 위력 배율 합을 대기 시간으로 나눈 값(초당)입니다. 치명타·보너스·MP는 빼고 계산한 추정치라 비교용으로만 보세요.\n");
 		md.append("- 범위 공격은 표의 배율에 이미 0.85배가 적용되어 있고, 한 번에 5마리를 넘게 맞히면 마리당 √(5/마리 수)로 줄어듭니다.\n");
 		md.append("- 소환수는 지속 시간의 70% 동안 초당 한 번 때린다고 보고 계산했습니다.\n\n");
 		md.append("| 차수 | 1마리 초당 (중앙값) | 5마리 초당 (중앙값) | 1마리 기준 강한 스킬 (중앙값의 1.8배 이상) | 약한 스킬 (0.4배 이하) |\n|---|---|---|---|---|\n");

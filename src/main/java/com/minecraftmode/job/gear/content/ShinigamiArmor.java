@@ -40,7 +40,7 @@ public final class ShinigamiArmor extends ArmorContent {
 		set("captains_haori", 60, "Captain's Haori", "대장 하오리", 0xF4F4F0, 0x18181C, 0x3A3A44,
 			two(line(DAMAGE_REDUCTION, 5)),
 			three(line(BOSS_DAMAGE, 12)),
-			four(line(COOLDOWN, 10), line(SKILL_DAMAGE, 10)));
+			four(line(COOLDOWN, 6), line(SKILL_DAMAGE, 10)));
 		set("visored", 70, "Visored", "가면의 군세", 0xE8E8E8, 0x18181C, 0xC8202A,
 			two(line(LIFESTEAL, 3)),
 			three(line(CRIT_DAMAGE, 25)),

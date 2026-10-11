@@ -7,7 +7,9 @@ import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDef;
+import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.dungeon.Dungeons;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.Paragon;
@@ -17,7 +19,9 @@ import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.raid.BossDef;
+import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
@@ -28,6 +32,7 @@ import com.minecraftmode.travel.Travel;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.ChatFormatting;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
@@ -67,6 +72,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(FieldBossPayload.TYPE, FieldBossPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(MenuActionPayload.TYPE, MenuActionPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -115,6 +121,9 @@ public final class ModNetworking {
 		}));
 		ServerPlayNetworking.registerGlobalReceiver(LandActionPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> LandOffice.act(context.player(), payload)
+		));
+		ServerPlayNetworking.registerGlobalReceiver(MenuActionPayload.TYPE, (payload, context) -> context.server().execute(
+			() -> handleMenu(context.player(), payload)
 		));
 		ServerPlayNetworking.registerGlobalReceiver(TravelPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			Destination destination = Destination.byOrdinal(payload.destination());
@@ -177,6 +186,36 @@ public final class ModNetworking {
 			}
 		}
 		AuctionService.send(player, payload.entityId(), payload.query(), suggestSlot, suggestEach);
+	}
+
+	/** The adventurer's menu: the same calls as {@code /party}, {@code /wallet pay}, {@code /raid leave} and {@code /dungeon leave}. */
+	private static void handleMenu(final ServerPlayer player, final MenuActionPayload payload) {
+		switch (payload.action()) {
+			case MenuActionPayload.PARTY_CREATE -> Parties.create(player);
+			case MenuActionPayload.PARTY_INVITE -> Parties.invite(player, payload.name());
+			case MenuActionPayload.PARTY_ACCEPT -> Parties.accept(player);
+			case MenuActionPayload.PARTY_LEAVE -> Parties.leave(player);
+			case MenuActionPayload.PARTY_KICK -> Parties.kick(player, payload.name());
+			case MenuActionPayload.PARTY_PROMOTE -> Parties.promote(player, payload.name());
+			case MenuActionPayload.PARTY_DISBAND -> Parties.disband(player);
+			case MenuActionPayload.PAY -> {
+				ServerPlayer to = player.level().getServer().getPlayerList().getPlayerByName(payload.name());
+				if (to == null) {
+					player.sendSystemMessage(Wallet.msg("not_online", payload.name()).withStyle(ChatFormatting.RED));
+				} else {
+					Wallet.pay(player, to, payload.amount());
+				}
+			}
+			case MenuActionPayload.LEAVE -> {
+				if (RaidDimension.is(player.level())) {
+					Raids.leave(player);
+				} else if (DungeonDimension.is(player.level())) {
+					Dungeons.leave(player);
+				}
+			}
+			default -> {
+			}
+		}
 	}
 
 	private static void handleProgress(final ServerPlayer player, final ProgressActionPayload payload) {

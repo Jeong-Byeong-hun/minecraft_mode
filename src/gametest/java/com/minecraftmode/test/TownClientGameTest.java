@@ -106,8 +106,8 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
  * The town comforts and the combat changes that came with them: gap-closing skills guard their caster and stagger what they hit,
  * melee classes get health and armor per tier, a vindicator hits for a flat 2.5 hearts, every advancement hands out a kit (once),
  * bags pick up by kind and keep what they hold, the trash button with its undo, the general store's odds-and-ends buying, the
- * target health bar, the invasion numbers, Huntmaster Garrick's trial hunt (only what the trial needs, and back out) and respawning
- * at a bed. The capital's portals, ender chests, travel circles and homestead plains need a noise world: see {@code CityChecks}.
+ * target health bar, the invasion numbers, Huntmaster Garrick's trial hunt (only what the trial needs, and back out), respawning
+ * at a bed, and the adventurer's menu ({@code MenuChecks}). The capital's portals, ender chests, travel circles and homestead plains need a noise world: see {@code CityChecks}.
  */
 public class TownClientGameTest implements FabricClientGameTest {
 	@Override
@@ -145,6 +145,8 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkInvasionNumbers();
 			checkTrialHunt(context, server, connection);
 			ResidenceChecks.run(context, server, connection);
+			// before the respawn check, which leaves getServerPlayer() holding the entity from before respawning
+			MenuChecks.run(context, server, connection);
 			checkBedRespawn(context, server, connection);
 			WorldClose.prepare(context, server);
 		}

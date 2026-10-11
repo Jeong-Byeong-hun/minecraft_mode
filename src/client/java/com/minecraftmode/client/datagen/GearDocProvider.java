@@ -491,7 +491,7 @@ public class GearDocProvider implements DataProvider {
 			.append(EnhanceMenu.PROTECTION_ETHER).append("개를 대신 씁니다(낮은 등급부터).\n");
 		md.append("- +").append(Enhancement.GLOW_FROM).append("부터 장비가 빛납니다: 광택, 슬롯 테두리(+").append(Enhancement.GLOW_FROM).append(" 파랑, +")
 			.append(Enhancement.GLOW_BRIGHT).append(" 보라, +").append(Enhancement.MAX).append(" 금색, 각성 붉은 금색과 ✦), 든 무기 주변 파티클, 직업 방어구 4부위가 모두 +")
-			.append(Enhancement.GLOW_FROM).append(" 이상이면 발밑의 고리. `/enhanceeffects false`로 파티클만 끕니다.\n");
+			.append(Enhancement.GLOW_FROM).append(" 이상이면 발밑의 고리. 모험가 메뉴(;)의 설정 탭에서 파티클만 끌 수 있습니다.\n");
 		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n\n");
 		md.append("| 단계 | 성공률 | 정수 | 강화석 | 실패 시 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|---|---|---|\n");
 		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());

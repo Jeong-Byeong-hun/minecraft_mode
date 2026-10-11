@@ -4,6 +4,9 @@ import com.minecraftmode.loot.Coins;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -50,6 +53,26 @@ public final class Wallet {
 		}
 		player.setAttached(ModAttachments.WALLET, have - copper);
 		return true;
+	}
+
+	/** Hands {@code copper} from one player's wallet to another's ({@code /wallet pay}, the adventurer's menu); both are told. */
+	public static boolean pay(final ServerPlayer from, final ServerPlayer to, final int copper) {
+		if (copper <= 0 || to == from) {
+			from.sendSystemMessage(msg("bad_amount").withStyle(ChatFormatting.RED));
+			return false;
+		}
+		if (!take(from, copper)) {
+			from.sendSystemMessage(msg("short", Coins.component(copper), Coins.component(balance(from))).withStyle(ChatFormatting.RED));
+			return false;
+		}
+		add(to, copper);
+		from.sendSystemMessage(msg("paid", Coins.component(copper), to.getDisplayName()).withStyle(ChatFormatting.GREEN));
+		to.sendSystemMessage(msg("received", Coins.component(copper), from.getDisplayName()).withStyle(ChatFormatting.GREEN));
+		return true;
+	}
+
+	public static MutableComponent msg(final String key, final Object... args) {
+		return Component.translatable("message.minecraft_mode.wallet." + key, args);
 	}
 
 	/** Copper value of one coin item (0 for anything else). */

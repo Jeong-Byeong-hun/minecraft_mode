@@ -63,17 +63,17 @@ final class ContentLang {
 		b.add("message.minecraft_mode.starter_kit.taken", ko ? "보급품은 모험가마다 한 번만 받을 수 있네." : "The kit is one per adventurer - you already have yours.");
 		String[][] topics = {
 			{"start", "Getting started", "처음 시작",
-				"Defeat monsters and mine ores (the rarer, the more) to gain class experience (see Leveling to 10). At level 10, talk to the trainer whose class you want and take it on the spot.\n\nFirst pick up the unbreakable Quartermaster's gear and shield from Bram and today's bread from Baker Hanna here on the plaza. Coins go straight into your wallet (/wallet), and you keep your items when you die.",
-				"몬스터를 처치하고 광석을 캐면(희귀할수록 많이) 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게 가서 바로 전직하세요.\n\n먼저 바로 옆 보급관 브람에게서 닳지 않는 보급관의 장비와 방패를, 제빵사 한나에게서 오늘의 빵을 받아 가세요. 동전은 지갑에 바로 들어가고(/wallet), 죽어도 아이템은 잃지 않습니다."},
+				"Defeat monsters and mine ores (the rarer, the more) to gain class experience (see Leveling to 10). At level 10, talk to the trainer whose class you want and take it on the spot.\n\nFirst pick up the unbreakable Quartermaster's gear and shield from Bram and today's bread from Baker Hanna here on the plaza. Coins go straight into your wallet, and you keep your items when you die.",
+				"몬스터를 처치하고 광석을 캐면(희귀할수록 많이) 직업 경험치가 오릅니다(빠른 성장 참고). 레벨 10이 되면 원하는 직업의 교관에게 가서 바로 전직하세요.\n\n먼저 바로 옆 보급관 브람에게서 닳지 않는 보급관의 장비와 방패를, 제빵사 한나에게서 오늘의 빵을 받아 가세요. 동전은 지갑에 바로 들어가고, 죽어도 아이템은 잃지 않습니다."},
 			{"leveling", "Leveling to 10", "빠른 성장 (Lv 10)",
 				"Level 10 takes %s EXP. A monster gives EXP equal to its max health (zombie or skeleton 20, spider 16), so about %s zombies; ores are slow.\n\n· Fastest: the Training Grounds under the city (stairs in the park south-east of the fountain). Monsters keep coming and give double EXP until you choose a class: about %s zombies\n· Take Bram's unbreakable gear and shield and Hanna's bread\n· Scholar's Coffee from the alchemist (3 silver): +15%% EXP for 10 min\n· Dying costs 10%% of this level's EXP\n\nPast level 10 the main road is the lairs (see Named & lairs): the first walk into each lair, its first clear and every cycle's treasure pay a large share of a level.",
 				"레벨 10까지 경험치 %s. 몬스터 경험치는 최대 체력과 같아서(좀비·스켈레톤 20, 거미 16) 좀비 약 %s마리면 됩니다. 광석은 느립니다.\n\n· 가장 빠른 곳: 도시 지하 수련장(분수 남동쪽 공원의 계단). 몬스터가 계속 나오고 직업을 고르기 전까지 경험치 2배라 좀비 약 %s마리\n· 브람의 닳지 않는 장비·방패와 한나의 빵을 챙기기\n· 연금술사의 학자의 커피(은화 3개): 10분간 경험치 +15%%\n· 죽으면 이번 레벨 경험치의 10%%를 잃습니다\n\n레벨 10 이후 성장의 중심은 소굴입니다(네임드와 소굴 참고): 소굴마다 첫 발견·첫 공략, 그리고 주기마다 보물 상자가 레벨의 큰 몫을 줍니다."},
 			{"classes", "Classes", "직업과 전직",
 				"Seven classes: Warrior, Rogue, Mage, Archer, Pirate, Soul Reaper and Hunter. The first class is free: at level 10 the trainer makes you one on the spot. From tier 2 on, every advancement is a trial from the class trainer: defeat the listed monsters, collect their trial tokens and hand them in with essence. Tiers open at levels 10, 25, 45 and 70.\n\nThe class screen (K) shows your next trial and where its trainer stands. Past level 100 you gain paragon levels.",
 				"직업은 전사·도적·법사·궁수·해적·사신·헌터 7가지입니다. 1차 전직은 레벨 10에 교관에게 가면 바로 됩니다. 2차부터는 교관의 시련입니다: 목표 몬스터를 처치해 시련 증표를 모으고 정수와 함께 제출하세요. 레벨 10·25·45·70에 1~4차가 열립니다.\n\n직업 창(K)에서 다음 시련과 교관 위치를 볼 수 있습니다. 레벨 100 이후에는 초월 레벨이 쌓입니다."},
-			{"keys", "Keys and commands", "키와 명령어",
-				"%s class screen\n%s talents and paragon\n%s codex, achievements, titles, story\n%s / %s / %s / %s skills\n%s innate ability (level 20)\n%s pets and mounts\n%s call or dismiss your mount\n%s raid loot\n%s world map, %s minimap on/off\n%s character info\n(your current keys; change them in Options > Controls)\n\n/wallet, /party, /raid leave, /dungeon leave, /story, /damagenumbers, /enhanceeffects, /hpbar",
-				"%s 직업 창\n%s 특성·초월\n%s 도감·업적·칭호·스토리\n%s / %s / %s / %s 스킬\n%s 고유 기술 (레벨 20)\n%s 펫·탈것\n%s 탈것 호출/내리기\n%s 레이드 전리품\n%s 월드 지도, %s 미니맵 켜기/끄기\n%s 캐릭터 정보\n(지금 설정된 키입니다. 설정 > 조작에서 바꿀 수 있습니다)\n\n/wallet, /party, /raid leave, /dungeon leave, /story, /damagenumbers, /enhanceeffects, /hpbar"},
+			{"keys", "Keys and menus", "키와 메뉴",
+				"%s class screen\n%s talents and paragon\n%s codex, achievements, titles, story\n%s / %s / %s / %s skills\n%s innate ability (level 20)\n%s pets and mounts\n%s call or dismiss your mount\n%s raid loot\n%s world map, %s minimap on/off\n%s character info\n%s adventurer's menu: party, paying a player, display settings (also in the pause menu, which offers \"return home\" in raids and dungeons)\n(your current keys; change them in Options > Controls)",
+				"%s 직업 창\n%s 특성·초월\n%s 도감·업적·칭호·스토리\n%s / %s / %s / %s 스킬\n%s 고유 기술 (레벨 20)\n%s 펫·탈것\n%s 탈것 호출/내리기\n%s 레이드 전리품\n%s 월드 지도, %s 미니맵 켜기/끄기\n%s 캐릭터 정보\n%s 모험가 메뉴: 파티, 송금, 화면 설정 (일시정지 메뉴에도 있고, 레이드·던전에서는 '귀환' 버튼도 나옵니다)\n(지금 설정된 키입니다. 설정 > 조작에서 바꿀 수 있습니다)"},
 			{"places", "Directions (x, z)", "길 안내 (x, z)", "", ""},
 			{"money", "Money and shops", "돈·상점·거래소",
 				"9 copper = 1 silver, 9 silver = 1 gold. Monsters and named monsters drop coins.\n\nThe south market has the general store, blacksmith, grocer, jeweler and alchemist, the Adventurers' Guild (class gear) and Broker Morgan's market where players trade with each other. Prices rise for a while as an item is traded a lot.",
@@ -263,7 +263,7 @@ final class ContentLang {
 		b.add(m + "hall_cleared", ko ? "홀 %s/%s 정리! 다음 문이 열립니다." : "Hall %s/%s cleared! The next door opens.");
 		b.add(m + "monsters_left", ko ? "남은 몬스터 %s" : "%s left");
 		b.add(m + "stuck", ko ? "한동안 아무도 맞지 않아, 남은 몬스터를 홀 안으로 불러냅니다." : "Nothing was hit for a while: the remaining monsters are brought back into the hall.");
-		b.add(m + "returning", ko ? "%s초 뒤 귀환합니다 (/dungeon leave)" : "Returning in %s s (/dungeon leave)");
+		b.add(m + "returning", ko ? "%s초 뒤 귀환합니다 (일시정지 메뉴의 '귀환': 바로 귀환)" : "Returning in %s s (\"Return home\" in the pause menu to go now)");
 		b.add(m + "victory", ko ? "%s 클리어! 시간 %s" : "%s cleared in %s!");
 		b.add(m + "timed", ko ? "제한 시간(%s) 안에 돌파했습니다!" : "Beaten within the limit (%s)!");
 		b.add(m + "late", ko ? "제한 시간(%s)을 넘겼습니다. 보상은 60%%만 받습니다." : "Over the limit (%s): rewards are 60%%.");
@@ -309,7 +309,7 @@ final class ContentLang {
 		b.add("screen.minecraft_mode.codex.chapter", ko ? "%s장" : "Chapter %s");
 		b.add("screen.minecraft_mode.codex.chapter_goal", ko ? "목표: %s" : "Goal: %s");
 		b.add("screen.minecraft_mode.codex.chapter_reward", ko ? "보상: %s (+ 코인)" : "Reward: %s (+ coins)");
-		b.add("screen.minecraft_mode.codex.story_hint", ko ? "광장의 왕실 전령에게 다음 장을 들으세요 (/story)." : "Hear the next chapter from the royal herald on the plaza (/story).");
+		b.add("screen.minecraft_mode.codex.story_hint", ko ? "광장의 왕실 전령에게 다음 장을 들으세요." : "Hear the next chapter from the royal herald on the plaza.");
 		b.add("screen.minecraft_mode.codex.story_done", ko ? "메인 스토리를 모두 마쳤습니다!" : "You finished the main story!");
 	}
 

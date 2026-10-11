@@ -28,6 +28,8 @@ public final class RaidClient {
 		new KeyMapping("key.minecraft_mode.loot_screen", InputConstants.Type.KEYBOARD, InputConstants.KEY_Y, JobKeys.CATEGORY));
 
 	private static List<PartySyncPayload.Member> party = List.of();
+	/** The leader whose party invite this player can still accept ("" = none). */
+	private static String invitedBy = "";
 	private static @Nullable LootStatePayload loot;
 	private static @Nullable OpenRaidPayload raidInfo;
 
@@ -36,7 +38,14 @@ public final class RaidClient {
 			raidInfo = payload;
 			context.client().gui.setScreen(new RaidScreen(payload.entityId()));
 		}));
-		ClientPlayNetworking.registerGlobalReceiver(PartySyncPayload.TYPE, (payload, context) -> context.client().execute(() -> party = List.copyOf(payload.members())));
+		ClientPlayNetworking.registerGlobalReceiver(PartySyncPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			// keep the same list while nothing changed, so screens that watch it rebuild only on a real change
+			List<PartySyncPayload.Member> members = List.copyOf(payload.members());
+			if (!members.equals(party)) {
+				party = members;
+			}
+			invitedBy = payload.invitedBy();
+		}));
 		ClientPlayNetworking.registerGlobalReceiver(LootStatePayload.TYPE, (payload, context) -> context.client().execute(() -> {
 			loot = payload;
 			Minecraft minecraft = context.client();
@@ -59,12 +68,17 @@ public final class RaidClient {
 
 	private static void reset() {
 		party = List.of();
+		invitedBy = "";
 		loot = null;
 		raidInfo = null;
 	}
 
 	public static List<PartySyncPayload.Member> party() {
 		return party;
+	}
+
+	public static String invitedBy() {
+		return invitedBy;
 	}
 
 	/** What the marshal last sent: the cycle, its modifiers and the record tables. */

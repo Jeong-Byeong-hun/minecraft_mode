@@ -8,6 +8,7 @@ import com.minecraftmode.client.companion.CompanionClient;
 import com.minecraftmode.client.endgame.EndgameClient;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.client.map.MapClient;
+import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.map.MapScreen;
 import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.entity.CityNpc;
@@ -138,7 +139,7 @@ public class GuideScreen extends Screen {
 			// the keys as bound now, so rebinding shows here too
 			KeyMapping[] keys = {JobKeys.OPEN_SCREEN, EndgameClient.TALENTS, EndgameClient.CODEX, JobKeys.SKILLS[0], JobKeys.SKILLS[1], JobKeys.SKILLS[2],
 				JobKeys.SKILLS[3], JobKeys.INNATE, CompanionClient.COLLECTION, CompanionClient.MOUNT, RaidClient.LOOT, MapClient.OPEN_MAP, MapClient.TOGGLE_MINIMAP,
-				JobKeys.CHARACTER};
+				JobKeys.CHARACTER, MenuClient.MENU};
 			Object[] args = new Object[keys.length];
 			for (int i = 0; i < keys.length; i++) {
 				args[i] = keys[i].getTranslatedKeyMessage().copy().withStyle(ChatFormatting.YELLOW);

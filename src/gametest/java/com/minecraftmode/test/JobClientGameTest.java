@@ -1010,6 +1010,28 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(items[0] >= 2 && items[1] == 1, "mythril golem drops: condensed essence " + items[0] + ", golem core " + items[1]);
 		server.runCommand("kill @e[type=minecraft:item]");
 
+		// a Warden drops a fixed 2 condensed essence (shriekers summon the next one at once), not one per 150 health
+		server.runCommand("summon minecraft:warden 0.5 -60 -6.5 {NoAI:1b}");
+		context.waitTicks(3);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Mob warden = player.level().getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(12), e -> e.getType() == EntityTypes.WARDEN).getFirst();
+			warden.hurtServer(player.level(), player.damageSources().playerAttack(player), 10000.0F);
+		});
+		context.waitTicks(5);
+		int wardenCondensed = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int condensed = 0;
+			for (ItemEntity item : player.level().getEntitiesOfClass(ItemEntity.class, player.getBoundingBox().inflate(16))) {
+				if (item.getItem().is(ModItems.CONDENSED_ESSENCE)) {
+					condensed += item.getItem().getCount();
+				}
+			}
+			return condensed;
+		});
+		require(wardenCondensed == JobEvents.WARDEN_CONDENSED, "a warden should drop " + JobEvents.WARDEN_CONDENSED + " condensed essence, got " + wardenCondensed);
+		server.runCommand("kill @e[type=minecraft:item]");
+
 		// experience comes from a monster's own health: a zombie made ten times tougher (a keystone, an event) still pays 20 and is no boss;
 		// a named monster pays a share of a level; ores pay a share of the miner's level past the low levels
 		String growth = server.computeOnServer(s -> {

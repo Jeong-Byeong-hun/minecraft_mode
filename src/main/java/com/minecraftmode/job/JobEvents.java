@@ -83,6 +83,8 @@ public final class JobEvents {
 		new TrialBossExp(EntityTypes.ELDER_GUARDIAN, 4, NAMED_SHARE), // three per monument, never back
 		new TrialBossExp(ModEntities.MYTHRIL_GOLEM, 3, 0.2F) // spawns on its own below Y 0
 	);
+	/** Condensed essence of a Warden kill instead of one per 150 health (4): shriekers summon the next one right away. */
+	public static final int WARDEN_CONDENSED = 2;
 
 	/** Cooldown key of Avalon in {@link JobData#cooldowns()}. */
 	public static final String AVALON_COOLDOWN = "passive.avalon";
@@ -164,7 +166,8 @@ public final class JobEvents {
 
 		// Essence: monsters drop it at random, bosses always drop condensed essence (dungeon runs pay theirs at the end)
 		if (boss && !event) {
-			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + (int)(health / 150.0F)));
+			int condensed = entity.getType() == EntityTypes.WARDEN ? WARDEN_CONDENSED : 1 + (int)(health / 150.0F);
+			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, condensed));
 		} else if (!event && mvp.getRandom().nextFloat() < Math.min(0.6F, 0.06F + health * 0.0025F)) {
 			drop(level, entity, new ItemStack(ModItems.ESSENCE));
 		}

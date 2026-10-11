@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.progress.Codex;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
 
@@ -96,6 +98,36 @@ final class CodexLang {
 		for (String[] k : known) {
 			b.add(s + k[0], ko ? k[1] : k[2]);
 		}
+		farm(b, ko, s);
+	}
+
+	/** Where crops, seeds and fish come from. */
+	private static void farm(final TranslationBuilder b, final boolean ko, final String s) {
+		int lv = Crops.ADVANCED_LEVEL;
+		for (Crops.CropDef def : Crops.all()) {
+			b.add(s + def.id(), ko ? "농사: " + (def.plantsItself() ? "심어서 수확" : "씨앗을 심어 수확") : "Farming: " + (def.plantsItself() ? "plant it and harvest" : "plant the seeds and harvest"));
+			if (def.advanced()) {
+				b.add(s + def.id() + "_seeds", ko ? "풀 베기, 씨앗 탐색 괭이로 기본 작물 수확 (농사 Lv " + lv + "부터)"
+					: "Cutting grass, harvesting basic crops with Seed Finder (Farming level " + lv + "+)");
+			} else if (Crops.seed(def) != null) {
+				b.add(s + def.id() + "_seeds", ko ? "풀 베기" : "Cutting grass");
+			}
+		}
+		for (Fishing.FishDef def : Fishing.all()) {
+			String level = def.minLevel() > 1 ? (ko ? ", 낚시 Lv " + def.minLevel() + "부터" : ", Fishing level " + def.minLevel() + "+") : "";
+			b.add(s + def.id(), ko ? "낚시: " + habitat(def.habitat(), true) + level : "Fishing: " + habitat(def.habitat(), false) + level);
+		}
+	}
+
+	static String habitat(final Fishing.Habitat habitat, final boolean ko) {
+		return switch (habitat) {
+			case ANY -> ko ? "어디서나" : "anywhere";
+			case OCEAN -> ko ? "바다" : "the sea";
+			case WARM_OCEAN -> ko ? "따뜻한 바다" : "warm seas";
+			case RIVER -> ko ? "강" : "rivers";
+			case COLD -> ko ? "눈 내리는 추운 물" : "cold, snowy water";
+			case SWAMP -> ko ? "늪·맹그로브 늪" : "swamps and mangroves";
+		};
 	}
 
 	private CodexLang() {

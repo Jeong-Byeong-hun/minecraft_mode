@@ -30,7 +30,7 @@ import net.minecraft.world.level.storage.loot.predicates.DamageSourceCondition;
  * Coin Finder has no data effect; {@code ModEconomy} reads its level in code.
  * Auto Smelt is applied through block loot tables by {@link AutoSmeltLoot}.
  * The per-equipment sets live in {@link WeaponEnchantments}, {@link RangedEnchantments},
- * {@link ToolEnchantments} and {@link ArmorEnchantments}.
+ * {@link ToolEnchantments}, {@link ArmorEnchantments} and {@link LifeEnchantments}.
  */
 public final class ModEnchantments {
 	public static final ResourceKey<Enchantment> LIFESTEAL = key("lifesteal");
@@ -55,7 +55,8 @@ public final class ModEnchantments {
 
 	/** Every enchantment of the mod, for lang and tag datagen. */
 	public static final List<EnchantInfo> ALL = Stream.of(
-			ORIGINAL, WeaponEnchantments.ALL, RangedEnchantments.ALL, ToolEnchantments.ALL, ArmorEnchantments.BUFFS, ArmorEnchantments.AURAS
+			ORIGINAL, WeaponEnchantments.ALL, RangedEnchantments.ALL, ToolEnchantments.ALL, ArmorEnchantments.BUFFS, ArmorEnchantments.AURAS,
+			LifeEnchantments.ALL
 		)
 		.flatMap(List::stream)
 		.toList();
@@ -66,6 +67,7 @@ public final class ModEnchantments {
 		RangedEnchantments.bootstrap(factory);
 		ToolEnchantments.bootstrap(factory);
 		ArmorEnchantments.bootstrap(factory);
+		LifeEnchantments.bootstrap(factory);
 		bootstrapOriginal(context);
 	}
 

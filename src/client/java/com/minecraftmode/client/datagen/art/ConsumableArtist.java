@@ -411,6 +411,42 @@ public final class ConsumableArtist {
 			"..oooooooooooo..",
 			"................",
 			"................"});
+		// a cooked fish on a plate (C fish, A garnish)
+		SHAPES.put(Shape.FISH, new String[] {
+			"................",
+			"................",
+			"................",
+			"......oooo......",
+			"....ooCCCCoo..oo",
+			"...oCCcCcCCCooAo",
+			"..oCxCCcCcCCCAAo",
+			".oCCCCCCCCCCCAo.",
+			".oLLCCcCcCCcCAo.",
+			"..oLLLLLLLccAAAo",
+			"...ooLLLLccoovAo",
+			"..GGooooooGvVvG.",
+			".GWWWWWWWWWWWWWG",
+			"..GgggggggggggG.",
+			"...GGGGGGGGGGG..",
+			"................"});
+		// a grilled cob (C kernels, c char marks, A husk)
+		SHAPES.put(Shape.CORN, new String[] {
+			"................",
+			"..........oo....",
+			".........oLCo...",
+			"........oLxCco..",
+			".......oLCCxco..",
+			"......oLxCCco...",
+			".....oLCCxco....",
+			"....oLxCCco.....",
+			"...AoCCxco......",
+			"..AaoxCco.......",
+			"..AAaooo........",
+			".AAaAa..........",
+			".AaAa...........",
+			"..aa............",
+			"................",
+			"................"});
 	}
 
 	/** Effect icon glyphs (12x12, drawn in the middle of an 18x18 tile). */
@@ -603,7 +639,8 @@ public final class ConsumableArtist {
 		return paint(glyph, 18, 3, color, 0xFFD24A);
 	}
 
-	private static BufferedImage paint(final String[] rows, final int size, final int offset, final int color, final int accent) {
+	/** Paints a character grid (see the class comment; {@code V} dark leaf, {@code Y} pale yellow) tinted with two colors. */
+	static BufferedImage paint(final String[] rows, final int size, final int offset, final int color, final int accent) {
 		BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
 		for (int y = 0; y < rows.length; y++) {
 			String row = rows[y];
@@ -624,6 +661,8 @@ public final class ConsumableArtist {
 					case 'p' -> 0xEEDDB4;
 					case 'P' -> 0xB8A070;
 					case 'v' -> 0x4CA82A;
+					case 'V' -> 0x2E7A1A;
+					case 'Y' -> 0xF0E070;
 					default -> -1;
 				};
 				int px = x + offset;

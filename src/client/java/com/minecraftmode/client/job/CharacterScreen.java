@@ -1,5 +1,6 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.craft.Profession;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
@@ -20,6 +21,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Character screen (I, or the button on the class screen): who the player is (class, level, paragon), their vanilla attributes and
@@ -110,7 +112,8 @@ public class CharacterScreen extends Screen {
 		g.text(this.font, Component.translatable("screen.minecraft_mode.character.combat").withStyle(ChatFormatting.AQUA), x + 10, ty, 0xFFFFFFFF, false);
 		ty += ROW;
 		ty = this.row(g, x, ty, Component.translatable("screen.minecraft_mode.character.crit_chance"), JobTooltips.num(totals.get(EngraveStat.CRIT_CHANCE)) + "%");
-		this.row(g, x, ty, Component.translatable("screen.minecraft_mode.character.crit_damage"), JobTooltips.num(150.0F + totals.get(EngraveStat.CRIT_DAMAGE)) + "%");
+		ty = this.row(g, x, ty, Component.translatable("screen.minecraft_mode.character.crit_damage"), JobTooltips.num(150.0F + totals.get(EngraveStat.CRIT_DAMAGE)) + "%");
+		List<Component> professionTip = this.professions(g, player, x, ty + 4, mouseX, mouseY);
 
 		Map<EngraveStat, Map<GearStats.Source, Float>> breakdown = GearStats.breakdown(player);
 		List<EngraveStat> stats = shown(totals, breakdown);
@@ -159,9 +162,40 @@ public class CharacterScreen extends Screen {
 			g.fill(barX, knobY, barX + 3, knobY + knob, 0xFFE8C24A);
 		}
 		super.extractRenderState(g, mouseX, mouseY, a);
+		if (tip == null) {
+			tip = professionTip;
+		}
 		if (tip != null) {
 			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
 		}
+	}
+
+	/** One row: the professions' levels in their colors; hovering it lists each with its experience. Returns that tooltip when hovered. */
+	private @Nullable List<Component> professions(final GuiGraphicsExtractor g, final LocalPlayer player, final int x, final int y, final int mouseX,
+		final int mouseY) {
+		g.text(this.font, Component.translatable("screen.minecraft_mode.character.professions").withStyle(ChatFormatting.AQUA), x + 10, y, 0xFFFFFFFF, false);
+		int right = x + 10 + COL - 6;
+		Profession.Data data = Profession.data(player);
+		Profession[] all = Profession.values();
+		for (int i = all.length - 1; i >= 0; i--) {
+			String level = Integer.toString(Profession.levelFor(data.exp(all[i])));
+			right -= this.font.width(level);
+			g.text(this.font, level, right, y, 0xFF000000 | all[i].color, false);
+			right -= 6;
+		}
+		if (mouseX < x + 10 || mouseX >= x + 10 + COL || mouseY < y || mouseY >= y + ROW) {
+			return null;
+		}
+		List<Component> tip = new ArrayList<>();
+		for (Profession p : all) {
+			int total = data.exp(p);
+			int level = Profession.levelFor(total);
+			Component progress = level >= Profession.MAX_LEVEL ? Component.literal("MAX")
+				: Component.literal(Profession.progress(total) + "/" + Profession.expToNext(level));
+			tip.add(Component.translatable(p.nameKey()).withColor(p.color).append(Component.literal(" Lv " + level + "  ").withStyle(ChatFormatting.WHITE))
+				.append(progress.copy().withStyle(ChatFormatting.GRAY)));
+		}
+		return tip;
 	}
 
 	private int attribute(final GuiGraphicsExtractor g, final int x, final int y, final String name, final Holder<Attribute> attribute, final LocalPlayer player,

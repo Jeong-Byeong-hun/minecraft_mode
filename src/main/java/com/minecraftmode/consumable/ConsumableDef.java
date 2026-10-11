@@ -33,7 +33,7 @@ public record ConsumableDef(
 	/** How {@code ConsumableArtist} draws the icon. */
 	public enum Shape {
 		BOTTLE, VIAL, FLASK, CUP, CAN, BEAN, PILL, ROLL, BOWL, MEAT, FISH_BREAD, SWEET_POTATO, RICE_BALL, COOKIE, MUSHROOM, STAR, CANDY, FEATHER, HEART, STONE,
-		BOX, JERKY, SCROLL
+		BOX, JERKY, SCROLL, FISH, CORN
 	}
 
 	public enum Special {

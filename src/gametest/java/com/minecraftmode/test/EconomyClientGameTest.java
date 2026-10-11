@@ -99,7 +99,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 	}
 
 	private static void checkContent(final ClientGameTestContext context) {
-		require(Consumables.all().size() == 40, "expected 40 consumables, got " + Consumables.all().size());
+		require(Consumables.all().size() == 58, "expected 58 consumables, got " + Consumables.all().size());
 		int[] perTier = new int[6];
 		for (ConsumableDef def : Consumables.all()) {
 			perTier[def.tier()]++;

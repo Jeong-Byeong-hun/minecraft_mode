@@ -11,6 +11,8 @@ import com.minecraftmode.command.RaidCommands;
 import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.craft.Herbs;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.economy.ModEconomy;
@@ -70,6 +72,8 @@ public class MinecraftMode implements ModInitializer {
 		ModEntities.init();
 		ModItems.init();
 		Consumables.init();
+		Crops.init();
+		Fishing.init();
 		JobWeapons.init();
 		ClassArmor.init();
 		Quests.init();

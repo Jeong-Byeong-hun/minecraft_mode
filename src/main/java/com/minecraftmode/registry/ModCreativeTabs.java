@@ -4,6 +4,8 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.dungeon.Keystone;
@@ -95,6 +97,8 @@ public final class ModCreativeTabs {
 					for (DungeonDef def : Dungeons.all()) {
 						output.accept(KeystoneItem.of(new Keystone(def.id(), Keystone.MIN_LEVEL)));
 					}
+					Crops.items().forEach(output::accept);
+					Fishing.items().forEach(output::accept);
 					for (ConsumableDef def : Consumables.all()) {
 						output.accept(Consumables.item(def));
 					}

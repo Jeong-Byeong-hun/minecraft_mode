@@ -74,6 +74,15 @@
     "minecraft_mode:fortune_aura",
     "minecraft_mode:toughness_aura",
     "minecraft_mode:leap_aura",
-    "minecraft_mode:satiation_aura"
+    "minecraft_mode:satiation_aura",
+    "minecraft_mode:bountiful_harvest",
+    "minecraft_mode:reaping",
+    "minecraft_mode:replant",
+    "minecraft_mode:seed_finder",
+    "minecraft_mode:farmers_wisdom",
+    "minecraft_mode:anglers_instinct",
+    "minecraft_mode:net_cast",
+    "minecraft_mode:anglers_wisdom",
+    "minecraft_mode:any_waters"
   ]
 }

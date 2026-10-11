@@ -3,6 +3,9 @@ package com.minecraftmode.client.datagen;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.FarmCropBlock;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.gear.ArmorPieceDef;
@@ -52,6 +55,10 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.KITCHEN_STATION, TexturedModel.CUBE_BOTTOM_TOP);
 		generators.createTrivialBlock(ModBlocks.ALCHEMY_STATION, TexturedModel.CUBE_BOTTOM_TOP);
 		generators.createTrivialBlock(ModBlocks.SMITHING_STATION, TexturedModel.CUBE_BOTTOM_TOP);
+		// <crop>_crop_stage0..3 (FarmArtist); also the flat model of what is planted (the seed, or the crop itself)
+		for (Crops.CropDef def : Crops.all()) {
+			generators.createCropBlock(Crops.block(def), FarmCropBlock.AGE, 0, 1, 2, 3);
+		}
 	}
 
 	@Override
@@ -94,6 +101,14 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
+		for (Crops.CropDef def : Crops.all()) {
+			if (Crops.seed(def) != null) {
+				generators.generateFlatItem(Crops.produce(def), ModelTemplates.FLAT_ITEM);
+			}
+		}
+		for (Item fish : Fishing.items()) {
+			generators.generateFlatItem(fish, ModelTemplates.FLAT_ITEM);
 		}
 		for (Companions.PetDef def : Companions.pets()) {
 			generators.generateFlatItem(Companions.petItem(def.id()), ModelTemplates.FLAT_ITEM);

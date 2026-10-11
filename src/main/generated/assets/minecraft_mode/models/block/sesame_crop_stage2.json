@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "minecraft_mode:block/sesame_crop_stage2"
+  }
+}

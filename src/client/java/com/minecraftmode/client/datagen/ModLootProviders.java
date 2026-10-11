@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.FarmCropBlock;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
@@ -7,14 +9,21 @@ import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootSubProvider;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricEntityLootSubProvider;
+import net.minecraft.advancements.predicates.StatePropertiesPredicate;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.storage.loot.LootPool;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.entries.LootItem;
+import net.minecraft.world.level.storage.loot.functions.ApplyBonusCount;
 import net.minecraft.world.level.storage.loot.functions.EnchantedCountIncreaseFunction;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
+import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemKilledByPlayerCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
+import net.minecraft.world.level.storage.loot.predicates.MatchBlock;
 import net.minecraft.world.level.storage.loot.providers.number.floats.ContextFloatProviders;
 import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 
@@ -47,6 +56,23 @@ public final class ModLootProviders {
 			this.dropSelf(ModBlocks.KITCHEN_STATION);
 			this.dropSelf(ModBlocks.ALCHEMY_STATION);
 			this.dropSelf(ModBlocks.SMITHING_STATION);
+
+			// Crops: seeded ones like wheat (the crop when ripe, else the seed; Fortune adds seeds), self-planting ones like potatoes.
+			for (Crops.CropDef def : Crops.all()) {
+				Block block = Crops.block(def);
+				Item produce = Crops.produce(def);
+				Item seed = Crops.seed(def);
+				LootItemCondition.Builder ripe = MatchBlock.blockMatches(this.blocks, block,
+					StatePropertiesPredicate.Builder.properties().hasProperty(FarmCropBlock.AGE, 3));
+				if (seed != null) {
+					this.add(block, this.createCropDrops(block, produce, seed, ripe));
+				} else {
+					this.add(block, this.applyExplosionDecay(block, LootTable.lootTable()
+						.withPool(LootPool.lootPool().add(LootItem.lootTableItem(produce)))
+						.withPool(LootPool.lootPool().when(ripe).add(LootItem.lootTableItem(produce)
+							.apply(ApplyBonusCount.addBonusBinomialDistributionCount(this.enchantments.getOrThrow(Enchantments.FORTUNE), 0.5714286F, 3))))));
+				}
+			}
 		}
 	}
 

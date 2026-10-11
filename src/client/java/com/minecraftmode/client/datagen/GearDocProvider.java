@@ -20,6 +20,8 @@ import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.craft.CraftPrices;
 import com.minecraftmode.craft.CraftRecipes;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonAffix;
 import com.minecraftmode.dungeon.DungeonDef;
@@ -685,7 +687,7 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 연금술사는 약초도 삽니다: ").append(CraftPrices.herbs().entrySet().stream()
 			.map(e -> this.itemName(e.getKey()) + " " + buyPrice(e.getKey(), e.getValue())).collect(Collectors.joining(", "))).append(". 거신의 파편은 재료 값 ")
 			.append(Coins.format(Coins.GOLD)).append("(상점은 사지 않음).\n");
-		for (Profession profession : Profession.values()) {
+		for (Profession profession : Profession.CRAFTING) {
 			md.append("\n### ").append(profession.ko).append("\n\n| 레벨 | 결과 | 재료 | 숙련도 | 상점 매입 (개당) |\n|---|---|---|---|---|\n");
 			for (CraftRecipes.Recipe recipe : CraftRecipes.of(profession)) {
 				String output = recipe.output() instanceof CraftRecipes.Output out
@@ -697,6 +699,7 @@ public class GearDocProvider implements DataProvider {
 					.append(" | ").append(sells).append(" |\n");
 			}
 		}
+		this.farmingAndFishing(md);
 
 		md.append("\n## 펫과 탈것\n\n");
 		md.append("- 펫 부적·탈것 호루라기를 쓰면 수집품에 추가되고(아이템 소모) 바로 소환됩니다. 수집품: U. 탈것 호출/내리기: H(마지막 탈것).\n");
@@ -831,6 +834,51 @@ public class GearDocProvider implements DataProvider {
 	}
 
 	/** What the shop line for {@code copper} a piece pays: "9C", "1S", or "2개 1C" for things worth less than a copper. */
+	/** The farming and fishing sections: rules, crops and fish. */
+	private void farmingAndFishing(final StringBuilder md) {
+		md.append("\n### 농사\n\n");
+		md.append("- 이 모드의 작물을 다 자랐을 때 수확하면 농사 숙련도: 기본 ").append(Crops.BASIC_EXP).append(", 고급 ").append(Crops.ADVANCED_EXP)
+			.append(". (농사 레벨 ÷ 2)% 확률로 하나 더. 바닐라 작물은 숙련도를 주지 않습니다.\n");
+		md.append("- **뼛가루도 벌의 가루받이도 듣지 않습니다.** 자연 성장만: 4단계, 기본 작물은 밀과 비슷하게, 고급 작물은 조금 느리게 자랍니다.\n");
+		md.append("- 기본 작물 씨앗(무·마늘·고구마는 작물 자체)은 식료품점이 16개 2C에 팝니다. 풀·고사리를 베면 ").append(Crops.GRASS_SEED_CHANCE)
+			.append("% 확률로 씨앗이 나오고, 농사 Lv ").append(Crops.ADVANCED_LEVEL).append("부터는 그중 ").append(Math.round(Crops.GRASS_ADVANCED_SHARE * 100))
+			.append("%가 고급 씨앗(고추·참깨·딸기)입니다. 고급 씨앗은 상점에서 팔지 않습니다.\n");
+		md.append("- 괭이 인챈트: 풍작(하나 더 ").append(Math.round(Crops.BOUNTIFUL_PER_LEVEL * 100)).append("%/레벨), 낫질(3×3·5×5 범위 수확), 자동 파종, ")
+			.append("씨앗 탐색(풀 씨앗 +").append(Crops.SEED_FINDER_GRASS).append("%p·고급 비중 +").append(Math.round(Crops.SEED_FINDER_ADVANCED * 100))
+			.append("%p/레벨, 기본 작물 수확 시 고급 씨앗 ").append(Math.round(Crops.SEED_FINDER_HARVEST * 100)).append("%/레벨), 농부의 지혜(숙련도 +")
+			.append(Math.round(Crops.WISDOM_PER_LEVEL * 100)).append("%/레벨).\n\n");
+		md.append("| 작물 | 종류 | 심는 것 | 식료품점 매입 |\n|---|---|---|---|\n");
+		for (Crops.CropDef def : Crops.all()) {
+			md.append("| ").append(def.ko()).append(" | ").append(def.advanced() ? "고급" : "기본").append(" | ")
+				.append(def.plantsItself() ? "작물 자체" : def.seedKo()).append(" | ").append(buyPrice(Crops.produce(def), Crops.price(def))).append(" |\n");
+		}
+		md.append("\n### 낚시\n\n");
+		md.append("- 바닐라 낚싯대로 낚는 물고기 중 ").append(Math.round(Fishing.CUSTOM_SHARE * 100)).append("%가 이 모드의 물고기가 됩니다(쓰레기·보물은 그대로). ")
+			.append("먼저 ").append(Math.round(Fishing.PLACE_CHANCE * 100)).append("% 확률로 그 장소의 물고기가, 아니면 어디서나 나오는 물고기가 가중치대로 낚입니다. ")
+			.append("낚시 레벨이 모자란 물고기는 낚이지 않습니다.\n");
+		md.append("- 낚시 숙련도는 등급별(흔함 ").append(Fishing.Tier.COMMON.exp).append(", 보통 ").append(Fishing.Tier.UNCOMMON.exp).append(", 희귀 ")
+			.append(Fishing.Tier.RARE.exp).append(", 아주 희귀 ").append(Fishing.Tier.VERY_RARE.exp).append(", 전설 ").append(Fishing.Tier.LEGENDARY.exp)
+			.append("). (낚시 레벨 ÷ 2)% 확률로 하나 더.\n");
+		md.append("- 낚싯대 인챈트: 어부의 감(희귀 이상 가중치 +").append(Math.round(Fishing.INSTINCT_PER_LEVEL * 100)).append("%/레벨, 행운 1당 +")
+			.append(Math.round(Fishing.LUCK_PER_POINT * 100)).append("%), 그물질(하나 더 ").append(Math.round(Fishing.NET_CAST_PER_LEVEL * 100))
+			.append("%/레벨), 강태공의 지혜(숙련도 +").append(Math.round(Fishing.WISDOM_PER_LEVEL * 100)).append("%/레벨), 만능 어장(모든 장소의 물고기가 어디서나).\n\n");
+		md.append("| 물고기 | 장소 | 등급 | 낚시 레벨 | 가중치 | 식료품점 매입 |\n|---|---|---|---|---|---|\n");
+		for (Fishing.FishDef def : Fishing.all()) {
+			md.append("| ").append(def.ko()).append(" | ").append(CodexLang.habitat(def.habitat(), true)).append(" | ").append(fishTier(def.tier())).append(" | ")
+				.append(def.minLevel()).append(" | ").append(ClassDocProvider.num(def.weight())).append(" | ").append(buyPrice(Fishing.item(def), def.price())).append(" |\n");
+		}
+	}
+
+	private static String fishTier(final Fishing.Tier tier) {
+		return switch (tier) {
+			case COMMON -> "흔함";
+			case UNCOMMON -> "보통";
+			case RARE -> "희귀";
+			case VERY_RARE -> "아주 희귀";
+			case LEGENDARY -> "전설";
+		};
+	}
+
 	private static String buyPrice(final Item item, final float copper) {
 		ShopOffers.Trade line = CraftPrices.line(item, copper);
 		if (line == null) {

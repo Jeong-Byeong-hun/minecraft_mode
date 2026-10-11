@@ -60,13 +60,18 @@ public final class WalletCommand {
 		Collection<ServerPlayer> targets = EntityArgument.getPlayers(c, "targets");
 		int amount = parse(StringArgumentType.getString(c, "amount"));
 		for (ServerPlayer target : targets) {
-			if (set) {
-				Wallet.take(target, Wallet.balance(target));
-			}
-			Wallet.add(target, amount);
+			grant(target, amount, set);
 		}
 		c.getSource().sendSuccess(() -> Component.literal((set ? "Set " : "Gave ") + Coins.format(amount) + " to " + targets.size() + " player(s)"), true);
 		return targets.size();
+	}
+
+	/** Operator money: adds {@code copper} to the wallet, or makes it the whole balance when {@code set}. */
+	public static void grant(final ServerPlayer target, final int copper, final boolean set) {
+		if (set) {
+			Wallet.take(target, Wallet.balance(target));
+		}
+		Wallet.add(target, copper);
 	}
 
 	/** "3g 2s 1c", "40s", "120" -> copper (-1 when nothing could be read). */

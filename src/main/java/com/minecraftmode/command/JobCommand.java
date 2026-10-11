@@ -98,19 +98,7 @@ public final class JobCommand {
 	private static int quest(final CommandContext<CommandSourceStack> c, final boolean goals) throws CommandSyntaxException {
 		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
 		for (ServerPlayer player : players) {
-			QuestDef quest = QuestService.active(player);
-			if (quest == null) {
-				continue;
-			}
-			QuestData data = QuestService.get(player);
-			if (goals) {
-				for (int i = 0; i < quest.kills().size(); i++) {
-					data = data.withProgress(i, quest.kills().get(i).count());
-				}
-				QuestService.set(player, data);
-			} else {
-				QuestService.set(player, data.cleared());
-			}
+			quest(player, goals);
 		}
 		c.getSource().sendSuccess(() -> Component.translatable(goals ? "commands.minecraft_mode.job.quest_goals" : "commands.minecraft_mode.job.quest_clear", players.size()), true);
 		return players.size();
@@ -137,8 +125,7 @@ public final class JobCommand {
 		int tier = job == JobClass.NONE ? 0 : Math.max(1, IntegerArgumentType.getInteger(c, "tier"));
 		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
 		for (ServerPlayer player : players) {
-			JobProgression.set(player, JobProgression.get(player).withJob(job, tier).withCooldowns(Map.of()));
-			JobStats.refresh(player);
+			setJob(player, job, tier);
 		}
 		c.getSource().sendSuccess(() -> Component.translatable("commands.minecraft_mode.job.set", players.size(), Component.translatable(job.tierKey(tier))), true);
 		return players.size();
@@ -148,8 +135,7 @@ public final class JobCommand {
 		int level = IntegerArgumentType.getInteger(c, "level");
 		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
 		for (ServerPlayer player : players) {
-			JobProgression.set(player, JobProgression.get(player).withProgress(level, 0));
-			JobStats.refresh(player);
+			setLevel(player, level);
 		}
 		c.getSource().sendSuccess(() -> Component.translatable("commands.minecraft_mode.job.level", players.size(), level), true);
 		return players.size();
@@ -168,7 +154,7 @@ public final class JobCommand {
 	private static int mana(final CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
 		for (ServerPlayer player : players) {
-			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			fillMana(player);
 		}
 		c.getSource().sendSuccess(() -> Component.translatable("commands.minecraft_mode.job.mana", players.size()), true);
 		return players.size();
@@ -177,10 +163,47 @@ public final class JobCommand {
 	private static int cooldowns(final CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
 		Collection<ServerPlayer> players = EntityArgument.getPlayers(c, "targets");
 		for (ServerPlayer player : players) {
-			JobProgression.set(player, JobProgression.get(player).withCooldowns(Map.of()));
+			resetCooldowns(player);
 		}
 		c.getSource().sendSuccess(() -> Component.translatable("commands.minecraft_mode.job.cooldowns", players.size()), true);
 		return players.size();
+	}
+
+	// ------------------------------------------------------------------ per player (also the admin screen)
+
+	public static void setJob(final ServerPlayer player, final JobClass job, final int tier) {
+		JobProgression.set(player, JobProgression.get(player).withJob(job, job == JobClass.NONE ? 0 : Math.max(1, tier)).withCooldowns(Map.of()));
+		JobStats.refresh(player);
+	}
+
+	public static void setLevel(final ServerPlayer player, final int level) {
+		JobProgression.set(player, JobProgression.get(player).withProgress(Math.clamp(level, 1, JobProgression.MAX_LEVEL), 0));
+		JobStats.refresh(player);
+	}
+
+	public static void fillMana(final ServerPlayer player) {
+		JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+	}
+
+	public static void resetCooldowns(final ServerPlayer player) {
+		JobProgression.set(player, JobProgression.get(player).withCooldowns(Map.of()));
+	}
+
+	/** {@code goals} completes the active trial's kill goals (tokens and materials are still needed); otherwise drops the trial. */
+	public static void quest(final ServerPlayer player, final boolean goals) {
+		QuestDef quest = QuestService.active(player);
+		if (quest == null) {
+			return;
+		}
+		QuestData data = QuestService.get(player);
+		if (goals) {
+			for (int i = 0; i < quest.kills().size(); i++) {
+				data = data.withProgress(i, quest.kills().get(i).count());
+			}
+			QuestService.set(player, data);
+		} else {
+			QuestService.set(player, data.cleared());
+		}
 	}
 
 	private JobCommand() {

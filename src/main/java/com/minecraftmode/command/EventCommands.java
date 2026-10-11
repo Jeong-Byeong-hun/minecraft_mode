@@ -67,9 +67,7 @@ public final class EventCommands {
 			.then(Commands.literal("set")
 				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
 				.then(Commands.argument("chapter", IntegerArgumentType.integer(0, Story.chapters().size())).executes(c -> {
-					ServerPlayer p = player(c);
-					StoryData data = Story.data(p);
-					p.setAttached(ModAttachments.STORY, new StoryData(IntegerArgumentType.getInteger(c, "chapter"), false, data.worldBosses()));
+					setChapter(player(c), IntegerArgumentType.getInteger(c, "chapter"));
 					return 1;
 				}))));
 	}
@@ -97,6 +95,12 @@ public final class EventCommands {
 				+ " @" + instance.origin().toShortString() + " - " + names), false);
 		}
 		return instances.size();
+	}
+
+	/** Puts {@code player} at the start of story {@code chapter} (operators; the admin screen too). */
+	public static void setChapter(final ServerPlayer player, final int chapter) {
+		StoryData data = Story.data(player);
+		player.setAttached(ModAttachments.STORY, new StoryData(Math.clamp(chapter, 0, Story.chapters().size()), false, data.worldBosses()));
 	}
 
 	private static ServerPlayer player(final CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

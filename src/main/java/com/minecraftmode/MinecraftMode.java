@@ -1,5 +1,6 @@
 package com.minecraftmode;
 
+import com.minecraftmode.admin.AdminState;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.DummyMeter;
@@ -95,6 +96,7 @@ public class MinecraftMode implements ModInitializer {
 		ResidenceRules.init();
 		Consumables.initEvents();
 		Parties.init();
+		AdminState.init();
 		Raids.init();
 		Dungeons.init();
 		TrialHunts.init();

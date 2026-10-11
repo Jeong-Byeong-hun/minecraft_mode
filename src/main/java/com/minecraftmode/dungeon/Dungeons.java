@@ -310,6 +310,16 @@ public final class Dungeons {
 		return List.copyOf(INSTANCES.values());
 	}
 
+	/** Operator stop (admin screen): run {@code id} closes on the next tick, which sends its players home. */
+	public static boolean stop(final int id) {
+		DungeonInstance instance = INSTANCES.get(id);
+		if (instance == null) {
+			return false;
+		}
+		instance.state = DungeonInstance.State.CLOSED;
+		return true;
+	}
+
 	/** The highest keystone for {@code dungeon} in the player's inventory (or null). */
 	public static @Nullable Keystone keystone(final Player player, final String dungeon) {
 		Keystone best = null;

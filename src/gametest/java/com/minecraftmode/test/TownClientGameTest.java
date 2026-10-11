@@ -107,7 +107,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
  * melee classes get health and armor per tier, a vindicator hits for a flat 2.5 hearts, every advancement hands out a kit (once),
  * bags pick up by kind and keep what they hold, the trash button with its undo, the general store's odds-and-ends buying, the
  * target health bar, the invasion numbers, Huntmaster Garrick's trial hunt (only what the trial needs, and back out), respawning
- * at a bed, and the adventurer's menu ({@code MenuChecks}). The capital's portals, ender chests, travel circles and homestead plains need a noise world: see {@code CityChecks}.
+ * at a bed, and the adventurer's menu and admin screen ({@code MenuChecks}). The capital's portals, ender chests, travel circles and homestead plains need a noise world: see {@code CityChecks}.
  */
 public class TownClientGameTest implements FabricClientGameTest {
 	@Override

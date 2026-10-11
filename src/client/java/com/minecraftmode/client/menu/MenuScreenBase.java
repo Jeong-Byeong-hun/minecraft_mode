@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Frame of the adventurer's menu (and of later menu screens): a panel with a row of tabs, and helpers that let a tab lay itself out
+ * Shared frame of the adventurer's menu and the admin screen: a panel with a row of tabs, and helpers that let a tab lay itself out
  * in one pass over {@link #init}. Labels are kept with the widgets and drawn after the panel, text boxes keep what was typed in
  * {@link #values} across {@link #rebuildWidgets}, and {@link #confirm} buttons need a second click.
  */

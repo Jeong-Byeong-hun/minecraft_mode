@@ -18,16 +18,16 @@ import net.minecraft.world.level.Level;
  * other landmarks, and the shops and work places ({@link CityZone.Spot}), at their posts from {@link CityZone} (the city keeps
  * people there, see {@code CityServices.keepTrainers}). Only the x and z matter.
  */
-final class CityPlaces {
-	enum Kind {
+public final class CityPlaces {
+	public enum Kind {
 		NPC,
 		TRAINER,
 		LANDMARK,
 		SHOP
 	}
 
-	record Place(String nameKey, int x, int z, int color, Kind kind) {
-		Component name() {
+	public record Place(String nameKey, int x, int z, int color, Kind kind) {
+		public Component name() {
 			return Component.translatable(this.nameKey);
 		}
 	}
@@ -41,7 +41,8 @@ final class CityPlaces {
 		return cityWorld && level.dimension() == Level.OVERWORLD;
 	}
 
-	static List<Place> all() {
+	/** Also the admin screen's teleport list. */
+	public static List<Place> all() {
 		if (places == null) {
 			List<Place> out = new ArrayList<>();
 			for (CityNpc.Role role : CityNpc.Role.values()) {

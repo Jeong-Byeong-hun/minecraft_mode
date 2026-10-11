@@ -2,6 +2,8 @@ package com.minecraftmode.client.menu;
 
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.network.AdminActionPayload;
+import com.minecraftmode.network.AdminStatePayload;
 import com.minecraftmode.network.MenuActionPayload;
 import com.minecraftmode.raid.RaidDimension;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -19,10 +21,12 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.permissions.Permissions;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Opens the adventurer's menu (semicolon, or a button in the top-left corner of the pause menu, which also offers "return home"
- * inside a raid or dungeon).
+ * inside a raid or dungeon) and hands {@link AdminStatePayload}s to an open admin screen.
  */
 public final class MenuClient {
 	public static final KeyMapping MENU = KeyMappingHelper.registerKeyMapping(
@@ -37,6 +41,11 @@ public final class MenuClient {
 				}
 			}
 		});
+		ClientPlayNetworking.registerGlobalReceiver(AdminStatePayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			if (context.client().gui.screen() instanceof AdminScreen admin) {
+				admin.update(payload);
+			}
+		}));
 		ScreenEvents.AFTER_INIT.register((client, screen, width, height) -> {
 			if (!(screen instanceof PauseScreen pause) || !pause.showsPauseMenu() || client.player == null) {
 				return;
@@ -57,6 +66,20 @@ public final class MenuClient {
 	/** In the raid or dungeon dimension, where "return home" ({@code /raid leave}, {@code /dungeon leave}) applies. */
 	static boolean inInstance(final Minecraft minecraft) {
 		return minecraft.level != null && (minecraft.level.dimension() == RaidDimension.LEVEL || minecraft.level.dimension() == DungeonDimension.LEVEL);
+	}
+
+	/** Whether this player may use the admin screen; the server checks every action again. */
+	static boolean isOperator(final @Nullable Minecraft minecraft) {
+		return minecraft != null && minecraft.player != null && minecraft.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
+	}
+
+	public static void openAdmin() {
+		Minecraft minecraft = Minecraft.getInstance();
+		if (!isOperator(minecraft) || !ClientPlayNetworking.canSend(AdminActionPayload.TYPE)) {
+			return;
+		}
+		minecraft.gui.setScreen(new AdminScreen());
+		ClientPlayNetworking.send(AdminActionPayload.of(AdminActionPayload.REFRESH, ""));
 	}
 
 	/** Everyone on the server but this player, sorted by name (from the tab list). */

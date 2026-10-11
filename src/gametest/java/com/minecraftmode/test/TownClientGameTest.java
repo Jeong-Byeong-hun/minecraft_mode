@@ -325,6 +325,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			detail[1] = "MP paid " + (JobStats.maxMana(player) - mana) + ", magic defense " + t.get(EngraveStat.MAGIC_DEFENSE) + "%, dodge " + t.get(EngraveStat.DODGE)
 				+ "%, health " + player.getHealth() + "/" + player.getMaxHealth() + ", last source " + player.getLastDamageSource();
 			require(mana < JobStats.maxMana(player), "the mana shield paid with MP");
+			checkDodgedHitsCostNoMana(player, s.overworld());
 			for (net.minecraft.world.entity.EquipmentSlot slot : new net.minecraft.world.entity.EquipmentSlot[] {net.minecraft.world.entity.EquipmentSlot.HEAD,
 				net.minecraft.world.entity.EquipmentSlot.CHEST, net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET}) {
 				player.setItemSlot(slot, ItemStack.EMPTY);
@@ -339,7 +340,84 @@ public class TownClientGameTest implements FabricClientGameTest {
 		float ratio = magic / physical;
 		require(ratio > 0.45F && ratio < 0.6F, "magic defense cuts a spell to about half of a physical hit, ratio " + ratio + " (physical " + physical + ", magic " + magic + "; " + detail[0] + "; " + detail[1] + ")");
 		MinecraftMode.LOGGER.info("[town] class defense: level 80 mage takes {} from a 20 physical hit, {} from a 20 spell", physical, magic);
+		checkGuardedHitsReflectNothing(context, server, connection);
 		context.waitTicks(25);
+	}
+
+	/**
+	 * The mana shield pays only for hits that land: it used to pay at the start of {@code hurtServer}, before ALLOW_DAMAGE rolled the
+	 * dodge, so a dodged spell cost MP. A full EVADE stance dodges 75% of hits (the cap); the ones that get through still pay. A hit the
+	 * guard of a gap-closing skill swallows costs nothing either.
+	 */
+	private static void checkDodgedHitsCostNoMana(final ServerPlayer player, final ServerLevel level) {
+		CombatState state = CombatState.of(player);
+		state.stance = CombatState.Stance.EVADE;
+		state.stanceValue = 100.0F;
+		state.stanceUntil = level.getGameTime() + 200;
+		int dodged = 0;
+		for (int i = 0; i < 12; i++) {
+			player.setHealth(player.getMaxHealth());
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			float lost = hit(player, level, i % 2 == 0);
+			int paid = JobStats.maxMana(player) - JobProgression.get(player).mana();
+			if (lost <= 0.0F) {
+				dodged++;
+				require(paid == 0, "a dodged hit costs no MP, paid " + paid);
+			} else {
+				require(paid > 0, "a hit that got past the dodge pays with MP");
+			}
+		}
+		require(dodged > 0, "a full evade stance dodges most hits, dodged none of 12");
+		state.stanceUntil = 0L;
+		Engage.guard(player, Engage.GUARD_TICKS);
+		player.setHealth(player.getMaxHealth());
+		JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+		float lost = hit(player, level, true);
+		int paid = JobStats.maxMana(player) - JobProgression.get(player).mana();
+		require(lost <= 0.0F && paid == 0, "a guarded hit costs neither health nor MP, lost " + lost + ", paid " + paid);
+		state.guardUntil = 0L;
+		player.setHealth(player.getMaxHealth());
+	}
+
+	/** Thorns and the counter stance hit back only when the hit lands: a guarded hit reflects nothing, the next one does. */
+	private static void checkGuardedHitsReflectNothing(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		int id = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = s.overworld();
+			// a husk: a zombie would burn in the sun and lose health on its own
+			Mob husk = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+			husk.snapTo(player.getX() + 2, player.getY(), player.getZ(), 0.0F, 0.0F);
+			husk.setNoAi(true);
+			level.addFreshEntity(husk);
+			CombatState state = CombatState.of(player);
+			state.stance = CombatState.Stance.COUNTER;
+			state.stanceValue = 50.0F;
+			state.stanceUntil = level.getGameTime() + 200;
+			Engage.guard(player, Engage.GUARD_TICKS);
+			player.damageCooldownTime = 0;
+			require(!player.hurtServer(level, level.damageSources().mobAttack(husk), 10.0F), "the guard swallows the hit");
+			return husk.getId();
+		});
+		context.waitTicks(3);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Entity husk = s.overworld().getEntity(id);
+			require(husk instanceof LivingEntity living && living.getHealth() >= living.getMaxHealth(), "a guarded hit is not countered");
+			CombatState.of(player).guardUntil = 0L;
+			player.damageCooldownTime = 0;
+			require(player.hurtServer(s.overworld(), s.overworld().damageSources().mobAttack((LivingEntity)husk), 10.0F), "the next hit lands");
+		});
+		context.waitTicks(3);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Entity husk = s.overworld().getEntity(id);
+			require(!(husk instanceof LivingEntity living) || living.getHealth() < living.getMaxHealth(), "a hit that lands is countered");
+			if (husk != null) {
+				husk.discard();
+			}
+			CombatState.of(player).stanceUntil = 0L;
+			player.setHealth(player.getMaxHealth());
+		});
 	}
 
 	/**
@@ -396,7 +474,9 @@ public class TownClientGameTest implements FabricClientGameTest {
 		zombie.setNoAi(true);
 		level.addFreshEntity(zombie);
 		// a lagging test server may not have ticked the last hit's invulnerability away yet; this check measures armor, not that
+		// (the hurt cooldown is damageCooldownTime: without it the hits right after one that landed bounced)
 		player.setInvulnerableTime(0);
+		player.damageCooldownTime = 0;
 		float before = player.getHealth();
 		player.hurtServer(level, magic ? MagicDamage.source(level, zombie, zombie) : level.damageSources().mobAttack(zombie), 20.0F);
 		zombie.discard();

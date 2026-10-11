@@ -50,7 +50,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Damage pipeline for classes: class passives, engravings, skill buffs and marks. Outgoing and
  * incoming damage is adjusted in {@link #modifyIncoming} (called from {@code LivingEntityMixin} at
- * the start of {@code hurtServer}); dodging and on-hit effects use Fabric events.
+ * the start of {@code hurtServer}); dodging and on-hit effects use Fabric events. What a hit on a player costs or sets off (mana
+ * shield, thorns, counter stance) waits until it lands ({@link #landed}).
  *
  * <p>Damage dealt by skills and class projectiles goes through {@link #deal}, which tags it with a
  * {@link DamageKind} so basic-attack bonuses are not applied twice.
@@ -93,6 +94,13 @@ public final class CombatHooks {
 
 	private record SkillArrow(SkillContext ctx, double multiplier) {
 	}
+
+	/** A hit on a player that {@link #incoming} reduced; {@code amount} is the hit before those reductions (what thorns reflect from). */
+	private record Landing(ServerPlayer player, DamageSource source, float amount, @Nullable DamageKind kind) {
+	}
+
+	/** The player hit {@code hurtServer} is going through right now, until it lands ({@link #landed}) or is dropped. */
+	private static @Nullable Landing landing;
 
 	public static void init() {
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(CombatHooks::allowDamage);
@@ -179,7 +187,12 @@ public final class CombatHooks {
 	// ------------------------------------------------------------------ damage adjustment
 
 	public static float modifyIncoming(final LivingEntity victim, final DamageSource source, final float amount) {
-		if (!(victim.level() instanceof ServerLevel level) || RaidDamage.is(source)) {
+		if (!(victim.level() instanceof ServerLevel level)) {
+			return amount;
+		}
+		// the last player hit never landed if it is still here (dodged, guarded, bounced)
+		landing = null;
+		if (RaidDamage.is(source)) {
 			return amount;
 		}
 		long now = level.getGameTime();
@@ -215,7 +228,8 @@ public final class CombatHooks {
 			}
 		}
 		// Vanilla hits (melee, arrows) that vanilla is about to discard - damage cooldown, invulnerability - must not trigger crit
-		// refunds, consume empower/stealth, drain mana shields or reflect; skills reset the cooldown themselves before dealing.
+		// refunds or consume empower/stealth; skills reset the cooldown themselves before dealing. (The mana shield and reflections
+		// wait for the hit to land: landed.)
 		if (kind == null && (victim.isInvulnerableTo(level, source)
 			|| victim.damageCooldownTime > 10 && !source.is(DamageTypeTags.BYPASSES_COOLDOWN) && amount <= ((LivingEntityAccessor)victim).minecraftMode$lastHurt())) {
 			return amount;
@@ -346,6 +360,28 @@ public final class CombatHooks {
 		if (MagicDamage.is(source)) {
 			result *= 1.0F - mods.fraction(EngraveStat.MAGIC_DEFENSE);
 		}
+		// the mana shield and thorns/counter wait until the hit lands (landed)
+		landing = new Landing(player, source, amount, kind);
+		return result;
+	}
+
+	/**
+	 * The hit on {@code victim} that {@link #modifyIncoming} adjusted gets through ({@code PlayerMixin}, start of
+	 * {@code Player.actuallyHurt}, before armor): the mana shield pays part of it with MP, thorns and the counter stance hit back.
+	 * They used to act in {@code modifyIncoming} at the start of {@code hurtServer}, so a hit then dodged or guarded
+	 * ({@link #allowDamage}), refused by another ALLOW_DAMAGE listener, bounced by the hurt cooldown or shrugged off with fire resistance
+	 * still cost MP and reflected. {@code damage} is what is left of the hit after a shield block (nothing for a full block, so no MP)
+	 * and, during the hurt cooldown, only the part above the last hit.
+	 */
+	public static float landed(final Player victim, final DamageSource source, final float damage) {
+		Landing hit = landing;
+		if (hit == null || hit.player() != victim || hit.source() != source) {
+			return damage;
+		}
+		landing = null;
+		ServerPlayer player = hit.player();
+		EngraveTotals mods = JobWeapons.activeTotals(player);
+		float result = damage;
 		// Mana shield: part of the hit is paid with MP, one point per point of damage
 		float shield = mods.fraction(EngraveStat.MANA_SHIELD);
 		if (shield > 0.0F && result > 0.0F) {
@@ -357,6 +393,8 @@ public final class CombatHooks {
 				player.level().sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY(0.6), player.getZ(), 8, 0.4, 0.5, 0.4, 0.4);
 			}
 		}
+		float amount = hit.amount();
+		DamageKind kind = hit.kind();
 		// Thorns: melee attackers take part of the hit back
 		float thorns = mods.fraction(EngraveStat.THORNS);
 		if (thorns > 0.0F && kind != DamageKind.REFLECT && source.getDirectEntity() instanceof LivingEntity attacker && attacker != player && attacker.isAlive()) {
@@ -367,7 +405,7 @@ public final class CombatHooks {
 				}
 			});
 		}
-		float counter = state.stanceValue(CombatState.Stance.COUNTER, now);
+		float counter = CombatState.of(player).stanceValue(CombatState.Stance.COUNTER, player.level().getGameTime());
 		if (counter > 0.0F && kind != DamageKind.REFLECT && source.getEntity() instanceof LivingEntity attacker && attacker != player && attacker.isAlive()) {
 			float reflected = amount * counter / 100.0F;
 			SkillScheduler.schedule(1, () -> {

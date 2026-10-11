@@ -1,9 +1,12 @@
 package com.minecraftmode.mixin;
 
+import com.llamalad7.mixinextras.sugar.Local;
 import com.minecraftmode.city.CityServices;
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.CombatState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -12,6 +15,7 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -46,6 +50,12 @@ public abstract class PlayerMixin {
 	@Inject(method = "doSweepAttack", at = @At("RETURN"))
 	private void minecraftMode$sweepEnd(final CallbackInfo ci) {
 		CombatState.of((Player)(Object)this).sweep = false;
+	}
+
+	/** A hit that got through (not dodged, guarded, bounced or shrugged off): the mana shield pays and thorns/counter hit back, before armor. */
+	@ModifyVariable(method = "actuallyHurt", at = @At("HEAD"), argsOnly = true)
+	private float minecraftMode$landed(final float damage, @Local(argsOnly = true) final DamageSource source) {
+		return CombatHooks.landed((Player)(Object)this, source, damage);
 	}
 
 	@Inject(method = "mayUseItemAt", at = @At("HEAD"), cancellable = true)

@@ -11,15 +11,21 @@ import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.skill.SkillContext;
 import com.minecraftmode.job.skill.SkillProjectile;
 import com.minecraftmode.job.skill.SkillScheduler;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragonPart;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Right-click shots and bow shots of class weapons. Anyone can use them; class bonuses (engravings,
@@ -28,6 +34,30 @@ import net.minecraft.world.phys.Vec3;
 public final class BasicAttacks {
 	/** King of Heroes (archer tier 4): chance that two treasure blades join a basic shot. */
 	public static final float BABYLON_CHANCE = 0.15F;
+
+	/**
+	 * The projectiles of one basic shot. Each enemy takes one of them: the extra ones ({@link EngraveStat#EXTRA_SHOT}) fly on past it to the
+	 * monsters around, as the class docs count them (ClassComparison). The whole fan used to land on anything wide enough, so three
+	 * Multishot lines made a raid boss take five or more arrows a shot. The treasure blades of King of Heroes are not part of it.
+	 */
+	public static final class Fan {
+		private final Set<UUID> struck = new HashSet<>();
+
+		/** Whether a projectile of this shot already hit {@code target}. */
+		public boolean taken(final Entity target) {
+			return this.struck.contains(body(target).getUUID());
+		}
+
+		/** A projectile of this shot hits {@code target}. */
+		public void take(final Entity target) {
+			this.struck.add(body(target).getUUID());
+		}
+
+		/** The Ender Dragon is hit through its parts. */
+		private static Entity body(final Entity entity) {
+			return entity instanceof EnderDragonPart part ? part.parentMob : entity;
+		}
+	}
 
 	/**
 	 * Damage bonus (fraction) of an active weapon's basic shot: the shot damage stat and, for mages, their skill damage too (Mana
@@ -62,9 +92,10 @@ public final class BasicAttacks {
 		// one shot always on the aim line, the extra ones fanned out to alternate sides (an even count spread evenly left the middle
 		// empty: two arrows 8° apart passed either side of a monster from a few blocks on)
 		float step = count == 1 ? 0.0F : Math.min(30.0F, 8.0F * (count - 1)) / (count - 1);
+		Fan fan = count == 1 ? null : new Fan();
 		for (int i = 0; i < count; i++) {
 			float yaw = (i + 1) / 2 * step * (i % 2 == 1 ? 1 : -1);
-			spawn(player, stack, def, style, damage, yaw, power);
+			spawn(player, stack, def, style, damage, yaw, power, fan);
 		}
 		ServerLevel level = player.level();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), style.sound(), SoundSource.PLAYERS, 0.6F, 1.0F + player.getRandom().nextFloat() * 0.2F);
@@ -86,7 +117,8 @@ public final class BasicAttacks {
 	}
 
 	private static void spawn(
-		final ServerPlayer player, final ItemStack stack, final WeaponDef def, final ProjectileStyle style, final float damage, final float yawOffset, final float power
+		final ServerPlayer player, final ItemStack stack, final WeaponDef def, final ProjectileStyle style, final float damage, final float yawOffset, final float power,
+		final @Nullable Fan fan
 	) {
 		ServerLevel level = player.level();
 		Vec3 dir = Vec3.directionFromRotation(player.getXRot(), player.getYRot() + yawOffset);
@@ -98,7 +130,7 @@ public final class BasicAttacks {
 			arrow.shoot(dir.x, dir.y, dir.z, speed, 1.0F);
 			arrow.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
 			arrow.setCritArrow(power >= 1.0F);
-			CombatHooks.trackArrow(arrow, damage);
+			CombatHooks.trackArrow(arrow, damage, fan);
 			level.addFreshEntity(arrow);
 			SkillScheduler.schedule(100, arrow::discard);
 			return;
@@ -106,6 +138,7 @@ public final class BasicAttacks {
 		SkillProjectile projectile = SkillProjectile.forBasicShot(player, style.display(), def.fx().color(), style.trail(), style.gravity(), damage)
 			.sweep(style.hitRadius())
 			.explode(style == ProjectileStyle.CANNONBALL ? 2.0F : 0.0F)
+			.fan(fan)
 			.launch(from, dir, speed);
 		level.addFreshEntity(projectile);
 	}

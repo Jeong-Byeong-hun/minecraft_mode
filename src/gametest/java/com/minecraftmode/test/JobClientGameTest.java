@@ -745,6 +745,42 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(arrowed < 400.0F, "a bow shot from inside a pressed husk went through it");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 
+		// the arrows of one basic shot hit each enemy once: of a fan of four (three Multishot lines) the husk in front takes the middle one
+		// (three used to land), and an arrow passing through it goes on to the husk beside and behind it
+		LivingEntity[] fanned = new LivingEntity[2];
+		float[] arrowHit = new float[2];
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			// tier 3: no treasure blades joining the shot
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.ARCHER, 3).withProgress(100, 0));
+			WeaponDef def = JobWeapons.def("hunter_shortbow");
+			ItemStack bow = new ItemStack(JobWeapons.item(def));
+			bow.set(ModDataComponents.ENGRAVINGS, new Engravings(List.of("multishot", "multishot", "multishot"), 1));
+			player.setItemInHand(InteractionHand.MAIN_HAND, bow);
+			JobStats.refresh(player);
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			fanned[0] = spawnTarget(player.level(), 0.5, -60, -2.5);
+			fanned[1] = spawnTarget(player.level(), 1.35, -60, -5.5);
+			EngraveTotals mods = JobWeapons.activeTotals(player);
+			arrowHit[0] = mods.get(EngraveStat.EXTRA_SHOT);
+			arrowHit[1] = def.shotDamage() * (1.0F + BasicAttacks.shotBonus(JobProgression.get(player), mods)) * 1.15F;
+		});
+		require(arrowHit[0] == 3.0F, "three Multishot lines should add 3 arrows, got " + arrowHit[0]);
+		context.waitTicks(2);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setYRot(180.0F);
+			player.setXRot(0.0F);
+			BasicAttacks.loose(player, player.getMainHandItem(), JobWeapons.def(player.getMainHandItem()), 1.0F);
+		});
+		context.waitTicks(8);
+		float[] fanLost = server.computeOnServer(s -> new float[] {400.0F - fanned[0].getHealth(), 400.0F - fanned[1].getHealth()});
+		// a crit adds half again; a second arrow would double it
+		require(fanLost[0] > 0.0F && fanLost[0] < arrowHit[1] * 1.75F, "the husk in front should take one arrow of " + arrowHit[1] + " from a fan of four, took " + fanLost[0]);
+		require(fanLost[1] > 0.0F, "an arrow of the fan should pass the husk in front and hit the one beside it");
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+
 		// a homing fan splits the enemies between its shots: a lone husk takes Flower Storm's middle orb, not all seven of them
 		LivingEntity[] lone = new LivingEntity[1];
 		float[] orb = new float[1];
@@ -776,7 +812,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(stormed > 0.0F && stormed < 3.0F * orb[0], "Flower Storm should hit a lone husk with about one orb of " + orb[0] + ", took " + stormed);
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] volleys: {} health from blades under a roof, arrows through the damage cooldown {}, bow shot from inside a husk hit,"
-			+ " Flower Storm took {} off a lone husk (one orb {})", blades[0], java.util.Arrays.toString(drops), stormed, orb[0]);
+			+ " a fan of four took {} off the husk in front (one arrow {}) and {} off the one beside it, Flower Storm took {} off a lone husk (one orb {})",
+			blades[0], java.util.Arrays.toString(drops), fanLost[0], arrowHit[1], fanLost[1], stormed, orb[0]);
 	}
 
 	/**

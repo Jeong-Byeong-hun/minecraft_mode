@@ -1,5 +1,6 @@
 package com.minecraftmode.job.skill;
 
+import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.registry.ModEntities;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -64,6 +65,8 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private @Nullable UUID claimed;
 	private @Nullable BiConsumer<SkillContext, Vec3> impact;
 	private final Set<UUID> hits = new HashSet<>();
+	/** The other projectiles of the same basic shot: each enemy takes one of them. */
+	private BasicAttacks.@Nullable Fan fan;
 
 	/**
 	 * The homing shots of one fan: each steers to a different enemy. A fan of seven used to curl every shot into a lone boss (seven times
@@ -151,6 +154,12 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		if (volley != null && first != null) {
 			volley.claim(first.getUUID(), this);
 		}
+		return this;
+	}
+
+	/** Shares its targets with the other projectiles of one basic shot ({@link BasicAttacks.Fan}). */
+	public SkillProjectile fan(final BasicAttacks.@Nullable Fan fan) {
+		this.fan = fan;
 		return this;
 	}
 
@@ -245,7 +254,7 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	@Override
 	protected boolean canHitEntity(final Entity entity) {
 		Entity target = body(entity);
-		if (!super.canHitEntity(entity) || this.hits.contains(target.getUUID())) {
+		if (!super.canHitEntity(entity) || this.hits.contains(target.getUUID()) || this.fan != null && this.fan.taken(target)) {
 			return false;
 		}
 		ServerPlayer owner = this.owner();
@@ -337,6 +346,13 @@ public class SkillProjectile extends ThrowableItemProjectile {
 
 	/** Damages {@code target} with {@code share} of this projectile's hit (less than all of it when an explosion catches a big pack). */
 	private void damage(final LivingEntity target, final double share) {
+		if (this.fan != null) {
+			// a cannonball's blast counts too: the next ball of the same shot must not catch the target again
+			if (this.fan.taken(target)) {
+				return;
+			}
+			this.fan.take(target);
+		}
 		if (this.ctx != null) {
 			if (this.ctx.valid()) {
 				this.ctx.hit(target, this.multiplier * share, this.damageSources().thrown(this, this.ctx.caster));

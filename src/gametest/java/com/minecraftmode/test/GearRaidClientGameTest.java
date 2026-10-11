@@ -27,6 +27,7 @@ import com.minecraftmode.job.gear.GearRules;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.gear.StatLine;
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -71,7 +72,9 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -466,6 +469,19 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			// armor takes a few percent more
 			if (lost > expected + 0.5F || lost < expected * 0.85F) {
 				return "100 damage should take about " + expected + " off the bar, took " + lost;
+			}
+			// a class arrow replaces the amount the boss already divided (CombatHooks.modifyIncoming) and used to skip the divisor, so a
+			// solo archer felled any boss in seconds; a six-member party's toughness makes the difference plain
+			boss.configure(6, boss.home(), boss.difficulty(), boss.affixes());
+			Arrow arrow = new Arrow(player.level(), player, new ItemStack(Items.ARROW), new ItemStack(Items.BOW));
+			CombatHooks.trackArrow(arrow, 100.0F);
+			boss.setInvulnerableTime(0);
+			boss.hurtServer(player.level(), player.damageSources().arrow(arrow, player), 1.0F);
+			float shot = RaidBoss.HEALTH_BAR - boss.getHealth();
+			float share = 100.0F / boss.divisor();
+			// a crit adds half again
+			if (shot <= 0.0F || shot > share * 2.0F) {
+				return "a class arrow of 100 should take about " + share + " off a six-member boss's bar (divisor " + boss.divisor() + "), took " + shot;
 			}
 			boss.setInvulnerableTime(0);
 			boss.hurtServer(player.level(), player.damageSources().playerAttack(player), 1.0E7F);

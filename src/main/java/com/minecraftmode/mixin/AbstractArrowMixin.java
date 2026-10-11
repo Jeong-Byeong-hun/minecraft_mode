@@ -19,12 +19,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Arrows of class bows and skills reach like {@link SkillProjectile}s: they hit a monster pressed against the archer (vanilla
- * misses a hitbox the arrow starts inside) and have the full 0.3 margin from the first tick on.
+ * misses a hitbox the arrow starts inside) and have the full 0.3 margin from the first tick on. The arrows of one basic shot hit
+ * each enemy once.
  */
 @Mixin(AbstractArrow.class)
 public abstract class AbstractArrowMixin {
 	@Shadow
 	protected abstract boolean canHitEntity(Entity entity);
+
+	/** The arrows of one basic shot hit each enemy once; the others fly on past it to the monsters around ({@code BasicAttacks.Fan}). */
+	@Inject(method = "canHitEntity", at = @At("HEAD"), cancellable = true)
+	private void minecraftMode$oneArrowPerEnemy(final Entity entity, final CallbackInfoReturnable<Boolean> cir) {
+		if (CombatHooks.fanTaken((AbstractArrow)(Object)this, entity)) {
+			cir.setReturnValue(false);
+		}
+	}
 
 	@Inject(method = "findHitEntities", at = @At("RETURN"), cancellable = true)
 	private void minecraftMode$classArrowReach(final Vec3 from, final Vec3 to, final CallbackInfoReturnable<Collection<EntityHitResult>> cir) {

@@ -195,7 +195,8 @@ final class ClassComparison {
 			* crit * (1.0 + mods.fraction(DOUBLE_STRIKE));
 		double melee = meleeHit * swings;
 		double melee5 = melee * (1.0 + 4 * 0.5 * Math.min(1.0, mods.get(SPLASH)));
-		// shots: one per draw or reload, the extra ones of a fan only reach the other monsters of a group
+		// shots: one per draw or reload, the extra ones of a fan only reach the other monsters of a group (BasicAttacks.Fan; the stat
+		// stops at its cap)
 		double shot = 0.0;
 		double shot5 = 0.0;
 		double shotRate = 0.0;
@@ -207,7 +208,7 @@ final class ClassComparison {
 			double hit = w.shotDamage() * (1.0 + BasicAttacks.shotBonus(data, mods)) * (CombatHooks.has(data, JobClass.ARCHER, 1) ? 1.15 : 1.0)
 				* (1.0 + execute + first + distance) * crit * (CombatHooks.has(data, JobClass.ARCHER, 4) ? 1.0 + BasicAttacks.BABYLON_CHANCE * 2 : 1.0);
 			shot = hit * shotRate;
-			double extra = Math.min(4.0, mods.get(EXTRA_SHOT)) * 0.5;
+			double extra = mods.get(EXTRA_SHOT) * 0.5;
 			shot5 = shot * (type.shot() == ProjectileStyle.CANNONBALL ? CANNON_TARGETS : 1.0 + extra);
 		}
 		boolean shoots = shot > melee;

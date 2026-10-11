@@ -14,6 +14,7 @@ import com.minecraftmode.mixin.LivingEntityAccessor;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
+import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModEffects;
@@ -87,6 +88,8 @@ public final class CombatHooks {
 	private static final Map<Entity, Float> ARROWS = new WeakHashMap<>();
 	/** Vanilla arrows fired by skills -> the skill that fired them. */
 	private static final Map<Entity, SkillArrow> SKILL_ARROWS = new WeakHashMap<>();
+	/** Class bow arrows of a basic shot with more than one arrow -> that shot (each enemy takes one of them). */
+	private static final Map<Entity, BasicAttacks.Fan> FANS = new WeakHashMap<>();
 
 	private record SkillArrow(SkillContext ctx, double multiplier) {
 	}
@@ -97,7 +100,21 @@ public final class CombatHooks {
 	}
 
 	public static void trackArrow(final Entity arrow, final float damage) {
+		trackArrow(arrow, damage, null);
+	}
+
+	/** A class bow arrow; {@code fan} = the other arrows of the same shot, or null for a lone arrow. */
+	public static void trackArrow(final Entity arrow, final float damage, final BasicAttacks.@Nullable Fan fan) {
 		ARROWS.put(arrow, damage);
+		if (fan != null) {
+			FANS.put(arrow, fan);
+		}
+	}
+
+	/** Another arrow of {@code arrow}'s basic shot already hit {@code target}: it flies on past it ({@code AbstractArrowMixin}). */
+	public static boolean fanTaken(final Entity arrow, final Entity target) {
+		BasicAttacks.Fan fan = FANS.get(arrow);
+		return fan != null && fan.taken(target);
 	}
 
 	public static void trackSkillArrow(final Entity arrow, final SkillContext ctx, final double multiplier) {
@@ -179,6 +196,16 @@ public final class CombatHooks {
 		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
 			victim.damageCooldownTime = 0;
 		}
+		if (arrowDamage != null) {
+			BasicAttacks.Fan fan = FANS.get(direct);
+			if (fan != null) {
+				fan.take(victim);
+			}
+		}
+		// A raid boss divided the hit before it got here (RaidBoss.hurtServer). The class arrow, skill arrow and summon damage below replace
+		// that amount, so they are divided again: they used to skip the divisor, and a solo archer felled any boss on any difficulty in
+		// seconds (the bar is always 1000).
+		float raidDivisor = victim instanceof RaidBoss boss ? boss.divisor() : 1.0F;
 		// a fully charged swing of a class weapon lands too: the hurt cooldown capped melee at two hits a second (faster weapons and
 		// attack speed were wasted) and swallowed the swing after a skill hit or a double strike; uncharged spam still bounces
 		if (kind == null && source.getDirectEntity() instanceof ServerPlayer swinger && source.getEntity() == swinger && !victim.isInvulnerableTo(level, source)) {
@@ -194,11 +221,11 @@ public final class CombatHooks {
 			return amount;
 		}
 		if (arrowDamage != null) {
-			result = arrowDamage;
+			result = arrowDamage / raidDivisor;
 			kind = DamageKind.SHOT;
 		}
 		if (skillArrow != null) {
-			result = skillArrow.ctx.damageFor(skillArrow.multiplier);
+			result = skillArrow.ctx.damageFor(skillArrow.multiplier) / raidDivisor;
 			kind = DamageKind.SKILL;
 		}
 		critHit = false;
@@ -207,7 +234,7 @@ public final class CombatHooks {
 		} else if (summonOwner(level, source.getEntity()) instanceof ServerPlayer owner && owner != victim) {
 			// a skill summon hits with its caster's power and stats like a skill (vanilla wolves bit for 4 and snow golems for 0 at any level)
 			float hit = Actions.summonDamage(source.getEntity());
-			result = outgoing(owner, victim, source, Float.isNaN(hit) ? result : hit, DamageKind.SKILL, now);
+			result = outgoing(owner, victim, source, Float.isNaN(hit) ? result : hit / raidDivisor, DamageKind.SKILL, now);
 		}
 		// event monsters meant to have more than vanilla's 1024 health take damage divided by the rest (MobPower); armor still reads
 		// the whole hit (LivingEntityMixin)

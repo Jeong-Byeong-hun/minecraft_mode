@@ -44,7 +44,7 @@ public class Raijin extends RaidBoss {
 		return List.of(
 			spell("lightning_strike", 1, 80, 0, 12, this::lightningStrike),
 			spell("thunder_drum", 1, 150, 10, 22, this::thunderDrum),
-			pattern("wind_blade", 1, 100, 22, 14, this::windBlade),
+			pattern("wind_blade", 1, 100, 22, 20, this::windBlade),
 			pattern("storm_spirits", 2, 420, 0, 20, (level, target) -> {
 				this.playAnim(CreatureAnim.SUMMON);
 				this.summonMinions(level, EntityTypes.BREEZE, 2, 4, target);
@@ -103,7 +103,7 @@ public class Raijin extends RaidBoss {
 		Vec3 from = this.ground(this.position());
 		Vec3 to = reach(from, target.position(), 18);
 		this.sound(level, SoundEvents.BREEZE_SHOOT, 2.0F, 0.6F);
-		this.line(level, from, to, 2.5, 16, Telegraph.ORANGE, 1.2F, e -> Attacks.knock(e, from, 1.0, 0.3),
+		this.line(level, from, to, 2.5, Telegraph.MIN_WARNING, Telegraph.ORANGE, 1.2F, e -> Attacks.knock(e, from, 1.0, 0.3),
 			() -> new Fx(Fx.Kind.SLASH, STORM).line(level, from.add(0, 1.0, 0), to.add(0, 1.0, 0), 0.8));
 	}
 

@@ -45,9 +45,9 @@ public class Aethryx extends RaidBoss {
 	@Override
 	protected List<Pattern> patterns() {
 		return List.of(
-			spell("void_breath", 1, 150, 0, 34, this::voidBreath),
+			spell("void_breath", 1, 150, 0, 40, this::voidBreath),
 			pattern("wing_buffet", 1, 170, 14, 22, this::wingBuffet),
-			pattern("tail_lash", 1, 110, 0, 18, this::tailLash),
+			pattern("tail_lash", 1, 110, 0, 20, this::tailLash),
 			spell("void_orbs", 2, 160, 0, 10, this::voidOrbs),
 			pattern("dive_bomb", 2, 220, 0, 40, this::diveBomb),
 			spell("rifts", 3, 260, 0, 20, this::rifts),
@@ -79,7 +79,7 @@ public class Aethryx extends RaidBoss {
 	private void voidBreath(final ServerLevel level, final LivingEntity target) {
 		this.playAnim(CreatureAnim.BREATH);
 		this.sound(level, SoundEvents.ENDER_DRAGON_GROWL, 3.0F, 0.9F);
-		this.cone(level, this.ground(this.position()), target.position(), 17, 28, 16, Telegraph.PURPLE, 0.5F, 5, new Fx(Fx.Kind.ORB, VOID),
+		this.cone(level, this.ground(this.position()), target.position(), 17, 28, Telegraph.MIN_WARNING, Telegraph.PURPLE, 0.5F, 5, new Fx(Fx.Kind.ORB, VOID),
 			e -> this.effect(e, MobEffects.DARKNESS, 60, 0));
 	}
 
@@ -97,7 +97,7 @@ public class Aethryx extends RaidBoss {
 		this.playAnim(CreatureAnim.SPIN);
 		Vec3 from = this.ground(this.position());
 		Vec3 to = reach(from, target.position(), 16);
-		this.line(level, from, to, 3.4, 18, Telegraph.RED, 1.5F, e -> Attacks.knock(e, from, 1.4, 0.5),
+		this.line(level, from, to, 3.4, Telegraph.MIN_WARNING, Telegraph.RED, 1.5F, e -> Attacks.knock(e, from, 1.4, 0.5),
 			() -> new Fx(Fx.Kind.SLASH, VOID).line(level, from.add(0, 1, 0), to.add(0, 1, 0), 0.8));
 		this.sound(level, SoundEvents.ENDER_DRAGON_HURT, 2.0F, 0.6F);
 	}

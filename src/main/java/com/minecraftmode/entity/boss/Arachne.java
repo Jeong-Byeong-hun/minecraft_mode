@@ -48,7 +48,7 @@ public class Arachne extends RaidBoss {
 				this.summonMinions(level, EntityTypes.CAVE_SPIDER, 3, 6, target);
 			}),
 			pattern("acid_pools", 2, 220, 0, 16, this::acidPools),
-			pattern("silk_storm", 3, 320, 0, 50, this::silkStorm)
+			pattern("silk_storm", 3, 320, 0, 55, this::silkStorm)
 		);
 	}
 
@@ -93,7 +93,7 @@ public class Arachne extends RaidBoss {
 		this.playAnim(CreatureAnim.LEAP);
 		Attacks.push(this, new Vec3(d.x * 0.16, 0.9 + Math.min(0.5, d.horizontalDistance() * 0.03), d.z * 0.16));
 		this.sound(level, SoundEvents.SPIDER_HURT, 2.0F, 0.5F);
-		this.circle(level, to, 3.5, 18, Telegraph.ORANGE, 1.4F, e -> Attacks.knock(e, to, 0.9, 0.5), () -> this.boom(level, to, 3.5));
+		this.circle(level, to, 3.5, Telegraph.MIN_WARNING, Telegraph.ORANGE, 1.4F, e -> Attacks.knock(e, to, 0.9, 0.5), () -> this.boom(level, to, 3.5));
 	}
 
 	private void webShot(final ServerLevel level, final LivingEntity target) {
@@ -143,7 +143,8 @@ public class Arachne extends RaidBoss {
 				this.pull(level, this.ground(this.position()), 22, 0.9);
 			}
 		});
-		this.circle(level, me, 7.5, 34, Telegraph.RED, 2.0F, e -> Attacks.knock(e, me, 1.6, 0.6), () -> {
+		// 2.1 s after the second pull to sprint out of 7.5 blocks (it was 1.3 s, about 7 blocks at a sprint)
+		this.circle(level, me, 7.5, 50, Telegraph.RED, 2.0F, e -> Attacks.knock(e, me, 1.6, 0.6), () -> {
 			this.playAnim(CreatureAnim.SLAM);
 			this.boom(level, me, 7.5);
 			this.webs(level, BlockPos.containing(me), 2);

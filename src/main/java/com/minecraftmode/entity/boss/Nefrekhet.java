@@ -88,7 +88,7 @@ public class Nefrekhet extends RaidBoss {
 	private void sandSlam(final ServerLevel level, final LivingEntity target) {
 		this.playAnim(CreatureAnim.SLAM);
 		Vec3 me = this.ground(this.position());
-		this.circle(level, me, 5.0, 18, Telegraph.RED, 1.4F, e -> Attacks.knock(e, me, 1.2, 0.5), () -> this.boom(level, me, 5.0));
+		this.circle(level, me, 5.0, Telegraph.MIN_WARNING, Telegraph.RED, 1.4F, e -> Attacks.knock(e, me, 1.2, 0.5), () -> this.boom(level, me, 5.0));
 	}
 
 	/** A conjured sandstorm blows from him: blinding gusts. */

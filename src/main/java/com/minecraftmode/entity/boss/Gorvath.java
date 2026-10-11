@@ -32,6 +32,8 @@ import net.minecraft.world.phys.Vec3;
  */
 public class Gorvath extends RaidBoss {
 	private static final int STONE = 0xA09080;
+	/** How far from its body the avalanche hits; the warning strip is drawn just as wide (it was narrower). */
+	private static final double AVALANCHE_RADIUS = 2.8;
 
 	public Gorvath(final EntityType<? extends Gorvath> type, final Level level) {
 		super(type, level);
@@ -146,14 +148,14 @@ public class Gorvath extends RaidBoss {
 		this.getLookControl().setLookAt(target);
 		this.setBusy(40);
 		this.sound(level, SoundEvents.RAVAGER_ROAR, 3.0F, 0.6F);
-		Telegraph.line(level, from, end, 5.0, 22, Telegraph.RED, () -> {
+		Telegraph.line(level, from, end, AVALANCHE_RADIUS * 2, 22, Telegraph.RED, () -> {
 			if (!this.alive()) {
 				return;
 			}
 			java.util.Set<java.util.UUID> hit = new java.util.HashSet<>();
 			this.dash(end, 12, () -> {
 				level.sendParticles(ParticleTypes.CLOUD, this.getX(), this.getY() + 0.3, this.getZ(), 6, 1.0, 0.2, 1.0, 0.05);
-				for (LivingEntity e : Attacks.inCircle(level, this.position(), 2.8, this.getBbHeight())) {
+				for (LivingEntity e : Attacks.inCircle(level, this.position(), AVALANCHE_RADIUS, this.getBbHeight())) {
 					if (hit.add(e.getUUID())) {
 						Attacks.hit(this, e, this.dmg(2.0F));
 						Attacks.knock(e, this.position(), 1.8, 0.7);

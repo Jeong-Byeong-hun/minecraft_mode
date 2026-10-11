@@ -678,7 +678,7 @@ public class NamedMob extends CreatureMob {
 		this.playAnim(CreatureAnim.LEAP);
 		Attacks.push(this, new Vec3(d.x * 0.14, 0.75 + Math.min(0.45, d.horizontalDistance() * 0.025), d.z * 0.14));
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.RAVAGER_ATTACK, SoundSource.HOSTILE, 0.8F, 1.3F);
-		Telegraph.circle(level, to, ability.radius(), 16, Telegraph.ORANGE, () -> {
+		Telegraph.circle(level, to, ability.radius(), Telegraph.MIN_WARNING, Telegraph.ORANGE, () -> {
 			if (!this.isAlive()) {
 				return;
 			}
@@ -692,11 +692,11 @@ public class NamedMob extends CreatureMob {
 		Vec3 start = this.position();
 		Vec3 dir = target.position().subtract(start).multiply(1, 0, 1).normalize();
 		Vec3 end = start.add(dir.scale(ability.range()));
-		this.busyTicks = 18;
+		this.busyTicks = Telegraph.MIN_WARNING;
 		this.playAnim(CreatureAnim.CHARGE);
 		this.getLookControl().setLookAt(target);
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 0.8F, 1.4F);
-		Telegraph.line(level, start, end, ability.radius() * 2, 18, Telegraph.RED, () -> {
+		Telegraph.line(level, start, end, ability.radius() * 2, Telegraph.MIN_WARNING, Telegraph.RED, () -> {
 			Set<UUID> hit = new HashSet<>();
 			for (int i = 0; i < 10; i++) {
 				SkillScheduler.schedule(i, () -> {
@@ -726,8 +726,10 @@ public class NamedMob extends CreatureMob {
 			aim = aim.add(0, aim.horizontalDistance() * 0.35, 0);
 		}
 		ItemStack display = ability.display() == null ? ItemStack.EMPTY : new ItemStack(ability.display());
-		for (int k = 0; k < ability.count(); k++) {
-			float offset = ability.count() == 1 ? 0.0F : -ability.radius() / 2 + ability.radius() * k / (ability.count() - 1);
+		// an even fan gets a middle shot (MobProjectile.fanShots), or it passed either side of a player standing still
+		int shots = MobProjectile.fanShots(ability.count(), ability.radius());
+		for (int k = 0; k < shots; k++) {
+			float offset = shots == 1 ? 0.0F : -ability.radius() / 2 + ability.radius() * k / (shots - 1);
 			Vec3 dir = aim.yRot((float)Math.toRadians(offset));
 			MobProjectile projectile = MobProjectile.of(this, display, ability.fx(), ability.color(), ability.gravity(), this.damage(ability)).magic(ability.magic())
 				.launch(eye, dir, speed);
@@ -850,11 +852,11 @@ public class NamedMob extends CreatureMob {
 		Vec3 to = target.position().subtract(origin);
 		float yaw = (float)Math.toDegrees(Math.atan2(-to.x, to.z));
 		float half = ability.radius() / 2.0F;
-		this.busyTicks = 34;
+		this.busyTicks = Telegraph.MIN_WARNING + 20;
 		this.getLookControl().setLookAt(target);
 		this.playAnim(CreatureAnim.BREATH);
 		Fx fx = new Fx(ability.fx(), ability.color());
-		Telegraph.cone(level, origin, yaw, ability.range(), half, 14, Telegraph.RED, () -> {
+		Telegraph.cone(level, origin, yaw, ability.range(), half, Telegraph.MIN_WARNING, Telegraph.RED, () -> {
 			for (int i = 0; i < 20; i += 4) {
 				SkillScheduler.schedule(i, () -> {
 					if (!this.isAlive()) {

@@ -9,15 +9,18 @@ import net.minecraft.world.phys.Vec3;
 /**
  * Ground warnings for monster and boss attacks: a colored outline drawn on the ground with a
  * filling ring that shows how much time is left, then the attack itself after {@code delay} ticks.
- * Every area attack of named monsters and bosses is telegraphed so players can dodge.
+ * Every area attack of named monsters and bosses is telegraphed so players can dodge, never with less than {@link #MIN_WARNING}.
  */
 public final class Telegraph {
 	public static final int RED = 0xFF3030;
 	public static final int ORANGE = 0xFF8A20;
 	public static final int PURPLE = 0xB040FF;
+	/** The shortest warning (ticks): 0.7-0.9 s breaths, strips and slams left no time to react on a lagging connection. */
+	public static final int MIN_WARNING = 20;
 
 	/** A circle that fills from the center outward; {@code then} runs when it is full. */
-	public static void circle(final ServerLevel level, final Vec3 center, final double radius, final int delay, final int color, final Runnable then) {
+	public static void circle(final ServerLevel level, final Vec3 center, final double radius, final int warning, final int color, final Runnable then) {
+		int delay = Math.max(MIN_WARNING, warning);
 		for (int t = 0; t < delay; t += 3) {
 			final float fill = t / (float)delay;
 			SkillScheduler.schedule(t, () -> {
@@ -29,7 +32,8 @@ public final class Telegraph {
 	}
 
 	/** A ring with a safe hole in the middle (donut): outer and inner edges, filling inward. */
-	public static void donut(final ServerLevel level, final Vec3 center, final double inner, final double outer, final int delay, final int color, final Runnable then) {
+	public static void donut(final ServerLevel level, final Vec3 center, final double inner, final double outer, final int warning, final int color, final Runnable then) {
+		int delay = Math.max(MIN_WARNING, warning);
 		for (int t = 0; t < delay; t += 3) {
 			final float fill = t / (float)delay;
 			SkillScheduler.schedule(t, () -> {
@@ -42,7 +46,8 @@ public final class Telegraph {
 	}
 
 	/** A strip from {@code from} to {@code to}, {@code width} wide, filling along its length. */
-	public static void line(final ServerLevel level, final Vec3 from, final Vec3 to, final double width, final int delay, final int color, final Runnable then) {
+	public static void line(final ServerLevel level, final Vec3 from, final Vec3 to, final double width, final int warning, final int color, final Runnable then) {
+		int delay = Math.max(MIN_WARNING, warning);
 		Vec3 dir = to.subtract(from).multiply(1, 0, 1);
 		double length = dir.length();
 		if (length < 0.01) {
@@ -68,8 +73,9 @@ public final class Telegraph {
 	}
 
 	/** A cone from {@code origin} toward {@code yawDeg} (Minecraft yaw), {@code range} long and {@code halfAngle} degrees wide. */
-	public static void cone(final ServerLevel level, final Vec3 origin, final float yawDeg, final double range, final double halfAngle, final int delay, final int color,
+	public static void cone(final ServerLevel level, final Vec3 origin, final float yawDeg, final double range, final double halfAngle, final int warning, final int color,
 		final Runnable then) {
+		int delay = Math.max(MIN_WARNING, warning);
 		for (int t = 0; t < delay; t += 3) {
 			final float fill = t / (float)delay;
 			SkillScheduler.schedule(t, () -> {

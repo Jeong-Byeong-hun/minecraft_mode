@@ -60,6 +60,14 @@ public class MobProjectile extends ThrowableItemProjectile {
 		super(ModEntities.MOB_PROJECTILE, owner, level, display);
 	}
 
+	/**
+	 * How many projectiles a fan of {@code count} over {@code spread} degrees really fires: an even fan gets one in the middle, or nothing
+	 * flies along the aim line (two skulls 20 degrees apart passed either side of a player 3 blocks away).
+	 */
+	public static int fanShots(final int count, final float spread) {
+		return count > 1 && count % 2 == 0 && spread > 0.0F ? count + 1 : count;
+	}
+
 	/** A projectile dealing {@code damage}; aim it with {@link #launch} and add it to the level. */
 	public static MobProjectile of(final Mob owner, final ItemStack display, final Fx.Kind trail, final int color, final float gravity, final float damage) {
 		MobProjectile p = new MobProjectile(owner.level(), owner, display);

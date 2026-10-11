@@ -6,6 +6,8 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.raid.LootScreen;
 import com.minecraftmode.client.raid.RaidScreen;
 import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.entity.combat.MobProjectile;
+import com.minecraftmode.entity.combat.Telegraph;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
@@ -374,6 +376,10 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 
 	/** Spawns every boss (no arena) and runs each of its patterns once; any exception fails the test. */
 	private static void checkBossPatterns(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// an even monster fan gets a middle shot (nothing flew along the aim line), odd fans and single shots stay as they are
+		require(MobProjectile.fanShots(4, 36.0F) == 5 && MobProjectile.fanShots(2, 10.0F) == 3 && MobProjectile.fanShots(5, 40.0F) == 5
+			&& MobProjectile.fanShots(1, 0.0F) == 1 && MobProjectile.fanShots(2, 0.0F) == 2, "even monster fans should get a middle shot");
+		require(Telegraph.MIN_WARNING >= 20, "boss warnings should last at least a second");
 		server.runCommand("tp @p 0.5 -60 0.5 180 0");
 		server.runCommand("effect give @p resistance 999999 4 true");
 		server.runCommand("effect give @p regeneration 999999 4 true");

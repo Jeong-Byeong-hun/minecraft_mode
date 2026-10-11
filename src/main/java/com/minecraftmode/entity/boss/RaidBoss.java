@@ -1060,7 +1060,10 @@ public abstract class RaidBoss extends CreatureMob {
 		}
 	}
 
-	/** Fires {@code count} projectiles at {@code target} in a fan of {@code spread} degrees. */
+	/**
+	 * Fires {@code count} projectiles at {@code target} in a fan of {@code spread} degrees. An even fan gets one more in the middle
+	 * ({@link MobProjectile#fanShots}): with nothing on the aim line it missed a player standing still from a few blocks on.
+	 */
 	protected List<MobProjectile> volley(final ServerLevel level, final LivingEntity target, final int count, final float spread, final float power, final ItemStack display,
 		final Fx.Kind trail, final int color, final float gravity, final float speed, final boolean homing) {
 		Vec3 eye = this.position().add(0, this.getBbHeight() * 0.7, 0);
@@ -1069,8 +1072,9 @@ public abstract class RaidBoss extends CreatureMob {
 			aim = aim.add(0, aim.horizontalDistance() * 0.3, 0);
 		}
 		List<MobProjectile> out = new ArrayList<>();
-		for (int k = 0; k < count; k++) {
-			float offset = count == 1 ? 0.0F : -spread / 2 + spread * k / (count - 1);
+		int shots = MobProjectile.fanShots(count, spread);
+		for (int k = 0; k < shots; k++) {
+			float offset = shots == 1 ? 0.0F : -spread / 2 + spread * k / (shots - 1);
 			Vec3 dir = aim.yRot((float)Math.toRadians(offset));
 			MobProjectile p = MobProjectile.of(this, display, trail, color, gravity, this.dmg(power)).magic(this.casting).launch(eye, dir, speed);
 			if (homing) {

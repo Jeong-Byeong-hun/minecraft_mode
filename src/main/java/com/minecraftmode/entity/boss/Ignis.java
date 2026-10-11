@@ -33,6 +33,8 @@ import net.minecraft.world.phys.Vec3;
 public class Ignis extends RaidBoss {
 	private static final int FLAME = 0xFF7A1A;
 	private static final int REBIRTH_TICKS = 100;
+	/** How far from its body the flame dive burns; the warning strip is drawn just as wide (it was 1 block narrower). */
+	private static final double DIVE_RADIUS = 2.4;
 	private boolean reborn;
 
 	public Ignis(final EntityType<? extends Ignis> type, final Level level) {
@@ -49,7 +51,7 @@ public class Ignis extends RaidBoss {
 		return List.of(
 			spell("fireball_volley", 1, 70, 0, 8, this::fireballs),
 			pattern("flame_dive", 1, 190, 0, 40, this::flameDive),
-			spell("fire_breath", 1, 160, 18, 34, this::breath),
+			spell("fire_breath", 1, 160, 18, 40, this::breath),
 			spell("meteor_rain", 2, 230, 0, 20, this::meteors),
 			spell("burning_ground", 2, 210, 0, 10, this::burningGround),
 			spell("supernova", 3, 520, 0, 50, (level, target) -> this.supernova(level))
@@ -129,7 +131,7 @@ public class Ignis extends RaidBoss {
 		this.playAnim(CreatureAnim.DIVE);
 		this.sound(level, SoundEvents.PHANTOM_SWOOP, 3.0F, 0.6F);
 		this.setBusy(40);
-		Telegraph.line(level, start, end, 3.5, 20, Telegraph.RED, () -> {
+		Telegraph.line(level, start, end, DIVE_RADIUS * 2, 20, Telegraph.RED, () -> {
 			if (!this.alive()) {
 				return;
 			}
@@ -137,7 +139,7 @@ public class Ignis extends RaidBoss {
 			this.teleportTo(start.x, start.y + 1.0, start.z);
 			this.dash(end.add(0, 1.0, 0), 14, () -> {
 				level.sendParticles(ParticleTypes.FLAME, this.getX(), this.getY() + 0.5, this.getZ(), 12, 1.0, 0.4, 1.0, 0.02);
-				for (LivingEntity e : Attacks.inCircle(level, this.position(), 2.4, 4.0)) {
+				for (LivingEntity e : Attacks.inCircle(level, this.position(), DIVE_RADIUS, 4.0)) {
 					if (hit.add(e.getUUID())) {
 						Attacks.hit(this, e, this.dmg(1.6F));
 						e.igniteForSeconds(4.0F);
@@ -151,7 +153,7 @@ public class Ignis extends RaidBoss {
 	private void breath(final ServerLevel level, final LivingEntity target) {
 		this.playAnim(CreatureAnim.BREATH);
 		this.sound(level, SoundEvents.ENDER_DRAGON_SHOOT, 2.5F, 1.2F);
-		this.cone(level, this.ground(this.position()), target.position(), 14, 28, 14, Telegraph.RED, 0.45F, 5, new Fx(Fx.Kind.SPARK, FLAME),
+		this.cone(level, this.ground(this.position()), target.position(), 14, 28, Telegraph.MIN_WARNING, Telegraph.RED, 0.45F, 5, new Fx(Fx.Kind.SPARK, FLAME),
 			e -> e.igniteForSeconds(3.0F));
 	}
 
@@ -172,7 +174,7 @@ public class Ignis extends RaidBoss {
 		this.playAnim(CreatureAnim.CAST);
 		for (ServerPlayer p : this.fighters(level)) {
 			Vec3 at = this.ground(p.position());
-			Telegraph.circle(level, at, 3.0, 16, Telegraph.ORANGE, () -> {
+			Telegraph.circle(level, at, 3.0, Telegraph.MIN_WARNING, Telegraph.ORANGE, () -> {
 				for (int t = 0; t < 100; t += 10) {
 					SkillScheduler.schedule(t + 1, () -> {
 						if (!this.alive()) {

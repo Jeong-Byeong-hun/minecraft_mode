@@ -44,8 +44,8 @@ public class Kraken extends RaidBoss {
 	@Override
 	protected List<Pattern> patterns() {
 		return List.of(
-			pattern("tentacle_slam", 1, 46, 0, 18, this::tentacleSlam),
-			pattern("ink_spray", 1, 170, 0, 30, this::inkSpray),
+			pattern("tentacle_slam", 1, 46, 0, 20, this::tentacleSlam),
+			pattern("ink_spray", 1, 170, 0, 35, this::inkSpray),
 			pattern("water_spout", 1, 140, 0, 10, this::waterSpout),
 			pattern("drowned_call", 2, 400, 0, 20, (level, target) -> {
 				this.playAnim(CreatureAnim.SUMMON);
@@ -83,7 +83,7 @@ public class Kraken extends RaidBoss {
 		Vec3 from = this.ground(this.poolEdgeToward(target.position()));
 		Vec3 to = reach(from, target.position(), from.distanceTo(this.ground(target.position())) + 4);
 		this.sound(level, SoundEvents.ELDER_GUARDIAN_AMBIENT, 2.5F, 0.6F);
-		this.line(level, from, to, 2.6, 18, Telegraph.RED, 1.3F, e -> Attacks.knock(e, from, 1.0, 0.5), () -> {
+		this.line(level, from, to, 2.6, Telegraph.MIN_WARNING, Telegraph.RED, 1.3F, e -> Attacks.knock(e, from, 1.0, 0.5), () -> {
 			new Fx(Fx.Kind.BUBBLE, SEA).line(level, from.add(0, 0.5, 0), to.add(0, 0.5, 0), 0.6);
 			this.sound(level, to, SoundEvents.GENERIC_SPLASH, 2.0F, 0.6F);
 		});
@@ -93,7 +93,7 @@ public class Kraken extends RaidBoss {
 		this.playAnim(CreatureAnim.BREATH);
 		this.sound(level, SoundEvents.SQUID_SQUIRT, 3.0F, 0.5F);
 		Vec3 origin = this.ground(this.poolEdgeToward(target.position()));
-		this.cone(level, origin, target.position(), 15, 32, 16, Telegraph.PURPLE, 0.5F, 3, new Fx(Fx.Kind.SMOKE, INK), e -> {
+		this.cone(level, origin, target.position(), 15, 32, Telegraph.MIN_WARNING, Telegraph.PURPLE, 0.5F, 3, new Fx(Fx.Kind.SMOKE, INK), e -> {
 			this.effect(e, MobEffects.BLINDNESS, 60, 0);
 			this.effect(e, MobEffects.SLOWNESS, 60, 1);
 		});

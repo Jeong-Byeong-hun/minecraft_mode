@@ -12,6 +12,10 @@ import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
 import com.minecraftmode.client.mixin.AbstractContainerScreenAccessor;
 import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.CraftPrices;
+import com.minecraftmode.craft.CraftRecipes;
+import com.minecraftmode.craft.Profession;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.economy.ShopType;
@@ -685,32 +689,48 @@ public class TownClientGameTest implements FabricClientGameTest {
 		// no shop buys anything back for more than any shop sells it for
 		for (ShopType seller : ShopType.values()) {
 			for (ShopOffers.Trade sale : ShopOffers.trades(seller)) {
-				if (coinValue(sale.cost().asItem()) == 0 || coinValue(sale.result().asItem()) > 0) {
+				if (Coins.value(sale.cost().asItem()) == 0 || Coins.value(sale.result().asItem()) > 0) {
 					continue;
 				}
-				float price = (coinValue(sale.cost().asItem()) * sale.costCount()
-					+ (sale.extra() == null ? 0 : coinValue(sale.extra().asItem()) * sale.extraCount())) / (float)sale.resultCount();
+				float price = (Coins.value(sale.cost().asItem()) * sale.costCount()
+					+ (sale.extra() == null ? 0 : Coins.value(sale.extra().asItem()) * sale.extraCount())) / (float)sale.resultCount();
 				for (ShopType buyer : ShopType.values()) {
 					float pays = paid(ShopOffers.trades(buyer), sale.result().asItem());
 					require(pays < price, buyer + " pays " + pays + "C for " + sale.result() + " that " + seller + " sells for " + price + "C");
 				}
 			}
 		}
+		// what professions make sells to that profession's shop (all but the crafter's own ether), herbs to the alchemist
+		for (Profession profession : Profession.values()) {
+			List<ShopOffers.Trade> shop = ShopOffers.trades(CraftPrices.shop(profession));
+			for (CraftRecipes.Recipe recipe : CraftRecipes.of(profession)) {
+				if (recipe.output() instanceof CraftRecipes.Output output) {
+					require(paid(shop, output.item()) > 0.0F, CraftPrices.shop(profession) + " buys " + output.item() + " (" + recipe.id() + ")");
+				}
+			}
+		}
+		List<ShopOffers.Trade> alchemist = ShopOffers.trades(ShopType.ALCHEMIST);
+		for (Item herb : CraftPrices.herbs().keySet()) {
+			require(paid(alchemist, herb) > 0.0F, "the alchemist buys " + herb);
+		}
+		// a made thing pays more than its materials would, and the top recipes most
+		Item elixir = Consumables.item("elixir");
+		float parts = paid(alchemist, Consumables.item("estus_flask")) + paid(alchemist, Consumables.item("hi_ether")) + paid(alchemist, ModItems.VOIDCAP);
+		require(paid(alchemist, elixir) > parts, "an elixir (" + paid(alchemist, elixir) + "C) pays more than what goes into it (" + parts + "C)");
+		require(paid(alchemist, Consumables.item("thunderbolt")) > paid(alchemist, ModItems.EMBERBLOOM) + paid(ShopOffers.trades(ShopType.GENERAL), Items.GOLD_INGOT),
+			"a thunderbolt pays more than an emberbloom and a gold ingot");
+		require(CraftPrices.mastery(50) > CraftPrices.mastery(1) * 1.5F, "mastery grows with the recipe level");
 	}
 
 	/** Copper one {@code item} sells for in {@code trades} (the best line), 0 when nobody buys it. */
 	private static float paid(final List<ShopOffers.Trade> trades, final Item item) {
 		float best = 0.0F;
 		for (ShopOffers.Trade trade : trades) {
-			if (trade.cost().asItem() == item && coinValue(trade.result().asItem()) > 0) {
-				best = Math.max(best, coinValue(trade.result().asItem()) * trade.resultCount() / (float)trade.costCount());
+			if (trade.cost().asItem() == item && Coins.value(trade.result().asItem()) > 0) {
+				best = Math.max(best, Coins.value(trade.result().asItem()) * trade.resultCount() / (float)trade.costCount());
 			}
 		}
 		return best;
-	}
-
-	private static int coinValue(final Item item) {
-		return item == ModItems.COPPER_COIN ? 1 : item == ModItems.SILVER_COIN ? Coins.SILVER : item == ModItems.GOLD_COIN ? Coins.GOLD : 0;
 	}
 
 	// ------------------------------------------------------------------ target health bar

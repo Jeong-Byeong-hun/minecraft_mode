@@ -11,6 +11,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -27,6 +28,11 @@ public final class Coins {
 		return Wallet.balance(player) + JobProgression.count(inventory, ModItems.COPPER_COIN)
 			+ SILVER * JobProgression.count(inventory, ModItems.SILVER_COIN)
 			+ GOLD * JobProgression.count(inventory, ModItems.GOLD_COIN);
+	}
+
+	/** Copper one coin of {@code item} is worth (0 for anything that is not a coin). */
+	public static int value(final Item item) {
+		return item == ModItems.COPPER_COIN ? 1 : item == ModItems.SILVER_COIN ? SILVER : item == ModItems.GOLD_COIN ? GOLD : 0;
 	}
 
 	/** Pays {@code amount} copper from the wallet; false (and nothing taken) when the player cannot pay. */

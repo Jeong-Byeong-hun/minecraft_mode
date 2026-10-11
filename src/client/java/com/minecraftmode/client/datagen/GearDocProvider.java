@@ -16,6 +16,7 @@ import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.CraftPrices;
 import com.minecraftmode.craft.CraftRecipes;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonAffix;
@@ -664,14 +665,24 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 레벨 1–").append(Profession.MAX_LEVEL).append(". 다음 레벨까지 20 + 6 × 레벨. (레벨 ÷ 2)% 확률로 두 배 제작. 레시피 레벨 + 15 이상이면 숙련도 1/4.\n");
 		md.append("- **약초**: 풀·꽃을 부수면 (12 + 연금술 레벨 ÷ 2)% 확률로 떨어지고 연금술 숙련도 +1. 햇살잎(기본), 달꽃잎(밤의 꽃), 서리뿌리(눈 내리는 생물군계), ")
 			.append("빛버섯(버섯·발광 이끼·깊은 지하의 풀), 잿불꽃(네더 식물), 공허버섯(코러스).\n");
+		md.append("- **상점 매입**: 요리는 식료품점, 연금술은 연금술사, 대장 기술은 대장간이 삽니다(진화의 에테르 제외). 값 = 재료 값 × 숙련 배율(")
+			.append(String.format(Locale.ROOT, "%.2f + 레시피 레벨 × %.2f, 레벨 1에 %.2f배, 레벨 50에 %.2f배", CraftPrices.MASTERY_BASE, CraftPrices.MASTERY_PER_LEVEL,
+				CraftPrices.mastery(1), CraftPrices.mastery(50)))
+			.append("). 재료 값은 상점이 그 재료를 사 주는 값이고, 만든 재료(물약, 구운 감자, 종이 등)는 원재료로, 약초와 거신의 파편은 아래 값으로 셉니다. ")
+			.append("같은 물건을 만드는 레시피가 여럿이면 싼 쪽이 기준입니다.\n");
+		md.append("- 연금술사는 약초도 삽니다: ").append(CraftPrices.herbs().entrySet().stream()
+			.map(e -> this.itemName(e.getKey()) + " " + buyPrice(e.getKey(), e.getValue())).collect(Collectors.joining(", "))).append(". 거신의 파편은 재료 값 ")
+			.append(Coins.format(Coins.GOLD)).append("(상점은 사지 않음).\n");
 		for (Profession profession : Profession.values()) {
-			md.append("\n### ").append(profession.ko).append("\n\n| 레벨 | 결과 | 재료 | 숙련도 |\n|---|---|---|---|\n");
+			md.append("\n### ").append(profession.ko).append("\n\n| 레벨 | 결과 | 재료 | 숙련도 | 상점 매입 (개당) |\n|---|---|---|---|---|\n");
 			for (CraftRecipes.Recipe recipe : CraftRecipes.of(profession)) {
 				String output = recipe.output() instanceof CraftRecipes.Output out
 					? this.itemName(out.item()) + (out.count() > 1 ? " ×" + out.count() : "")
 					: this.ko.getOrDefault("item.minecraft_mode." + recipe.id(), recipe.id()) + " ×3 (제작자 레벨 구간)";
 				String ingredients = recipe.ingredients().stream().map(in -> this.itemName(in.item()) + " ×" + in.count()).collect(Collectors.joining(", "));
-				md.append("| ").append(recipe.level()).append(" | ").append(output).append(" | ").append(ingredients).append(" | ").append(recipe.exp()).append(" |\n");
+				String sells = recipe.output() instanceof CraftRecipes.Output out ? buyPrice(out.item(), CraftPrices.value(out.item())) : "-";
+				md.append("| ").append(recipe.level()).append(" | ").append(output).append(" | ").append(ingredients).append(" | ").append(recipe.exp())
+					.append(" | ").append(sells).append(" |\n");
 			}
 		}
 
@@ -805,6 +816,16 @@ public class GearDocProvider implements DataProvider {
 	/** "{@code exp} (n%)": an amount and its share of the level's requirement. */
 	private static String exp(final int exp, final int level) {
 		return exp + " (" + Math.round(exp * 100.0F / JobProgression.expToNext(level)) + "%)";
+	}
+
+	/** What the shop line for {@code copper} a piece pays: "9C", "1S", or "2개 1C" for things worth less than a copper. */
+	private static String buyPrice(final Item item, final float copper) {
+		ShopOffers.Trade line = CraftPrices.line(item, copper);
+		if (line == null) {
+			return "-";
+		}
+		String paid = Coins.format(Coins.value(line.result().asItem()) * line.resultCount());
+		return line.costCount() > 1 ? line.costCount() + "개 " + paid : paid;
 	}
 
 	private static String rarity(final net.minecraft.world.item.Rarity rarity) {

@@ -3,6 +3,7 @@ package com.minecraftmode.economy;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.craft.CraftPrices;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobClass;
@@ -99,7 +100,22 @@ public final class ShopOffers {
 			}
 			list.add(priced(5 * 9, ModItems.LAIR_MAP));
 		}
+		list.addAll(CraftPrices.trades(type));
 		return list;
+	}
+
+	/** Copper the best base sell line of any shop pays for one {@code item} (0 when no shop buys it); profession goods not counted. */
+	public static float basePaid(final Item item) {
+		float best = 0.0F;
+		for (ShopType type : ShopType.values()) {
+			for (Trade trade : base(type)) {
+				int coin = Coins.value(trade.result().asItem());
+				if (trade.cost().asItem() == item && coin > 0) {
+					best = Math.max(best, coin * trade.resultCount() / (float)trade.costCount());
+				}
+			}
+		}
+		return best;
 	}
 
 	/** One {@code goods} for {@code copper}, charged in the largest coin that keeps the price close. */

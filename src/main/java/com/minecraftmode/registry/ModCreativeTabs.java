@@ -79,6 +79,7 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.SUPPLY_BAG);
 					output.accept(ModItems.ORE_BAG);
 					output.accept(ModItems.LAIR_MAP);
+					output.accept(ModItems.LAND_DEED);
 					output.accept(ModItems.KITCHEN_STATION);
 					output.accept(ModItems.ALCHEMY_STATION);
 					output.accept(ModItems.SMITHING_STATION);

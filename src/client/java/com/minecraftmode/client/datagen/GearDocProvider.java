@@ -4,12 +4,14 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityFixtures;
+import com.minecraftmode.city.CityZone;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.city.Homestead;
 import com.minecraftmode.city.TrainingGrounds;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.map.MapSettings;
+import com.minecraftmode.client.residence.LandBorders;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
@@ -25,6 +27,7 @@ import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.combat.PlayerArmor;
 import com.minecraftmode.entity.named.Ability;
@@ -70,6 +73,8 @@ import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.residence.LandClaims;
+import com.minecraftmode.residence.ResidenceDimension;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
@@ -473,7 +478,8 @@ public class GearDocProvider implements DataProvider {
 		}
 		md.append("\n### 공적 상점\n\n| 물품 | 공적 |\n|---|---|\n");
 		for (Bounties.Offer offer : Bounties.SHOP) {
-			md.append("| ").append(this.ko(offer.nameKey())).append(" | ").append(offer.cost()).append(" |\n");
+			md.append("| ").append(this.ko(offer.nameKey())).append(" | ").append(offer.cost())
+				.append(offer.raise() > 0 ? " (살 때마다 +" + offer.raise() + ")" : "").append(" |\n");
 		}
 
 		md.append("\n## 장비 강화 (+1 ~ +").append(Enhancement.MAX).append(")\n\n");
@@ -603,6 +609,15 @@ public class GearDocProvider implements DataProvider {
 			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 이 평야가 생기기 전에 만든 월드는 서버가 처음 켜질 때 한 번 평야 구역을 평지로 깎습니다(그 자리의 지형·나무·건물은 사라지고, 이후 지은 건물은 그대로).\n");
 		md.append("- **이동 마법진**(자석석): 광장 스폰 바로 뒤(x 0, z ").append(CityFixtures.WAYSTONE.getZ()).append(")와 건축 평야 한가운데(x ").append(Homestead.CENTER_X)
 			.append(", z ").append(Homestead.CENTER_Z).append("). 우클릭하면 서로 이동합니다(3초 재사용 대기). 귀환 주문서로도 광장에 돌아올 수 있습니다.\n");
+		BlockPos waymaster = CityZone.npcHome(CityNpc.Role.WAYMASTER, 0);
+		md.append("- **이동술사 오린**: 광장 분수 서쪽(x ").append(waymaster.getX()).append(", z ").append(waymaster.getZ())
+			.append("). 우클릭하면 갈 수 있는 곳 목록이 뜨고, 고르면 바로 이동합니다. 지금은 거주구역(거주구역 광장의 오린에게서는 수도 광장).\n");
+		md.append("- **거주구역**: 이동술사 오린을 통해 가는 평평한 초원 차원(적대 몹·구조물 없음). 길드 의뢰 접수원의 공적 상점에서 파는 **토지 소유권 증서**(공적 ").append(Bounties.DEED_MERIT)
+			.append("부터, 살 때마다 +").append(Bounties.DEED_RAISE).append(")를 거주구역에서 쓰면 서 있는 청크의 발밑부터 위로 ").append(LandClaims.SIZE).append("칸(16×16×16)이 내 땅이 됩니다. 한 사람당 최대 ")
+			.append(LandClaims.MAX_CLAIMS).append("개, 같은 청크 기둥에는 한 사람만 가질 수 있고 위아래로 증서를 더 써서 넓힙니다. 도착 광장 근처(청크 ")
+			.append(ResidenceDimension.SPAWN_CHUNKS).append("칸 이내)는 점유할 수 없습니다. 내 땅에서는 나와 내가 허용한 플레이어(최대 ").append(LandClaims.MAX_TRUSTED)
+			.append("명, 모든 땅에 공통)만 블록을 부수고 놓고, 상자·문·버튼 등을 쓰고, 동물·갑옷 거치대·아이템 액자를 건드릴 수 있습니다(몬스터와 플레이어는 예외). ")
+			.append("주인 없는 땅에는 아무도 짓지 못하고, 폭발은 거주구역의 블록을 부수지 않습니다. 물·용암·불, 피스톤, 디스펜서·공급기·제작기, 호퍼는 주인이 다른 땅으로 넘어가지 않고, 다른 사람이 쏜 화살이나 불붙인 TNT도 내 땅의 동물·액자·탈것을 다치게 하지 못합니다. 땅에 들어서면 액션 바에 주인이 표시되고, 주변 ").append(LandBorders.RANGE).append("블록 안의 땅 테두리가 실선으로 보입니다(내 땅 초록, 허용받은 땅 노랑, 남의 땅 빨강). 증서를 웅크린 채 쓰거나 /land로 관리 화면(땅 목록·포기·허용 목록)을 엽니다. 땅을 포기하면 그 범위가 처음 초원으로 돌아가고(지은 블록·액자·갑옷 거치대·탈것은 사라짐), 보관함·액자·갑옷 거치대에 있던 물건과 증서를 돌려받습니다.\n");
 		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");
 		md.append("- **가방**: 보급관 브람이 장비·소비·재료 가방을 한 번씩 줍니다(잡화점에서 은화 ").append(ShopOffers.BAG_PRICE / Coins.SILVER).append("개에 추가 구매). 가방마다 ")
 			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")

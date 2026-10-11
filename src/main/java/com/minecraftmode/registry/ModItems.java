@@ -9,6 +9,7 @@ import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.EssenceItem;
 import com.minecraftmode.item.ModMaterials;
 import com.minecraftmode.loot.EvolutionEtherItem;
+import com.minecraftmode.residence.LandDeedItem;
 import com.minecraftmode.worldgen.lair.LairMapItem;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
@@ -94,6 +95,9 @@ public final class ModItems {
 	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));
 	/** A dungeon keystone (component {@code keystone}): the leader's key to a harder, timed run. */
 	public static final Item DUNGEON_KEYSTONE = register("dungeon_keystone", KeystoneItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
+
+	/** Claims a 16x16x16 box of land in the residence (general store). */
+	public static final Item LAND_DEED = register("land_deed", LandDeedItem::new, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON));
 
 	// Mobs
 	public static final Item MINE_RAIDER_SPAWN_EGG = register(

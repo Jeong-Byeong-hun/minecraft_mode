@@ -33,7 +33,7 @@ public class BountyScreen extends Screen {
 	private static final int ROWS_Y = 24;
 	private static final int SHOP_Y = 134;
 	/** The merit shop is one row of offers: icon, then the buy button with the price. */
-	private static final int CELL_W = 27;
+	private static final int CELL_W = 25;
 
 	private OpenBountyPayload info;
 	private BountyData shown = BountyData.DEFAULT;
@@ -82,12 +82,24 @@ public class BountyScreen extends Screen {
 		for (int i = 0; i < Bounties.SHOP.size(); i++) {
 			Bounties.Offer offer = Bounties.SHOP.get(i);
 			final int index = i;
-			Button buy = Button.builder(Component.literal(offer.cost() + "★"), b -> send(BountyActionPayload.BUY, index))
+			Button buy = Button.builder(Component.literal(priceLabel(offer.price(data))), b -> send(BountyActionPayload.BUY, index))
 				.bounds(this.left + 9 + i * CELL_W, this.top + SHOP_Y + 34, CELL_W - 2, 16).build();
-			buy.active = data.merit() >= offer.cost();
+			buy.active = data.merit() >= offer.price(data);
 			this.addRenderableWidget(buy);
 		}
 		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + W - 68, this.top + H - 22, 60, 18).build());
+	}
+
+	/** A price that fits the narrow buy button: "55★", "500", "1.2k" (the tooltip has the exact figure). */
+	private static String priceLabel(final int merit) {
+		if (merit < 100) {
+			return merit + "★";
+		}
+		if (merit < 1000) {
+			return Integer.toString(merit);
+		}
+		int tenths = merit / 100 % 10;
+		return merit / 1000 + (tenths > 0 && merit < 10000 ? "." + tenths : "") + "k";
 	}
 
 	private void send(final int action, final int index) {
@@ -190,7 +202,7 @@ public class BountyScreen extends Screen {
 				List<Component> lines = new ArrayList<>();
 				lines.add(Component.translatable(offer.nameKey()).withStyle(ChatFormatting.WHITE));
 				lines.addAll(getTooltipFromItem(this.minecraft, stack).stream().skip(1).toList());
-				lines.add(Component.translatable("screen.minecraft_mode.bounty.cost", offer.cost()).withStyle(ChatFormatting.YELLOW));
+				lines.add(Component.translatable("screen.minecraft_mode.bounty.cost", offer.price(data)).withStyle(ChatFormatting.YELLOW));
 				tip = lines;
 			}
 		}

@@ -28,7 +28,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.ItemCost;
 
 /**
- * Bound rewards and character select. A starter kit piece is bound: no trade cost takes it and the market refuses it. A second slot
+ * Bound rewards and character select. A starter kit piece is bound: no trade cost takes it and the market refuses it. Another slot
  * costs merit, and a world without the capital has no town to switch characters in ({@link #run}, flat world). Inside the capital's
  * walls ({@link #inCity}, from {@code CityChecks}) switching to the new slot starts an empty character (no coins, items or class)
  * that still sees the account's ender chest and codex, and switching back brings the first character's wallet, items, class and
@@ -43,6 +43,8 @@ final class CharacterChecks {
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			buySlot(player);
+			Characters.onJoin(player);
+			require(!Characters.choosing(player), "empty slots alone do not send a player to the lobby");
 			require(!Characters.switchTo(player, 1), "no capital, no town to switch characters in");
 		});
 		checkChoosing(context, server, connection);
@@ -146,8 +148,8 @@ final class CharacterChecks {
 		require(!Characters.buySlot(player), "a slot costs merit");
 		Bounties.addMerit(player, Characters.SLOT_MERIT);
 		require(Characters.buySlot(player), "merit buys a slot");
-		require(CharacterRoster.get(player.level().getServer()).account(player.getUUID()).slots() == 2 && Bounties.get(player).merit() == 0,
-			"two slots, merit spent");
+		require(CharacterRoster.get(player.level().getServer()).account(player.getUUID()).slots() == Characters.BASE_SLOTS + 1
+			&& Bounties.get(player).merit() == 0, "one more slot, merit spent");
 	}
 
 	private static void checkBound() {

@@ -65,8 +65,8 @@ import net.minecraft.world.phys.Vec3;
  * damage, no using or hitting anything, only character actions) until they {@link #enter} a slot.
  */
 public final class Characters {
-	public static final int BASE_SLOTS = 1;
-	public static final int MAX_SLOTS = 5;
+	public static final int BASE_SLOTS = 3;
+	public static final int MAX_SLOTS = 7;
 	public static final int SLOT_MERIT = 1000;
 	/** What the select screen dresses each character's figure in, in this order. */
 	public static final List<EquipmentSlot> GEAR_SLOTS = List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET,
@@ -102,12 +102,14 @@ public final class Characters {
 	}
 
 	/**
-	 * Joining: with more than one slot (outside a raid or dungeon) the player goes to the lobby to choose; a player who logged out
-	 * there while choosing is still there and keeps their origin. Anyone else found in the lobby is sent back to their origin.
+	 * Joining: with another character to play (outside a raid or dungeon) the player goes to the lobby to choose; a new account's
+	 * empty slots alone do not send anyone there. A player who logged out there while choosing is still there, chooses again and
+	 * keeps their origin.
 	 */
 	public static void onJoin(final ServerPlayer player) {
 		boolean instance = RaidDimension.is(player.level()) || DungeonDimension.is(player.level());
-		if (CharacterRoster.get(server(player)).account(player.getUUID()).slots() > 1 && !instance) {
+		boolean others = !CharacterRoster.get(server(player)).account(player.getUUID()).stored().isEmpty();
+		if ((others || Lobby.is(player.level())) && !instance) {
 			choose(player);
 		} else {
 			Lobby.leave(player);

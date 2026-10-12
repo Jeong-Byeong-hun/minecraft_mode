@@ -473,6 +473,9 @@ public final class Companions {
 		}
 		mount.setup(owner);
 		mount.snapTo(owner.getX(), owner.getY(), owner.getZ(), owner.getYRot(), 0.0F);
+		// AbstractHorse.addPassenger turns the rider to the mount's head; snapTo leaves it at 0 (south)
+		mount.setYHeadRot(owner.getYRot());
+		mount.setYBodyRot(owner.getYRot());
 		level.addFreshEntity(mount);
 		owner.startRiding(mount);
 		set(owner, data.withLastMount(id));

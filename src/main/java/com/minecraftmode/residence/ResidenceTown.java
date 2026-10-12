@@ -57,6 +57,10 @@ public final class ResidenceTown {
 				CityCore.tower(b, x, z, 4, 14);
 			}
 		}
+		ResidenceDimension.shops().forEach((block, pos) -> {
+			b.set(pos.getX(), 0, pos.getZ(), block);
+			b.lantern(pos.getX(), 1, pos.getZ(), false, false);
+		});
 	}
 
 	/** One chunk of an avenue starting at {@code along}, with lamps on the verges as in the capital. */

@@ -12,7 +12,11 @@ public enum ShopType {
 	/** Class guild: offers depend on the visitor's class and tier. */
 	GUILD("guild"),
 	/** Potions and the better consumables (see {@code Consumables}). */
-	ALCHEMIST("alchemist");
+	ALCHEMIST("alchemist"),
+	/** Crops and seeds, on the residence square. */
+	FARMER("farmer"),
+	/** Fish, on the residence square. */
+	FISHMONGER("fishmonger");
 
 	private final String id;
 

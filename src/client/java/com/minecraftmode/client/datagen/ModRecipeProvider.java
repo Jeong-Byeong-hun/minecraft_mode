@@ -224,6 +224,8 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 				this.themedShop(ModItems.GROCER_SHOP, Items.HAY_BLOCK);
 				this.themedShop(ModItems.JEWELER_SHOP, Items.DIAMOND);
 				this.themedShop(ModItems.ALCHEMIST_SHOP, Items.BREWING_STAND);
+				this.themedShop(ModItems.FARMER_SHOP, Items.COMPOSTER);
+				this.themedShop(ModItems.FISHMONGER_SHOP, Items.FISHING_ROD);
 			}
 
 			private void themedShop(final Item shop, final Item theme) {

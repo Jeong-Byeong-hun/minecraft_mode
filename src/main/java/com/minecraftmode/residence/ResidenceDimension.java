@@ -1,6 +1,8 @@
 package com.minecraftmode.residence;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.registry.ModBlocks;
+import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -8,6 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -62,6 +65,21 @@ public final class ResidenceDimension {
 	/** Where the residence's waymaster stands, between the fountain and the arrival spot. */
 	public static BlockPos waymaster() {
 		return new BlockPos(ResidenceTown.MID, SURFACE_Y + 1, ResidenceTown.MID + 8);
+	}
+
+	/** The square's market stalls (shop block -> where it stands), either side of the waymaster. */
+	public static Map<Block, BlockPos> shops() {
+		return Map.of(ModBlocks.FARMER_SHOP, new BlockPos(ResidenceTown.MID - 4, SURFACE_Y + 1, ResidenceTown.MID + 8),
+			ModBlocks.FISHMONGER_SHOP, new BlockPos(ResidenceTown.MID + 4, SURFACE_Y + 1, ResidenceTown.MID + 8));
+	}
+
+	/** Puts back a missing stall shop block (older residences were generated without them, loaded chunks only). */
+	public static void keepShops(final ServerLevel level) {
+		shops().forEach((block, pos) -> {
+			if (level.isLoaded(pos) && !level.getBlockState(pos).is(block)) {
+				level.setBlockAndUpdate(pos, block.defaultBlockState());
+			}
+		});
 	}
 
 	/** The block the flat generator puts at height {@code y} (used to give abandoned land back its first look). */

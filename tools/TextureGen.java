@@ -98,6 +98,10 @@ public class TextureGen {
 		write("block/jeweler_shop_top", shopTop(0x6A3D9A, 0xF2F2F2));
 		write("block/alchemist_shop_side", shopSide(0x1E6E6A, 0xF2F2F2, emblem(POTION)));
 		write("block/alchemist_shop_top", shopTop(0x1E6E6A, 0xF2F2F2));
+		write("block/farmer_shop_side", shopSide(0x8A6A2E, 0xF2E6B0, emblem(WHEAT)));
+		write("block/farmer_shop_top", shopTop(0x8A6A2E, 0xF2E6B0));
+		write("block/fishmonger_shop_side", shopSide(0x2A5C8C, 0xF2F2F2, emblem(FISH)));
+		write("block/fishmonger_shop_top", shopTop(0x2A5C8C, 0xF2F2F2));
 
 		// --- Mob & effect ---
 		write("item/mine_raider_spawn_egg", spawnEgg(0x6B4423, 0xE3B92C, 0x2E1C0F));
@@ -1125,6 +1129,24 @@ public class TextureGen {
 		"CRWRRC",
 		"CRRRrC",
 		".CCCC.",
+	};
+
+	static final String[] WHEAT = {
+		".G.G.G",
+		"GSGSG.",
+		".SGSG.",
+		"..SS..",
+		"..SS..",
+		".SSSS.",
+	};
+
+	static final String[] FISH = {
+		"......",
+		".MMM.D",
+		"MHMMMD",
+		"MMMMDD",
+		".DDD.D",
+		"......",
 	};
 
 	static BufferedImage emblem(final String[] rows) {

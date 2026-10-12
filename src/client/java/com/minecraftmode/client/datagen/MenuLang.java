@@ -61,7 +61,7 @@ final class MenuLang {
 		b.add(s + "character.empty", ko ? "비어 있음" : "Empty");
 		b.add(s + "character.playing", ko ? "플레이 중" : "Playing");
 		b.add(s + "character.play", ko ? "이 캐릭터로" : "Play");
-		b.add(s + "character.new", ko ? "새 캐릭터" : "New character");
+		b.add(s + "character.new", ko ? "새 캐릭터" : "New");
 		b.add(s + "character.buy", ko ? "슬롯 구매 (기여도 %s)" : "Buy a slot (%s merit)");
 		b.add(s + "character.max", ko ? "슬롯을 모두 열었습니다." : "All slots are open.");
 		b.add(s + "character.select", ko ? "캐릭터 선택" : "Choose a Character");

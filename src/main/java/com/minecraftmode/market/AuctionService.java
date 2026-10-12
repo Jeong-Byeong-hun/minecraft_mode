@@ -7,6 +7,7 @@ import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.AuctionActionPayload;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.progress.Progress;
+import com.minecraftmode.registry.ModDataComponents;
 import io.netty.buffer.Unpooled;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -101,9 +102,9 @@ public final class AuctionService {
 		return price - price * SALE_FEE_PERCENT / 100;
 	}
 
-	/** Whether {@code stack} may be put up for sale: not coins, not a container with items inside. */
+	/** Whether {@code stack} may be put up for sale: not coins, not bound, not a container with items inside. */
 	public static boolean sellable(final ItemStack stack) {
-		return !stack.isEmpty() && Wallet.value(stack.getItem()) == 0 && !hasContents(stack);
+		return !stack.isEmpty() && Wallet.value(stack.getItem()) == 0 && !stack.has(ModDataComponents.BOUND) && !hasContents(stack);
 	}
 
 	/** A shulker box (or any container item) or a bundle that holds items. */

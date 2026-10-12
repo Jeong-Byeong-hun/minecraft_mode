@@ -11,6 +11,7 @@ import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Unit;
 
 public final class ModDataComponents {
 	/** Engraving lines on a class weapon. */
@@ -60,6 +61,16 @@ public final class ModDataComponents {
 		BuiltInRegistries.DATA_COMPONENT_TYPE,
 		MinecraftMode.id("look"),
 		DataComponentType.<Identifier>builder().persistent(Identifier.CODEC).networkSynchronized(Identifier.STREAM_CODEC).build()
+	);
+
+	/**
+	 * Bound: a one-off reward (starter kit, starter bags, advancement kit) that no shop or villager buys ({@code ItemCostMixin}) and the
+	 * market refuses ({@code AuctionService.sellable}). It can still be worn, used and moved, e.g. through the ender chest.
+	 */
+	public static final DataComponentType<Unit> BOUND = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("bound"),
+		DataComponentType.<Unit>builder().persistent(Unit.CODEC).networkSynchronized(Unit.STREAM_CODEC).build()
 	);
 
 	public static void init() {

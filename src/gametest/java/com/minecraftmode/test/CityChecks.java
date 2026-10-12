@@ -73,6 +73,7 @@ final class CityChecks {
 		checkTrainingGrounds(context, server, connection, base);
 		checkHomesteadLand(context, server, base);
 		checkFixtures(context, server, connection, base);
+		CharacterChecks.inCity(context, server, connection, base);
 		screenshots(context, server, connection, base);
 		checkInvasion(context, server, base);
 	}

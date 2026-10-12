@@ -102,6 +102,7 @@ public final class GearUpgrades {
 		if (enhancement != null) {
 			result.set(ModDataComponents.ENHANCEMENT, enhancement);
 		}
+		result.copyFrom(ModDataComponents.BOUND, from);
 		return result;
 	}
 

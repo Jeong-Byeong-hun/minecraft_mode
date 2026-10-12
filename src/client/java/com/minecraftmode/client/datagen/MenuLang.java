@@ -54,6 +54,29 @@ final class MenuLang {
 		b.add(s + "setting.enhance_effects.hint", ko ? "+10 이상 장비의 파티클입니다. 테두리와 광택은 꺼지지 않습니다." : "Particles of +10 gear. Frames and glint always stay.");
 		b.add(s + "setting.hp_bar", ko ? "HP·MP 막대" : "HP and MP bars");
 		b.add(s + "setting.hp_bar.hint", ko ? "끄면 바닐라 하트와 방어 아이콘으로 돌아갑니다." : "Off brings back vanilla hearts and armor icons.");
+		// characters
+		b.add(s + "characters", ko ? "캐릭터" : "Characters");
+		b.add(s + "character.loading", ko ? "불러오는 중..." : "Loading...");
+		b.add(s + "character.slot", ko ? "슬롯 %s" : "Slot %s");
+		b.add(s + "character.empty", ko ? "비어 있음" : "Empty");
+		b.add(s + "character.playing", ko ? "플레이 중" : "Playing");
+		b.add(s + "character.play", ko ? "이 캐릭터로" : "Play");
+		b.add(s + "character.new", ko ? "새 캐릭터" : "New character");
+		b.add(s + "character.buy", ko ? "슬롯 구매 (기여도 %s)" : "Buy a slot (%s merit)");
+		b.add(s + "character.max", ko ? "슬롯을 모두 열었습니다." : "All slots are open.");
+		b.add(s + "character.select", ko ? "캐릭터 선택" : "Choose a Character");
+		b.add(s + "character.continue", ko ? "계속하기" : "Continue");
+		b.add(s + "character.choose", ko ? "플레이할 캐릭터를 고르세요. 완료를 누르면 지금 캐릭터로 들어갑니다." : "Pick a character to play; Done goes on with this one.");
+		b.add(s + "character.town", ko ? "캐릭터는 수도 성벽 안에서만 바꿀 수 있습니다." : "Switch characters inside the capital's walls.");
+		b.add(s + "character.shared", ko ? "엔더 상자·도감·땅·거래소는 모든 캐릭터가 함께 씁니다." : "Ender chest, codex, land and market are shared.");
+		String m = "message.minecraft_mode.character.";
+		b.add(m + "switched", ko ? "슬롯 %s의 캐릭터로 바꿨습니다." : "Now playing the character in slot %s.");
+		b.add(m + "started", ko ? "슬롯 %s에서 새 캐릭터를 시작합니다." : "A new character starts in slot %s.");
+		b.add(m + "bought", ko ? "캐릭터 슬롯이 %s개가 되었습니다." : "You now have %s character slots.");
+		b.add(m + "not_here", ko ? "캐릭터는 수도 성벽 안에서만 바꿀 수 있습니다." : "You can only switch characters inside the capital's walls.");
+		b.add(m + "failed", ko ? "캐릭터를 바꾸지 못했습니다. 지금 캐릭터 그대로입니다." : "The switch failed; you are still playing the same character.");
+		b.add(m + "max", ko ? "더 이상 슬롯을 살 수 없습니다." : "You cannot buy more slots.");
+		b.add(m + "no_merit", ko ? "기여도가 부족합니다." : "Not enough merit.");
 	}
 
 	private static void admin(final TranslationBuilder b, final boolean ko) {

@@ -13,6 +13,9 @@ import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
 import com.mojang.serialization.Codec;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +199,27 @@ public final class ModAttachments {
 			.initializer(List::of)
 			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 	);
+
+	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */
+	private static final List<AttachmentType<?>> ALL = collect();
+
+	public static List<AttachmentType<?>> all() {
+		return ALL;
+	}
+
+	private static List<AttachmentType<?>> collect() {
+		List<AttachmentType<?>> list = new ArrayList<>();
+		for (Field field : ModAttachments.class.getDeclaredFields()) {
+			if (Modifier.isStatic(field.getModifiers()) && AttachmentType.class.isAssignableFrom(field.getType())) {
+				try {
+					list.add((AttachmentType<?>)field.get(null));
+				} catch (IllegalAccessException e) {
+					throw new IllegalStateException("attachment field " + field.getName(), e);
+				}
+			}
+		}
+		return List.copyOf(list);
+	}
 
 	public static void init() {
 	}

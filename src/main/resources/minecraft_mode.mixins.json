@@ -15,6 +15,7 @@
 		"FireBlockMixin",
 		"FlowingFluidMixin",
 		"HopperBlockEntityMixin",
+		"ItemCostMixin",
 		"ItemEntityMixin",
 		"LavaFluidMixin",
 		"LivingEntityAccessor",
@@ -29,6 +30,7 @@
 		"PlayerNameMixin",
 		"ProjectileDeflectionMixin",
 		"ServerExplosionMixin",
+		"ServerGamePacketListenerImplMixin",
 		"ServerPlayerTabNameMixin",
 		"ShulkerMixin",
 		"WitherBossMixin"

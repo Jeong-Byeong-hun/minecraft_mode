@@ -2,6 +2,7 @@ package com.minecraftmode.city;
 
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModDataComponents;
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
@@ -28,11 +29,12 @@ public final class StarterKit {
 	public static final List<Item> ITEMS = List.of(Items.IRON_HELMET, Items.IRON_CHESTPLATE, Items.IRON_LEGGINGS, Items.IRON_BOOTS, Items.IRON_SWORD,
 		Items.IRON_PICKAXE, Items.IRON_AXE, Items.SHIELD);
 
-	/** One kit piece: unbreakable (no durability bar) and named after the quartermaster. */
+	/** One kit piece: unbreakable (no durability bar), bound (never sold) and named after the quartermaster. */
 	public static ItemStack stack(final Item item) {
 		ItemStack stack = new ItemStack(item);
 		stack.set(DataComponents.UNBREAKABLE, Unit.INSTANCE);
 		stack.set(DataComponents.ITEM_NAME, Component.translatable(nameKey(item)));
+		stack.set(ModDataComponents.BOUND, Unit.INSTANCE);
 		return stack;
 	}
 

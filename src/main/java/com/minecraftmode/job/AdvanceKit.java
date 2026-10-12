@@ -6,6 +6,7 @@ import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModDataComponents;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -14,6 +15,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Prediction;
+import net.minecraft.util.Unit;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
@@ -21,7 +23,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Every advancement (the first choice of class included) hands out a class weapon and a full set of class armor for the player's
  * level: in each slot the lowest-level piece of the player's 10-level bracket they can use, or the best usable piece below it when
- * the bracket has none yet. Armor options are rolled as for a drop.
+ * the bracket has none yet. Armor options are rolled as for a drop; the pieces are bound (never sold, {@code ModDataComponents.BOUND}).
  */
 public final class AdvanceKit {
 	public static final List<GearSlot> SLOTS = List.of(GearSlot.WEAPON, GearSlot.HEAD, GearSlot.CHEST, GearSlot.LEGS, GearSlot.FEET);
@@ -61,6 +63,7 @@ public final class AdvanceKit {
 		List<ClassGear> pieces = pieces(job, tier, JobProgression.get(player).level());
 		for (ClassGear gear : pieces) {
 			ItemStack stack = GearDrops.create(gear, random);
+			stack.set(ModDataComponents.BOUND, Unit.INSTANCE);
 			player.getInventory().placeItemBackInInventory(stack, Prediction.SERVER_ONLY);
 		}
 		if (!pieces.isEmpty()) {

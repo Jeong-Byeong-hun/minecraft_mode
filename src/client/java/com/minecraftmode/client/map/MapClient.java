@@ -1,5 +1,6 @@
 package com.minecraftmode.client.map;
 
+import com.minecraftmode.character.Lobby;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.network.CityInfoPayload;
@@ -120,7 +121,8 @@ public final class MapClient {
 					.withStyle(ChatFormatting.GRAY));
 			}
 		}
-		if (player == null || level == null) {
+		if (player == null || level == null || level.dimension() == Lobby.LEVEL) {
+			// (the character lobby is a waiting room, not a place to map)
 			return;
 		}
 		String key = worldKey(minecraft);

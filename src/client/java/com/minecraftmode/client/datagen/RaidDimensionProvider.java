@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.minecraftmode.character.Lobby;
 import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.residence.ResidenceDimension;
@@ -13,12 +14,14 @@ import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.BuiltinDimensionTypes;
 import net.minecraft.world.level.dimension.DimensionType;
 
 /**
  * Writes the level stems of the raid and dungeon dimensions ({@code data/minecraft_mode/dimension/raid.json}, {@code dungeon.json}):
  * each dimension type with a flat generator that has no layers (an empty void) in the void biome; and the residence
- * ({@code residence.json}): flat plains on the overworld dimension type. Level stems are not a datagen
+ * ({@code residence.json}): flat plains on the overworld dimension type; and the character lobby ({@code lobby.json}): a void on the
+ * overworld dimension type (sky and daylight behind the select screen). Level stems are not a datagen
  * dynamic registry, so this writes the JSON.
  */
 public class RaidDimensionProvider implements DataProvider {
@@ -33,6 +36,7 @@ public class RaidDimensionProvider implements DataProvider {
 		return CompletableFuture.allOf(
 			this.stem(cache, RaidDimension.LEVEL, RaidDimension.TYPE),
 			this.stem(cache, DungeonDimension.LEVEL, DungeonDimension.TYPE),
+			this.stem(cache, Lobby.LEVEL, BuiltinDimensionTypes.OVERWORLD),
 			this.residence(cache));
 	}
 
@@ -85,6 +89,6 @@ public class RaidDimensionProvider implements DataProvider {
 
 	@Override
 	public String getName() {
-		return "Raid, dungeon and residence dimensions";
+		return "Raid, dungeon, residence and lobby dimensions";
 	}
 }

@@ -4,6 +4,7 @@ import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.network.OpenBountyPayload;
 import com.minecraftmode.network.ProgressActionPayload;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -49,6 +50,9 @@ public final class EndgameClient {
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP)) {
 				lines.add(1, Component.translatable(stack.getItem().getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
+			}
+			if (stack.has(ModDataComponents.BOUND)) {
+				lines.add(1, Component.translatable("item.minecraft_mode.bound").withStyle(ChatFormatting.RED));
 			}
 		});
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {

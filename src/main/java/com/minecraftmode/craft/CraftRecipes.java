@@ -21,6 +21,9 @@ import org.jspecify.annotations.Nullable;
  * lang and docs.
  */
 public final class CraftRecipes {
+	/** Ingredient slots a recipe row of the station screen has room for. */
+	public static final int MAX_INGREDIENTS = 4;
+
 	public record Ingredient(Item item, int count) {
 	}
 
@@ -51,6 +54,8 @@ public final class CraftRecipes {
 			map.put(Profession.COOKING, cooking());
 			map.put(Profession.ALCHEMY, alchemy());
 			map.put(Profession.SMITHING, smithing());
+			map.put(Profession.FARMING, List.of());
+			map.put(Profession.FISHING, List.of());
 			recipes = map;
 		}
 		return recipes;
@@ -81,27 +86,63 @@ public final class CraftRecipes {
 	}
 
 	private static Recipe r(final String id, final Profession p, final int level, final Function<Player, ItemStack> output, final int exp, final Ingredient... in) {
+		if (in.length > MAX_INGREDIENTS) {
+			throw new IllegalStateException(id + ": the station screen shows at most " + MAX_INGREDIENTS + " ingredients");
+		}
 		return new Recipe(id, p, level, List.of(in), output, exp);
 	}
 
 	private static List<Recipe> cooking() {
 		Profession p = Profession.COOKING;
 		return List.of(
-			r("gimbap", p, 1, consumable("gimbap", 2), 6, in(Items.DRIED_KELP, 3), in(Items.WHEAT, 1), in(Items.CARROT, 1)),
-			r("tteokbokki", p, 1, consumable("tteokbokki", 2), 6, in(Items.WHEAT, 2), in(Items.SWEET_BERRIES, 2)),
-			r("roasted_sweet_potato", p, 3, consumable("roasted_sweet_potato", 2), 7, in(Items.BAKED_POTATO, 2), in(Items.SUGAR, 1)),
-			r("bungeoppang", p, 5, consumable("bungeoppang", 3), 8, in(Items.WHEAT, 2), in(Items.SUGAR, 1), in(Items.COD, 1)),
-			r("onigiri", p, 10, consumable("onigiri", 2), 10, in(Items.WHEAT, 2), in(Items.DRIED_KELP, 1), in(Items.COOKED_SALMON, 1)),
-			r("samgyetang", p, 12, consumable("samgyetang", 1), 12, in(Items.CHICKEN, 1), in(ModItems.SUNLEAF, 2), in(Items.BOWL, 1)),
+			r("gimbap", p, 1, consumable("gimbap", 2), 6, in(crop("rice"), 2), in(Items.DRIED_KELP, 2), in(Items.CARROT, 1), in(crop("radish"), 1)),
+			r("tteokbokki", p, 1, consumable("tteokbokki", 2), 6, in(crop("rice"), 2), in(crop("chili_pepper"), 1), in(crop("green_onion"), 1)),
+			r("grilled_corn", p, 1, consumable("grilled_corn", 2), 5, in(crop("corn"), 2)),
+			r("roasted_sweet_potato", p, 3, consumable("roasted_sweet_potato", 2), 7, in(crop("sweet_potato"), 2), in(Items.SUGAR, 1)),
+			r("tomato_soup", p, 3, consumable("tomato_soup", 1), 7, in(crop("tomato"), 3), in(crop("green_onion"), 1), in(Items.BOWL, 1)),
+			r("bungeoppang", p, 5, consumable("bungeoppang", 3), 8, in(Items.WHEAT, 2), in(Items.SUGAR, 1), in(crop("soybean"), 2)),
+			r("kimchi", p, 6, consumable("kimchi", 3), 8, in(crop("napa_cabbage"), 2), in(crop("chili_pepper"), 1), in(crop("garlic"), 1),
+				in(crop("radish"), 1)),
+			r("candied_sweet_potato", p, 8, consumable("candied_sweet_potato", 2), 9, in(crop("sweet_potato"), 2), in(Items.SUGAR, 1), in(crop("sesame"), 1)),
+			r("onigiri", p, 10, consumable("onigiri", 2), 10, in(crop("rice"), 2), in(Items.DRIED_KELP, 1), in(fish("mackerel"), 1)),
+			r("doenjang_jjigae", p, 10, consumable("doenjang_jjigae", 1), 10, in(crop("soybean"), 3), in(crop("radish"), 1), in(crop("green_onion"), 1),
+				in(Items.BOWL, 1)),
+			r("grilled_mackerel", p, 10, consumable("grilled_mackerel", 2), 10, in(fish("mackerel"), 2), in(crop("garlic"), 1)),
+			r("samgyetang", p, 12, consumable("samgyetang", 1), 12, in(Items.CHICKEN, 1), in(ModItems.SUNLEAF, 2), in(crop("rice"), 1), in(crop("garlic"), 1)),
+			r("braised_crucian", p, 12, consumable("braised_crucian", 1), 11, in(fish("crucian_carp"), 2), in(crop("radish"), 1), in(crop("garlic"), 1),
+				in(crop("green_onion"), 1)),
+			r("grilled_trout", p, 12, consumable("grilled_trout", 2), 11, in(fish("trout"), 2), in(crop("green_onion"), 1)),
+			r("bibimbap", p, 14, consumable("bibimbap", 1), 12, in(crop("rice"), 2), in(crop("napa_cabbage"), 1), in(crop("chili_pepper"), 1), in(Items.EGG, 1)),
 			r("meat_on_the_bone", p, 15, consumable("meat_on_the_bone", 1), 13, in(Items.COOKED_BEEF, 2), in(Items.BONE, 1)),
+			r("chueotang", p, 16, consumable("chueotang", 1), 13, in(fish("loach"), 3), in(crop("green_onion"), 1), in(crop("garlic"), 1), in(Items.BOWL, 1)),
 			r("fortune_cookie", p, 18, consumable("fortune_cookie", 3), 14, in(Items.WHEAT, 2), in(Items.SUGAR, 1), in(Items.PAPER, 1)),
-			r("heros_bento", p, 25, consumable("heros_bento", 1), 18, in(Items.COOKED_BEEF, 1), in(Items.COOKED_SALMON, 1), in(Items.BREAD, 1),
-				in(ModItems.SUNLEAF, 2)),
-			r("hunters_jerky", p, 30, consumable("hunters_jerky", 2), 20, in(Items.COOKED_BEEF, 3), in(ModItems.FROSTROOT, 2)),
+			r("fried_smelt", p, 18, consumable("fried_smelt", 2), 14, in(fish("smelt"), 4), in(Items.WHEAT, 1), in(crop("sesame"), 1)),
+			r("strawberry_daifuku", p, 20, consumable("strawberry_daifuku", 2), 15, in(crop("strawberry"), 2), in(crop("rice"), 2), in(Items.SUGAR, 1)),
+			r("heros_bento", p, 25, consumable("heros_bento", 1), 18, in(Items.COOKED_BEEF, 1), in(fish("trout"), 1), in(crop("rice"), 2),
+				in(Consumables.item("kimchi"), 1)),
+			r("catfish_maeuntang", p, 26, consumable("catfish_maeuntang", 1), 18, in(fish("catfish"), 2), in(fish("minnow"), 2), in(crop("chili_pepper"), 2),
+				in(crop("radish"), 1)),
+			r("hunters_jerky", p, 30, consumable("hunters_jerky", 2), 20, in(Items.COOKED_BEEF, 3), in(ModItems.FROSTROOT, 2), in(crop("garlic"), 1)),
+			r("eel_rice_bowl", p, 30, consumable("eel_rice_bowl", 1), 20, in(fish("eel"), 2), in(crop("rice"), 2), in(crop("sesame"), 1), in(Items.BOWL, 1)),
+			r("tuna_sashimi", p, 34, consumable("tuna_sashimi", 1), 22, in(fish("tuna"), 1), in(crop("radish"), 1), in(crop("sesame"), 1)),
+			r("snakehead_soup", p, 36, consumable("snakehead_soup", 1), 23, in(fish("snakehead"), 1), in(fish("carp"), 1), in(crop("garlic"), 2),
+				in(Items.BOWL, 1)),
 			r("super_mushroom", p, 38, consumable("super_mushroom", 1), 24, in(Items.RED_MUSHROOM, 2), in(ModItems.GLOWCAP, 2), in(Items.GOLDEN_CARROT, 1)),
+			r("golden_carp_feast", p, 44, consumable("golden_carp_feast", 1), 32, in(fish("golden_carp"), 1), in(crop("garlic"), 2), in(crop("chili_pepper"), 1),
+				in(crop("sesame"), 2)),
+			r("coelacanth_steak", p, 48, consumable("coelacanth_steak", 1), 38, in(fish("coelacanth"), 1), in(crop("garlic"), 2), in(crop("sesame"), 1),
+				in(crop("corn"), 2)),
 			r("dragon_heart_steak", p, 50, consumable("dragon_heart_steak", 1), 40, in(ModItems.TITAN_SHARD, 1), in(Items.COOKED_BEEF, 4),
 				in(ModItems.EMBERBLOOM, 3), in(ModItems.VOIDCAP, 2))
 		);
+	}
+
+	private static Item crop(final String id) {
+		return Crops.produce(id);
+	}
+
+	private static Item fish(final String id) {
+		return Fishing.item(id);
 	}
 
 	private static List<Recipe> alchemy() {
@@ -113,7 +154,8 @@ public final class CraftRecipes {
 			r("green_tea", p, 8, consumable("green_tea", 2), 9, in(Items.GLASS_BOTTLE, 2), in(ModItems.SUNLEAF, 3)),
 			r("greater_healing_draught", p, 10, consumable("greater_healing_draught", 1), 10, in(Consumables.item("healing_draught"), 2), in(ModItems.GLOWCAP, 1)),
 			r("greater_mana_draught", p, 10, consumable("greater_mana_draught", 1), 10, in(Consumables.item("mana_draught"), 2), in(ModItems.MOONPETAL, 2)),
-			r("red_ginseng_extract", p, 15, consumable("red_ginseng_extract", 1), 12, in(Items.HONEY_BOTTLE, 1), in(ModItems.SUNLEAF, 2), in(Items.CARROT, 2)),
+			r("red_ginseng_extract", p, 15, consumable("red_ginseng_extract", 1), 12, in(Items.HONEY_BOTTLE, 1), in(ModItems.SUNLEAF, 2), in(Items.CARROT, 1),
+				in(crop("radish"), 1)),
 			r("ironskin_tonic", p, 18, consumable("ironskin_tonic", 1), 13, in(Items.GLASS_BOTTLE, 1), in(Items.IRON_INGOT, 2), in(ModItems.FROSTROOT, 1)),
 			r("scholars_coffee", p, 22, consumable("scholars_coffee", 2), 15, in(Items.COCOA_BEANS, 3), in(ModItems.MOONPETAL, 1), in(Items.GLASS_BOTTLE, 2)),
 			r("thunderbolt", p, 26, consumable("thunderbolt", 1), 17, in(Items.GLASS_BOTTLE, 1), in(ModItems.EMBERBLOOM, 1), in(Items.GOLD_INGOT, 1)),

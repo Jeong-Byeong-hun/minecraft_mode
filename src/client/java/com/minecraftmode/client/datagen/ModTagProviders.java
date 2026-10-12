@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.enchantment.EnchantInfo;
 import com.minecraftmode.enchantment.ModEnchantments;
 import com.minecraftmode.enchantment.RangedEnchantments;
@@ -46,6 +48,12 @@ public final class ModTagProviders {
 			// Coin Finder only triggers on c:ores.
 			this.builder(ConventionalBlockTags.ORES)
 				.add(key(ModBlocks.MYTHRIL_ORE), key(ModBlocks.DEEPSLATE_MYTHRIL_ORE), key(ModBlocks.ALUMINUM_ORE), key(ModBlocks.DEEPSLATE_ALUMINUM_ORE));
+			// The mod's crops keep the farmland under them from drying into dirt. They stay out of minecraft:crops, whose only use is
+			// bee_growables: bees would grow them a stage per trip, past the no-bone-meal rule.
+			var farmland = this.builder(BlockTags.MAINTAINS_FARMLAND);
+			for (Crops.CropDef def : Crops.all()) {
+				farmland.add(key(Crops.block(def)));
+			}
 		}
 
 		private static ResourceKey<Block> key(final Block block) {
@@ -75,6 +83,11 @@ public final class ModTagProviders {
 			this.builder(ItemTags.LEG_ARMOR).add(key(ModItems.MYTHRIL_LEGGINGS));
 			this.builder(ItemTags.FOOT_ARMOR).add(key(ModItems.MYTHRIL_BOOTS));
 			this.builder(ItemTags.BEACON_PAYMENT_ITEMS).add(key(ModItems.MYTHRIL_INGOT), key(ModItems.ALUMINUM_INGOT));
+			// The fishing statistic counts these, and cats and dolphins take them.
+			var fishes = this.builder(ItemTags.FISHES);
+			for (Item fish : Fishing.items()) {
+				fishes.add(key(fish));
+			}
 		}
 
 		private static ResourceKey<Item> key(final Item item) {

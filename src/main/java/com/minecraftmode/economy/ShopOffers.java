@@ -4,6 +4,8 @@ import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.craft.CraftPrices;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobClass;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.player.Player;
@@ -258,7 +261,7 @@ public final class ShopOffers {
 				buy(ModItems.SILVER_COIN, 4, ModItems.MYTHRIL_SWORD, 1),
 				buy(ModItems.SILVER_COIN, 7, ModItems.MYTHRIL_CHESTPLATE, 1)
 			);
-			case GROCER -> List.of(
+			case GROCER -> Stream.of(List.of(
 				sell(Items.WHEAT, 20, ModItems.COPPER_COIN, 1),
 				sell(Items.CARROT, 24, ModItems.COPPER_COIN, 1),
 				sell(Items.POTATO, 24, ModItems.COPPER_COIN, 1),
@@ -287,7 +290,7 @@ public final class ShopOffers {
 				buy(ModItems.COPPER_COIN, 4, Items.CAKE, 1),
 				buy(ModItems.SILVER_COIN, 1, Items.GOLDEN_APPLE, 1),
 				buy(ModItems.SILVER_COIN, 2, Items.GOLDEN_CARROT, 4)
-			);
+			), Crops.trades(), Fishing.trades()).flatMap(List::stream).toList();
 			case JEWELER -> List.of(
 				sell(Items.GOLD_INGOT, 1, ModItems.COPPER_COIN, 2),
 				sell(Items.LAPIS_LAZULI, 16, ModItems.COPPER_COIN, 2),

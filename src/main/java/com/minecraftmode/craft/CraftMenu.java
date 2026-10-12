@@ -42,6 +42,7 @@ public class CraftMenu extends AbstractContainerMenu {
 			case COOKING -> ModMenus.CRAFT_COOKING;
 			case ALCHEMY -> ModMenus.CRAFT_ALCHEMY;
 			case SMITHING -> ModMenus.CRAFT_SMITHING;
+			case FARMING, FISHING -> throw new IllegalArgumentException(profession.id + " has no station");
 		};
 	}
 
@@ -118,7 +119,7 @@ public class CraftMenu extends AbstractContainerMenu {
 		serverPlayer.level().playSound(null, player.getX(), player.getY(), player.getZ(), switch (this.profession) {
 			case COOKING -> SoundEvents.SMOKER_SMOKE;
 			case ALCHEMY -> SoundEvents.BREWING_STAND_BREW;
-			case SMITHING -> SoundEvents.ANVIL_USE;
+			case SMITHING, FARMING, FISHING -> SoundEvents.ANVIL_USE;
 		}, SoundSource.BLOCKS, 0.7F, 1.1F);
 		this.broadcastChanges();
 		return true;

@@ -40,7 +40,7 @@ public final class CraftPrices {
 	/** The shop that buys what {@code profession} makes. */
 	public static ShopType shop(final Profession profession) {
 		return switch (profession) {
-			case COOKING -> ShopType.GROCER;
+			case COOKING, FARMING, FISHING -> ShopType.GROCER;
 			case ALCHEMY -> ShopType.ALCHEMIST;
 			case SMITHING -> ShopType.BLACKSMITH;
 		};

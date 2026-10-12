@@ -21,8 +21,13 @@ import com.minecraftmode.client.map.Waypoints;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
+import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.craft.CraftMenu;
+import com.minecraftmode.craft.CraftPrices;
 import com.minecraftmode.craft.CraftRecipes;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.FarmCropBlock;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.craft.Herbs;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonData;
@@ -33,7 +38,11 @@ import com.minecraftmode.dungeon.DungeonLayout;
 import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.dungeon.Keystone;
 import com.minecraftmode.dungeon.KeystoneItem;
+import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.enchantment.EnchantLevels;
+import com.minecraftmode.enchantment.LifeEnchantments;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
@@ -66,8 +75,10 @@ import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -82,11 +93,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
@@ -95,10 +108,13 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -135,6 +151,8 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			checkParagon(server, connection);
 			checkAwakening(context, server, connection);
 			checkProfessions(context, server, connection);
+			checkFarming(server, connection);
+			checkFishing(server, connection);
 			checkCompanions(context, server, connection);
 			checkDungeon(context, server, connection);
 			checkWarden(context, server, connection);
@@ -222,6 +240,151 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[content] awakened: {}", report);
 	}
 
+	// ------------------------------------------------------------------ farming and fishing
+
+	private static void checkFarming(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			require(Crops.all().size() == 12 && Crops.seeds().size() == 9, "12 crops, 9 of them with seeds");
+			Crops.CropDef rice = Crops.def("rice");
+			FarmCropBlock crop = (FarmCropBlock)Crops.block(rice);
+			// a row of three ripe rice plants on farmland, away from everything else
+			BlockPos center = new BlockPos(-14, -60, 9);
+			for (int dx = -1; dx <= 1; dx++) {
+				level.setBlockAndUpdate(center.offset(dx, -1, 0), Blocks.FARMLAND.defaultBlockState());
+				level.setBlockAndUpdate(center.offset(dx, 0, 0), crop.getStateForAge(crop.getMaxAge()));
+			}
+			BlockPos young = center.offset(0, 0, 2);
+			level.setBlockAndUpdate(young.below(), Blocks.FARMLAND.defaultBlockState());
+			level.setBlockAndUpdate(young, crop.getStateForAge(0));
+			require(!BoneMealItem.growCrop(new ItemStack(Items.BONE_MEAL), level, young) && crop.getAge(level.getBlockState(young)) == 0,
+				"bone meal does nothing on the mod's crops");
+			require(!crop.defaultBlockState().is(BlockTags.BEE_GROWABLES), "bees do not grow the mod's crops either");
+
+			// a hoe with Reaping I and Replant harvests the row and plants it again
+			ItemStack hoe = new ItemStack(Items.IRON_HOE);
+			hoe.enchant(EnchantLevels.holder(level, LifeEnchantments.REAPING.key()).orElseThrow(), 1);
+			hoe.enchant(EnchantLevels.holder(level, LifeEnchantments.REPLANT.key()).orElseThrow(), 1);
+			ItemStack held = player.getMainHandItem().copy();
+			player.setItemInHand(InteractionHand.MAIN_HAND, hoe);
+			int exp = Profession.data(player).exp(Profession.FARMING);
+			require(player.gameMode.destroyBlock(center), "the ripe rice can be harvested");
+			player.setItemInHand(InteractionHand.MAIN_HAND, held);
+			int gained = Profession.data(player).exp(Profession.FARMING) - exp;
+			require(gained >= 3 * Crops.BASIC_EXP, "three ripe crops teach farming (Reaping), got " + gained);
+			for (int dx = -1; dx <= 1; dx++) {
+				BlockState state = level.getBlockState(center.offset(dx, 0, 0));
+				require(state.is(crop) && crop.getAge(state) == 0, "Replant planted the rice again at " + dx + ", got " + state);
+			}
+			int riceDropped = 0;
+			for (ItemEntity drop : level.getEntitiesOfClass(ItemEntity.class, new AABB(center).inflate(3.0))) {
+				if (drop.getItem().is(Crops.produce(rice))) {
+					riceDropped += drop.getItem().getCount();
+				}
+				drop.discard();
+			}
+			require(riceDropped >= 3, "every harvested plant drops rice, got " + riceDropped);
+
+			// advanced seeds only for farmers of the advanced level
+			RandomSource random = RandomSource.create(7);
+			Map<String, Integer> withoutFarming = new HashMap<>(Profession.data(player).exp());
+			withoutFarming.remove(Profession.FARMING.id);
+			player.setAttached(ModAttachments.PROFESSIONS, new Profession.Data(withoutFarming));
+			int advancedLow = 0;
+			for (int i = 0; i < 3000; i++) {
+				Item seed = Crops.grassSeed(player, 3, random);
+				if (seed != null && Crops.advanced().stream().anyMatch(d -> Crops.planting(d) == seed)) {
+					advancedLow++;
+				}
+			}
+			Profession.FARMING.addExp(player, Profession.totalFor(Crops.ADVANCED_LEVEL));
+			int seeds = 0;
+			int advanced = 0;
+			for (int i = 0; i < 3000; i++) {
+				Item seed = Crops.grassSeed(player, 3, random);
+				if (seed != null) {
+					seeds++;
+					if (Crops.advanced().stream().anyMatch(d -> Crops.planting(d) == seed)) {
+						advanced++;
+					}
+				}
+			}
+			require(advancedLow == 0, "no advanced seeds below farming level " + Crops.ADVANCED_LEVEL + ", got " + advancedLow);
+			require(seeds > 200 && advanced > 0, "grass gives seeds (" + seeds + ") and, from level " + Crops.ADVANCED_LEVEL + ", advanced ones (" + advanced + ")");
+
+			// the grocer buys every crop and sells the basic seeds
+			List<ShopOffers.Trade> grocer = ShopOffers.trades(ShopType.GROCER);
+			for (Crops.CropDef def : Crops.all()) {
+				require(grocer.stream().anyMatch(t -> t.cost().asItem() == Crops.produce(def) && Coins.value(t.result().asItem()) > 0), "the grocer buys " + def.id());
+				require(def.advanced() || grocer.stream().anyMatch(t -> t.result().asItem() == Crops.planting(def)), "the grocer sells what " + def.id() + " grows from");
+			}
+			return "farming +" + gained + ", seeds " + seeds + " (" + advanced + " advanced), rice " + riceDropped;
+		});
+		MinecraftMode.LOGGER.info("[content] {}", report);
+	}
+
+	private static void checkFishing(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			BlockPos plains = player.blockPosition();
+			RandomSource random = RandomSource.create(11);
+			Set<String> low = new HashSet<>();
+			Set<String> anywhere = new HashSet<>();
+			Set<String> master = new HashSet<>();
+			for (int i = 0; i < 3000; i++) {
+				low.add(Fishing.fishFor(level, plains, 1, false, 0, 0.0F, random).id());
+				anywhere.add(Fishing.fishFor(level, plains, 1, true, 0, 0.0F, random).id());
+				master.add(Fishing.fishFor(level, plains, Profession.MAX_LEVEL, false, 3, 3.0F, random).id());
+			}
+			for (Fishing.FishDef def : Fishing.all()) {
+				require(def.minLevel() <= 1 || !low.contains(def.id()) && !anywhere.contains(def.id()), def.id() + " needs fishing level " + def.minLevel());
+				require(def.habitat() == Fishing.Habitat.ANY || !low.contains(def.id()) && !master.contains(def.id()), def.id() + " does not live in the plains");
+				require(def.habitat() != Fishing.Habitat.ANY || master.contains(def.id()), def.id() + " bites anywhere for a master angler");
+				require(def.habitat() == Fishing.Habitat.ANY || def.minLevel() > 1 || anywhere.contains(def.id()), "Any Waters brings " + def.id() + " to the plains");
+			}
+
+			// Net Cast II: sometimes two; every catch teaches fishing
+			ItemStack rod = new ItemStack(Items.FISHING_ROD);
+			rod.enchant(EnchantLevels.holder(level, LifeEnchantments.NET_CAST.key()).orElseThrow(), 2);
+			int exp = Profession.data(player).exp(Profession.FISHING);
+			int doubles = 0;
+			for (int i = 0; i < 100; i++) {
+				ItemStack fish = Fishing.land(player, player.position(), rod, 0.0F, random);
+				require(Fishing.all().stream().anyMatch(d -> fish.is(Fishing.item(d))), "a landed fish is one of the mod's, got " + fish);
+				if (fish.getCount() >= 2) {
+					doubles++;
+				}
+			}
+			int gained = Profession.data(player).exp(Profession.FISHING) - exp;
+			require(doubles > 0 && gained >= 100 * Fishing.Tier.COMMON.exp, "Net Cast doubles some catches (" + doubles + ") and fishing is taught (" + gained + ")");
+
+			List<ShopOffers.Trade> grocer = ShopOffers.trades(ShopType.GROCER);
+			for (Fishing.FishDef def : Fishing.all()) {
+				require(grocer.stream().anyMatch(t -> t.cost().asItem() == Fishing.item(def) && Coins.value(t.result().asItem()) > 0), "the grocer buys " + def.id());
+			}
+
+			// a dish of the new crops: kimchi at the kitchen station
+			List<CraftRecipes.Recipe> cooking = CraftRecipes.of(Profession.COOKING);
+			int index = 0;
+			while (!cooking.get(index).id().equals("kimchi")) {
+				index++;
+			}
+			CraftRecipes.Recipe kimchi = cooking.get(index);
+			for (CraftRecipes.Ingredient in : kimchi.ingredients()) {
+				player.getInventory().add(new ItemStack(in.item(), in.count()));
+			}
+			CraftMenu menu = new CraftMenu(CraftMenu.type(Profession.COOKING), 0, player.getInventory(), Profession.COOKING, null);
+			Item made = Consumables.item("kimchi");
+			int before = JobProgression.count(player.getInventory(), made);
+			require(menu.clickMenuButton(player, index * 2) && JobProgression.count(player.getInventory(), made) > before, "kimchi is cooked from the new crops");
+			require(CraftPrices.value(made) > 0.0F, "the grocer buys kimchi");
+			return "fish " + low.size() + "/" + anywhere.size() + "/" + master.size() + " kinds, doubles " + doubles + ", fishing +" + gained;
+		});
+		MinecraftMode.LOGGER.info("[content] {}", report);
+	}
+
 	// ------------------------------------------------------------------ professions
 
 	private static void checkProfessions(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
@@ -229,7 +392,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			ServerPlayer player = connection.getServerPlayer();
 			ServerLevel level = player.level();
 			List<String> lines = new ArrayList<>();
-			for (Profession profession : Profession.values()) {
+			for (Profession profession : Profession.CRAFTING) {
 				CraftRecipes.Recipe recipe = CraftRecipes.of(profession).getFirst();
 				for (CraftRecipes.Ingredient in : recipe.ingredients()) {
 					player.getInventory().add(new ItemStack(in.item(), in.count() * 2));

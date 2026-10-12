@@ -49,7 +49,8 @@ import net.minecraft.world.item.component.UseCooldown;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The 40 consumables: foods, potions, pills and charms in five tiers. Tier 1-2 are sold in the market
+ * The 58 consumables: foods, potions, pills and charms in five tiers (the last 18 are dishes of the mod's crops and fish, made only
+ * by cooking). Tier 1-2 are sold in the market
  * (and some are crafted), tier 3 at the alchemist for gold and dropped by named monsters, tier 4 are
  * rare drops and raid rewards (a few sold at steep prices), tier 5 only come from raid bosses. Lasting
  * effects run 10 minutes; instant heals and MP potions share cooldown groups so they cannot be
@@ -394,6 +395,73 @@ public final class Consumables {
 		c("dragon_heart_steak", "Dragon Heart Steak", "용의 심장 스테이크", 5, FOOD, HEART, 0xB01020, 0x5A2A8A).food(20, 1.5F)
 			.flavor("Cut from the heart of the void dragon. It still beats.", "공허룡의 심장에서 잘라낸 고기. 아직도 뛰고 있다.")
 			.buff(ModEffects.FURY, 2).buff(ModEffects.IRONSKIN, 2).buff(MobEffects.HEALTH_BOOST, 2).buff(ModEffects.REJUVENATION, 1);
+
+		dishes();
+	}
+
+	/** Dishes of the mod's crops and fish: cooking only (no shop sells them), tier by recipe level. */
+	private static void dishes() {
+		// ---------------------------------------------------------------- tier 1
+		c("kimchi", "Kimchi", "김치", 1, FOOD, BOWL, 0xD83A2A, 0xF0E8C8).food(3, 0.6F)
+			.flavor("Cabbage, chili and garlic, left to ripen. Goes with everything.", "배추와 고춧가루, 마늘을 버무려 익혔다. 어디에나 어울린다.")
+			.buff(ModEffects.IRONSKIN, 0);
+		c("grilled_corn", "Grilled Corn", "군옥수수", 1, FOOD, CORN, 0xF2C430, 0x8A5A20).food(5, 0.5F)
+			.flavor("Charred at the edges, sweet in the middle.", "겉은 그을리고 속은 달콤하다.")
+			.buff(MobEffects.HASTE, 0);
+		c("tomato_soup", "Tomato Soup", "토마토 수프", 1, FOOD, BOWL, 0xD8402A, 0xF4E6D0).food(6, 0.6F)
+			.flavor("A warm bowl on a cold night.", "추운 밤의 따뜻한 한 그릇.")
+			.buff(MobEffects.HEALTH_BOOST, 0);
+		c("candied_sweet_potato", "Candied Sweet Potato", "고구마 맛탕", 1, FOOD, SWEET_POTATO, 0xE89A30, 0xF4E6B0).food(5, 0.6F)
+			.flavor("Glazed in syrup and rolled in sesame.", "시럽을 입히고 참깨를 뿌렸다.")
+			.buff(ModEffects.CLARITY, 0);
+
+		// ---------------------------------------------------------------- tier 2
+		c("doenjang_jjigae", "Doenjang Jjigae", "된장찌개", 2, FOOD, BOWL, 0x9A6A30, 0xF0E0B0).food(8, 0.8F)
+			.flavor("Soybean paste stew. Tastes like home.", "된장으로 끓인 찌개. 집밥의 맛.")
+			.buff(ModEffects.REJUVENATION, 0).buff(ModEffects.CLARITY, 0);
+		c("grilled_mackerel", "Grilled Mackerel", "고등어구이", 2, FOOD, FISH, 0x5A7A9A, 0xC88A40).food(6, 0.8F)
+			.flavor("Crisp skin, rich flesh. Sharpens the eye.", "바삭한 껍질, 기름진 살. 눈이 밝아진다.")
+			.buff(ModEffects.PRECISION, 0);
+		c("braised_crucian", "Braised Crucian Carp", "붕어찜", 2, FOOD, FISH, 0x9A6A3A, 0xD83A2A).food(7, 0.8F)
+			.flavor("Simmered slowly with radish. The old fishers' secret.", "무와 함께 오래 졸였다. 늙은 어부들의 비법.")
+			.buff(ModEffects.WISDOM, 0);
+		c("grilled_trout", "Grilled Trout", "송어구이", 2, FOOD, FISH, 0xB88A6A, 0x6AA040).food(6, 0.8F)
+			.flavor("River fish over an open fire. Clears the mind for spells.", "모닥불에 구운 민물고기. 주문을 외우기 좋게 머리가 맑아진다.")
+			.buff(ModEffects.ARCANA, 0);
+		c("bibimbap", "Bibimbap", "비빔밥", 2, FOOD, BOWL, 0xE04A2A, 0xF0C040).food(10, 0.9F)
+			.flavor("Mix it all up. Strength and grit in one bowl.", "전부 비벼라. 힘과 끈기가 한 그릇에.")
+			.buff(ModEffects.FURY, 0).buff(ModEffects.IRONSKIN, 0);
+		c("chueotang", "Chueotang", "추어탕", 2, FOOD, BOWL, 0x7A5A2A, 0x5AA040).food(9, 0.9F)
+			.flavor("Loach soup. The farmers' remedy for summer fatigue.", "미꾸라지 탕. 농부들의 여름 보양식.")
+			.buff(MobEffects.HEALTH_BOOST, 0).buff(MobEffects.SPEED, 0);
+		c("fried_smelt", "Fried Smelt", "빙어튀김", 2, FOOD, FISH, 0xE8C060, 0xC8DCE8).food(5, 0.6F)
+			.flavor("Caught through the ice, fried by the handful. Lucky ones say they taste better.", "얼음 구멍에서 낚아 한 줌씩 튀겼다. 운 좋은 날 더 맛있다나.")
+			.buff(MobEffects.LUCK, 0).buff(MobEffects.HASTE, 0);
+		c("strawberry_daifuku", "Strawberry Daifuku", "딸기 찹쌀떡", 2, FOOD, RICE_BALL, 0xF4E4EC, 0xE8304A).food(4, 0.6F)
+			.flavor("A whole strawberry hidden in sweet rice cake.", "쫀득한 찹쌀떡 속에 딸기가 통째로.")
+			.buff(ModEffects.FOCUS, 0);
+
+		// ---------------------------------------------------------------- tier 3
+		c("catfish_maeuntang", "Catfish Maeuntang", "메기 매운탕", 3, FOOD, BOWL, 0xC82A1A, 0x4A4A3A).food(10, 1.0F)
+			.flavor("Fiery fish stew. You will want to hit something.", "불같이 매운 생선탕. 뭐라도 때리고 싶어진다.")
+			.buff(ModEffects.FURY, 1).buff(ModEffects.REJUVENATION, 0);
+		c("eel_rice_bowl", "Eel Rice Bowl", "장어덮밥", 3, FOOD, BOWL, 0x6A3A1A, 0xF4F0E0).food(12, 1.1F)
+			.flavor("Glazed eel over rice. Stamina for the whole day.", "양념 장어를 올린 밥. 하루 종일 기운이 넘친다.")
+			.buff(MobEffects.HEALTH_BOOST, 1).buff(MobEffects.SPEED, 0);
+		c("tuna_sashimi", "Tuna Sashimi", "참치회", 3, FOOD, BOX, 0xC8303A, 0xF4F0E8).food(6, 1.0F)
+			.flavor("Fresh from the warm sea. Every cut is exact.", "따뜻한 바다에서 갓 잡았다. 칼질 하나하나가 정확하다.")
+			.buff(ModEffects.PRECISION, 1).buff(ModEffects.FOCUS, 0);
+		c("snakehead_soup", "Snakehead Soup", "가물치 보양탕", 3, FOOD, BOWL, 0x4A3A2A, 0xC8A050).food(10, 1.1F)
+			.flavor("An old tonic for the wounded.", "다친 이에게 끓여 주던 옛 보양식.")
+			.buff(ModEffects.IRONSKIN, 1).buff(ModEffects.REJUVENATION, 0);
+
+		// ---------------------------------------------------------------- tier 4
+		c("golden_carp_feast", "Golden Carp Feast", "황금 잉어찜", 4, FOOD, FISH, 0xF0C030, 0xC82A1A).food(14, 1.2F)
+			.flavor("They say whoever eats it never goes poor.", "먹은 사람은 평생 가난하지 않다고 한다.")
+			.buff(ModEffects.FORTUNE, 1).buff(MobEffects.LUCK, 1).buff(ModEffects.WISDOM, 1);
+		c("coelacanth_steak", "Coelacanth Steak", "실러캔스 스테이크", 4, FOOD, MEAT, 0x9A5A3A, 0xF4ECD8).food(16, 1.3F)
+			.flavor("A fish older than the dinosaurs. Its strength is older still.", "공룡보다 오래된 물고기. 그 힘은 더 오래되었다.")
+			.buff(ModEffects.FURY, 1).buff(ModEffects.IRONSKIN, 1).buff(MobEffects.HEALTH_BOOST, 1).buff(ModEffects.SLAYER, 0);
 	}
 
 	private static Builder c(final String id, final String en, final String ko, final int tier, final Kind kind, final Shape shape, final int color, final int accent) {

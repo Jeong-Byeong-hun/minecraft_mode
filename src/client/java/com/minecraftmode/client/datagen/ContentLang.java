@@ -2,6 +2,8 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.city.StarterKit;
 import com.minecraftmode.companion.Companions;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.DungeonAffix;
 import com.minecraftmode.dungeon.DungeonDef;
@@ -158,6 +160,17 @@ final class ContentLang {
 		b.add("message.minecraft_mode.profession.crafted", ko ? "%s ×%s 제작" : "Made %s ×%s");
 		b.add("message.minecraft_mode.profession.crafted_double", ko ? "%s ×%s 제작 (숙련 보너스!)" : "Made %s ×%s (mastery bonus!)");
 		b.add("message.minecraft_mode.profession.level_up", ko ? "%s 레벨 %s!" : "%s level %s!");
+		b.add("message.minecraft_mode.profession.gained", ko ? "+%s %s 경험치 (Lv %s)" : "+%s %s experience (Lv %s)");
+		for (Crops.CropDef def : Crops.all()) {
+			b.add(def.nameKey(), ko ? def.ko() : def.en());
+			if (Crops.seed(def) != null) {
+				b.add(def.seedKey(), ko ? def.seedKo() : def.seedEn());
+			}
+			b.add(Crops.block(def), ko ? def.ko() + " 작물" : def.en() + " Crop");
+		}
+		for (Fishing.FishDef def : Fishing.all()) {
+			b.add(def.nameKey(), ko ? def.ko() : def.en());
+		}
 	}
 
 	private static void companions(final TranslationBuilder b, final boolean ko) {

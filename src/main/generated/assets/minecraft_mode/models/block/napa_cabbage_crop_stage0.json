@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "minecraft_mode:block/napa_cabbage_crop_stage0"
+  }
+}

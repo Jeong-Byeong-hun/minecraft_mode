@@ -59,11 +59,11 @@ public class ConsumableAssetProvider implements DataProvider {
 			writes.add(write(cache, assets.resolve("textures/mob_effect/" + id + ".png"), icon));
 			sheet.add(icon);
 		}
-		this.preview(sheet);
+		preview(this.output, sheet, "consumable-preview.png");
 		return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
 	}
 
-	private static CompletableFuture<?> write(final CachedOutput cache, final Path path, final BufferedImage image) {
+	static CompletableFuture<?> write(final CachedOutput cache, final Path path, final BufferedImage image) {
 		byte[] bytes = ArmorAssetProvider.png(image);
 		return CompletableFuture.runAsync(() -> {
 			try {
@@ -74,8 +74,8 @@ public class ConsumableAssetProvider implements DataProvider {
 		});
 	}
 
-	/** Every icon at 4x on a dark sheet, 10 per row. */
-	private void preview(final List<BufferedImage> icons) {
+	/** Every icon at 4x on a dark sheet, 10 per row, written to build/{@code name}. */
+	static void preview(final PackOutput output, final List<BufferedImage> icons, final String name) {
 		int scale = 4;
 		int cell = 18 * scale + 8;
 		int cols = 10;
@@ -100,12 +100,12 @@ public class ConsumableAssetProvider implements DataProvider {
 			}
 		}
 		try {
-			Path root = this.output.getOutputFolder().getParent().getParent().getParent();
-			Path file = root.resolve("build/consumable-preview.png");
+			Path root = output.getOutputFolder().getParent().getParent().getParent();
+			Path file = root.resolve("build/" + name);
 			Files.createDirectories(file.getParent());
 			ImageIO.write(out, "png", file.toFile());
 		} catch (IOException | NullPointerException e) {
-			MinecraftMode.LOGGER.warn("Could not write the consumable preview", e);
+			MinecraftMode.LOGGER.warn("Could not write {}", name, e);
 		}
 	}
 

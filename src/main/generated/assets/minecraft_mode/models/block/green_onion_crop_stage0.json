@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/crop",
+  "textures": {
+    "crop": "minecraft_mode:block/green_onion_crop_stage0"
+  }
+}

@@ -5,6 +5,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -17,15 +18,20 @@ import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Crafting professions (생활 기술): cooking, alchemy and smithing, each levelled 1..{@value #MAX_LEVEL} by crafting at its station
- * (alchemy also by gathering herbs). Every player has all three. Ids are saved keys.
+ * Professions (생활 기술), each levelled 1..{@value #MAX_LEVEL}: cooking, alchemy and smithing by crafting at their stations (alchemy
+ * also by gathering herbs), farming by harvesting the mod's crops ({@link Crops}) and fishing by landing the mod's fish
+ * ({@link Fishing}). Every player has all of them. Ids are saved keys; append new ones at the end.
  */
 public enum Profession {
 	COOKING("cooking", "Cooking", "요리", 0xE0A040),
 	ALCHEMY("alchemy", "Alchemy", "연금술", 0x60C060),
-	SMITHING("smithing", "Smithing", "대장 기술", 0x9AA0B0);
+	SMITHING("smithing", "Smithing", "대장 기술", 0x9AA0B0),
+	FARMING("farming", "Farming", "농사", 0x8AC040),
+	FISHING("fishing", "Fishing", "낚시", 0x40A0E0);
 
 	public static final int MAX_LEVEL = 50;
+	/** The professions with a station and recipes; farming and fishing are levelled in the field. */
+	public static final List<Profession> CRAFTING = List.of(COOKING, ALCHEMY, SMITHING);
 
 	public final String id;
 	public final String en;
@@ -128,6 +134,10 @@ public enum Profession {
 		exp.merge(this.id, amount, Integer::sum);
 		player.setAttached(ModAttachments.PROFESSIONS, new Data(exp));
 		int after = levelFor(exp.get(this.id));
+		if (!CRAFTING.contains(this)) {
+			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.profession.gained", amount, Component.translatable(this.nameKey()), after)
+				.withColor(this.color));
+		}
 		if (after > before) {
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.profession.level_up", Component.translatable(this.nameKey()), after)
 				.withColor(this.color));

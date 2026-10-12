@@ -119,6 +119,7 @@ final class JobLang {
 		b.add(c + "combat", ko ? "전투" : "Combat");
 		b.add(c + "crit_chance", ko ? "치명타 확률" : "Critical chance");
 		b.add(c + "crit_damage", ko ? "치명타 피해" : "Critical damage");
+		b.add(c + "professions", ko ? "생활 기술" : "Professions");
 		b.add(c + "stats", ko ? "능력치 합계 (%s개) · 마우스를 올리면 출처" : "Stat totals (%s) · hover for sources");
 		b.add(c + "no_stats", ko ? "아직 장비·레벨·특성에서 오는 능력치가 없습니다." : "No stats from gear, level or talents yet.");
 		b.add(c + "cap", ko ? "최대 %s (합계 %s)" : "Capped at %s (sum %s)");

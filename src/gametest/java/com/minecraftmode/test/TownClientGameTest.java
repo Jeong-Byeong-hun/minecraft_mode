@@ -145,6 +145,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			checkInvasionNumbers();
 			checkTrialHunt(context, server, connection);
 			ResidenceChecks.run(context, server, connection);
+			CharacterChecks.run(context, server, connection);
 			// before the respawn check, which leaves getServerPlayer() holding the entity from before respawning
 			MenuChecks.run(context, server, connection);
 			checkBedRespawn(context, server, connection);
@@ -211,7 +212,8 @@ public class TownClientGameTest implements FabricClientGameTest {
 			player.setHealth(player.getMaxHealth());
 			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
 			require(SkillCaster.tryCast(player, 1) == SkillCaster.Result.OK && !Engage.guarded(player), "Iron Wall does not guard like a dash");
-			// Iron Wall's guard stance would soften the hits measured next
+			// Iron Wall's damage boost and any combat state must not touch the hits measured next
+			player.removeEffect(ModEffects.VALOR);
 			CombatState.forget(player);
 			zombie.discard();
 		});
@@ -531,7 +533,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 			ServerPlayer player = connection.getServerPlayer();
 			player.getInventory().clearContent();
 			require(Bags.giveStarter(player) && !Bags.giveStarter(player), "the starter bags come once");
-			require(Bags.items().stream().allMatch(item -> player.getInventory().contains(new ItemStack(item))), "one bag of each kind");
+			require(Bags.items().stream().allMatch(item -> player.getInventory().contains(stack -> stack.is(item))), "one bag of each kind");
 			ServerLevel level = s.overworld();
 			for (ItemStack stack : List.of(new ItemStack(Items.RAW_IRON, 5), new ItemStack(Items.COBBLESTONE, 20), new ItemStack(Items.DIAMOND, 2),
 				new ItemStack(Items.IRON_SWORD), new ItemStack(Items.BREAD, 4), new ItemStack(Items.STICK, 3), new ItemStack(ModItems.ESSENCE, 2))) {

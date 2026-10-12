@@ -160,6 +160,12 @@ public class MountEntity extends AbstractHorse implements AnimatedCreature {
 		return true;
 	}
 
+	/** Projectiles fly through (it is never hurt, so it only caught shots); it stays pickable to be ridden. */
+	@Override
+	public boolean canBeHitByProjectile() {
+		return false;
+	}
+
 	/**
 	 * The mount itself is never hurt. A flying mount lands wherever its rider steers it, so a landing is never a fall (its fall
 	 * distance would otherwise add up every block it glided down since takeoff). A ground mount passes a fall on to its rider only

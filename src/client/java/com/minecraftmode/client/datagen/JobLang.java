@@ -42,6 +42,10 @@ final class JobLang {
 		b.add(ModEffects.STUN.value(), ko ? "기절" : "Stun");
 		b.add(ModEffects.VULNERABLE.value(), ko ? "취약" : "Vulnerable");
 		b.add(ModEffects.MANA_FLOW.value(), ko ? "마나 흐름" : "Mana Flow");
+		// skill boosts (Boost)
+		b.add(ModEffects.VALOR.value(), ko ? "용맹" : "Valor");
+		b.add(ModEffects.INSIGHT.value(), ko ? "간파" : "Insight");
+		b.add(ModEffects.FEROCITY.value(), ko ? "맹렬" : "Ferocity");
 
 		// classes
 		for (JobClass job : JobClass.values()) {

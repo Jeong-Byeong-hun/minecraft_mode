@@ -49,6 +49,7 @@ import com.minecraftmode.mixin.LivingEntityAccessor;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.network.QuestActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.registry.ModEffects;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
@@ -145,6 +146,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkPointBlank(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
+			checkBoosts(server, connection);
 			checkProjectileImmunities(context, server, connection);
 			checkLockedAim(context, server, connection);
 			castEverySkill(context, server, connection);
@@ -684,6 +686,58 @@ public class JobClientGameTest implements FabricClientGameTest {
 			return session.crits() + " crits in 200 skill hits, wolf bite " + bite;
 		});
 		MinecraftMode.LOGGER.info("[job] crits and dummy: {}", report);
+	}
+
+	/**
+	 * Support skills boost damage instead of defense (0.5.20): Iron Wall gives +20% damage dealt, which every hit reads, and
+	 * Whirlwind gives both of its boosts (its two stances used to overwrite each other, so only the second ever counted).
+	 */
+	private static void checkBoosts(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			JobData saved = JobProgression.get(player);
+			ItemStack hand = player.getMainHandItem().copy();
+			JobProgression.set(player, saved.withJob(JobClass.WARRIOR, 1).withProgress(10, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("iron_greatsword"))));
+			JobStats.refresh(player);
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			GearStats.invalidate(player);
+			require(GearStats.of(player).get(EngraveStat.CRIT_CHANCE) == 0.0F, "a level 10 warrior should have no crit chance for this check");
+			TrainingDummy dummy = ModEntities.TRAINING_DUMMY.create(level, EntitySpawnReason.COMMAND);
+			dummy.snapTo(player.getX() + 3, player.getY(), player.getZ(), 0, 0);
+			level.addFreshEntity(dummy);
+			float plain = skillHit(player, dummy);
+			require(SkillCaster.tryCast(player, 1) == SkillCaster.Result.OK, "Iron Wall should cast");
+			GearStats.invalidate(player);
+			require(player.hasEffect(ModEffects.VALOR) && GearStats.of(player).get(EngraveStat.DAMAGE) == 20.0F, "Iron Wall should give +20% damage dealt");
+			float boosted = skillHit(player, dummy);
+			require(Math.abs(boosted - plain - 2.0F) < 0.01F, "a 10-damage skill hit should deal 2 more under +20% damage: " + plain + " -> " + boosted);
+			player.removeEffect(ModEffects.VALOR);
+
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.HUNTER, 4).withProgress(100, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("godspeed"))));
+			JobStats.refresh(player);
+			JobProgression.set(player, JobProgression.get(player).withMana(JobStats.maxMana(player)));
+			require(SkillCaster.tryCast(player, 1) == SkillCaster.Result.OK, "Whirlwind should cast");
+			require(player.hasEffect(ModEffects.INSIGHT) && player.hasEffect(ModEffects.FEROCITY), "Whirlwind should give both its crit chance and crit damage boosts");
+			player.removeEffect(ModEffects.INSIGHT);
+			player.removeEffect(ModEffects.FEROCITY);
+			dummy.discard();
+			player.setItemInHand(InteractionHand.MAIN_HAND, hand);
+			JobProgression.set(player, saved);
+			JobStats.refresh(player);
+			return "skill hit " + plain + " -> " + boosted;
+		});
+		MinecraftMode.LOGGER.info("[job] boosts: {}", report);
+	}
+
+	/** What one 10-damage skill hit on {@code dummy} counts for after the caster's bonuses. */
+	private static float skillHit(final ServerPlayer player, final TrainingDummy dummy) {
+		DummyMeter.Session session = DummyMeter.session(player);
+		float before = session == null ? 0.0F : session.total();
+		CombatHooks.deal(player, dummy, 10.0F, player.damageSources().playerAttack(player), CombatHooks.DamageKind.SKILL);
+		return DummyMeter.session(player).total() - before;
 	}
 
 	private static void checkVolleys(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

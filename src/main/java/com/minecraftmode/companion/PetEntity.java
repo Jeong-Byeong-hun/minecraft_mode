@@ -116,6 +116,15 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 		return false;
 	}
 
+	/**
+	 * Never in the way: shots, skill projectiles and melee swings pass through (the crosshair and every projectile skip unpickable
+	 * entities). Until 0.5.20 a pet by the shoulder caught its owner's arrows, which bounced off it (it is never hurt).
+	 */
+	@Override
+	public boolean isPickable() {
+		return false;
+	}
+
 	@Override
 	public boolean canBeSeenAsEnemy() {
 		return false;

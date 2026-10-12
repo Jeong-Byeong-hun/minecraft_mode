@@ -1,5 +1,6 @@
 package com.minecraftmode.network;
 
+import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.bag.Trash;
@@ -76,6 +77,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(MenuActionPayload.TYPE, MenuActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(AdminActionPayload.TYPE, AdminActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AdminStatePayload.TYPE, AdminStatePayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(CharacterListPayload.TYPE, CharacterListPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -194,8 +196,11 @@ public final class ModNetworking {
 		AuctionService.send(player, payload.entityId(), payload.query(), suggestSlot, suggestEach);
 	}
 
-	/** The adventurer's menu: the same calls as {@code /party}, {@code /wallet pay}, {@code /raid leave} and {@code /dungeon leave}. */
+	/** The adventurer's menu: the same calls as {@code /party}, {@code /wallet pay}, {@code /raid leave} and {@code /dungeon leave}, and character select. */
 	private static void handleMenu(final ServerPlayer player, final MenuActionPayload payload) {
+		if (Characters.choosing(player) && payload.action() < MenuActionPayload.CHARACTERS) {
+			return;
+		}
 		switch (payload.action()) {
 			case MenuActionPayload.PARTY_CREATE -> Parties.create(player);
 			case MenuActionPayload.PARTY_INVITE -> Parties.invite(player, payload.name());
@@ -219,6 +224,10 @@ public final class ModNetworking {
 					Dungeons.leave(player);
 				}
 			}
+			case MenuActionPayload.CHARACTERS -> Characters.send(player);
+			case MenuActionPayload.CHARACTER_SWITCH -> Characters.switchTo(player, payload.amount());
+			case MenuActionPayload.CHARACTER_BUY -> Characters.buySlot(player);
+			case MenuActionPayload.CHARACTER_ENTER -> Characters.enter(player, payload.amount());
 			default -> {
 			}
 		}

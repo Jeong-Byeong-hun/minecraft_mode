@@ -145,7 +145,8 @@ public final class CityServices {
 		level.getGameRules().set(GameRules.RESPAWN_RADIUS, 0, server);
 	}
 
-	private static void welcome(final ServerPlayer player) {
+	/** First visit (also a fresh character, {@code character/Characters}): to the plaza with the handbook. */
+	public static void welcome(final ServerPlayer player) {
 		var quest = QuestService.get(player);
 		if (quest.visitedCity()) {
 			return;

@@ -631,8 +631,51 @@ public final class ConsumableArtist {
 		return paint(rows, 16, 0, kind.color(), 0xE8B730);
 	}
 
+	/** The skill boosts (job/skill/Boost): crossed swords (damage dealt), an eye (critical chance), a burst (critical damage). */
+	private static final Map<String, String[]> BOOST_GLYPHS = Map.of(
+		"valor", new String[] {
+			"oo........oo",
+			"oWo......oWo",
+			".oWo....oWo.",
+			"..oWo..oWo..",
+			"...oWooWo...",
+			"....oWWo....",
+			"....oWWo....",
+			"...oAooAo...",
+			"..oAAooAAo..",
+			".oCo....oCo.",
+			"oCo......oCo",
+			"oo........oo"},
+		"insight", new String[] {
+			"..........A.",
+			".........AAA",
+			"...oooooo.A.",
+			"..oWWWWWWo..",
+			".oWWCCCCWWo.",
+			"oWWCCxxCCWWo",
+			"oWWCCxxCCWWo",
+			".oWWCCCCWWo.",
+			"..oWWWWWWo..",
+			"...oooooo...",
+			"............",
+			"............"},
+		"ferocity", new String[] {
+			".....oo.....",
+			".....oCo....",
+			"..oo.oCo.oo.",
+			"..oCooCooCo.",
+			"...oCoCoCo..",
+			"oooooCACoooo",
+			"oCCCCAWACCCo",
+			"oooooCACoooo",
+			"...oCoCoCo..",
+			"..oCooCooCo.",
+			"..oo.oCo.oo.",
+			".....oo....."}
+	);
+
 	public static BufferedImage effectIcon(final String id, final int color) {
-		String[] glyph = GLYPHS.get(id);
+		String[] glyph = GLYPHS.containsKey(id) ? GLYPHS.get(id) : BOOST_GLYPHS.get(id);
 		if (glyph == null) {
 			throw new IllegalArgumentException("no glyph for " + id);
 		}

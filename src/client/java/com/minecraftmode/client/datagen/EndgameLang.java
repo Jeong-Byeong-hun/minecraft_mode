@@ -185,7 +185,8 @@ final class EndgameLang {
 	}
 
 	private static void market(final TranslationBuilder b, final boolean ko) {
-		b.add("message.minecraft_mode.market.not_sellable", ko ? "코인은 팔 수 없습니다." : "Coins cannot be sold.");
+		b.add("message.minecraft_mode.market.not_sellable", ko ? "코인과 귀속 아이템은 팔 수 없습니다." : "Coins and bound items cannot be sold.");
+		b.add("item.minecraft_mode.bound", ko ? "귀속 · 판매 불가" : "Bound - cannot be sold");
 		b.add("message.minecraft_mode.market.full", ko ? "가방에 빈 칸이 없습니다." : "Your inventory has no free slot.");
 		b.add("message.minecraft_mode.market.mail_left", ko ? "가방이 가득 차 %s개는 우편함에 남겨 두었습니다." : "%s item(s) stay in your mailbox - your inventory is full.");
 		b.add("message.minecraft_mode.market.has_contents", ko ? "안에 물건이 든 상자나 꾸러미는 비우고 파세요." : "Empty boxes and bundles before selling them.");

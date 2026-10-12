@@ -5,6 +5,7 @@ import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.loot.Coins;
+import com.minecraftmode.network.CharacterListPayload;
 import com.minecraftmode.network.MenuActionPayload;
 import com.minecraftmode.network.PartySyncPayload;
 import com.minecraftmode.raid.Parties;
@@ -17,7 +18,8 @@ import net.minecraft.network.chat.Component;
 
 /**
  * The adventurer's menu (semicolon, or the pause menu): the party ({@code /party}), paying another player ({@code /wallet pay}) and
- * this client's display settings ({@code /damagenumbers}, {@code /enhanceeffects}, {@code /hpbar}). Operators also get a button to
+ * this client's display settings ({@code /damagenumbers}, {@code /enhanceeffects}, {@code /hpbar}) and character select
+ * ({@code character/Characters}: play another slot, start a new character, buy a slot with merit). Operators also get a button to
  * the admin screen. The party part follows {@link RaidClient#party()}, which the server syncs twice a second.
  */
 public class AdventurerScreen extends MenuScreenBase {
@@ -26,6 +28,7 @@ public class AdventurerScreen extends MenuScreenBase {
 	private static final int H = 230;
 	private static final int PARTY = 0;
 	private static final int PAY = 1;
+	static final int CHARACTERS = 3;
 	private static final int NAMES_PER_PAGE = 8;
 
 	private List<String> shownParty = List.of();
@@ -38,9 +41,17 @@ public class AdventurerScreen extends MenuScreenBase {
 		super(Component.translatable(K + "title"), W, H);
 	}
 
+	/** New character slots arrived from the server. */
+	void refresh() {
+		if (this.tab == CHARACTERS) {
+			this.rebuildWidgets();
+		}
+	}
+
 	@Override
 	protected List<Component> tabs() {
-		return List.of(Component.translatable(K + "party"), Component.translatable(K + "pay"), Component.translatable(K + "settings"));
+		return List.of(Component.translatable(K + "party"), Component.translatable(K + "pay"), Component.translatable(K + "settings"),
+			Component.translatable(K + "characters"));
 	}
 
 	@Override
@@ -54,6 +65,7 @@ public class AdventurerScreen extends MenuScreenBase {
 		switch (this.tab) {
 			case PARTY -> this.party(x, y);
 			case PAY -> this.pay(x, y);
+			case CHARACTERS -> this.characters(x, y);
 			default -> this.settings(x, y);
 		}
 	}
@@ -161,6 +173,42 @@ public class AdventurerScreen extends MenuScreenBase {
 			set.accept(!on);
 			this.rebuildWidgets();
 		});
+	}
+
+	// ------------------------------------------------------------------ characters
+
+	/** The account's character slots ({@link MenuClient#characters()}): a button per slot, buying a slot, and how switching works. */
+	private void characters(final int x, final int y) {
+		String k = "screen.minecraft_mode.menu.";
+		CharacterListPayload list = MenuClient.characters();
+		if (list == null) {
+			this.label(x, y + 3, Component.translatable(k + "character.loading").withStyle(ChatFormatting.GRAY));
+			MenuClient.send(MenuActionPayload.CHARACTERS, 0);
+			return;
+		}
+		int rows = y;
+		for (int slot = 0; slot < list.entries().size(); slot++) {
+			CharacterListPayload.Entry e = list.entries().get(slot);
+			this.label(x, rows + 3, Component.translatable(k + "character.slot", slot + 1).withStyle(ChatFormatting.WHITE).append("  ")
+				.append(CharacterSelectScreen.describe(e)));
+			int index = slot;
+			boolean current = slot == list.active();
+			if (current) {
+				this.label(x + 200, rows + 3, Component.translatable(k + "character.playing").withStyle(ChatFormatting.GREEN));
+			} else {
+				Component text = Component.translatable(k + (e.empty() ? "character.new" : "character.play"));
+				this.confirm(x + 200, rows, 96, "character:" + slot, text, () -> MenuClient.send(MenuActionPayload.CHARACTER_SWITCH, index));
+			}
+			rows += ROW;
+		}
+		if (list.entries().size() < list.maxSlots()) {
+			this.confirm(x, rows + 4, 180, "character:buy", Component.translatable(k + "character.buy", list.price()).withStyle(ChatFormatting.GOLD),
+				() -> MenuClient.send(MenuActionPayload.CHARACTER_BUY, 0));
+		} else {
+			this.label(x, rows + 7, Component.translatable(k + "character.max").withStyle(ChatFormatting.GRAY));
+		}
+		this.label(x, rows + ROW + 12, Component.translatable(k + "character.town").withStyle(ChatFormatting.GRAY));
+		this.label(x, rows + ROW + 24, Component.translatable(k + "character.shared").withStyle(ChatFormatting.GRAY));
 	}
 
 	// ------------------------------------------------------------------ shared

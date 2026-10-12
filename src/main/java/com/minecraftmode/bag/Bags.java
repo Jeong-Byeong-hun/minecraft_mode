@@ -3,6 +3,7 @@ package com.minecraftmode.bag;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.util.Prediction;
+import net.minecraft.util.Unit;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -270,14 +272,16 @@ public final class Bags {
 		return player.getAttachedOrElse(ModAttachments.STARTER_BAGS, false);
 	}
 
-	/** One bag of each kind, once per player. Returns false when the player already had them. */
+	/** One bag of each kind (bound: never sold), once per player. Returns false when the player already had them. */
 	public static boolean giveStarter(final ServerPlayer player) {
 		if (starterTaken(player)) {
 			return false;
 		}
 		player.setAttached(ModAttachments.STARTER_BAGS, true);
 		for (Item item : items()) {
-			player.getInventory().placeItemBackInInventory(new ItemStack(item), Prediction.SERVER_ONLY);
+			ItemStack bag = new ItemStack(item);
+			bag.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			player.getInventory().placeItemBackInInventory(bag, Prediction.SERVER_ONLY);
 		}
 		player.sendSystemMessage(Component.translatable("message.minecraft_mode.bags.given").withStyle(ChatFormatting.GREEN));
 		return true;

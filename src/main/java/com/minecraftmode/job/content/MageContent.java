@@ -1,7 +1,7 @@
 package com.minecraftmode.job.content;
 
 import static com.minecraftmode.job.skill.Actions.*;
-import static com.minecraftmode.job.skill.CombatState.Stance.*;
+import static com.minecraftmode.job.skill.Boost.*;
 import static com.minecraftmode.job.skill.SkillKind.*;
 import static com.minecraftmode.job.weapon.Archetype.*;
 import static com.minecraftmode.registry.ModEffects.MANA_FLOW;
@@ -30,20 +30,20 @@ public final class MageContent extends ClassContent {
 		weapon("apprentice_staff", 1, 10, STAFF, "Apprentice's Staff", "견습 마법사의 지팡이",
 			art(0x9AA3AD, 0x7A5634, 0x5DA9FF), fx(Fx.Kind.ORB, 0x8FC4FF),
 			skill("magic_claw", "Magic Claw", "매직 클로", ATTACK, 5, 8, shoot(ProjectileStyle.ORB, 0.9).count(2).interval(3)),
-			skill("magic_guard", "Magic Guard", "매직 가드", DEFENSE, 16, 10, stance(GUARD, 6, 30)),
+			skill("magic_guard", "Magic Guard", "매직 가드", UTILITY, 16, 10, boost(DAMAGE, 6, 15)),
 			skill("teleport", "Teleport", "텔레포트", MOVEMENT, 8, 8, blink(7)));
 
 		weapon("holly_wand", 1, 15, WAND, "Holly Wand", "호랑가시나무 지팡이",
 			art(0xC8A060, 0x7B4A2D, 0xFF8A3D), fx(Fx.Kind.BOLT, 0xFF5050),
 			skill("stupefy", "Stupefy", "스튜페파이", ATTACK, 7, 10, shoot(ProjectileStyle.ORB, 1.82).speed(2.4F), stun(1.0)),
 			skill("expelliarmus", "Expelliarmus", "엑스펠리아르무스", UTILITY, 12, 10, push(5, 1.6), debuff(5, WEAKNESS, 5, 0)),
-			skill("protego", "Protego", "프로테고", DEFENSE, 15, 12, stance(COUNTER, 5, 40)));
+			skill("protego", "Protego", "프로테고", UTILITY, 15, 12, boost(CRIT_DAMAGE, 5, 40)));
 
 		weapon("frostglass_orb", 1, 21, ORB, "Frostglass Orb", "서리유리 오브",
 			art(0x8FA3B8, 0x4A6A8A, 0x9FE3FF), fx(Fx.Kind.SHARD, 0xB8ECFF),
 			skill("ice_shard", "Ice Shard", "아이스 샤드", ATTACK, 6, 10, shoot(ProjectileStyle.ICICLE, 1.12).count(3).spread(18), inflict(SLOWNESS, 3, 0)),
 			skill("frost_nova", "Frost Nova", "프로스트 노바", UTILITY, 12, 12, nova(4, 1.0), inflict(SLOWNESS, 3, 2)),
-			skill("ice_armor", "Ice Armor", "아이스 아머", DEFENSE, 18, 12, shield(8, 10), buff(RESISTANCE, 6, 0)));
+			skill("ice_armor", "Ice Armor", "아이스 아머", DEFENSE, 18, 12, shield(8, 10), boost(DAMAGE, 6, 10)));
 
 		// ---------------------------------------------------------------- tier 2: Caster
 		weapon("fire_poison_wand", 2, 25, WAND, "Fire-Poison Wand", "불독의 완드",
@@ -112,12 +112,12 @@ public final class MageContent extends ClassContent {
 			art(0x4A2A22, 0x3A2018, 0xFF6A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
 			skill("muspel_fire_rain", "Fire Rain of Muspelheim", "무스펠헤임의 불비", ATTACK, 14, 24, rain(ProjectileStyle.FIREBALL, 18, 5, 12, 0.38, 1.5F), burn(3)),
 			skill("twig_of_ruin", "Twig of Ruin", "파멸의 가지", ATTACK, 9, 22, beam(16, 2.6), burn(5)),
-			skill("surtr_mantle", "Surtr's Mantle", "수르트의 외투", DEFENSE, 22, 20, buff(FIRE_RESISTANCE, 12, 0), stance(COUNTER, 6, 45)));
+			skill("surtr_mantle", "Surtr's Mantle", "수르트의 외투", DEFENSE, 22, 20, buff(FIRE_RESISTANCE, 12, 0), boost(CRIT_DAMAGE, 6, 50)));
 
 		weapon("bishop_scepter", 3, 66, SCEPTER, "Bishop's Holy Scepter", "비숍의 성홀",
 			art(0xEDE8DA, 0xC9A64A, 0xFFD84A), fx(Fx.Kind.RING, 0xFFF6D6),
 			skill("angel_ray", "Angel Ray", "엔젤레이", ATTACK, 7, 18, shoot(ProjectileStyle.ORB, 1.8).pierce(3), allyHeal(6, 6)),
-			skill("holy_symbol", "Holy Symbol", "홀리 심볼", UTILITY, 28, 22, allyBuff(12, LUCK, 15, 1), allyBuff(12, RESISTANCE, 15, 0)),
+			skill("holy_symbol", "Holy Symbol", "홀리 심볼", UTILITY, 28, 22, allyBoost(12, CRIT_CHANCE, 15, 10), allyBoost(12, DAMAGE, 15, 10)),
 			skill("genesis", "Genesis", "제네시스", ATTACK, 22, 28, repeat(3, 10, lightning(20, 5, 1.3))));
 
 		// ---------------------------------------------------------------- tier 4: Grand Caster
@@ -134,7 +134,7 @@ public final class MageContent extends ClassContent {
 				allyHeal(12, 35), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)),
 			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, strike(18, 3.5, 3, 1.01), burn(4)),
 			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.34), inflict(SLOWNESS, 4, 2)),
-			skill("shapeshift", "Shapeshift", "변화", DEFENSE, 24, 20, stance(GUARD, 7, 50), cleanse()));
+			skill("shapeshift", "Shapeshift", "변화", UTILITY, 24, 20, boost(DAMAGE, 7, 25), cleanse()));
 
 		weapon("megumin_staff", 4, 78, STAFF, "Megumin's Staff", "메구밍의 지팡이",
 			art(0xD4AF37, 0x4A2E1A, 0xE0213B), fx(Fx.Kind.SPARK, 0xFF3A2A),
@@ -149,28 +149,28 @@ public final class MageContent extends ClassContent {
 				zone(8, 6, 1.34).at(20).pull(1.0).effect(STUN, 0), inflict(VULNERABLE, 8, 1)),
 			skill("red_cliffs_east_wind", "East Wind of Red Cliffs", "적벽의 동남풍", ATTACK, 12, 26,
 				push(4, 1.2), shoot(ProjectileStyle.FIREBALL, 1.22).count(5).spread(50).explode(2.0F), burn(5)),
-			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, mark(24, 10, 40), allyBuff(10, STRENGTH, 10, 1)),
-			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, allyBuff(10, RESISTANCE, 10, 1), allyHeal(10, 15)));
+			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, mark(24, 10, 40), allyBoost(10, DAMAGE, 10, 20)),
+			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, allyBoost(10, DAMAGE, 10, 20), allyHeal(10, 15)));
 
 		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 히스토리아",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
 			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
 			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28, shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing(), inflict(VULNERABLE, 6, 1)),
-			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", DEFENSE, 30, 30, stance(GUARD, 8, 60), allyBuff(10, RESISTANCE, 8, 2)),
+			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", UTILITY, 30, 30, boost(CRIT_CHANCE, 8, 30), allyBoost(10, DAMAGE, 8, 30)),
 			skill("fairy_tactician", "Fairy Tactician", "요정군사", UTILITY, 20, 20, allyBuff(12, SPEED, 10, 1), allyBuff(12, MANA_FLOW, 10, 0), refresh(20)));
 
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
-			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBuff(10, RESISTANCE, 10, 1)),
-			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBuff(10, STRENGTH, 12, 1), allyBuff(10, ABSORPTION, 12, 1)),
+			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBoost(10, DAMAGE, 10, 20)),
+			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing(), inflict(WEAKNESS, 4, 0)),
-			skill("illusion", "Illusion", "환술", DEFENSE, 18, 18, stance(EVADE, 7, 50), blink(8)));
+			skill("illusion", "Illusion", "환술", UTILITY, 18, 18, boost(CRIT_CHANCE, 7, 25), blink(8)));
 
 		weapon("frieren_staff", 4, 95, STAFF, "Frieren's Staff", "프리렌의 지팡이",
 			art(0xD4AF37, 0xEDEAE0, 0xD9304A), fx(Fx.Kind.BOLT, 0xE8F0FF),
 			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40, barrage(ProjectileStyle.ORB, 30, 0.31)),
 			skill("judradjim", "Judradjim", "쥬드라질룸", ATTACK, 10, 26, lightning(22, 4.5, 2.91), stun(0.8)),
-			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, stance(GUARD, 6, 55), shield(12, 6)),
+			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, boost(DAMAGE, 6, 30), shield(12, 6)),
 			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24, sanctuary(7, 8, 4), cleanse()));
 
 		weapon("lemegeton", 4, 100, GRIMOIRE, "Lemegeton", "레메게톤",
@@ -178,6 +178,6 @@ public final class MageContent extends ClassContent {
 			skill("ars_almadel_salomonis", "Ars Almadel Salomonis", "아르스 알마델 살로모니스", ULTIMATE, 60, 40, strike(24, 7, 12, 0.96), inflict(VULNERABLE, 8, 1)),
 			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5), nova(6, 3.81)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, mark(24, 12, 50), debuff(14, GLOWING, 10, 0)),
-			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, stance(COUNTER, 6, 50), shield(12, 10)));
+			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, boost(CRIT_DAMAGE, 6, 50), shield(12, 10)));
 	}
 }

@@ -47,7 +47,7 @@ final class MenuChecks {
 	private static final int WAIT = 100;
 	/** The chunk column (x and z) of the offline owner's plot, far from where the player stands. */
 	private static final int LAND_CHUNK = 12;
-	private static final int ADVENTURER_TABS = 3;
+	private static final int ADVENTURER_TABS = 4;
 	private static final int ADMIN_TABS = 5;
 
 	static void run(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

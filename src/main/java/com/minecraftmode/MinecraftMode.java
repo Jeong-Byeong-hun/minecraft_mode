@@ -47,6 +47,7 @@ import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.registry.ModMenus;
 import com.minecraftmode.registry.ModParticles;
+import com.minecraftmode.residence.IdleGrowth;
 import com.minecraftmode.residence.ResidenceRules;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.worldgen.ModOreGeneration;
@@ -99,6 +100,7 @@ public class MinecraftMode implements ModInitializer {
 		CityServices.init();
 		DummyMeter.init();
 		ResidenceRules.init();
+		IdleGrowth.init();
 		Consumables.initEvents();
 		Parties.init();
 		Characters.init();

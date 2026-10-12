@@ -11,22 +11,27 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A straw training dummy in the warrior arena to measure damage on: every skill, shot and summon treats it as an enemy, it never
- * dies, gives nothing, and reports each attacker's damage per second ({@link DummyMeter}). Knockback, pulls and launches still move
- * it; the city puts it back on its post once nobody has hit it for a while (CityServices.keepDummies). The boss kind counts as a boss
+ * dies, gives nothing, and reports each attacker's damage per second ({@link DummyMeter}). Knockback, pulls and launches never move
+ * it (it only falls); should it end up off its post anyway, the city puts it back once nobody has hit it for a while
+ * (CityServices.keepDummies). The boss kind counts as a boss
  * ({@link EliteMob}), so boss-damage bonuses apply on it. An armor stand body (pumpkin head, dyed tunic) keeps it light.
  */
 public class TrainingDummy extends ArmorStand implements Enemy {
@@ -87,6 +92,18 @@ public class TrainingDummy extends ArmorStand implements Enemy {
 		level.broadcastEntityEvent(this, (byte)32);
 		level.playSound(null, this.getX(), this.getY(), this.getZ(), SoundEvents.ARMOR_STAND_HIT, SoundSource.NEUTRAL, 0.4F, 1.0F);
 		return true;
+	}
+
+	/** Knockback, pulls, launches and shoves all set its motion: only falling is kept, so it stays on its post. */
+	@Override
+	public void setDeltaMovement(final Vec3 deltaMovement) {
+		super.setDeltaMovement(new Vec3(0.0, Math.min(deltaMovement.y, 0.0), 0.0));
+	}
+
+	/** No armor stand gear swapping: right-clicks never take or put its pumpkin and tunic. */
+	@Override
+	public InteractionResult interact(final Player player, final InteractionHand hand, final Vec3 location) {
+		return InteractionResult.PASS;
 	}
 
 	@Override

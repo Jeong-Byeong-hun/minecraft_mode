@@ -18,7 +18,7 @@ import net.minecraft.world.phys.AABB;
  * ({@link LandBordersPayload}); the lines are vanilla gizmos, emitted every client tick like the debug renderers do.
  */
 public final class LandBorders {
-	public static final int RANGE = 64;
+	public static final int RANGE = 16;
 	private static final int[] COLORS = {0xFF55FF55, 0xFFFFE040, 0xFFFF5050};
 	private static final float WIDTH = 2.5F;
 	/** Lifts the lines off block faces so they do not flicker against them. */
@@ -47,7 +47,8 @@ public final class LandBorders {
 			double z0 = border.chunkZ() << 4;
 			double dx = Math.max(0.0, Math.abs(px - (x0 + size / 2.0)) - size / 2.0);
 			double dz = Math.max(0.0, Math.abs(pz - (z0 + size / 2.0)) - size / 2.0);
-			if (dx * dx + dz * dz > RANGE * RANGE) {
+			double dy = Math.max(0.0, Math.abs(minecraft.player.getY() - (border.minY() + size / 2.0)) - size / 2.0);
+			if (dx * dx + dy * dy + dz * dz > RANGE * RANGE) {
 				continue;
 			}
 			GizmoStyle style = GizmoStyle.stroke(COLORS[Math.clamp(border.relation(), 0, COLORS.length - 1)], WIDTH);

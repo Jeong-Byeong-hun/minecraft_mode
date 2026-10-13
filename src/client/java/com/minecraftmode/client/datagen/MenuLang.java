@@ -74,6 +74,7 @@ final class MenuLang {
 		b.add(m + "started", ko ? "슬롯 %s에서 새 캐릭터를 시작합니다." : "A new character starts in slot %s.");
 		b.add(m + "bought", ko ? "캐릭터 슬롯이 %s개가 되었습니다." : "You now have %s character slots.");
 		b.add(m + "not_here", ko ? "캐릭터는 수도 성벽 안에서만 바꿀 수 있습니다." : "You can only switch characters inside the capital's walls.");
+		b.add(m + "busy", ko ? "레이드·분배·침공·거신 전투가 끝나야 캐릭터를 바꿀 수 있습니다." : "Finish your raid, its loot, the invasion or the titan fight before switching characters.");
 		b.add(m + "failed", ko ? "캐릭터를 바꾸지 못했습니다. 지금 캐릭터 그대로입니다." : "The switch failed; you are still playing the same character.");
 		b.add(m + "max", ko ? "더 이상 슬롯을 살 수 없습니다." : "You cannot buy more slots.");
 		b.add(m + "no_merit", ko ? "기여도가 부족합니다." : "Not enough merit.");

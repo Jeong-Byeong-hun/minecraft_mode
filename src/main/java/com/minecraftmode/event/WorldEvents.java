@@ -173,6 +173,11 @@ public final class WorldEvents {
 		return day % 3 == 2 && CityZone.isCityLevel(overworld);
 	}
 
+	/** Whether {@code player} has a share in the running invasion or titan fight (paid to the account's character at the end). */
+	public static boolean committed(final UUID player) {
+		return DEALT.containsKey(player) || invasion != null && invasion.fighters.contains(player);
+	}
+
 	public static boolean invasionRunning() {
 		return invasion != null;
 	}

@@ -141,6 +141,7 @@ public class AdventurerScreen extends MenuScreenBase {
 		this.heading(x, y + 18, Component.translatable(K + "payee"));
 		this.names(x, y + 30, MenuClient.onlineNames(this.minecraft), name -> {
 			this.payee = name;
+			this.disarm();
 			this.rebuildWidgets();
 		}, this.payee);
 		int ay = y + 30 + (NAMES_PER_PAGE / 2) * ROW + 22;

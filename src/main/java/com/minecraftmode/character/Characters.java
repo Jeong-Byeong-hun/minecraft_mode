@@ -8,12 +8,15 @@ import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.network.CharacterListPayload;
 import com.minecraftmode.progress.Titles;
 import com.minecraftmode.raid.RaidDimension;
+import com.minecraftmode.raid.Raids;
+import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.registry.ModAttachments;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -176,6 +179,11 @@ public final class Characters {
 		if (!choosing(player) && !CityZone.protectedAt(player.level(), player.blockPosition()) || player.isDeadOrDying()) {
 			return fail(player, "not_here");
 		}
+		// rewards of a raid, its loot, an invasion or a titan go to whoever plays the account when they are paid: until 0.5.24 a
+		// fallen raider could switch in town and hand the clear (and the lockout) to another character
+		if (Raids.committed(player.getUUID()) || LootSessions.sessionOf(player.getUUID()) != null || WorldEvents.committed(player.getUUID())) {
+			return fail(player, "busy");
+		}
 		CharacterRoster.Stored target = account.at(slot);
 		player.closeContainer();
 		if (player.getVehicle() instanceof MountEntity mount) {
@@ -200,6 +208,12 @@ public final class Characters {
 			return fail(player, "failed");
 		}
 		roster.put(player.getUUID(), account.swap(new CharacterRoster.Stored(account.active(), current, job.job(), job.tier(), job.level(), gear), slot));
+		// a switch inside one level fires none of the events that bring the active pet back (join, respawn, level change)
+		Companions.restore(player);
+		// write the player file and the roster now, together: the player file is written on logout but the roster only at the next
+		// autosave, so a hard stop in between left one character twice and the other gone
+		server(player).getPlayerList().saveAll();
+		server(player).getDataStorage().scheduleSave();
 		player.sendSystemMessage(Component.translatable(target == null ? "message.minecraft_mode.character.started" : "message.minecraft_mode.character.switched",
 			slot + 1).withStyle(ChatFormatting.GREEN));
 		send(player);

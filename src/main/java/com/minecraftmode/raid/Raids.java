@@ -120,6 +120,15 @@ public final class Raids {
 		return member != null && member.active ? instance : null;
 	}
 
+	/**
+	 * Whether {@code player} still counts for a raid that has not closed: fighting, fallen and waiting for the party, or won and not
+	 * left. Rewards go to whoever plays that account at the victory, so the character must not change until then.
+	 */
+	public static boolean committed(final UUID player) {
+		RaidInstance instance = BY_PLAYER.get(player);
+		return instance != null && instance.state != RaidInstance.State.CLOSED && instance.member(player) != null;
+	}
+
 	/** True while {@code boss} belongs to a running instance. */
 	public static boolean ownsBoss(final RaidBoss boss) {
 		for (RaidInstance instance : INSTANCES.values()) {

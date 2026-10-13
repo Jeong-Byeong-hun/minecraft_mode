@@ -134,9 +134,11 @@ public class GearDocProvider implements DataProvider {
 		LairDef.Shape.FORTRESS, "요새", LairDef.Shape.DOME, "돔", LairDef.Shape.SPIRE, "첨탑", LairDef.Shape.TREE, "거목", LairDef.Shape.NONE, "지하 미궁");
 	private static final Map<ConsumableDef.Shop, String> SHOPS = Map.of(ConsumableDef.Shop.GENERAL, "잡화점", ConsumableDef.Shop.GROCER, "식료품점",
 		ConsumableDef.Shop.ALCHEMIST, "연금술사");
-	private static final Map<String, String> VANILLA_EFFECTS = Map.of("effect.minecraft.absorption", "흡수", "effect.minecraft.fire_resistance", "화염 저항",
-		"effect.minecraft.haste", "성급함", "effect.minecraft.health_boost", "생명력 강화", "effect.minecraft.resistance", "저항", "effect.minecraft.speed", "신속",
-		"effect.minecraft.regeneration", "재생", "effect.minecraft.strength", "힘", "effect.minecraft.night_vision", "야간 투시", "effect.minecraft.water_breathing", "수중 호흡");
+	private static final Map<String, String> VANILLA_EFFECTS = Map.ofEntries(Map.entry("effect.minecraft.absorption", "흡수"),
+		Map.entry("effect.minecraft.fire_resistance", "화염 저항"), Map.entry("effect.minecraft.haste", "성급함"), Map.entry("effect.minecraft.health_boost", "생명력 강화"),
+		Map.entry("effect.minecraft.resistance", "저항"), Map.entry("effect.minecraft.speed", "신속"), Map.entry("effect.minecraft.regeneration", "재생"),
+		Map.entry("effect.minecraft.strength", "힘"), Map.entry("effect.minecraft.night_vision", "야간 투시"), Map.entry("effect.minecraft.water_breathing", "수중 호흡"),
+		Map.entry("effect.minecraft.luck", "행운"));
 	private static final Map<String, String> BIOMES = Map.ofEntries(
 		Map.entry("plains", "평원"), Map.entry("sunflower_plains", "해바라기 평원"), Map.entry("meadow", "초원"), Map.entry("flower_forest", "꽃 숲"),
 		Map.entry("forest", "숲"), Map.entry("birch_forest", "자작나무 숲"), Map.entry("savanna", "사바나"), Map.entry("savanna_plateau", "사바나 고원"),
@@ -416,10 +418,12 @@ public class GearDocProvider implements DataProvider {
 			if (ModRecipeProvider.COOKED.contains(def.id())) {
 				sources.add("조합");
 			}
-			if (def.tier() <= 4) {
+			if (Consumables.isDish(def)) {
+				sources.add("요리(생활 기술)");
+			} else if (def.tier() <= 4) {
 				sources.add(def.tier() == 4 ? "네임드·소굴(드묾)" : "네임드·소굴");
 			}
-			if (def.tier() >= 3) {
+			if (def.tier() >= 3 && !Consumables.isDish(def)) {
 				sources.add("레이드");
 			}
 			md.append("| **").append(def.ko()).append("** | ").append("★".repeat(def.tier())).append(" | ").append(String.join(" · ", effects)).append(" | ")

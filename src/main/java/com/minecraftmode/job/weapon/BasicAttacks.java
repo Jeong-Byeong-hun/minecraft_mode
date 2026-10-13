@@ -142,7 +142,9 @@ public final class BasicAttacks {
 			SkillScheduler.schedule(100, arrow::discard);
 			return;
 		}
-		SkillProjectile projectile = SkillProjectile.forBasicShot(player, style.display(), def.fx().color(), style.trail(), style.gravity(), damage)
+		// thrown blades (chakrams) fly as the weapon itself
+		ItemStack display = style == ProjectileStyle.BLADE ? stack.copyWithCount(1) : style.display();
+		SkillProjectile projectile = SkillProjectile.forBasicShot(player, display, def.fx().color(), style.trail(), style.gravity(), damage)
 			.sweep(style.hitRadius())
 			.explode(style == ProjectileStyle.CANNONBALL ? 2.0F : 0.0F)
 			.fan(fan)

@@ -83,6 +83,13 @@ public final class MageContent extends ClassContent {
 			skill("thorn_volley", "Thorn Volley", "가시 난사", ATTACK, 8, 14, shoot(ProjectileStyle.ORB, 1.0).count(5).spread(35), inflict(POISON, 4, 0)),
 			skill("photosynthesis", "Photosynthesis", "광합성", DEFENSE, 20, 16, heal(10), buff(REGENERATION, 8, 1), buff(MANA_FLOW, 8, 0)));
 
+		// 0.5.24: the spellblade
+		weapon("runeblade", 2, 37, SPELLBLADE, "Runeblade", "룬 블레이드",
+			art(0x9AA8C0, 0x2E2A4A, 0x5FD3FF), fx(Fx.Kind.RUNE, 0x7FE0FF),
+			skill("rune_slash", "Rune Slash", "룬 베기", ATTACK, 7, 14, burn(3), slash(4, 140, 1.7)),
+			skill("rune_bolt", "Rune Bolt", "룬 탄환", ATTACK, 9, 16, shoot(ProjectileStyle.ORB, 1.5).pierce(3)),
+			skill("arcane_lunge", "Arcane Lunge", "비전 돌진", MOVEMENT, 11, 12, dash(6, 1.2)));
+
 		// ---------------------------------------------------------------- tier 3: Archmage
 		weapon("elder_wand", 3, 45, WAND, "Elder Wand", "딱총나무 지팡이",
 			art(0x9A9A9A, 0xBFAE8E, 0x4CE06A), fx(Fx.Kind.SPARK, 0x5CFF7A),
@@ -119,6 +126,12 @@ public final class MageContent extends ClassContent {
 			skill("angel_ray", "Angel Ray", "엔젤레이", ATTACK, 7, 18, shoot(ProjectileStyle.ORB, 1.8).pierce(3), allyHeal(6, 6)),
 			skill("holy_symbol", "Holy Symbol", "홀리 심볼", UTILITY, 28, 22, allyBoost(12, CRIT_CHANCE, 15, 10), allyBoost(12, DAMAGE, 15, 10)),
 			skill("genesis", "Genesis", "제네시스", ATTACK, 22, 28, repeat(3, 10, lightning(20, 5, 1.3))));
+
+		weapon("azoth_sword", 3, 64, SPELLBLADE, "Azoth Sword", "아조트 검",
+			art(0xC8C8D8, 0x5A1A1A, 0xE0115F), fx(Fx.Kind.RUNE, 0xFF4F7F),
+			skill("jewel_magecraft", "Jewel Magecraft", "보석 마술", ATTACK, 10, 20, shoot(ProjectileStyle.ORB, 2.0).count(3).spread(30)),
+			skill("gandr", "Gandr", "간드", ATTACK, 6, 14, shoot(ProjectileStyle.ORB, 1.2).pierce(2)),
+			skill("azoth_release", "Azoth Release", "아조트 해방", UTILITY, 22, 10, boost(DAMAGE, 8, 15), restoreMana(20)));
 
 		// ---------------------------------------------------------------- tier 4: Grand Caster
 		weapon("colchis_scepter", 4, 70, SCEPTER, "Scepter of Colchis", "콜키스의 홀",
@@ -179,5 +192,12 @@ public final class MageContent extends ClassContent {
 			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5), nova(6, 3.81)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, mark(24, 12, 50), debuff(14, GLOWING, 10, 0)),
 			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, boost(CRIT_DAMAGE, 6, 50), shield(12, 10)));
+
+		weapon("rule_breaker", 4, 92, SPELLBLADE, "Rule Breaker", "룰 브레이커",
+			art(0xB89BE0, 0x3A1F5C, 0xF0E6FF), fx(Fx.Kind.RUNE, 0xD6B8FF),
+			skill("all_spells_broken", "All Spells Must Be Broken", "파계하는 모든 부적", ULTIMATE, 45, 40, cleanse(), mark(20, 10, 40), beam(14, 5.8)),
+			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", ATTACK, 8, 20, barrage(ProjectileStyle.ORB, 4, 0.5)),
+			skill("witch_dagger", "Witch's Dagger", "마녀의 단검", ATTACK, 7, 16, slash(4, 180, 1.9)),
+			skill("territory_creation", "Territory Creation", "진지 작성", UTILITY, 26, 12, allyBoost(10, DAMAGE, 12, 15), restoreMana(25)));
 	}
 }

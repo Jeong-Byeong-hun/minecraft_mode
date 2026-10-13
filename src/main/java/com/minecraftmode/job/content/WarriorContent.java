@@ -79,6 +79,13 @@ public final class WarriorContent extends ClassContent {
 			skill("blazing_cleave", "Blazing Cleave", "업화 베기", ATTACK, 10, 18, slash(4.5, 160, 1.76), burn(5)),
 			skill("firewall", "Firewall", "불의 장벽", UTILITY, 18, 20, zone(4, 5, 0.7).at(12)));
 
+		// 0.5.24: the greatshield
+		weapon("legion_scutum", 2, 38, GREATSHIELD, "Legion Scutum", "군단의 방패",
+			art(0xB0B6BE, 0x7A2E1E, 0xD4AF37), fx(Fx.Kind.SHARD, 0xD9C28A),
+			skill("shield_bash", "Shield Bash", "방패 강타", ATTACK, 8, 14, stun(1.0), slash(3.5, 120, 1.9)),
+			skill("testudo", "Testudo", "거북 진형", DEFENSE, 22, 18, shield(8, 8), taunt(8)),
+			skill("shield_rush", "Shield Rush", "방패 돌진", MOVEMENT, 11, 12, dash(7, 1.6), push(3, 1.2)));
+
 		// ---------------------------------------------------------------- tier 3: Berserker
 		weapon("dragonslayer", 3, 45, GREATSWORD, "Dragonslayer", "드래곤 슬레이어",
 			art(0x5A5A5A, 0x2A1A10, 0x8B0000), fx(Fx.Kind.SHARD, 0x8B0000),
@@ -115,6 +122,12 @@ public final class WarriorContent extends ClassContent {
 			skill("reap", "Reap", "수확", ATTACK, 8, 18, lifesteal(15), slash(5, 270, 1.8)),
 			skill("deaths_pull", "Death's Pull", "죽음의 인도", UTILITY, 12, 16, pull(8, 1.8), debuff(8, WEAKNESS, 5, 1)),
 			skill("grim_harvest", "Grim Harvest", "사신의 수확", ATTACK, 18, 28, execute(5, 2.5, 35, 2.5)));
+
+		weapon("spartan_hoplon", 3, 63, GREATSHIELD, "Spartan Hoplon", "스파르타의 호플론",
+			art(0xC8A050, 0x5A2A14, 0xB22222), fx(Fx.Kind.SHARD, 0xFFCC66),
+			skill("phalanx_strike", "Phalanx Strike", "밀집 진형 일격", ATTACK, 8, 18, slash(5, 140, 2.6)),
+			skill("thermopylae", "Thermopylae Enomotia", "테르모필라이 에노모티아", DEFENSE, 26, 24, shield(14, 10), taunt(10), allyBoost(8, DAMAGE, 10, 10)),
+			skill("spartan_charge", "Spartan Charge", "스파르타의 돌격", ATTACK, 13, 22, dash(8, 1.8), nova(4, 1.4)));
 
 		// ---------------------------------------------------------------- tier 4: King of Knights
 		weapon("excalibur", 4, 70, LONGSWORD, "Excalibur", "엑스칼리버",
@@ -172,5 +185,12 @@ public final class WarriorContent extends ClassContent {
 			skill("grass_cutter", "Grass Cutter", "풀베기", ATTACK, 6, 16, slash(6, 300, 1.8)),
 			skill("wind_step", "Wind Step", "풍보", MOVEMENT, 8, 12, dash(10, 1.2)),
 			skill("eight_headed_bane", "Eight-Headed Bane", "야마타의 화근", ATTACK, 16, 24, shoot(ProjectileStyle.WAVE, 1.4).count(8).spread(315).pierce(3)));
+
+		weapon("round_table_shield", 4, 84, GREATSHIELD, "Round Table Shield", "원탁의 대방패",
+			art(0xDCE3EE, 0x3B4A6B, 0x9FD4FF), fx(Fx.Kind.RING, 0xBFE4FF),
+			skill("lord_camelot", "Lord Camelot", "로드 캐멀롯", ULTIMATE, 50, 40, shield(20, 10), allyBoost(12, DAMAGE, 12, 20), nova(6, 5.5)),
+			skill("snowflake_bulwark", "Bulwark of Snowflakes", "설화의 벽", DEFENSE, 24, 20, allyHeal(8, 15), shield(10, 8)),
+			skill("round_table_bash", "Round Table Bash", "원탁 강타", ATTACK, 7, 18, slash(5, 160, 2.5)),
+			skill("camelot_charge", "Camelot Charge", "캐멀롯 돌격", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)));
 	}
 }

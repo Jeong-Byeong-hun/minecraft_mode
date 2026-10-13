@@ -42,7 +42,15 @@ public enum Archetype {
 	PISTOL("pistol", "Pistol", "권총", 0.50F, 1.6F, 0.0F, ProjectileStyle.BULLET, 16, 0.85F),
 	MUSKET("musket", "Musket", "머스킷", 0.60F, 1.0F, 0.0F, ProjectileStyle.BULLET, 30, 1.50F),
 	HAND_CANNON("hand_cannon", "Hand Cannon", "핸드 캐논", 0.70F, 0.8F, 0.0F, ProjectileStyle.CANNONBALL, 40, 1.40F),
-	HARPOON("harpoon", "Harpoon", "작살", 1.00F, 1.1F, 1.5F, ProjectileStyle.HARPOON, 30, 1.00F);
+	HARPOON("harpoon", "Harpoon", "작살", 1.00F, 1.1F, 1.5F, ProjectileStyle.HARPOON, 30, 1.00F),
+	// 0.5.24: one new shape per class (appended, so the shapes above keep their order)
+	GREATSHIELD("greatshield", "Greatshield", "대방패", BasicMode.MELEE, 1.45F, 1.0F, 0.0F),
+	WAR_FAN("war_fan", "War Fan", "전투 부채", 0.80F, 1.5F, 0.5F, ProjectileStyle.WAVE, 14, 0.85F),
+	SPELLBLADE("spellblade", "Spellblade", "마검", 0.80F, 1.4F, 0.0F, ProjectileStyle.ORB, 14, 0.70F),
+	CHAKRAM("chakram", "Chakram", "차크람", 0.75F, 1.5F, 0.0F, ProjectileStyle.BLADE, 15, 0.75F),
+	BLUNDERBUSS("blunderbuss", "Blunderbuss", "나팔총", 0.65F, 1.0F, 0.0F, ProjectileStyle.BULLET, 24, 1.30F),
+	WHIP_SWORD("whip_sword", "Whip Sword", "사복검", BasicMode.MELEE, 0.95F, 1.25F, 2.0F),
+	NEEDLE("needle", "Throwing Needles", "투척침", 0.55F, 2.0F, -0.5F, ProjectileStyle.KNIFE, 10, 0.70F);
 
 	public enum BasicMode {
 		/** Plain melee attacks. */

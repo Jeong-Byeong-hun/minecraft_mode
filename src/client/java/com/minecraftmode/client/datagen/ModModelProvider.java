@@ -133,7 +133,7 @@ public class ModModelProvider extends FabricModelProvider {
 					generators.createFlatItemModel(item, ModelTemplates.BOW);
 					generators.generateBow(item);
 				}
-				case SHURIKEN, ORB, GRIMOIRE, KNUCKLE -> generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+				case SHURIKEN, ORB, GRIMOIRE, KNUCKLE, GREATSHIELD, WAR_FAN, CHAKRAM -> generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
 				default -> generators.generateFlatItem(item, ModelTemplates.FLAT_HANDHELD_ITEM);
 			}
 		}

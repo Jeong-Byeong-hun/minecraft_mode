@@ -172,26 +172,28 @@ final class CharacterChecks {
 			player.getEnderChestInventory().setItem(0, new ItemStack(Items.EMERALD, 5));
 			player.setAttached(ModAttachments.MONSTER_KILLS, Map.of("minecraft:zombie", 4));
 			require(Characters.switchTo(player, 1), "switches to the empty slot");
-			require(Wallet.balance(player) == 0 && !player.getInventory().contains(new ItemStack(Items.DIAMOND)), "a new character carries nothing");
+			require(!player.getInventory().contains(new ItemStack(Items.DIAMOND)), "a new character carries nothing");
+			require(Wallet.balance(player) == coins[0], "but shares the account's wallet, got " + Wallet.balance(player));
+			Wallet.add(player, COINS);
 			require(JobProgression.get(player).job() == JobClass.NONE && JobProgression.get(player).level() == 1, "and has no class");
 			require(player.getEnderChestInventory().getItem(0).is(Items.EMERALD), "the ender chest stays with the account");
 			require(player.getAttachedOrElse(ModAttachments.MONSTER_KILLS, Map.of()).getOrDefault("minecraft:zombie", 0) == 4, "so does the codex");
 		});
-		context.waitFor(mc -> Wallet.balance(mc.player) == 0, WAIT);
+		context.waitFor(mc -> Wallet.balance(mc.player) == coins[0] + COINS, WAIT);
 		context.runOnClient(mc -> require(!mc.player.getInventory().contains(new ItemStack(Items.DIAMOND)), "the client sees the empty inventory"));
 		context.takeScreenshot("character_new");
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			player.getEnderChestInventory().setItem(1, new ItemStack(Items.GOLD_INGOT, 2));
 			require(Characters.switchTo(player, 0), "switches back");
-			require(Wallet.balance(player) == coins[0], "the coins came back, got " + Wallet.balance(player));
+			require(Wallet.balance(player) == coins[0] + COINS, "the other character's coins are in the shared wallet, got " + Wallet.balance(player));
 			require(player.getInventory().countItem(Items.DIAMOND) == 3, "the diamonds came back");
 			require(player.getEnderChestInventory().getItem(1).is(Items.GOLD_INGOT), "what the other character stored is in the ender chest");
 			require(Math.abs(player.getX() - x) < 0.01 && Math.abs(player.getZ() - z) < 0.01, "the character is back where it left, got " + player.position());
 			player.getEnderChestInventory().clearContent();
 			player.getInventory().clearContent();
 		});
-		context.waitFor(mc -> Wallet.balance(mc.player) == coins[0], WAIT);
+		context.waitFor(mc -> Wallet.balance(mc.player) == coins[0] + COINS, WAIT);
 	}
 
 	private static void require(final boolean condition, final String message) {

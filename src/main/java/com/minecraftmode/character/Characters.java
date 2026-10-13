@@ -8,6 +8,7 @@ import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
@@ -20,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentTarget;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -57,9 +59,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Character select: an account owns {@link #BASE_SLOTS} character slots and buys more with merit ({@link #SLOT_MERIT} each, up to
- * {@link #MAX_SLOTS}). Switching saves the whole player (inventory, position, attachments: class, quests, wallet, records, ...) into
+ * {@link #MAX_SLOTS}). Switching saves the whole player (inventory, position, attachments: class, quests, records, ...) into
  * {@link CharacterRoster} and loads the other slot onto the same player, or starts a fresh character at the plaza. The ender chest,
- * the codex ({@link #SHARED}), the recipe book, land claims and the market (both keyed by the account's UUID) stay with the account.
+ * the codex and the wallet ({@link #SHARED}), the recipe book, land claims and the market (both keyed by the account's UUID) stay with the account.
  * Only inside the capital's walls (no fights to slip out of), except while choosing: a player who joins with more than one slot
  * (outside a raid or dungeon, which handle their own returns) waits in the {@link Lobby} on the select screen ({@link #choosing}: no
  * damage, no using or hitting anything, only character actions) until they {@link #enter} a slot.
@@ -75,8 +77,8 @@ public final class Characters {
 	private static final String DIMENSION = "minecraft_mode:dimension";
 	/** Player data the account keeps: never saved with a character or loaded from one. */
 	private static final List<String> ACCOUNT_KEYS = List.of("EnderItems", "recipeBook", "RootVehicle", "ender_pearls");
-	/** Attachments every character of an account shares: the monster and item codex. */
-	private static final Set<AttachmentType<?>> SHARED = Set.of(ModAttachments.MONSTER_KILLS, ModAttachments.ITEMS_FOUND);
+	/** Attachments every character of an account shares: the monster and item codex, and the wallet. */
+	private static final Set<AttachmentType<?>> SHARED = Set.of(ModAttachments.MONSTER_KILLS, ModAttachments.ITEMS_FOUND, ModAttachments.WALLET);
 	/** Players on the select screen after joining (server memory: a reconnect starts choosing again). */
 	private static final Set<UUID> CHOOSING = new HashSet<>();
 
@@ -229,6 +231,7 @@ public final class Characters {
 		player.saveWithoutId(output);
 		CompoundTag tag = output.buildResult();
 		ACCOUNT_KEYS.forEach(tag::remove);
+		takeStoredWallet(tag);
 		tag.putString(DIMENSION, player.level().dimension().identifier().toString());
 		if (Lobby.is(player.level())) {
 			// saved from the lobby: the character really is where it was before
@@ -238,6 +241,19 @@ public final class Characters {
 			tag.put("Rotation", Vec2.CODEC.encodeStart(NbtOps.INSTANCE, new Vec2(origin.yRot(), origin.xRot())).getOrThrow());
 		}
 		return tag;
+	}
+
+	/**
+	 * Removes the wallet from saved character data and returns its copper. Characters stored before the wallet became shared
+	 * (0.5.21) still carry their own coins; the first load pours them into the account's wallet, and later saves leave it out.
+	 */
+	private static int takeStoredWallet(final CompoundTag tag) {
+		return tag.getCompound(AttachmentTarget.NBT_ATTACHMENT_KEY).map(attachments -> {
+			String key = ModAttachments.WALLET.identifier().toString();
+			int copper = attachments.getIntOr(key, 0);
+			attachments.remove(key);
+			return Math.max(0, copper);
+		}).orElse(0);
 	}
 
 	/** What the character wears and holds ({@link #GEAR_SLOTS}), for its figure on the select screen. */
@@ -251,6 +267,7 @@ public final class Characters {
 		CompoundTag tag = data.copy();
 		tag.remove(DIMENSION);
 		ACCOUNT_KEYS.forEach(tag::remove);
+		int storedCoins = takeStoredWallet(tag);
 		GameType mode = player.gameMode();
 		Runnable keep = keepAccount(player);
 		clear(player);
@@ -264,6 +281,8 @@ public final class Characters {
 			toWorldSpawn(player);
 		}
 		player.setHealth(tag.getFloatOr("Health", player.getMaxHealth()));
+		// last, so a load that throws (and is rolled back) never pays the stored coins out twice
+		Wallet.add(player, storedCoins);
 	}
 
 	/** A fresh character: nothing carried, no class, at the world spawn (the plaza, with the handbook, in the capital's worlds). */

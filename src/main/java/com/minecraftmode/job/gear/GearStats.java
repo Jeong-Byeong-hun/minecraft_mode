@@ -1,5 +1,6 @@
 package com.minecraftmode.job.gear;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.enhance.Enhancement;
@@ -60,7 +61,7 @@ public final class GearStats {
 		for (GearSlot slot : GearSlot.ARMOR) {
 			hash = hash * 31 + ItemStack.hashItemAndComponents(player.getItemBySlot(slot.equipmentSlot()));
 		}
-		return hash;
+		return hash * 31 + Accessories.hash(player);
 	}
 
 	/** Drops the cached total, e.g. right after equipment changed in the same tick. */
@@ -70,7 +71,7 @@ public final class GearStats {
 
 	/** Where a stat line comes from (the character screen lists totals by source). */
 	public enum Source {
-		WEAPON, ARMOR, ENHANCEMENT, SET, LEVEL, PASSIVE, BUFF, TALENT, COLLECTION, PARAGON, COMPANION;
+		WEAPON, ARMOR, ENHANCEMENT, SET, LEVEL, PASSIVE, BUFF, TALENT, COLLECTION, PARAGON, COMPANION, ACCESSORY;
 
 		public String key() {
 			return "screen.minecraft_mode.character.source." + this.name().toLowerCase(Locale.ROOT);
@@ -141,6 +142,7 @@ public final class GearStats {
 		lines(sink, Source.COLLECTION, CollectionBonuses.lines(Progress.get(player)));
 		lines(sink, Source.PARAGON, Paragon.lines(player));
 		lines(sink, Source.COMPANION, Companions.lines(player));
+		lines(sink, Source.ACCESSORY, Accessories.lines(player));
 	}
 
 	private static void lines(final Sink sink, final Source source, final Iterable<StatLine> lines) {

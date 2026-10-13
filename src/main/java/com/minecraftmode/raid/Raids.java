@@ -1,5 +1,6 @@
 package com.minecraftmode.raid;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
@@ -587,6 +588,13 @@ public final class Raids {
 					stack.set(ModDataComponents.ENHANCEMENT, new Enhancement(difficulty.enhanceMin + random.nextInt(difficulty.enhanceMax - difficulty.enhanceMin + 1), 0));
 				}
 				items.add(stack);
+			}
+		}
+		// the raid-only accessories of this boss (one per rewarded member, more on harder difficulties), shared out like the gear
+		for (int i = 0; i < Accessories.raidLots(participants.size(), difficulty); i++) {
+			ItemStack accessory = Accessories.raidDrop(def, difficulty, random);
+			if (!accessory.isEmpty()) {
+				items.add(accessory);
 			}
 		}
 		tell(server, instance, msg("victory", Component.translatable(def.nameKey()), VICTORY_TICKS / 20).withStyle(ChatFormatting.GOLD));

@@ -1,5 +1,7 @@
 package com.minecraftmode.client.endgame;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.craft.CraftRecipes;
@@ -65,6 +67,10 @@ final class CodexSources {
 			}
 			out.add(Component.translatable(KEY + "drops", gear.bracket()));
 			out.add(Component.translatable(KEY + "evolve"));
+		}
+		AccessoryDef accessory = Accessories.def(new ItemStack(item));
+		if (accessory != null) {
+			out.add(Component.translatable(KEY + "raid_boss", Component.translatable(accessory.set().boss().nameKey()), accessory.level()));
 		}
 		String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 		ConsumableDef def = Consumables.def(path);

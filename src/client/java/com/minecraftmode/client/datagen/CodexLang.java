@@ -52,6 +52,7 @@ final class CodexLang {
 		b.add(Codex.Category.ARMOR.key(), ko ? "방어구" : "Armor");
 		b.add(Codex.Category.CONSUMABLE.key(), ko ? "소모품" : "Consum.");
 		b.add(Codex.Category.MATERIAL.key(), ko ? "재료·기타" : "Other");
+		b.add(Codex.Category.ACCESSORY.key(), ko ? "장신구" : "Jewelry");
 		b.add(i + "any_class", ko ? "직업 전체" : "Any class");
 		b.add(i + "any_level", ko ? "Lv 전체" : "Any Lv");
 		b.add(i + "search", ko ? "이름 검색" : "Search name");
@@ -70,6 +71,7 @@ final class CodexLang {
 		b.add(s + "drops", ko ? "네임드·소굴·레이드·던전 드롭 (Lv %s 구간)" : "Named, lair, raid and dungeon drops (Lv %s bracket)");
 		b.add(s + "evolve", ko ? "대장장이 진화 (아래 구간 장비 + 진화의 에테르)" : "Blacksmith evolution (lower gear + Evolution Ether)");
 		b.add(s + "raid", ko ? "레이드 보상" : "Raid rewards");
+		b.add(s + "raid_boss", ko ? "레이드 전용: %s 처치 분배 (Lv %s)" : "Raid only: %s's loot (Lv %s)");
 		b.add(s + "adventure", ko ? "모험 중 획득" : "Found while adventuring");
 		String[][] known = {
 			{"essence", "몬스터 처치·광석 채굴", "Monster kills and mining ores"},

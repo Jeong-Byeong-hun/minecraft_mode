@@ -1,6 +1,9 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessorySet;
+import com.minecraftmode.accessory.AccessorySlot;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityFixtures;
@@ -299,7 +302,30 @@ public class GearDocProvider implements DataProvider {
 				md.append(" |\n");
 			}
 		}
+		this.accessories(md);
 		return md.toString();
+	}
+
+	/** The raid-only accessories (0.5.24): slots, fixed lines, option pools and every boss's set. */
+	private void accessories(final StringBuilder md) {
+		md.append("\n## 장신구 (레이드 전용)\n\n");
+		md.append("- 방어구와 따로 **장신구 칸 ").append(Accessories.SLOTS).append("개**(목걸이·귀걸이·반지·팔찌·부적)에 하나씩 찹니다. 인벤토리 오른쪽의 \"보석\" 버튼(\"버림\" 위)이나 캐릭터 창(I)의 \"장신구\" 버튼으로 엽니다. 캐릭터마다 따로이고 죽어도 남습니다.\n");
+		md.append("- **레이드에서만** 나옵니다: 레이드 보스마다 자기 장신구 세트(5부위)가 있고, 클리어하면 분배 품목에 보상을 받는 파티원 수 + 난이도 추가 분배만큼(혼자 노말 1 · 영웅 2 · 악몽 3개) 섞여 경매·주사위로 나눕니다. 상점·소굴·던전·네임드는 주지 않습니다.\n");
+		md.append("- 직업 제한은 없고 **보스 레벨**(레이드 입장 레벨)이 되어야 찰 수 있습니다. 부위마다 고정 기본 옵션 1줄 + 추가 옵션이 노말 1줄 · 영웅 2줄 · 악몽 3줄(수치는 방어구 추가 옵션처럼 레벨 최대치의 60–100%). 같은 보스 장신구를 2·3·5부위 차면 세트 효과가 붙습니다.\n");
+		md.append("- 직업 비교 표(CLASSES.md)에는 넣지 않습니다(추가 옵션·각인처럼 뽑기 장비).\n\n");
+		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
+		for (AccessorySlot slot : AccessorySlot.values()) {
+			String pool = slot.pool().entrySet().stream().map(e -> this.stat(e.getKey(), ArmorOptions.max(e.getValue(), 100))).collect(Collectors.joining(", "));
+			md.append("| ").append(slot.ko()).append(" | ").append(this.stat(slot.baseLine(50))).append(" | ").append(pool).append(" |\n");
+		}
+		md.append("\n| 보스 | Lv | 세트 | 2세트 | 3세트 | 5세트 |\n|---|---|---|---|---|---|\n");
+		for (AccessorySet set : Accessories.sets()) {
+			md.append("| ").append(set.boss().ko()).append(" | ").append(set.level()).append(" | **").append(set.adjKo()).append(" 장신구**");
+			for (ArmorSetDef.SetBonus bonus : set.bonuses()) {
+				md.append(" | ").append(bonus.lines().stream().map(this::stat).collect(Collectors.joining(", ")));
+			}
+			md.append(" |\n");
+		}
 	}
 
 	// ------------------------------------------------------------------ MONSTERS.md

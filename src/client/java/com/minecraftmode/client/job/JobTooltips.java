@@ -56,14 +56,14 @@ public final class JobTooltips {
 		});
 	}
 
+	/** The default skill keys, for tooltips built off the render thread (R, X, V, Z). */
+	private static final String[] DEFAULT_KEYS = {"R", "X", "V", "Z"};
+
 	/**
 	 * The local player the requirement colours and stat totals are read for; null off the render thread, where the recipe book and
 	 * creative search build every tooltip and the client stat caches ({@code GearStats}) are not safe to read.
 	 */
-	/** The default skill keys, for tooltips built off the render thread (R, X, V, Z). */
-	private static final String[] DEFAULT_KEYS = {"R", "X", "V", "Z"};
-
-	static @Nullable Player viewer() {
+	public static @Nullable Player viewer() {
 		Minecraft minecraft = Minecraft.getInstance();
 		return minecraft.isSameThread() ? minecraft.player : null;
 	}

@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
@@ -101,6 +102,7 @@ public final class ModCreativeTabs {
 					}
 					Crops.items().forEach(output::accept);
 					Fishing.items().forEach(output::accept);
+					Accessories.items().forEach(output::accept);
 					for (ConsumableDef def : Consumables.all()) {
 						output.accept(Consumables.item(def));
 					}

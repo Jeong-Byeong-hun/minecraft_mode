@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
@@ -123,6 +125,11 @@ public class ModModelProvider extends FabricModelProvider {
 			ModItems.MYTHRIL_SWORD, ModItems.MYTHRIL_PICKAXE, ModItems.MYTHRIL_AXE, ModItems.MYTHRIL_SHOVEL, ModItems.MYTHRIL_HOE
 		}) {
 			generators.generateFlatItem(tool, ModelTemplates.FLAT_HANDHELD_ITEM);
+		}
+
+		// Raid accessories: icons come from AccessoryAssetProvider.
+		for (AccessoryDef def : Accessories.all()) {
+			generators.generateFlatItem(Accessories.item(def), ModelTemplates.FLAT_ITEM);
 		}
 
 		// Class weapons: textures come from WeaponTextureProvider; bows get vanilla-style pulling models.

@@ -1,5 +1,6 @@
 package com.minecraftmode.bag;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestTokenItem;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -78,7 +79,7 @@ public enum BagKind {
 	}
 
 	public static boolean isGear(final ItemStack stack) {
-		return JobWeapons.def(stack) != null || ClassArmor.def(stack) != null || stack.isDamageableItem() || stack.has(DataComponents.EQUIPPABLE)
+		return JobWeapons.def(stack) != null || ClassArmor.def(stack) != null || Accessories.def(stack) != null || stack.isDamageableItem() || stack.has(DataComponents.EQUIPPABLE)
 			|| stack.is(ConventionalItemTags.TOOLS) || stack.is(ConventionalItemTags.ARMORS);
 	}
 

@@ -66,7 +66,7 @@ public final class ArmorOptions {
 	}
 
 	/** Small stats keep one decimal, the rest are whole numbers (at least 1). */
-	static float round(final float value, final float top) {
+	public static float round(final float value, final float top) {
 		if (top <= 3.5F) {
 			return Math.max(0.1F, Math.round(value * 10.0F) / 10.0F);
 		}

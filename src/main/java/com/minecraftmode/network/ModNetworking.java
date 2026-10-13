@@ -1,5 +1,6 @@
 package com.minecraftmode.network;
 
+import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
@@ -63,6 +64,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenAccessoriesPayload.TYPE, OpenAccessoriesPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(BuybackPayload.TYPE, BuybackPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
@@ -92,6 +94,12 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(TrashPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> Trash.click(context.player())
 		));
+		ServerPlayNetworking.registerGlobalReceiver(OpenAccessoriesPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			// a player choosing a character in the lobby only gets the character menu
+			if (!Characters.choosing(context.player()) && context.player().isAlive()) {
+				AccessoryMenu.open(context.player());
+			}
+		}));
 		ServerPlayNetworking.registerGlobalReceiver(DungeonEnterPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			DungeonDef def = Dungeons.def(payload.dungeon());
 			if (def != null) {

@@ -3,6 +3,12 @@ package com.minecraftmode.test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryMenu;
+import com.minecraftmode.accessory.AccessorySet;
+import com.minecraftmode.accessory.AccessorySlot;
+import com.minecraftmode.client.accessory.AccessoryScreen;
 import com.minecraftmode.client.raid.LootScreen;
 import com.minecraftmode.client.raid.RaidScreen;
 import com.minecraftmode.entity.boss.RaidBoss;
@@ -23,6 +29,7 @@ import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ArmorSetDef;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.GearRules;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.GearStats;
@@ -41,11 +48,13 @@ import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.RaidInstance;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSession;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -107,6 +116,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			checkNamed(context, server, connection);
 			checkBossPatterns(context, server, connection);
 			checkRaidFlow(context, server, connection);
+			checkAccessories(context, server, connection);
 			checkDeathInRaid(context, server, connection);
 			checkLoot(context, server, connection);
 			raidBoard(context, server, connection);
@@ -139,6 +149,18 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		require(RaidBosses.supplyTier(RaidBosses.ARACHNE) == 0 && RaidBosses.supplyTier(RaidBosses.MALACHAR) == 4 && RaidBosses.supplyTier(RaidBosses.AETHRYX) == 5,
 			"raid supply tiers by level");
 		require(RaidBosses.AETHRYX.phaseCount() == 4, "Aethryx has 4 phases");
+		// every raid boss drops its own accessory set: five slots, 2/3/5-piece bonuses, ten options per slot
+		require(Accessories.sets().size() == RaidBosses.all().size() && Accessories.all().size() == RaidBosses.all().size() * Accessories.SLOTS,
+			"expected one accessory set of " + Accessories.SLOTS + " per raid boss, got " + Accessories.all().size());
+		for (BossDef def : RaidBosses.all()) {
+			AccessorySet set = Accessories.setOf(def);
+			require(set != null && set.level() == def.lo(), def.id() + " needs an accessory set of its level");
+			List<Integer> pieces = set.bonuses().stream().map(ArmorSetDef.SetBonus::pieces).toList();
+			require(pieces.equals(List.of(2, 3, 5)), set.id() + " accessories should have 2/3/5 piece bonuses, got " + pieces);
+		}
+		for (AccessorySlot slot : AccessorySlot.values()) {
+			require(slot.pool().size() >= 10, slot + " accessories roll from only " + slot.pool().size() + " options");
+		}
 		// every bracket offers one weapon (some classes have none at Lv 100) and one armor piece per class
 		for (JobClass job : JobClass.PLAYABLE) {
 			for (int bracket = 10; bracket <= 100; bracket += 10) {
@@ -181,6 +203,21 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 					missing.add("texture " + def.id());
 				}
 			}
+			// raid accessories (0.5.24): every piece has an icon, a model and a name, every slot and set a name
+			for (AccessoryDef def : Accessories.all()) {
+				keys.add(def.nameKey());
+				if (resources.getResource(MinecraftMode.id("items/" + def.id() + ".json")).isEmpty()
+					|| resources.getResource(MinecraftMode.id("textures/item/" + def.id() + ".png")).isEmpty()) {
+					missing.add("model/texture " + def.id());
+				}
+			}
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				keys.add(slot.nameKey());
+			}
+			for (AccessorySet set : Accessories.sets()) {
+				keys.add(set.nameKey());
+			}
+			keys.addAll(List.of("container.minecraft_mode.accessories", "tooltip.minecraft_mode.accessory.source", "screen.minecraft_mode.character.source.accessory"));
 			keys.addAll(List.of("raid.minecraft_mode.phase", "raid.minecraft_mode.victory", "screen.minecraft_mode.raid.title", "screen.minecraft_mode.loot.title",
 				"message.minecraft_mode.party.created", "message.minecraft_mode.raid.entered", "message.minecraft_mode.loot.won_auction", "key.minecraft_mode.loot_screen"));
 			for (String key : keys) {
@@ -517,6 +554,20 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			if (ether < 5 || condensed < 2 || gear < 3) {
 				return "solo victory should give 5+ ether, 2+ condensed essence and 3 gear, got " + ether + "/" + condensed + "/" + gear;
 			}
+			// the raid-only accessories: one of Arachne's set on a solo Normal clear, with one option
+			List<AccessoryDef> accessories = new ArrayList<>();
+			for (ItemStack stack : player.getInventory()) {
+				AccessoryDef a = Accessories.def(stack);
+				if (a != null) {
+					accessories.add(a);
+					if (stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines().size() != Accessories.optionCount(RaidDifficulty.NORMAL)) {
+						return "a Normal accessory should roll " + Accessories.optionCount(RaidDifficulty.NORMAL) + " option, got " + stack.get(ModDataComponents.GEAR_ROLLS);
+					}
+				}
+			}
+			if (accessories.size() != Accessories.raidLots(1, RaidDifficulty.NORMAL) || accessories.stream().anyMatch(a -> a.set().boss() != RaidBosses.ARACHNE)) {
+				return "solo Normal Arachne should give one of her accessories, got " + accessories.stream().map(AccessoryDef::id).toList();
+			}
 			Raids.leave(player);
 			return "";
 		});
@@ -528,6 +579,61 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		});
 		require(home.isEmpty(), home);
 		connection.waitForChunksRender();
+	}
+
+	/** Worn accessories add their lines and set bonuses under their own source; the window only takes a fitting piece. */
+	private static void checkAccessories(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		String worn = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.MAGE, 4).withProgress(95, 0));
+			AccessorySet set = Accessories.setOf(RaidBosses.AETHRYX);
+			RandomSource random = RandomSource.create(7L);
+			List<ItemStack> stacks = new ArrayList<>();
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				stacks.add(Accessories.create(Accessories.def(set, slot), Accessories.optionCount(RaidDifficulty.NIGHTMARE), random));
+			}
+			Accessories.setWorn(player, stacks);
+			GearStats.invalidate(player);
+			var breakdown = GearStats.breakdown(player);
+			float damage = breakdown.getOrDefault(EngraveStat.DAMAGE, java.util.Map.of()).getOrDefault(GearStats.Source.ACCESSORY, 0.0F);
+			// the ring's fixed line (1 + 90 / 25) and the 5-piece bonus (8)
+			if (damage < 4 + 8) {
+				return "five Voidscale pieces should add at least 12% damage dealt, got " + damage;
+			}
+			if (Accessories.setCounts(player).getOrDefault(set.id(), 0) != Accessories.SLOTS) {
+				return "all five Voidscale pieces should count, got " + Accessories.setCounts(player);
+			}
+			ItemStack ring = stacks.get(AccessorySlot.RING.ordinal());
+			if (AccessoryMenu.fits(player, AccessorySlot.NECKLACE, ring) || !AccessoryMenu.fits(player, AccessorySlot.RING, ring)) {
+				return "a ring fits the ring slot only";
+			}
+			JobProgression.set(player, JobProgression.get(player).withProgress(50, 0));
+			if (AccessoryMenu.fits(player, AccessorySlot.RING, ring) || !Accessories.lines(player).isEmpty()) {
+				return "a Lv 90 piece neither fits nor counts at Lv 50";
+			}
+			JobProgression.set(player, JobProgression.get(player).withProgress(95, 0));
+			AccessoryMenu.open(player);
+			return "";
+		});
+		require(worn.isEmpty(), worn);
+		context.waitTicks(10);
+		String client = context.computeOnClient(minecraft -> {
+			if (!(minecraft.gui.screen() instanceof AccessoryScreen)) {
+				return "the accessory window should be open, got " + minecraft.gui.screen();
+			}
+			long synced = Accessories.worn(minecraft.player).stream().filter(stack -> !stack.isEmpty()).count();
+			return synced == Accessories.SLOTS ? "" : "the client should see five worn accessories, sees " + synced;
+		});
+		require(client.isEmpty(), client);
+		context.takeScreenshot("accessories");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		context.waitTicks(5);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Accessories.setWorn(player, List.of());
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 2).withProgress(30, 0));
+		});
+		MinecraftMode.LOGGER.info("[gearraid] accessories: 5-piece set counted, slot and level checks, window synced");
 	}
 
 	private static void checkDeathInRaid(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

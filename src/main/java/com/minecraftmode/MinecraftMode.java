@@ -1,5 +1,6 @@
 package com.minecraftmode;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.AdminState;
 import com.minecraftmode.job.quest.TrialHunts;
@@ -78,6 +79,7 @@ public class MinecraftMode implements ModInitializer {
 		Fishing.init();
 		JobWeapons.init();
 		ClassArmor.init();
+		Accessories.init();
 		Quests.init();
 		ModMenus.init();
 		ModCreativeTabs.init();

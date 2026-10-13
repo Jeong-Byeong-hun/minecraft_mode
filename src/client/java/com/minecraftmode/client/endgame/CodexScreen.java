@@ -1,5 +1,7 @@
 package com.minecraftmode.client.endgame;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
@@ -573,16 +575,18 @@ public class CodexScreen extends Screen {
 		int bx = this.left + 8;
 		int by = this.top + 24;
 		Codex.Category[] categories = Codex.Category.values();
+		// "all" and every category share the row (six buttons since the accessories, 0.5.24)
+		int step = Math.min(60, (W - 16) / (categories.length + 1));
 		for (int i = -1; i < categories.length; i++) {
 			Codex.Category c = i < 0 ? null : categories[i];
 			Button b = Button.builder(Component.translatable(c == null ? "screen.minecraft_mode.codex.items.all" : c.key()), button -> {
 				itemCategory = c;
 				scroll = 0;
 				this.rebuildWidgets();
-			}).bounds(bx, by, 58, 16).build();
+			}).bounds(bx, by, step - 2, 16).build();
 			b.active = itemCategory != c;
 			this.addRenderableWidget(b);
-			bx += 60;
+			bx += step;
 		}
 		bx = this.left + 132;
 		by = this.top + 42;
@@ -620,7 +624,10 @@ public class CodexScreen extends Screen {
 			}
 			for (Item item : entry.getValue()) {
 				ClassGear gear = ClassGear.of(new ItemStack(item));
-				if (itemJob != null && (gear == null || gear.job() != itemJob) || itemBracket != 0 && (gear == null || gear.bracket() != itemBracket)) {
+				AccessoryDef accessory = Accessories.def(new ItemStack(item));
+				// accessories fit every class and have a level bracket of their own
+				int bracket = gear != null ? gear.bracket() : accessory != null ? ItemLevels.bracket(accessory.level()) : 0;
+				if (itemJob != null && (gear == null || gear.job() != itemJob) && accessory == null || itemBracket != 0 && bracket != itemBracket) {
 					continue;
 				}
 				if (!query.isEmpty() && !Component.translatable(item.getDescriptionId()).getString().toLowerCase(Locale.ROOT).contains(query)) {

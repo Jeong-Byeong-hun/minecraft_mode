@@ -12,6 +12,8 @@ import java.awt.image.BufferedImage;
 public final class AccessoryArtist {
 	private static final int CORD = 0x4A3426;
 	private static final int PAPER = 0xEDE3C8;
+	private static final int ORB_METAL = 0xE0B23A;
+	private static final int ORB_GEM = 0xB070FF;
 
 	public static BufferedImage draw(final AccessoryDef def) {
 		Canvas k = new Canvas();
@@ -28,6 +30,31 @@ public final class AccessoryArtist {
 			default -> CORD;
 		};
 		return k.render(Tones.of(def.set().metal()), Tones.of(grip), Tones.of(def.set().gem()));
+	}
+
+	/** The accessory orb (enhancement material): a violet sphere lit on its upper left, a glint and a small gold cradle. */
+	public static BufferedImage orb() {
+		Canvas k = new Canvas();
+		for (int y = 0; y < 16; y++) {
+			for (int x = 0; x < 16; x++) {
+				double dx = x - 7.5;
+				double dy = y - 6.5;
+				double d = Math.hypot(dx, dy);
+				if (d <= 5.4) {
+					double shade = (dx + dy) / 5.4;
+					k.put(x, y, d > 4.6 ? '2' : shade < -0.9 ? '5' : shade < -0.1 ? '4' : shade < 0.7 ? '3' : '2');
+				}
+			}
+		}
+		k.put(5, 3, 'w');
+		k.put(6, 3, 'w');
+		k.put(5, 4, 'w');
+		k.rect(4, 12, 11, 12, 'l');
+		k.rect(5, 13, 10, 13, 'd');
+		k.put(3, 11, 'm');
+		k.put(12, 11, 'd');
+		k.outline();
+		return k.render(Tones.of(ORB_METAL), Tones.of(CORD), Tones.of(ORB_GEM));
 	}
 
 	/** A cut stone: a diamond of radius {@code r} lit on its upper left. */

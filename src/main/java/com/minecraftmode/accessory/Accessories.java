@@ -3,6 +3,7 @@ package com.minecraftmode.accessory;
 import static com.minecraftmode.job.engrave.EngraveStat.*;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
@@ -35,10 +36,14 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Accessories (0.5.24): necklace, earring, ring, bracelet and talisman, worn in five slots of their own (the accessory window,
- * {@link AccessoryMenu}) and kept per character in {@link ModAttachments#ACCESSORIES}. Every raid boss has a set of five that only it
- * drops, in its raid ({@code Raids.onBossDefeated} adds the lots), so accessories are the raid-only reward: no shop, lair, dungeon or
- * named monster gives them. A piece needs the boss's level, has its slot's fixed line and 1-3 random options (Normal, Heroic,
- * Nightmare), and the set pays 2-, 3- and 5-piece bonuses. Everything adds up in {@code GearStats} under its own source.
+ * {@link AccessoryMenu}) and kept per character in {@link ModAttachments#ACCESSORIES}. Every raid boss has a set of five, and only
+ * raids drop them ({@code Raids.onBossDefeated} rolls {@link #raidDrops} for each rewarded member): no shop, lair, dungeon or named
+ * monster gives them. The sets come in three tiers; on Normal a boss drops its own set (tier 1 10%, tier 2 5%, tier 3 2%), from Heroic
+ * on every boss drops tier 3 pieces only, more often the harder the boss and the difficulty, so the ladder runs Normal Verdessa ...
+ * Normal Aethryx, Heroic Verdessa ... Nightmare Aethryx. A piece needs the boss's level, has its slot's fixed line and 1-3 random
+ * options (Normal, Heroic, Nightmare; the blacksmith rolls them again), can be enhanced to +{@value AccessoryEnhance#MAX} with
+ * accessory orbs (Heroic and Nightmare clears), and the set pays 2-, 3- and 5-piece bonuses. Everything adds up in
+ * {@code GearStats} under its own source.
  */
 public final class Accessories {
 	public static final int SLOTS = AccessorySlot.values().length;
@@ -51,29 +56,31 @@ public final class Accessories {
 	private static final Map<Item, AccessoryDef> BY_ITEM = new LinkedHashMap<>();
 
 	static {
-		// one set per raid boss, in the bosses' level order (the 5-piece bonus always adds damage dealt)
-		set(RaidBosses.VERDESSA, "Thornbloom", "가시꽃", 0x7FA05A, 0xE0457B, bonus(2, l(HEALTH_REGEN, 0.5F)), bonus(3, l(THORNS, 10)),
+		// one set per raid boss, in the bosses' level order, tier 1-3 by three (the 5-piece bonus always adds damage dealt)
+		set(RaidBosses.VERDESSA, 1, "Thornbloom", "가시꽃", 0x7FA05A, 0xE0457B, bonus(2, l(HEALTH_REGEN, 0.5F)), bonus(3, l(THORNS, 10)),
 			bonus(5, l(MAX_HEALTH, 2), l(DAMAGE, 2)));
-		set(RaidBosses.ARACHNE, "Silkweaver", "비단거미", 0xC8C8D0, 0x6A2A8A, bonus(2, l(POISON, 1)), bonus(3, l(CRIT_CHANCE, 2)),
+		set(RaidBosses.ARACHNE, 1, "Silkweaver", "비단거미", 0xC8C8D0, 0x6A2A8A, bonus(2, l(POISON, 1)), bonus(3, l(CRIT_CHANCE, 2)),
 			bonus(5, l(EXECUTE, 8), l(DAMAGE, 3)));
-		set(RaidBosses.GORVATH, "Peakstone", "산정석", 0x8A8478, 0x6FB7E0, bonus(2, l(MAX_HEALTH, 3)), bonus(3, l(KNOCKBACK_RES, 20)),
+		set(RaidBosses.GORVATH, 1, "Peakstone", "산정석", 0x8A8478, 0x6FB7E0, bonus(2, l(MAX_HEALTH, 3)), bonus(3, l(KNOCKBACK_RES, 20)),
 			bonus(5, l(DAMAGE_REDUCTION, 4), l(DAMAGE, 3)));
-		set(RaidBosses.NEFREKHET, "Pharaoh's", "파라오의", 0xE0B23A, 0x2A6FD0, bonus(2, l(MAGIC_DEFENSE, 3)), bonus(3, l(SLOW, 1)),
+		set(RaidBosses.NEFREKHET, 2, "Pharaoh's", "파라오의", 0xE0B23A, 0x2A6FD0, bonus(2, l(MAGIC_DEFENSE, 3)), bonus(3, l(SLOW, 1)),
 			bonus(5, l(BOSS_DAMAGE, 8), l(DAMAGE, 4)));
-		set(RaidBosses.KRAKEN, "Abyssal", "심해의", 0x3A6A8A, 0x3AE0C8, bonus(2, l(LIFESTEAL, 2)), bonus(3, l(SKILL_AREA, 8)),
+		set(RaidBosses.KRAKEN, 2, "Abyssal", "심해의", 0x3A6A8A, 0x3AE0C8, bonus(2, l(LIFESTEAL, 2)), bonus(3, l(SKILL_AREA, 8)),
 			bonus(5, l(MAX_MANA, 20), l(DAMAGE, 4)));
-		set(RaidBosses.IGNIS, "Phoenix", "불사조", 0xE07A2A, 0xFFD23A, bonus(2, l(BURN, 1)), bonus(3, l(HEALTH_REGEN, 1.5F)),
+		set(RaidBosses.IGNIS, 2, "Phoenix", "불사조", 0xE07A2A, 0xFFD23A, bonus(2, l(BURN, 1)), bonus(3, l(HEALTH_REGEN, 1.5F)),
 			bonus(5, l(LAST_STAND, 10), l(DAMAGE, 5)));
-		set(RaidBosses.RAIJIN, "Thunderdrum", "뇌고", 0x5A6AB0, 0xFFF04A, bonus(2, l(ATTACK_SPEED, 4)), bonus(3, l(CHAIN_LIGHTNING, 8)),
+		set(RaidBosses.RAIJIN, 3, "Thunderdrum", "뇌고", 0x5A6AB0, 0xFFF04A, bonus(2, l(ATTACK_SPEED, 4)), bonus(3, l(CHAIN_LIGHTNING, 8)),
 			bonus(5, l(CRIT_DAMAGE, 15), l(DAMAGE, 5)));
-		set(RaidBosses.MALACHAR, "Lich King's", "리치 왕의", 0x6A5A7A, 0x8AFF6A, bonus(2, l(MANA_REGEN, 2)), bonus(3, l(COOLDOWN, 5)),
+		set(RaidBosses.MALACHAR, 3, "Lich King's", "리치 왕의", 0x6A5A7A, 0x8AFF6A, bonus(2, l(MANA_REGEN, 2)), bonus(3, l(COOLDOWN, 5)),
 			bonus(5, l(SKILL_DAMAGE, 10), l(DAMAGE, 6)));
-		set(RaidBosses.AETHRYX, "Voidscale", "공허비늘", 0x2A2440, 0xC07AFF, bonus(2, l(BOSS_DAMAGE, 6)), bonus(3, l(CRIT_CHANCE, 4)),
+		set(RaidBosses.AETHRYX, 3, "Voidscale", "공허비늘", 0x2A2440, 0xC07AFF, bonus(2, l(BOSS_DAMAGE, 6)), bonus(3, l(CRIT_CHANCE, 4)),
 			bonus(5, l(DAMAGE, 8), l(PROTECTION, 3)));
 	}
 
-	private static void set(final BossDef boss, final String adjEn, final String adjKo, final int metal, final int gem, final ArmorSetDef.SetBonus... bonuses) {
-		AccessorySet set = new AccessorySet(boss, adjEn, adjKo, metal, gem, List.of(bonuses));
+	private static void set(
+		final BossDef boss, final int tier, final String adjEn, final String adjKo, final int metal, final int gem, final ArmorSetDef.SetBonus... bonuses
+	) {
+		AccessorySet set = new AccessorySet(boss, tier, adjEn, adjKo, metal, gem, List.of(bonuses));
 		SETS.add(set);
 		for (AccessorySlot slot : AccessorySlot.values()) {
 			AccessoryDef def = new AccessoryDef(set, slot);
@@ -164,19 +171,72 @@ public final class Accessories {
 		return stack;
 	}
 
-	/** One piece of {@code boss}'s set (random slot) as a raid lot, with the difficulty's option count; empty for a boss with no set. */
-	public static ItemStack raidDrop(final BossDef boss, final RaidDifficulty difficulty, final RandomSource random) {
+	/** The tier every boss drops from Heroic on. */
+	public static final int TOP_TIER = 3;
+	/** Normal-difficulty chance per rewarded member that a boss of tier 1, 2, 3 drops a piece of its own set. */
+	private static final float[] NORMAL_CHANCE = {0.10F, 0.05F, 0.02F};
+	/** Heroic and Nightmare: tier 3 pieces only, from the first boss's chance up to the last boss's (Heroic Verdessa beats Normal Aethryx). */
+	private static final float HEROIC_FIRST = 0.03F;
+	private static final float HEROIC_LAST = 0.06F;
+	private static final float NIGHTMARE_FIRST = 0.07F;
+	private static final float NIGHTMARE_LAST = 0.10F;
+
+	/** Chance per rewarded member that a clear of {@code boss} on {@code difficulty} drops an accessory. */
+	public static float dropChance(final BossDef boss, final RaidDifficulty difficulty) {
 		AccessorySet set = setOf(boss);
 		if (set == null) {
+			return 0.0F;
+		}
+		if (difficulty == RaidDifficulty.NORMAL) {
+			return NORMAL_CHANCE[set.tier() - 1];
+		}
+		// harder bosses drop more often, evenly from the first set to the last
+		float along = SETS.size() <= 1 ? 1.0F : SETS.indexOf(set) / (float)(SETS.size() - 1);
+		return difficulty == RaidDifficulty.HEROIC ? HEROIC_FIRST + (HEROIC_LAST - HEROIC_FIRST) * along
+			: NIGHTMARE_FIRST + (NIGHTMARE_LAST - NIGHTMARE_FIRST) * along;
+	}
+
+	/** The sets a clear of {@code boss} on {@code difficulty} drops from: its own on Normal (and for tier 3 bosses), else every tier 3 set. */
+	public static List<AccessorySet> dropSets(final BossDef boss, final RaidDifficulty difficulty) {
+		AccessorySet own = setOf(boss);
+		if (own == null) {
+			return List.of();
+		}
+		if (difficulty == RaidDifficulty.NORMAL || own.tier() == TOP_TIER) {
+			return List.of(own);
+		}
+		return SETS.stream().filter(set -> set.tier() == TOP_TIER).toList();
+	}
+
+	/** One piece from {@link #dropSets} (random set and slot) with the difficulty's option count; empty for a boss with no set. */
+	public static ItemStack raidDrop(final BossDef boss, final RaidDifficulty difficulty, final RandomSource random) {
+		List<AccessorySet> sets = dropSets(boss, difficulty);
+		if (sets.isEmpty()) {
 			return ItemStack.EMPTY;
 		}
+		AccessorySet set = sets.get(random.nextInt(sets.size()));
 		AccessorySlot slot = AccessorySlot.values()[random.nextInt(SLOTS)];
 		return create(def(set, slot), optionCount(difficulty), random);
 	}
 
-	/** Accessory lots of a raid win: one per rewarded member plus the difficulty's extra lots (solo: 1 / 2 / 3). */
-	public static int raidLots(final int members, final RaidDifficulty difficulty) {
-		return members <= 0 ? 0 : members + difficulty.extraLots;
+	/** The accessory lots of a raid win: each rewarded member rolls {@link #dropChance} once. */
+	public static List<ItemStack> raidDrops(final BossDef boss, final RaidDifficulty difficulty, final int members, final RandomSource random) {
+		List<ItemStack> out = new ArrayList<>();
+		float chance = dropChance(boss, difficulty);
+		for (int i = 0; i < members; i++) {
+			if (random.nextFloat() < chance) {
+				ItemStack piece = raidDrop(boss, difficulty, random);
+				if (!piece.isEmpty()) {
+					out.add(piece);
+				}
+			}
+		}
+		return out;
+	}
+
+	/** Accessory orbs every rewarded member gets: none on Normal, one on Heroic, two on Nightmare. */
+	public static int orbs(final RaidDifficulty difficulty) {
+		return difficulty.ordinal();
 	}
 
 	/** Opening bid of a raid loot auction: twice the guild weapon price of the piece's bracket. */
@@ -245,8 +305,13 @@ public final class Accessories {
 			if (def == null || !canWear(data, def)) {
 				continue;
 			}
-			out.add(def.baseLine());
-			out.addAll(stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines());
+			// enhancement raises the piece's own lines (fixed and rolled), and +10 adds damage dealt
+			int enhanced = Enhancement.level(stack);
+			out.add(AccessoryEnhance.scaled(def.baseLine(), enhanced));
+			for (StatLine line : stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines()) {
+				out.add(AccessoryEnhance.scaled(line, enhanced));
+			}
+			out.addAll(AccessoryEnhance.bonus(enhanced));
 			counts.merge(def.set().id(), 1, Integer::sum);
 		}
 		counts.forEach((id, worn) -> {

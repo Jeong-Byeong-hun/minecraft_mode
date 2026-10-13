@@ -2,8 +2,10 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.accessory.AccessorySet;
 import com.minecraftmode.accessory.AccessorySlot;
+import com.minecraftmode.registry.ModItems;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
 
 /** The raid accessories (0.5.24): slots, sets, item names, the accessory window and tooltips. */
@@ -29,6 +31,12 @@ final class AccessoryLang {
 		b.add(s + "raid_only", ko ? "레이드 보스 처치 분배로만 얻습니다." : "Only from raid boss loot.");
 		String t = "tooltip.minecraft_mode.accessory.";
 		b.add(t + "source", ko ? "레이드 전용 · %s" : "Raid only · %s");
+		b.add(t + "tier", ko ? "%s티어" : "Tier %s");
+		b.add(t + "enhanced", ko ? "고정·추가 옵션 수치 +%s%%" : "Fixed line and options +%s%%");
+		b.add(ModItems.ACCESSORY_ORB, ko ? "장신구 강화 구슬" : "Accessory Orb");
+		b.add(ModItems.ACCESSORY_ORB.getDescriptionId() + ".tooltip", ko
+			? "장인 브록의 강화대에서 레이드 장신구를 강화합니다 (최대 +" + AccessoryEnhance.MAX + "). 영웅·악몽 레이드 클리어 보상."
+			: "Enhances raid accessories at Artisan Brokk's bench (up to +" + AccessoryEnhance.MAX + "). From Heroic and Nightmare raid clears.");
 		b.add(t + "wear", ko ? "인벤토리 오른쪽 \"보석\" 버튼이나 캐릭터 창(I)에서 착용" : "Wear it from the \"Gem\" button by the inventory or the character screen (I)");
 	}
 

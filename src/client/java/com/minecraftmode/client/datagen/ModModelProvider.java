@@ -101,7 +101,7 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAND_DEED, ModelTemplates.FLAT_ITEM);
 		for (Item item : new Item[] {
-			ModItems.AWAKENING_CRYSTAL, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
+			ModItems.AWAKENING_CRYSTAL, ModItems.ACCESSORY_ORB, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
 			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);

@@ -1,5 +1,8 @@
 package com.minecraftmode.enhance;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.economy.Wallet;
@@ -30,7 +33,9 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Artisan Brokk's enhancement bench: put a class weapon or armor piece in the slot and try for the next level. Every attempt
+ * Artisan Brokk's enhancement bench: put a class weapon or armor piece in the slot and try for the next level. Raid accessories go in
+ * the same slot and enhance to +{@value AccessoryEnhance#MAX} with accessory orbs and coins instead ({@link AccessoryEnhance}; a failure
+ * never drops their level). Every attempt
  * costs coins and essence ({@link Enhancement#essence}; condensed from +6) and, from +6, enhancement stones. A failure keeps the
  * level and adds artisan's spirit; from +{@value Enhancement#RISKY_FROM} it also drops a level unless the attempt is protected
  * (button {@link #BUTTON_PROTECTED}), which uses up a protection scroll only when it saves the piece.
@@ -74,7 +79,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		this.addSlot(new Slot(this.container, 0, SLOT_X, SLOT_Y) {
 			@Override
 			public boolean mayPlace(final ItemStack itemStack) {
-				return ClassGear.of(itemStack) != null;
+				return fits(itemStack);
 			}
 
 			@Override
@@ -88,6 +93,60 @@ public class EnhanceMenu extends AbstractContainerMenu {
 
 	public ItemStack input() {
 		return this.container.getItem(0);
+	}
+
+	/** Class gear or a raid accessory. */
+	public static boolean fits(final ItemStack stack) {
+		return ClassGear.of(stack) != null || Accessories.def(stack) != null;
+	}
+
+	/** Whether {@code player} can pay an accessory attempt at {@code target}: coins and accessory orbs. */
+	public static boolean canPayAccessory(final Player player, final AccessoryDef def, final int target) {
+		return player.isCreative() || Coins.total(player) >= AccessoryEnhance.coins(def, target)
+			&& Bags.count(player, ModItems.ACCESSORY_ORB) >= AccessoryEnhance.orbs(target);
+	}
+
+	private boolean enhanceAccessory(final Player player, final AccessoryDef def) {
+		ItemStack stack = this.input();
+		Enhancement current = Enhancement.of(stack);
+		if (current.level() >= AccessoryEnhance.MAX) {
+			return false;
+		}
+		int target = current.level() + 1;
+		if (!canPayAccessory(player, def, target)) {
+			return false;
+		}
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return true;
+		}
+		if (!player.isCreative()) {
+			if (!Wallet.take(player, AccessoryEnhance.coins(def, target))) {
+				return false;
+			}
+			Bags.take(player, ModItems.ACCESSORY_ORB, AccessoryEnhance.orbs(target));
+		}
+		ServerLevel level = serverPlayer.level();
+		boolean success = player.getRandom().nextInt(100) < AccessoryEnhance.chance(target, current.pity());
+		Enhancement next = success ? AccessoryEnhance.succeeded(current) : AccessoryEnhance.failed(current);
+		if (success) {
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.0F, 1.2F);
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.8F);
+			level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY(1.0), player.getZ(), 20, 0.5, 0.6, 0.5, 0.05);
+			serverPlayer.sendOverlayMessage(Component.translatable("message.minecraft_mode.enhance.success", next.level()).withColor(AccessoryEnhance.color(next.level())));
+			if (next.level() >= AccessoryEnhance.MAX) {
+				level.getServer().getPlayerList().broadcastSystemMessage(Component.translatable("message.minecraft_mode.enhance.broadcast", player.getDisplayName(),
+					Component.translatable(stack.getItem().getDescriptionId()), next.level()).withStyle(ChatFormatting.GOLD), false);
+			}
+		} else {
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS, 0.8F, 0.8F);
+			level.sendParticles(ParticleTypes.SMOKE, player.getX(), player.getY(1.0), player.getZ(), 20, 0.4, 0.4, 0.4, 0.02);
+			serverPlayer.sendOverlayMessage(Component.translatable("message.minecraft_mode.enhance.failed", next.level(), next.pity()).withStyle(ChatFormatting.RED));
+		}
+		stack.set(ModDataComponents.ENHANCEMENT, next);
+		this.container.setChanged();
+		this.result.set(success ? RESULT_SUCCESS : RESULT_FAIL);
+		this.broadcastChanges();
+		return true;
 	}
 
 	/** The outcome of the last attempt ({@code RESULT_*}), for the screen. */
@@ -212,6 +271,10 @@ public class EnhanceMenu extends AbstractContainerMenu {
 			return false;
 		}
 		ItemStack stack = this.input();
+		AccessoryDef accessory = Accessories.def(stack);
+		if (accessory != null) {
+			return buttonId == BUTTON_ENHANCE && this.enhanceAccessory(player, accessory);
+		}
 		ClassGear gear = ClassGear.of(stack);
 		Enhancement current = Enhancement.of(stack);
 		if (gear == null || current.level() >= Enhancement.MAX) {
@@ -289,7 +352,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 				if (!this.moveItemStackTo(stack, 1, 37, true)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (ClassGear.of(stack) != null && !this.slots.get(0).hasItem()) {
+			} else if (fits(stack) && !this.slots.get(0).hasItem()) {
 				if (!this.moveItemStackTo(stack, 0, 1, false)) {
 					return ItemStack.EMPTY;
 				}

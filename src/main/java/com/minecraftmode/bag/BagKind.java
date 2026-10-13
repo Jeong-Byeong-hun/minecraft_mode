@@ -39,7 +39,8 @@ public enum BagKind {
 
 	/** Enhancement and crafting materials (the enhancement bench and the crafting stations read them from the bags too). */
 	private static boolean material(final ItemStack stack) {
-		return stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.AWAKENING_CRYSTAL) || stack.is(ModItems.TITAN_SHARD);
+		return stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.AWAKENING_CRYSTAL) || stack.is(ModItems.TITAN_SHARD)
+			|| stack.is(ModItems.ACCESSORY_ORB);
 	}
 
 	private final String id;

@@ -4,17 +4,19 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.client.datagen.art.AccessoryArtist;
+import com.minecraftmode.registry.ModItems;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 
-/** Draws the raid accessory icons ({@link AccessoryArtist}) and a review sheet at build/accessory-preview.png (one set per row). */
+/** Draws the raid accessory icons and the accessory orb ({@link AccessoryArtist}) and a review sheet at build/accessory-preview.png (one set per row, the orb last). */
 public class AccessoryAssetProvider implements DataProvider {
 	private final PackOutput output;
 
@@ -40,6 +42,9 @@ public class AccessoryAssetProvider implements DataProvider {
 				column = 0;
 			}
 		}
+		BufferedImage orb = AccessoryArtist.orb();
+		writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(ModItems.ACCESSORY_ORB).getPath() + ".png"), orb));
+		sheet.add(orb);
 		ConsumableAssetProvider.preview(this.output, sheet, "accessory-preview.png");
 		return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
 	}

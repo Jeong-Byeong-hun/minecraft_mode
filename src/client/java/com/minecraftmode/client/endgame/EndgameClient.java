@@ -48,7 +48,7 @@ public final class EndgameClient {
 		}));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> auction = null));
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
-			if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP)) {
+			if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP) || stack.is(ModItems.ACCESSORY_ORB)) {
 				lines.add(1, Component.translatable(stack.getItem().getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
 			}
 			if (stack.has(ModDataComponents.BOUND)) {

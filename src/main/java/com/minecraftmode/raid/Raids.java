@@ -590,13 +590,8 @@ public final class Raids {
 				items.add(stack);
 			}
 		}
-		// the raid-only accessories of this boss (one per rewarded member, more on harder difficulties), shared out like the gear
-		for (int i = 0; i < Accessories.raidLots(participants.size(), difficulty); i++) {
-			ItemStack accessory = Accessories.raidDrop(def, difficulty, random);
-			if (!accessory.isEmpty()) {
-				items.add(accessory);
-			}
-		}
+		// the raid-only accessories: each rewarded member rolls the boss's and difficulty's chance, the pieces are shared out like the gear
+		items.addAll(Accessories.raidDrops(def, difficulty, participants.size(), random));
 		tell(server, instance, msg("victory", Component.translatable(def.nameKey()), VICTORY_TICKS / 20).withStyle(ChatFormatting.GOLD));
 		int place = RaidRecordsData.get(server).submit(def, difficulty, names, fightTicks, ResetCycle.day(level));
 		tell(server, instance, msg("time", clock(fightTicks), Component.translatable(difficulty.nameKey())).withStyle(ChatFormatting.AQUA));
@@ -627,6 +622,9 @@ public final class Raids {
 			give(player, new ItemStack(ModItems.PROTECTION_SCROLL));
 		}
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
+		if (Accessories.orbs(difficulty) > 0) {
+			give(player, new ItemStack(ModItems.ACCESSORY_ORB, Accessories.orbs(difficulty)));
+		}
 		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);
 		}

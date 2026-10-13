@@ -1,6 +1,9 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.economy.Essence;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.ItemLevels;
@@ -29,8 +32,9 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * The blacksmith's bench, in two tabs. Evolution: the next pieces the gear in the slot can become, with their Evolution Ether
- * cost (green when the player carries enough); click a row to evolve. Options (armor only): the current extra options and,
- * after a paid roll (⟳), the new ones under them; ✔ takes the new options, ✖ keeps the old ones.
+ * cost (green when the player carries enough); click a row to evolve. Options (armor and raid accessories): the current extra options
+ * and, after a paid roll (⟳), the new ones under them; ✔ takes the new options, ✖ keeps the old ones. Accessory lines show as their
+ * enhancement raises them.
  */
 public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 	private static final int ROW_X = 40;
@@ -49,6 +53,8 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 
 	/** False = evolution tab, true = options tab. */
 	private boolean options;
+	/** The whole option line under the mouse when it was cut at the panel edge this frame. */
+	private Component hoverLine;
 
 	public UpgradeScreen(final UpgradeMenu menu, final Inventory inventory, final Component title) {
 		super(menu, inventory, title, UpgradeMenu.WIDTH, UpgradeMenu.HEIGHT);
@@ -71,8 +77,7 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 	}
 
 	private int rerollCost() {
-		ClassGear gear = ClassGear.of(this.menu.input());
-		return gear == null ? 0 : GearUpgrades.rerollCost(gear);
+		return UpgradeMenu.rerollCoins(this.menu.input());
 	}
 
 	private boolean canReroll() {
@@ -133,7 +138,8 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			return;
 		}
 		if (targets.isEmpty()) {
-			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.max"), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
+			g.textWithWordWrap(this.font, Component.translatable(Accessories.def(this.menu.input()) != null ? "screen.minecraft_mode.upgrade.accessory" : "screen.minecraft_mode.upgrade.max"),
+				x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
 			return;
 		}
 		for (int i = 0; i < targets.size(); i++) {
@@ -159,32 +165,44 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			return;
 		}
 		GearRolls pending = this.menu.input().get(ModDataComponents.GEAR_ROLLS_PENDING);
+		this.hoverLine = null;
 		this.button(g, x + BUTTON_X, y + REROLL_Y, "⟳", this.canReroll(), 0xFF2C5A51, 0xFF3E7A6E, mouseX, mouseY);
 		this.button(g, x + BUTTON_X, y + APPLY_Y, "✔", pending != null, 0xFF2E6B2E, 0xFF3E8A3E, mouseX, mouseY);
 		this.button(g, x + BUTTON_X, y + KEEP_Y, "✖", pending != null, 0xFF7A2E2E, 0xFF9A3E3E, mouseX, mouseY);
 
 		int ty = y + ROWS_Y + 2;
 		g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.current"), x + ROW_X, ty, 0xFF404040, false);
-		ty = this.lines(g, this.menu.input().get(ModDataComponents.GEAR_ROLLS), x + ROW_X, ty + 11, 0xFF1E5F7A);
+		ty = this.lines(g, this.menu.input().get(ModDataComponents.GEAR_ROLLS), x + ROW_X, ty + 11, 0xFF1E5F7A, mouseX, mouseY);
 		ty = Math.max(ty, y + ROWS_Y + 48);
 		g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.pending"), x + ROW_X, ty, 0xFF404040, false);
 		if (pending == null) {
 			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.no_pending"), x + ROW_X, ty + 11, ROW_W, 0xFF6B6B6B);
 		} else {
-			this.lines(g, pending, x + ROW_X, ty + 11, 0xFF2E6B2E);
+			this.lines(g, pending, x + ROW_X, ty + 11, 0xFF2E6B2E, mouseX, mouseY);
 		}
 	}
 
-	/** Draws the option lines (or a dash) and returns the y below them. */
-	private int lines(final GuiGraphicsExtractor g, final GearRolls rolls, final int lx, final int top, final int color) {
+	/** Draws the option lines (or a dash) and returns the y below them; long lines are cut at the panel edge, the tooltip has them whole. */
+	private int lines(final GuiGraphicsExtractor g, final GearRolls rolls, final int lx, final int top, final int color, final int mouseX, final int mouseY) {
 		int ly = top;
 		if (rolls == null || rolls.lines().isEmpty()) {
 			g.text(this.font, "-", lx + 4, ly, 0xFF6B6B6B, false);
 			return ly + 10;
 		}
 		ClassGear gear = ClassGear.of(this.menu.input());
-		for (StatLine line : rolls.lines()) {
-			g.text(this.font, Component.literal("• ").append(Component.translatable(line.stat().key(gear == null ? null : gear.job()), JobTooltips.num(line.value()))), lx + 4, ly, color, false);
+		int enhanced = Accessories.def(this.menu.input()) != null ? Enhancement.level(this.menu.input()) : 0;
+		for (StatLine rolled : rolls.lines()) {
+			StatLine line = AccessoryEnhance.scaled(rolled, enhanced);
+			Component text = Component.literal("• ").append(Component.translatable(line.stat().key(gear == null ? null : gear.job()), JobTooltips.num(line.value())));
+			int room = ROW_W - 4;
+			if (this.font.width(text) <= room) {
+				g.text(this.font, text, lx + 4, ly, color, false);
+			} else {
+				g.text(this.font, this.font.plainSubstrByWidth(text.getString(), room - this.font.width("…")) + "…", lx + 4, ly, color, false);
+				if (this.inside(mouseX, mouseY, lx + 4, ly, room, 10)) {
+					this.hoverLine = text;
+				}
+			}
 			ly += 10;
 		}
 		return ly;
@@ -208,6 +226,8 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 				g.setComponentTooltipForNextFrame(this.font, List.of(Component.translatable("screen.minecraft_mode.upgrade.apply")), mouseX, mouseY);
 			} else if (this.inside(mouseX, mouseY, this.leftPos + BUTTON_X, this.topPos + KEEP_Y, BUTTON_W, BUTTON_H)) {
 				g.setComponentTooltipForNextFrame(this.font, List.of(Component.translatable("screen.minecraft_mode.upgrade.keep")), mouseX, mouseY);
+			} else if (this.hoverLine != null) {
+				g.setComponentTooltipForNextFrame(this.font, List.of(this.hoverLine), mouseX, mouseY);
 			}
 			return;
 		}

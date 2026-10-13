@@ -2,9 +2,11 @@ package com.minecraftmode.client.accessory;
 
 import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.accessory.AccessorySet;
 import com.minecraftmode.client.job.GearTooltips;
 import com.minecraftmode.client.job.JobTooltips;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.gear.ArmorSetDef;
@@ -16,13 +18,14 @@ import java.util.List;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * Accessory tooltip: slot and level (red when too low), where it comes from (only that boss's raid), the fixed line, the rolled
- * options and the set's 2/3/5-piece bonuses (lit by the pieces worn). Built off the render thread too (search), so the viewer may
- * be missing and nothing here touches the font.
+ * Accessory tooltip: slot and level (red when too low), where it comes from (that boss's raid, its tier), the enhancement, the fixed
+ * line and the rolled options as the enhancement raises them, options waiting at the blacksmith and the set's 2/3/5-piece bonuses
+ * (lit by the pieces worn). Built off the render thread too (search), so the viewer may be missing and nothing here touches the font.
  */
 public final class AccessoryTooltips {
 	public static void init() {
@@ -43,16 +46,41 @@ public final class AccessoryTooltips {
 		lines.add(Component.translatable(def.slot().nameKey()).withStyle(ChatFormatting.GOLD)
 			.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
 			.append(Component.translatable("tooltip.minecraft_mode.weapon.level", def.level()).withStyle(levelOk ? ChatFormatting.GRAY : ChatFormatting.RED)));
-		lines.add(Component.translatable("tooltip.minecraft_mode.accessory.source", Component.translatable(set.boss().nameKey())).withStyle(ChatFormatting.DARK_PURPLE));
+		lines.add(Component.translatable("tooltip.minecraft_mode.accessory.source", Component.translatable(set.boss().nameKey())).withStyle(ChatFormatting.DARK_PURPLE)
+			.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
+			.append(Component.translatable("tooltip.minecraft_mode.accessory.tier", set.tier()).withStyle(ChatFormatting.LIGHT_PURPLE)));
+		Enhancement e = Enhancement.of(stack);
+		if (e.level() > 0 || e.pity() > 0) {
+			MutableComponent head = Component.translatable("tooltip.minecraft_mode.enhance.level", e.level(), AccessoryEnhance.MAX).withColor(AccessoryEnhance.color(e.level()));
+			if (e.pity() > 0) {
+				head.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(Component.translatable("tooltip.minecraft_mode.enhance.pity", e.pity())
+					.withStyle(ChatFormatting.GRAY));
+			}
+			lines.add(head);
+			if (e.level() > 0) {
+				lines.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable("tooltip.minecraft_mode.accessory.enhanced",
+					JobTooltips.num(Math.round(AccessoryEnhance.PER_LEVEL * e.level() * 100.0F))).withStyle(ChatFormatting.GREEN)));
+			}
+			for (StatLine line : AccessoryEnhance.bonus(e.level())) {
+				lines.add(GearTooltips.statLine(line, ChatFormatting.GREEN, null));
+			}
+		}
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.base").withStyle(ChatFormatting.GOLD));
-		lines.add(GearTooltips.statLine(def.baseLine(), ChatFormatting.WHITE, null));
+		lines.add(GearTooltips.statLine(AccessoryEnhance.scaled(def.baseLine(), e.level()), ChatFormatting.WHITE, null));
 		GearRolls rolls = stack.get(ModDataComponents.GEAR_ROLLS);
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.options").withStyle(ChatFormatting.AQUA));
 		if (rolls == null) {
 			lines.add(Component.translatable("tooltip.minecraft_mode.gear.unrolled", 1).withStyle(ChatFormatting.DARK_GRAY));
 		} else {
 			for (StatLine line : rolls.lines()) {
-				lines.add(GearTooltips.statLine(line, ChatFormatting.AQUA, null));
+				lines.add(GearTooltips.statLine(AccessoryEnhance.scaled(line, e.level()), ChatFormatting.AQUA, null));
+			}
+		}
+		GearRolls pending = stack.get(ModDataComponents.GEAR_ROLLS_PENDING);
+		if (pending != null) {
+			lines.add(Component.translatable("tooltip.minecraft_mode.gear.pending").withStyle(ChatFormatting.DARK_AQUA));
+			for (StatLine line : pending.lines()) {
+				lines.add(GearTooltips.statLine(AccessoryEnhance.scaled(line, e.level()), ChatFormatting.DARK_AQUA, null));
 			}
 		}
 		int worn = player == null ? 0 : Accessories.setCounts(player).getOrDefault(set.id(), 0);

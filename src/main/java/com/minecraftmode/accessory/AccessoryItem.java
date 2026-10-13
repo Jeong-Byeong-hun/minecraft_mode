@@ -1,6 +1,9 @@
 package com.minecraftmode.accessory;
 
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.registry.ModDataComponents;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,6 +22,17 @@ public class AccessoryItem extends Item {
 
 	public AccessoryDef def() {
 		return this.def;
+	}
+
+	@Override
+	public Component getName(final ItemStack itemStack) {
+		return AccessoryEnhance.decorate(Component.translatable(this.getDescriptionId()).withStyle(ChatFormatting.LIGHT_PURPLE), itemStack);
+	}
+
+	/** +{@value AccessoryEnhance#MAX} pieces shine. */
+	@Override
+	public boolean isFoil(final ItemStack itemStack) {
+		return super.isFoil(itemStack) || Enhancement.level(itemStack) >= AccessoryEnhance.MAX;
 	}
 
 	/** Pieces made without options (creative, commands) roll a Normal piece's one option once they are carried. */

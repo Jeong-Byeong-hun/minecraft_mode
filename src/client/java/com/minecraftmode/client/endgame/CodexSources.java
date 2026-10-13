@@ -71,6 +71,9 @@ final class CodexSources {
 		AccessoryDef accessory = Accessories.def(new ItemStack(item));
 		if (accessory != null) {
 			out.add(Component.translatable(KEY + "raid_boss", Component.translatable(accessory.set().boss().nameKey()), accessory.level()));
+			if (accessory.set().tier() == Accessories.TOP_TIER) {
+				out.add(Component.translatable(KEY + "raid_top"));
+			}
 		}
 		String path = BuiltInRegistries.ITEM.getKey(item).getPath();
 		ConsumableDef def = Consumables.def(path);

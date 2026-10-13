@@ -300,7 +300,9 @@ public final class Parties {
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
 			if (!BY_PLAYER.containsKey(p.getUUID()) && ServerPlayNetworking.canSend(p, PartySyncPayload.TYPE)) {
 				Invite invite = INVITES.get(p.getUUID());
-				ServerPlayNetworking.send(p, invite == null ? PartySyncPayload.NONE : new PartySyncPayload(List.of(), invite.from()));
+				// an invite into a party that broke up since cannot be accepted, so it is not offered
+				boolean open = invite != null && !invite.party().members().isEmpty();
+				ServerPlayNetworking.send(p, open ? new PartySyncPayload(List.of(), invite.from()) : PartySyncPayload.NONE);
 			}
 		}
 	}

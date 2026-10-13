@@ -289,6 +289,9 @@ public final class Characters {
 		player.getFoodData().setFoodLevel(20);
 		player.getFoodData().setSaturation(5.0F);
 		player.setRemainingFireTicks(0);
+		// a new character starts with no bed or anchor and no grave of the one it replaced
+		player.setRespawnPosition(null, false);
+		player.setLastDeathLocation(java.util.Optional.empty());
 		resync(player, mode);
 		player.setHealth(player.getMaxHealth());
 		toWorldSpawn(player);

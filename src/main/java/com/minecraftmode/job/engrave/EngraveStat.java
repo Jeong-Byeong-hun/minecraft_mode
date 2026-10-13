@@ -66,7 +66,9 @@ public enum EngraveStat {
 	PROTECTION("protection", "-%s%% damage taken (protection)", "물리 보호: 받는 피해 -%s%%", 70),
 	MAGIC_DEFENSE("magic_defense", "-%s%% magic damage taken", "마법 방어: 받는 마법 피해 -%s%%", 70),
 	// skill boosts (Boost): every hit of the player, basic, shot, skill or summon
-	DAMAGE("damage", "+%s%% damage dealt", "주는 피해 +%s%%", 0);
+	DAMAGE("damage", "+%s%% damage dealt", "주는 피해 +%s%%", 0),
+	// enhancement past +10 (Enhancement.lines: weapon +11..+14, armor +11..+15): multiplies the whole hit after every other bonus (CombatHooks.outgoing)
+	FINAL_DAMAGE("final_damage", "+%s%% final damage (multiplies every hit)", "최종 피해 +%s%% (모든 피해에 곱연산)", 0);
 
 	private final String id;
 	private final String en;

@@ -563,7 +563,11 @@ public class GearDocProvider implements DataProvider {
 		md.append("- +").append(Enhancement.GLOW_FROM).append("부터 장비가 빛납니다: 광택, 슬롯 테두리(+").append(Enhancement.GLOW_FROM).append(" 파랑, +")
 			.append(Enhancement.GLOW_BRIGHT).append(" 보라, +").append(Enhancement.MAX).append(" 금색, 각성 붉은 금색과 ✦), 든 무기 주변 파티클, 직업 방어구 4부위가 모두 +")
 			.append(Enhancement.GLOW_FROM).append(" 이상이면 발밑의 고리. 모험가 메뉴(;)의 설정 탭에서 파티클만 끌 수 있습니다.\n");
-		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n\n");
+		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n");
+		md.append("- 무기 +").append(Enhancement.FINAL_FROM).append("~+").append(Enhancement.FINAL_TO).append("는 단계마다 **최종 피해** +")
+			.append(ClassDocProvider.num(Enhancement.FINAL_PER_STEP)).append("%, 방어구 +").append(Enhancement.FINAL_FROM)
+			.append("부터는 단계마다 받는 피해 감소가 ").append(ClassDocProvider.num(Enhancement.ARMOR_LATE_REDUCTION)).append("%(+10까지는 0.5%)로 줄고 **최종 피해** +")
+			.append(ClassDocProvider.num(Enhancement.ARMOR_FINAL_PER_STEP)).append("%. 최종 피해는 다른 피해 보너스와 치명타를 모두 계산한 뒤 곱해져서, 기본 공격·스킬 피해가 이미 많이 쌓인 장비에서도 그대로 오르고 모든 직업에 똑같이 듭니다.\n\n");
 		md.append("| 단계 | 성공률 | 정수 | 강화석 | 실패 시 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|---|---|---|\n");
 		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());
 		ClassGear armor = ClassGear.of(ClassArmor.pieces().iterator().next());

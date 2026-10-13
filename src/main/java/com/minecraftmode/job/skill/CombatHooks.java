@@ -348,7 +348,8 @@ public final class CombatHooks {
 			bonus += mods.fraction(EngraveStat.FIRST_STRIKE);
 		}
 		bonus += state.markBonus(victim.getUUID(), now);
-		return amount * (1.0F + bonus) * crit;
+		// final damage (enhancement past +10) multiplies the whole hit, past every pool above
+		return amount * (1.0F + bonus) * crit * (1.0F + mods.fraction(EngraveStat.FINAL_DAMAGE));
 	}
 
 	/** Brings every running skill cooldown of {@code player} forward by {@code ticks}. */

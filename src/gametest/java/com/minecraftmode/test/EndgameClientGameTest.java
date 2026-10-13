@@ -447,6 +447,19 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 			GearStats.invalidate(player);
 			float enhanced = GearStats.of(player).get(EngraveStat.BASIC_DAMAGE);
 			require(Math.abs(enhanced - plain - 15.0F) < 0.01F, "+5 should add 15% basic damage, got " + (enhanced - plain));
+			// +11..+14 add final damage (multiplied last in CombatHooks.outgoing): none at +10, 2% a step up to +14, no more at +15
+			require(GearStats.of(player).get(EngraveStat.FINAL_DAMAGE) == 0.0F, "+5 has no final damage");
+			ItemStack risky = weapon.copy();
+			risky.set(ModDataComponents.ENHANCEMENT, new Enhancement(12, 0, 0));
+			player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, risky);
+			GearStats.invalidate(player);
+			float finalDamage = GearStats.of(player).get(EngraveStat.FINAL_DAMAGE);
+			require(Math.abs(finalDamage - 2.0F * Enhancement.FINAL_PER_STEP) < 0.01F, "+12 should give " + 2.0F * Enhancement.FINAL_PER_STEP + "% final damage, got " + finalDamage);
+			double atTop = Enhancement.lines(gear, Enhancement.MAX).stream().filter(l -> l.stat() == EngraveStat.FINAL_DAMAGE).mapToDouble(l -> l.value()).sum();
+			require(Math.abs(atTop - 4.0F * Enhancement.FINAL_PER_STEP) < 0.01F && Enhancement.lines(gear, 10).stream().noneMatch(l -> l.stat() == EngraveStat.FINAL_DAMAGE),
+				"final damage should stop at +" + Enhancement.FINAL_TO + ", got " + atTop + " at +15");
+			player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, weapon);
+			GearStats.invalidate(player);
 			List<ClassGear> targets = GearUpgrades.targets(gear);
 			require(!targets.isEmpty(), "the weapon should evolve");
 			ItemStack evolved = GearUpgrades.evolve(weapon, targets.getFirst(), net.minecraft.util.RandomSource.create(3));

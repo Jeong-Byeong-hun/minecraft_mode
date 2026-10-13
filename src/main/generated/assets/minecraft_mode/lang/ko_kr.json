@@ -581,6 +581,7 @@
   "engrave_stat.minecraft_mode.extra_shot.archer": "화살 +%s (기본 사격, 스킬 제외, 적마다 1발, 1발당 기본 사격 피해 +4%%)",
   "engrave_stat.minecraft_mode.extra_shot.pirate": "탄환 +%s (기본 사격, 스킬 제외, 적마다 1발, 1발당 기본 사격 피해 +4%%)",
   "engrave_stat.minecraft_mode.extra_shot.rogue": "투척 무기 +%s (기본 사격, 스킬 제외, 적마다 1발, 1발당 기본 사격 피해 +4%%)",
+  "engrave_stat.minecraft_mode.final_damage": "최종 피해 +%s%% (모든 피해에 곱연산)",
   "engrave_stat.minecraft_mode.first_strike": "체력 90%% 이상인 적에게 피해 +%s%%",
   "engrave_stat.minecraft_mode.gold_find": "처치 시 %s%% 확률로 동전 획득",
   "engrave_stat.minecraft_mode.heal_on_skill": "스킬 사용 시 체력 %s 회복",

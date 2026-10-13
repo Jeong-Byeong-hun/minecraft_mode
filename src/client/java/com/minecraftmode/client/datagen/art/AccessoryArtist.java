@@ -57,6 +57,32 @@ public final class AccessoryArtist {
 		return k.render(Tones.of(ORB_METAL), Tones.of(CORD), Tones.of(ORB_GEM));
 	}
 
+	/** Seal colours of the tier 1 and tier 2 inheritance tickets. */
+	private static final int[] TICKET_SEAL = {0x4FC86A, 0x3A8AE0};
+
+	/**
+	 * An inheritance ticket: a cream ticket with notched sides and a perforation, the tier's coloured seal on the stub and one gold mark
+	 * per tier on the other end.
+	 */
+	public static BufferedImage ticket(final int tier) {
+		Canvas k = new Canvas();
+		k.rect(1, 4, 14, 11, 'L');
+		k.rect(2, 5, 13, 10, 'H');
+		for (int y : new int[] {7, 8}) {
+			k.clear(1, y);
+			k.clear(14, y);
+		}
+		for (int y = 5; y <= 10; y += 2) {
+			k.put(9, y, 'M');
+		}
+		gem(k, 5.0, 7.5, 2.2);
+		for (int i = 0; i < tier; i++) {
+			k.rect(11 + i, 6, 11 + i, 9, i % 2 == 0 ? 'l' : 'd');
+		}
+		k.outline();
+		return k.render(Tones.of(ORB_METAL), Tones.of(PAPER), Tones.of(TICKET_SEAL[Math.max(0, Math.min(TICKET_SEAL.length - 1, tier - 1))]));
+	}
+
 	/** A cut stone: a diamond of radius {@code r} lit on its upper left. */
 	private static void gem(final Canvas k, final double cx, final double cy, final double r) {
 		for (int y = 0; y < 16; y++) {

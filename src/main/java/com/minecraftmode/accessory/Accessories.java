@@ -18,6 +18,7 @@ import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.registry.ModDataComponents;
+import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,12 +39,14 @@ import org.jspecify.annotations.Nullable;
  * Accessories (0.5.24): necklace, earring, ring, bracelet and talisman, worn in five slots of their own (the accessory window,
  * {@link AccessoryMenu}) and kept per character in {@link ModAttachments#ACCESSORIES}. Every raid boss has a set of five, and only
  * raids drop them ({@code Raids.onBossDefeated} rolls {@link #raidDrops} for each rewarded member): no shop, lair, dungeon or named
- * monster gives them. The sets come in three tiers; on Normal a boss drops its own set (tier 1 10%, tier 2 5%, tier 3 2%), from Heroic
- * on every boss drops tier 3 pieces only, more often the harder the boss and the difficulty, so the ladder runs Normal Verdessa ...
- * Normal Aethryx, Heroic Verdessa ... Nightmare Aethryx. A piece needs the boss's level, has its slot's fixed line and 1-3 random
- * options (Normal, Heroic, Nightmare; the blacksmith rolls them again), can be enhanced to +{@value AccessoryEnhance#MAX} with
- * accessory orbs (Heroic and Nightmare clears), and the set pays 2-, 3- and 5-piece bonuses. Everything adds up in
- * {@code GearStats} under its own source.
+ * monster gives them. The sets come in three tiers; on Normal a boss drops its own set (tier 1 15%, tier 2 8%, tier 3 1.5%), from
+ * Heroic on every boss drops tier 3 pieces only, more often the harder the boss and the difficulty, so the ladder runs Normal
+ * Verdessa ... Normal Aethryx, Heroic Verdessa ... Nightmare Aethryx. A piece needs the boss's level, has its slot's fixed line and 1-3
+ * random options (Normal, Heroic, Nightmare; the blacksmith rolls them again), can be enhanced to +{@value AccessoryEnhance#MAX} with
+ * accessory orbs (Heroic and Nightmare clears), and the set pays 2-, 3- and 5-piece bonuses. Tier 2 bosses drop tier 1 inheritance
+ * tickets and tier 3 bosses tier 2 ones: at the blacksmith a ticket turns a piece into the same slot of a next-tier set of the
+ * player's choice, keeping its enhancement and options ({@link #inherit}). Everything adds up in {@code GearStats} under its own
+ * source.
  */
 public final class Accessories {
 	public static final int SLOTS = AccessorySlot.values().length;
@@ -174,12 +177,12 @@ public final class Accessories {
 	/** The tier every boss drops from Heroic on. */
 	public static final int TOP_TIER = 3;
 	/** Normal-difficulty chance per rewarded member that a boss of tier 1, 2, 3 drops a piece of its own set. */
-	private static final float[] NORMAL_CHANCE = {0.10F, 0.05F, 0.02F};
+	private static final float[] NORMAL_CHANCE = {0.15F, 0.08F, 0.015F};
 	/** Heroic and Nightmare: tier 3 pieces only, from the first boss's chance up to the last boss's (Heroic Verdessa beats Normal Aethryx). */
-	private static final float HEROIC_FIRST = 0.03F;
-	private static final float HEROIC_LAST = 0.06F;
-	private static final float NIGHTMARE_FIRST = 0.07F;
-	private static final float NIGHTMARE_LAST = 0.10F;
+	private static final float HEROIC_FIRST = 0.025F;
+	private static final float HEROIC_LAST = 0.05F;
+	private static final float NIGHTMARE_FIRST = 0.06F;
+	private static final float NIGHTMARE_LAST = 0.09F;
 
 	/** Chance per rewarded member that a clear of {@code boss} on {@code difficulty} drops an accessory. */
 	public static float dropChance(final BossDef boss, final RaidDifficulty difficulty) {
@@ -237,6 +240,69 @@ public final class Accessories {
 	/** Accessory orbs every rewarded member gets: none on Normal, one on Heroic, two on Nightmare. */
 	public static int orbs(final RaidDifficulty difficulty) {
 		return difficulty.ordinal();
+	}
+
+	// ------------------------------------------------------------------ inheritance
+
+	/** Chance per rewarded member that a tier 2 or 3 boss also gives an inheritance ticket, by difficulty (Normal, Heroic, Nightmare). */
+	private static final float[] TICKET_CHANCE = {0.25F, 0.35F, 0.50F};
+
+	/** The ticket that inherits a piece of tier {@code tier} into the next tier, or null at the top tier. */
+	public static @Nullable Item inheritTicket(final int tier) {
+		return tier == 1 ? ModItems.ACCESSORY_INHERIT_1 : tier == 2 ? ModItems.ACCESSORY_INHERIT_2 : null;
+	}
+
+	/** The ticket a clear of {@code boss} may give: tier 2 bosses the tier 1 ticket, tier 3 bosses the tier 2 one, tier 1 bosses none. */
+	public static @Nullable Item ticketDrop(final BossDef boss) {
+		AccessorySet set = setOf(boss);
+		return set == null || set.tier() <= 1 ? null : inheritTicket(set.tier() - 1);
+	}
+
+	public static float ticketChance(final RaidDifficulty difficulty) {
+		return TICKET_CHANCE[difficulty.ordinal()];
+	}
+
+	/** What a piece of {@code def} can be inherited into: the same slot of every set one tier up (none at the top tier). */
+	public static List<AccessoryDef> inheritTargets(final AccessoryDef def) {
+		List<AccessoryDef> out = new ArrayList<>();
+		for (AccessorySet set : SETS) {
+			if (set.tier() == def.set().tier() + 1) {
+				out.add(def(set, def.slot()));
+			}
+		}
+		return out;
+	}
+
+	/** Coins for inheriting into {@code target}: half the guild weapon price of its bracket, like gear evolution. */
+	public static int inheritCoins(final AccessoryDef target) {
+		return Math.max(1, GearShop.bracketPrice(ItemLevels.bracket(target.level())) / 2);
+	}
+
+	/**
+	 * {@code from} turned into {@code target}: the enhancement and artisan's spirit carry over, and every option keeps its stat and its
+	 * share of the slot's maximum, measured again at the new level (a 90% roll stays a 90% roll). Options waiting at the blacksmith
+	 * are dropped.
+	 */
+	public static ItemStack inherit(final ItemStack from, final AccessoryDef target) {
+		AccessoryDef source = def(from);
+		ItemStack result = new ItemStack(item(target));
+		result.set(ModDataComponents.ENHANCEMENT, Enhancement.of(from));
+		GearRolls rolls = from.get(ModDataComponents.GEAR_ROLLS);
+		if (rolls != null && source != null) {
+			List<StatLine> lines = new ArrayList<>();
+			for (StatLine line : rolls.lines()) {
+				Float top = target.slot().pool().get(line.stat());
+				if (top == null) {
+					lines.add(line);
+					continue;
+				}
+				float before = ArmorOptions.max(top, source.level());
+				float after = ArmorOptions.max(top, target.level());
+				lines.add(StatLine.of(line.stat(), ArmorOptions.round(line.value() * after / before, after)));
+			}
+			result.set(ModDataComponents.GEAR_ROLLS, new GearRolls(lines));
+		}
+		return result;
 	}
 
 	/** Opening bid of a raid loot auction: twice the guild weapon price of the piece's bracket. */

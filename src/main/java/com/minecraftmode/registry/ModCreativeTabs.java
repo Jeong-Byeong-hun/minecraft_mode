@@ -126,6 +126,8 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.PROTECTION_SCROLL);
 					output.accept(ModItems.AWAKENING_CRYSTAL);
 					output.accept(ModItems.ACCESSORY_ORB);
+					output.accept(ModItems.ACCESSORY_INHERIT_1);
+					output.accept(ModItems.ACCESSORY_INHERIT_2);
 					output.accept(ModItems.TITAN_SHARD);
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));

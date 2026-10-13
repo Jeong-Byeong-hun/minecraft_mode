@@ -81,6 +81,8 @@ final class CodexLang {
 			{"enhancement_stone", "소굴 군주, 레이드, 던전, 거신·침공, 현상금 공적", "Lair lords, raids, dungeons, titans and invasions, bounty merit"},
 			{"protection_scroll", "소굴 군주(10%), 레이드(난이도별 확률), 현상금 공적", "Lair lords (10%), raids (chance by difficulty), bounty merit"},
 			{"awakening_crystal", "쐐기 던전 +5 이상 보상", "Keystone dungeons at +5 and up"},
+			{"accessory_inherit_1", "2티어 레이드(네프레케트·크라켄·이그니스) 클리어 보상 (확률)", "Tier 2 raid clears: Nefrekhet, Kraken, Ignis (chance)"},
+			{"accessory_inherit_2", "3티어 레이드(라이진·말라카르·에테릭스) 클리어 보상 (확률)", "Tier 3 raid clears: Raijin, Malachar, Aethryx (chance)"},
 			{"accessory_orb", "영웅·악몽 레이드 클리어 보상 (영웅 1개, 악몽 2개)", "Heroic and Nightmare raid clears (1 on Heroic, 2 on Nightmare)"},
 			{"titan_shard", "거신 처치", "Titan kills"},
 			{"lair_map", "현상금 공적", "Bounty merit"},

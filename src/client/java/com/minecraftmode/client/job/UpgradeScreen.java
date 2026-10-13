@@ -1,7 +1,9 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.accessory.AccessoryEnhance;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.job.gear.ClassGear;
@@ -28,11 +30,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
  * The blacksmith's bench, in two tabs. Evolution: the next pieces the gear in the slot can become, with their Evolution Ether
- * cost (green when the player carries enough); click a row to evolve. Options (armor and raid accessories): the current extra options
+ * cost (green when the player carries enough); click a row to evolve. A tier 1/2 raid accessory lists the next tier's sets instead
+ * (inheritance: ticket + coins; the hover shows the piece it becomes). Options (armor and raid accessories): the current extra options
  * and, after a paid roll (⟳), the new ones under them; ✔ takes the new options, ✖ keeps the old ones. Accessory lines show as their
  * enhancement raises them.
  */
@@ -137,9 +141,13 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.insert", GearUpgrades.etherCost(ItemLevels.MIN_BRACKET), GearUpgrades.etherCost(ItemLevels.MAX_BRACKET)), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
 			return;
 		}
+		AccessoryDef accessory = Accessories.def(this.menu.input());
+		if (accessory != null) {
+			this.extractInheritance(g, x, y, mouseX, mouseY, accessory);
+			return;
+		}
 		if (targets.isEmpty()) {
-			g.textWithWordWrap(this.font, Component.translatable(Accessories.def(this.menu.input()) != null ? "screen.minecraft_mode.upgrade.accessory" : "screen.minecraft_mode.upgrade.max"),
-				x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.max"), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
 			return;
 		}
 		for (int i = 0; i < targets.size(); i++) {
@@ -156,6 +164,35 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			String cost = this.have(target) + "/" + GearUpgrades.etherCost(target);
 			g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.cost", target.level(), GearUpgrades.grade(target)), x + ROW_X + 21, ry + 11, 0xFFE0C090, false);
 			g.text(this.font, cost, x + ROW_X + ROW_W - 3 - this.font.width(cost), ry + 11, ok ? 0xFF7FFFD4 : 0xFFFF8080, false);
+		}
+	}
+
+	/** A tier 1/2 raid accessory: one row per next-tier set (same slot) with its coins and the inheritance ticket it takes. */
+	private void extractInheritance(final GuiGraphicsExtractor g, final int x, final int y, final int mouseX, final int mouseY, final AccessoryDef from) {
+		List<AccessoryDef> targets = Accessories.inheritTargets(from);
+		Item ticket = Accessories.inheritTicket(from.set().tier());
+		if (targets.isEmpty() || ticket == null) {
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.upgrade.accessory"), x + ROW_X, y + ROWS_Y + 2, ROW_W, 0xFF404040);
+			return;
+		}
+		int have = this.minecraft.player == null ? 0 : Bags.count(this.minecraft.player, ticket);
+		for (int i = 0; i < targets.size(); i++) {
+			AccessoryDef target = targets.get(i);
+			int ry = y + ROWS_Y + i * ROW_H;
+			boolean ok = this.minecraft.player != null && UpgradeMenu.canPayInherit(this.minecraft.player, from, target);
+			boolean hover = this.inside(mouseX, mouseY, x + ROW_X, ry, ROW_W, ROW_H - 2);
+			g.fill(x + ROW_X, ry, x + ROW_X + ROW_W, ry + ROW_H - 2, !ok ? 0xFF6B6B6B : hover ? 0xFF6A3A8A : 0xFF4A2A6A);
+			g.fakeItem(new ItemStack(Accessories.item(target)), x + ROW_X + 2, ry + 2);
+			String coins = "◎" + Coins.format(Accessories.inheritCoins(target));
+			g.text(this.font, coins, x + ROW_X + ROW_W - 3 - this.font.width(coins), ry + 2, ok ? 0xFFFFD27F : 0xFFFF8080, false);
+			// long set names are cut before the price
+			String name = Component.translatable(target.nameKey()).getString();
+			int room = ROW_W - 21 - 3 - this.font.width(coins) - 4;
+			String shown = this.font.width(name) <= room ? name : this.font.plainSubstrByWidth(name, room - this.font.width("…")) + "…";
+			g.text(this.font, Component.literal(shown).withStyle(ChatFormatting.LIGHT_PURPLE), x + ROW_X + 21, ry + 2, 0xFFFFFFFF, false);
+			g.text(this.font, Component.translatable("screen.minecraft_mode.upgrade.inherit_cost", target.level(), from.set().tier()), x + ROW_X + 21, ry + 11, 0xFFE0C0F0, false);
+			String count = have + "/1";
+			g.text(this.font, count, x + ROW_X + ROW_W - 3 - this.font.width(count), ry + 11, have >= 1 ? 0xFF7FFFD4 : 0xFFFF8080, false);
 		}
 	}
 
@@ -231,6 +268,20 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			}
 			return;
 		}
+		AccessoryDef accessory = Accessories.def(this.menu.input());
+		if (accessory != null) {
+			List<AccessoryDef> inherits = Accessories.inheritTargets(accessory);
+			Item ticket = Accessories.inheritTicket(accessory.set().tier());
+			for (int i = 0; i < inherits.size() && ticket != null; i++) {
+				if (this.inside(mouseX, mouseY, this.leftPos + ROW_X, this.topPos + ROWS_Y + i * ROW_H, ROW_W, ROW_H - 2)) {
+					List<Component> tip = new ArrayList<>(getTooltipFromItem(this.minecraft, Accessories.inherit(this.menu.input(), inherits.get(i))));
+					tip.add(Component.translatable("screen.minecraft_mode.upgrade.inherit_keeps", Component.translatable(ticket.getDescriptionId()))
+						.withStyle(ChatFormatting.DARK_GRAY));
+					g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
+				}
+			}
+			return;
+		}
 		List<ClassGear> targets = this.menu.targets();
 		for (int i = 0; i < targets.size(); i++) {
 			int ry = this.topPos + ROWS_Y + i * ROW_H;
@@ -274,8 +325,9 @@ public class UpgradeScreen extends AbstractContainerScreen<UpgradeMenu> {
 			}
 			return super.mouseClicked(event, doubleClick);
 		}
-		List<ClassGear> targets = this.menu.targets();
-		for (int i = 0; i < targets.size(); i++) {
+		AccessoryDef accessory = Accessories.def(this.menu.input());
+		int rows = accessory != null ? Accessories.inheritTargets(accessory).size() : this.menu.targets().size();
+		for (int i = 0; i < rows; i++) {
 			int ry = this.topPos + ROWS_Y + i * ROW_H;
 			if (this.inside(event.x(), event.y(), this.leftPos + ROW_X, ry, ROW_W, ROW_H - 2)) {
 				this.press(i);

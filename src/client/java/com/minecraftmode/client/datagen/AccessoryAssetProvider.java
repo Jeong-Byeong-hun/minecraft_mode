@@ -16,7 +16,7 @@ import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 
-/** Draws the raid accessory icons and the accessory orb ({@link AccessoryArtist}) and a review sheet at build/accessory-preview.png (one set per row, the orb last). */
+/** Draws the raid accessory icons, the accessory orb and the inheritance tickets ({@link AccessoryArtist}) and a review sheet at build/accessory-preview.png (one set per row, orb and tickets last). */
 public class AccessoryAssetProvider implements DataProvider {
 	private final PackOutput output;
 
@@ -45,6 +45,11 @@ public class AccessoryAssetProvider implements DataProvider {
 		BufferedImage orb = AccessoryArtist.orb();
 		writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(ModItems.ACCESSORY_ORB).getPath() + ".png"), orb));
 		sheet.add(orb);
+		for (int tier = 1; tier <= 2; tier++) {
+			BufferedImage ticket = AccessoryArtist.ticket(tier);
+			writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(Accessories.inheritTicket(tier)).getPath() + ".png"), ticket));
+			sheet.add(ticket);
+		}
 		ConsumableAssetProvider.preview(this.output, sheet, "accessory-preview.png");
 		return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
 	}

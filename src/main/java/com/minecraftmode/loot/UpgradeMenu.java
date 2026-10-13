@@ -2,6 +2,7 @@ package com.minecraftmode.loot;
 
 import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ArmorPieceDef;
@@ -25,14 +26,16 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The blacksmith's evolution bench: put a class weapon or armor piece in the slot, pick one of the
  * offered next pieces ({@link GearUpgrades#targets}) and pay {@link GearUpgrades#etherCost}
- * Evolution Ether of that piece's bracket plus coins. Armor and raid accessories (0.5.24; they never evolve) can also have their
- * extra options rolled again for coins. Button id = index of the target, or {@link #BUTTON_REROLL}.
+ * Evolution Ether of that piece's bracket plus coins. Raid accessories of tier 1 and 2 are inherited instead (0.5.24): the targets are
+ * the same slot of every next-tier set, paid with the tier's inheritance ticket and coins ({@link Accessories#inherit}). Armor and raid
+ * accessories can also have their extra options rolled again for coins. Button id = index of the target, or {@link #BUTTON_REROLL}.
  */
 public class UpgradeMenu extends AbstractContainerMenu {
 	public static final int WIDTH = 200;
@@ -156,6 +159,10 @@ public class UpgradeMenu extends AbstractContainerMenu {
 		if (buttonId == BUTTON_KEEP || buttonId == BUTTON_APPLY) {
 			return this.choose(player, buttonId == BUTTON_APPLY);
 		}
+		AccessoryDef accessory = Accessories.def(this.input());
+		if (accessory != null) {
+			return this.inherit(player, accessory, buttonId);
+		}
 		List<ClassGear> targets = this.targets();
 		if (buttonId < 0 || buttonId >= targets.size()) {
 			return false;
@@ -182,6 +189,42 @@ public class UpgradeMenu extends AbstractContainerMenu {
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.8F, 1.1F);
 			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.6F);
 			level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY(1.0), player.getZ(), 30, 0.5, 0.6, 0.5, 0.2);
+		}
+		this.broadcastChanges();
+		return true;
+	}
+
+	/** Whether {@code player} can pay inheriting {@code from} into {@code target}: one inheritance ticket of its tier (bags count) and coins. */
+	public static boolean canPayInherit(final Player player, final AccessoryDef from, final AccessoryDef target) {
+		Item ticket = Accessories.inheritTicket(from.set().tier());
+		return ticket != null && (player.isCreative()
+			|| Bags.count(player, ticket) >= 1 && Coins.total(player) >= Accessories.inheritCoins(target));
+	}
+
+	/** Inherits the accessory in the slot into target {@code index} of {@link Accessories#inheritTargets}. */
+	private boolean inherit(final Player player, final AccessoryDef from, final int index) {
+		List<AccessoryDef> targets = Accessories.inheritTargets(from);
+		if (index < 0 || index >= targets.size()) {
+			return false;
+		}
+		AccessoryDef target = targets.get(index);
+		if (!canPayInherit(player, from, target)) {
+			return false;
+		}
+		if (player.level().isClientSide()) {
+			return true;
+		}
+		if (!player.isCreative()) {
+			if (!Wallet.take(player, Accessories.inheritCoins(target))) {
+				return false;
+			}
+			Bags.take(player, Accessories.inheritTicket(from.set().tier()), 1);
+		}
+		this.container.setItem(0, Accessories.inherit(this.input(), target));
+		if (player.level() instanceof ServerLevel level) {
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.0F, 1.0F);
+			level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.6F);
+			level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY(1.0), player.getZ(), 30, 0.5, 0.6, 0.5, 0.05);
 		}
 		this.broadcastChanges();
 		return true;

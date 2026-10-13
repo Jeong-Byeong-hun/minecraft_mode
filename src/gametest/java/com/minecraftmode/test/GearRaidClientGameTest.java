@@ -9,6 +9,7 @@ import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.accessory.AccessorySet;
 import com.minecraftmode.accessory.AccessorySlot;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.client.accessory.AccessoryScreen;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.job.UpgradeScreen;
@@ -91,6 +92,7 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -230,9 +232,17 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			keys.addAll(List.of("container.minecraft_mode.accessories", "tooltip.minecraft_mode.accessory.source", "screen.minecraft_mode.character.source.accessory",
 				"tooltip.minecraft_mode.accessory.tier", "tooltip.minecraft_mode.accessory.enhanced", ModItems.ACCESSORY_ORB.getDescriptionId(),
 				ModItems.ACCESSORY_ORB.getDescriptionId() + ".tooltip", "screen.minecraft_mode.upgrade.accessory", "screen.minecraft_mode.codex.source.raid_top"));
-			if (resources.getResource(MinecraftMode.id("items/accessory_orb.json")).isEmpty() || resources.getResource(MinecraftMode.id("textures/item/accessory_orb.png")).isEmpty()) {
-				missing.add("model/texture accessory_orb");
+			for (String id : List.of("accessory_orb", "accessory_inherit_1", "accessory_inherit_2")) {
+				if (resources.getResource(MinecraftMode.id("items/" + id + ".json")).isEmpty() || resources.getResource(MinecraftMode.id("textures/item/" + id + ".png")).isEmpty()) {
+					missing.add("model/texture " + id);
+				}
 			}
+			for (Item ticket : List.of(ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2)) {
+				keys.add(ticket.getDescriptionId());
+				keys.add(ticket.getDescriptionId() + ".tooltip");
+			}
+			keys.addAll(List.of("tooltip.minecraft_mode.accessory.inherit", "screen.minecraft_mode.upgrade.inherit_cost", "screen.minecraft_mode.upgrade.inherit_keeps",
+				"screen.minecraft_mode.codex.source.accessory_inherit_1", "screen.minecraft_mode.codex.source.accessory_inherit_2"));
 			keys.addAll(List.of("raid.minecraft_mode.phase", "raid.minecraft_mode.victory", "screen.minecraft_mode.raid.title", "screen.minecraft_mode.loot.title",
 				"message.minecraft_mode.party.created", "message.minecraft_mode.raid.entered", "message.minecraft_mode.loot.won_auction", "key.minecraft_mode.loot_screen"));
 			for (String key : keys) {
@@ -583,8 +593,11 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			if (accessories.size() > 1 || accessories.stream().anyMatch(a -> a.set().boss() != RaidBosses.ARACHNE)) {
 				return "solo Normal Arachne gives at most one of her own accessories, got " + accessories.stream().map(AccessoryDef::id).toList();
 			}
-			if (JobProgression.count(player.getInventory(), ModItems.ACCESSORY_ORB) != 0) {
+			if (Bags.count(player, ModItems.ACCESSORY_ORB) != 0) {
 				return "a Normal clear gives no accessory orbs";
+			}
+			if (Bags.count(player, ModItems.ACCESSORY_INHERIT_1) + Bags.count(player, ModItems.ACCESSORY_INHERIT_2) != 0) {
+				return "a tier 1 boss gives no inheritance tickets";
 			}
 			Raids.leave(player);
 			return "";
@@ -610,7 +623,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			require(sets.get(i).tier() == 1 + i / 3, sets.get(i).id() + " should be tier " + (1 + i / 3) + ", is " + sets.get(i).tier());
 			BossDef boss = sets.get(i).boss();
 			float normal = Accessories.dropChance(boss, RaidDifficulty.NORMAL);
-			require(Math.abs(normal - new float[] {0.10F, 0.05F, 0.02F}[sets.get(i).tier() - 1]) < 1.0E-4F, boss.id() + " Normal drop chance " + normal);
+			require(Math.abs(normal - new float[] {0.15F, 0.08F, 0.015F}[sets.get(i).tier() - 1]) < 1.0E-4F, boss.id() + " Normal drop chance " + normal);
 			require(Accessories.dropSets(boss, RaidDifficulty.NORMAL).equals(List.of(sets.get(i))), boss.id() + " drops its own set on Normal");
 			for (RaidDifficulty difficulty : List.of(RaidDifficulty.HEROIC, RaidDifficulty.NIGHTMARE)) {
 				List<AccessorySet> from = Accessories.dropSets(boss, difficulty);
@@ -629,6 +642,18 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		}
 		require(Accessories.orbs(RaidDifficulty.NORMAL) == 0 && Accessories.orbs(RaidDifficulty.HEROIC) == 1 && Accessories.orbs(RaidDifficulty.NIGHTMARE) == 2,
 			"accessory orbs: none on Normal, 1 on Heroic, 2 on Nightmare");
+		// inheritance tickets: tier 2 bosses give the tier 1 ticket, tier 3 bosses the tier 2 one, more often on harder difficulties
+		require(Accessories.ticketDrop(RaidBosses.VERDESSA) == null && Accessories.ticketDrop(RaidBosses.NEFREKHET) == ModItems.ACCESSORY_INHERIT_1
+			&& Accessories.ticketDrop(RaidBosses.AETHRYX) == ModItems.ACCESSORY_INHERIT_2, "inheritance tickets by boss tier");
+		require(Accessories.ticketChance(RaidDifficulty.NORMAL) > 0 && Accessories.ticketChance(RaidDifficulty.HEROIC) > Accessories.ticketChance(RaidDifficulty.NORMAL)
+			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) > Accessories.ticketChance(RaidDifficulty.HEROIC), "ticket chances rise with difficulty");
+		for (AccessorySet set : sets) {
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				List<AccessoryDef> next = Accessories.inheritTargets(Accessories.def(set, slot));
+				require(set.tier() == Accessories.TOP_TIER ? next.isEmpty() : next.size() == 3 && next.stream().allMatch(t -> t.set().tier() == set.tier() + 1 && t.slot() == slot),
+					set.id() + " " + slot + " inherits into " + next.stream().map(AccessoryDef::id).toList());
+			}
+		}
 		// enhancement: +10 tops out, raises the piece's own lines by half and adds damage; never below 30% per attempt
 		require(AccessoryEnhance.chance(1, 0) == 100 && AccessoryEnhance.baseRate(AccessoryEnhance.MAX) >= 30 && AccessoryEnhance.chance(AccessoryEnhance.MAX, 100) == 100,
 			"accessory enhancement chances");
@@ -643,7 +668,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 	private static String sampleHeroicDrops() {
 		List<ItemStack> drops = Accessories.raidDrops(RaidBosses.VERDESSA, RaidDifficulty.HEROIC, 1000, RandomSource.create(11L));
 		if (drops.size() < 10 || drops.size() > 60) {
-			return "1000 Heroic Verdessa rolls should give about 30 accessories, got " + drops.size();
+			return "1000 Heroic Verdessa rolls should give about 25 accessories, got " + drops.size();
 		}
 		for (ItemStack drop : drops) {
 			AccessoryDef def = Accessories.def(drop);
@@ -764,6 +789,22 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		});
 		context.waitTicks(10);
 		context.takeScreenshot("accessory_options");
+		// a tier 1 piece on the evolution tab lists the three tier 2 pieces it can be inherited into
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.closeContainer();
+			ItemStack low = Accessories.create(Accessories.def(Accessories.setOf(RaidBosses.VERDESSA), AccessorySlot.NECKLACE), 1, RandomSource.create(9L));
+			low.set(ModDataComponents.ENHANCEMENT, new Enhancement(4, 0, 0));
+			player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_1));
+			player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new UpgradeMenu(id, inventory, null), Component.translatable("container.minecraft_mode.upgrade")));
+			if (player.containerMenu instanceof UpgradeMenu menu) {
+				menu.slots.get(0).set(low);
+				menu.broadcastChanges();
+			}
+		});
+		context.waitForScreen(UpgradeScreen.class);
+		context.waitTicks(10);
+		context.takeScreenshot("accessory_inherit");
 		server.runOnServer(s -> connection.getServerPlayer().closeContainer());
 		context.waitTicks(5);
 		server.runOnServer(s -> {
@@ -818,6 +859,52 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		if (enhance.clickMenuButton(player, EnhanceMenu.BUTTON_PROTECTED) || enhance.clickMenuButton(player, EnhanceMenu.BUTTON_AWAKEN)) {
 			return "accessories have no protected enhancement or awakening";
 		}
+		return accessoryInheritance(player);
+	}
+
+	/** A +5 tier 1 ring with artisan's spirit and two options becomes the tier 2 ring the player picks, keeping all of it, for a tier 1 ticket. */
+	private static String accessoryInheritance(final ServerPlayer player) {
+		AccessoryDef low = Accessories.def(Accessories.setOf(RaidBosses.VERDESSA), AccessorySlot.RING);
+		ItemStack ring = Accessories.create(low, 2, RandomSource.create(3L));
+		ring.set(ModDataComponents.ENHANCEMENT, new Enhancement(5, 10, 0));
+		UpgradeMenu bench = new UpgradeMenu(0, player.getInventory(), null);
+		bench.slots.get(0).set(ring.copy());
+		AccessoryDef target = Accessories.inheritTargets(low).get(1);
+		if (bench.clickMenuButton(player, 1)) {
+			return "inheriting a tier 1 ring needs a tier 1 ticket";
+		}
+		player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_2));
+		if (bench.clickMenuButton(player, 1)) {
+			return "a tier 2 ticket does not inherit a tier 1 piece";
+		}
+		player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_1));
+		int wallet = Wallet.balance(player);
+		if (!bench.clickMenuButton(player, 1)) {
+			return "a tier 1 ticket should inherit the ring";
+		}
+		ItemStack result = bench.input();
+		if (Accessories.def(result) != target) {
+			return "the ring should become " + target.id() + ", is " + result;
+		}
+		Enhancement kept = Enhancement.of(result);
+		if (kept.level() != 5 || kept.pity() != 10) {
+			return "inheritance keeps +5 and the artisan's spirit, got " + kept;
+		}
+		List<StatLine> before = ring.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines();
+		List<StatLine> after = result.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines();
+		if (after.size() != before.size()) {
+			return "inheritance keeps the options, got " + after + " from " + before;
+		}
+		for (int i = 0; i < before.size(); i++) {
+			if (after.get(i).stat() != before.get(i).stat() || after.get(i).value() < before.get(i).value()) {
+				return "an inherited option keeps its stat and grows with the level, got " + after + " from " + before;
+			}
+		}
+		if (Bags.count(player, ModItems.ACCESSORY_INHERIT_1) != 0 || Bags.count(player, ModItems.ACCESSORY_INHERIT_2) != 1
+			|| wallet - Wallet.balance(player) != Accessories.inheritCoins(target)) {
+			return "inheriting costs one tier 1 ticket and " + Accessories.inheritCoins(target) + " coins";
+		}
+		Bags.take(player, ModItems.ACCESSORY_INHERIT_2, 1);
 		return "";
 	}
 

@@ -329,6 +329,13 @@ public class GearDocProvider implements DataProvider {
 			.append("%가 붙습니다. 실패해도 단계는 내려가지 않고 장인의 기운(+").append(Enhancement.PITY_STEP).append("%p)이 쌓입니다. 세트 효과는 강화로 오르지 않습니다.\n");
 		md.append("- 장신구 강화 구슬은 **영웅·악몽 클리어 보상**입니다(보상을 받는 파티원마다 영웅 ").append(Accessories.orbs(RaidDifficulty.HEROIC)).append("개 · 악몽 ")
 			.append(Accessories.orbs(RaidDifficulty.NIGHTMARE)).append("개). 재료 가방에 들어갑니다.\n");
+		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**을 보상을 받는 파티원마다 확률로 줍니다(");
+		for (RaidDifficulty difficulty : RaidDifficulty.values()) {
+			md.append(difficulty.ordinal() > 0 ? " · " : "").append(this.ko(difficulty.nameKey())).append(' ')
+				.append(ClassDocProvider.num(Math.round(Accessories.ticketChance(difficulty) * 100))).append('%');
+		}
+		md.append("). 대장장이 진화대에 1·2티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
+			.append("강화 단계·장인의 기운과 추가 옵션(같은 능력치, 새 레벨 최대치에 대한 비율 그대로)이 이어집니다. 재료 가방에 들어갑니다.\n");
 		md.append("- 직업 비교 표(CLASSES.md)에는 넣지 않습니다(추가 옵션·각인처럼 뽑기 장비).\n\n");
 		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
 		for (AccessorySlot slot : AccessorySlot.values()) {
@@ -529,7 +536,7 @@ public class GearDocProvider implements DataProvider {
 				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" | ").append(Accessories.orbs(d) == 0 ? "-" : String.valueOf(Accessories.orbs(d))).append(" |\n");
 		}
 		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
-		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표와 강화: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다 줍니다.\n");
+		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스에서 확률로 줍니다.\n");
 		md.append("- **보상 귀속**: 보스·난이도마다 레이드 주기(현실 3일)에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
 		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
 		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");
@@ -698,7 +705,7 @@ public class GearDocProvider implements DataProvider {
 			.append("주인 없는 땅에는 아무도 짓지 못하고, 폭발은 거주구역의 블록을 부수지 않습니다. 물·용암·불, 피스톤, 디스펜서·공급기·제작기, 호퍼는 주인이 다른 땅으로 넘어가지 않고, 다른 사람이 쏜 화살이나 불붙인 TNT도 내 땅의 동물·액자·탈것을 다치게 하지 못합니다. 땅에 들어서면 액션 바에 주인이 표시되고, 주변 ").append(LandBorders.RANGE).append("블록 안의 땅 테두리가 실선으로 보입니다(내 땅 초록, 허용받은 땅 노랑, 남의 땅 빨강). 증서를 웅크린 채 쓰거나 /land로 관리 화면(땅 목록·포기·허용 목록)을 엽니다. 땅을 포기하면 그 범위가 처음 초원으로 돌아가고(지은 블록·액자·갑옷 거치대·탈것은 사라짐), 보관함·액자·갑옷 거치대에 있던 물건과 증서를 돌려받습니다.\n");
 		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");
 		md.append("- **가방**: 보급관 브람이 장비·소비·재료 가방을 한 번씩 줍니다(잡화점에서 은화 ").append(ShopOffers.BAG_PRICE / Coins.SILVER).append("개에 추가 구매). 가방마다 ")
-			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·장신구 강화 구슬·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
+			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·장신구 강화 구슬·장신구 계승권·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
 			.append("동전·정수·진화의 에테르·시련 증표·쐐기돌·화살·불사의 토템은 가방에 들어가지 않습니다(상점과 교관이 인벤토리에서 찾음). 들고 우클릭하거나 인벤토리에서 우클릭하면 열리고, 아이템을 든 채 가방을 우클릭하면 넣습니다. 가방에는 가방·셜커 상자를 넣을 수 없습니다.\n");
 		md.append("- **쓰레기통**: 인벤토리 오른쪽의 \"버림\" 버튼. 커서에 든 아이템을 없애고, 빈 커서로 누르면 마지막에 버린 것을 한 번 되돌립니다. 잡템(막대기·씨앗·켈프·네더랙·석영 등)은 잡화점이 싸게 사 줍니다(가방에 든 것도 판매 거래를 고르면 함께 팔림).\n");
 		md.append("- **대상 체력 바**: 마지막으로 때린 몬스터의 이름과 체력이 화면 위(보스 바 아래)에 ").append(TargetHealthHud.SHOW_TICKS / 20).append("초 동안 보입니다.\n");

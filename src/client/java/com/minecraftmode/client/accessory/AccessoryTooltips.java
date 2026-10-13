@@ -20,6 +20,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -91,6 +92,11 @@ public final class AccessoryTooltips {
 				lines.add(Component.literal(" (" + bonus.pieces() + ") ").withStyle(color)
 					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(color)));
 			}
+		}
+		Item ticket = Accessories.inheritTicket(set.tier());
+		if (ticket != null) {
+			lines.add(Component.translatable("tooltip.minecraft_mode.accessory.inherit", Component.translatable(ticket.getDescriptionId()), set.tier() + 1)
+				.withStyle(ChatFormatting.DARK_AQUA));
 		}
 		lines.add(Component.translatable("tooltip.minecraft_mode.accessory.wear").withStyle(ChatFormatting.DARK_GRAY));
 		lines.add(Component.empty());

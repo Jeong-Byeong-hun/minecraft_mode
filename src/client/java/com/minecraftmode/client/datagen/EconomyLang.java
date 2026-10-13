@@ -25,8 +25,11 @@ final class EconomyLang {
 		b.add("screen.minecraft_mode.upgrade.pending", ko ? "새 옵션" : "New options");
 		b.add("screen.minecraft_mode.upgrade.no_pending", ko ? "⟳로 새 옵션을 굴려 보세요. 고르기 전까지 기존 옵션이 유지됩니다." : "Roll with ⟳. The old options stay until you choose.");
 		b.add("screen.minecraft_mode.upgrade.armor_only", ko ? "추가 옵션은 직업 방어구와 레이드 장신구에만 있습니다. 칸에 넣으세요." : "Only class armor and raid accessories have extra options. Put one in the slot.");
-		b.add("screen.minecraft_mode.upgrade.accessory", ko ? "장신구는 진화하지 않습니다. 추가 옵션 탭에서 옵션을 다시 굴릴 수 있습니다 (줄 수는 그대로)."
-			: "Accessories never evolve. Roll their options again in the Options tab (same number of lines).");
+		b.add("screen.minecraft_mode.upgrade.accessory", ko ? "3티어 장신구는 더 계승할 곳이 없습니다. 추가 옵션 탭에서 옵션을 다시 굴릴 수 있습니다 (줄 수는 그대로)."
+			: "Tier 3 accessories go no further. Roll their options again in the Options tab (same number of lines).");
+		b.add("screen.minecraft_mode.upgrade.inherit_cost", ko ? "Lv %s · %s티어 계승권" : "Lv %s · tier %s ticket");
+		b.add("screen.minecraft_mode.upgrade.inherit_keeps", ko ? "%s 1장: 강화·장인의 기운·추가 옵션(새 레벨에 맞춰)이 이어집니다"
+			: "1 %s: enhancement, artisan's spirit and options (at the new level) carry over");
 		b.add("screen.minecraft_mode.buyback.title", ko ? "재구매" : "Buy back");
 		b.add("screen.minecraft_mode.buyback.price", ko ? "재구매 가격 %s (판매가 %s)" : "Buy back for %s (sold for %s)");
 		b.add("screen.minecraft_mode.buyback.click", ko ? "클릭해서 되사기 · 최근 판매 10개까지" : "Click to buy it back · last 10 sales");

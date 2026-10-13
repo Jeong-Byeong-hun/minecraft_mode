@@ -57,6 +57,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.phys.AABB;
@@ -624,6 +625,11 @@ public final class Raids {
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
 		if (Accessories.orbs(difficulty) > 0) {
 			give(player, new ItemStack(ModItems.ACCESSORY_ORB, Accessories.orbs(difficulty)));
+		}
+		// tier 2 and 3 bosses: a ticket that inherits an accessory of the tier below into theirs
+		Item ticket = Accessories.ticketDrop(def);
+		if (ticket != null && random.nextFloat() < Accessories.ticketChance(difficulty)) {
+			give(player, new ItemStack(ticket));
 		}
 		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);

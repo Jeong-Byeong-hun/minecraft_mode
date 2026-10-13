@@ -69,6 +69,8 @@ public final class Crops {
 	/** Copper the grocer pays for one crop. */
 	public static final float BASIC_PRICE = 1.0F / 16;
 	public static final float ADVANCED_PRICE = 1.0F / 6;
+	/** A seed sells for this share of its crop (basic seeds stay well under the grocer's 1/8 copper asking price). */
+	public static final float SEED_SHARE = 0.5F;
 
 	/** How the crop's icon and plant are drawn (client art). */
 	public enum Shape {
@@ -219,13 +221,18 @@ public final class Crops {
 		return def.advanced() ? ADVANCED_PRICE : BASIC_PRICE;
 	}
 
-	/** The grocer's lines: buys every crop, sells the basic seeds (and the self-planting crops) at twice what it pays. */
+	/** The grocer's lines: buys every crop and seed, sells the basic seeds (and the self-planting crops) at twice what it pays. */
 	public static List<ShopOffers.Trade> trades() {
 		List<ShopOffers.Trade> out = new ArrayList<>();
 		for (CropDef def : DEFS) {
 			ShopOffers.Trade line = CraftPrices.line(produce(def), price(def));
 			if (line != null) {
 				out.add(line);
+			}
+			Item seed = seed(def);
+			ShopOffers.Trade seedLine = seed == null ? null : CraftPrices.line(seed, price(def) * SEED_SHARE);
+			if (seedLine != null) {
+				out.add(seedLine);
 			}
 		}
 		for (CropDef def : basic()) {

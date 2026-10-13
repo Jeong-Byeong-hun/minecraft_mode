@@ -6,6 +6,7 @@ import com.minecraftmode.client.menu.AdminScreen;
 import com.minecraftmode.client.menu.AdventurerScreen;
 import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.raid.RaidClient;
+import com.minecraftmode.command.DiceCommand;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
@@ -19,7 +20,10 @@ import com.minecraftmode.residence.LandClaims;
 import com.minecraftmode.residence.ResidenceDimension;
 import com.mojang.authlib.GameProfile;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -36,8 +40,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 
 /**
- * The adventurer's menu and the admin screen. A party is made and left through the menu's payload, paying moves coins, the settings
- * toggles flip and are saved; a player without operator rights is refused by the admin handler, while the operator gives and sets
+ * The adventurer's menu and the admin screen. A party is made and left through the menu's payload, paying moves coins, the dice
+ * button and {@code /dice} put a 1-1000 roll in the chat (one roll per few seconds), the settings toggles flip and are saved; a player without operator rights is refused by the admin handler, while the operator gives and sets
  * money, sets a level and a class, summons tagged monsters, teleports onto the surface, takes a market listing back to its seller's
  * mailbox and frees an offline owner's land (deed to the mailbox). Every tab of both screens is screenshotted.
  */
@@ -49,10 +53,15 @@ final class MenuChecks {
 	private static final int LAND_CHUNK = 12;
 	private static final int ADVENTURER_TABS = 4;
 	private static final int ADMIN_TABS = 5;
+	/** "... 537 (1-1000)" (English) or "... 537 (1~1000)" (Korean). */
+	private static final Pattern DICE_LINE = Pattern.compile("(\\d+) \\(1[-~]" + DiceCommand.SIDES + "\\)");
+	private static volatile String lastGameMessage = "";
+	private static boolean diceListening;
 
 	static void run(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		checkParty(context, server, connection);
 		checkPay(server, connection);
+		checkDice(context, server, connection);
 		checkSettings(context);
 		// the test world has no cheats: its player is a plain player until made an operator
 		server.runOnServer(s -> require(!Admin.allowed(connection.getServerPlayer()), "without cheats the singleplayer owner is no operator"));
@@ -84,6 +93,35 @@ final class MenuChecks {
 			require(!Wallet.pay(player, friend, before * 10), "nobody pays more than they have");
 			require(!Wallet.pay(player, player, 10), "nor themselves");
 		});
+	}
+
+	/** The menu's dice button and {@code /dice}: a roll of 1-1000 reaches the chat, a second roll right away is refused. */
+	private static void checkDice(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		if (!diceListening) {
+			diceListening = true;
+			ClientReceiveMessageEvents.GAME.register((message, overlay) -> {
+				if (!overlay) {
+					lastGameMessage = message.getString();
+				}
+			});
+		}
+		lastGameMessage = "";
+		context.runOnClient(mc -> ClientPlayNetworking.send(new MenuActionPayload(MenuActionPayload.DICE)));
+		context.waitFor(mc -> DICE_LINE.matcher(lastGameMessage).find(), WAIT);
+		requireRoll(lastGameMessage, context.computeOnClient(mc -> mc.player.getGameProfile().name()));
+		server.runOnServer(s -> require(DiceCommand.roll(connection.getServerPlayer()) == -1, "a second roll right away waits"));
+		context.waitTicks(DiceCommand.COOLDOWN_TICKS + 5);
+		lastGameMessage = "";
+		server.runCommand("execute as @p run dice");
+		context.waitFor(mc -> DICE_LINE.matcher(lastGameMessage).find(), WAIT);
+		requireRoll(lastGameMessage, context.computeOnClient(mc -> mc.player.getGameProfile().name()));
+	}
+
+	private static void requireRoll(final String line, final String name) {
+		Matcher m = DICE_LINE.matcher(line);
+		require(m.find() && line.contains(name), "the roll should name the player: " + line);
+		int value = Integer.parseInt(m.group(1));
+		require(value >= 1 && value <= DiceCommand.SIDES, "a roll is 1-" + DiceCommand.SIDES + ", got " + value);
 	}
 
 	private static void checkSettings(final ClientGameTestContext context) {

@@ -73,7 +73,7 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 - 정수 각인대: `정수 ×3 / 다이아몬드·미스릴 주괴·다이아몬드 / 흑요석 ×3`, 응축된 정수 = 정수 ×9
 - 조리대: `철 주괴·정수·철 주괴 / 판자·훈연기·판자 / 판자 ×3`, 연금술 작업대: `유리병·정수·유리병 / 판자·양조기·판자 / 판자 ×3`, 대장 작업대: `철 주괴·정수·철 주괴 / 조약돌·모루·조약돌 / 조약돌 ×3`
 
-명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 Y 키), `/dungeon leave`(던전에서 귀환), `/story`(현재 장), `/land`(거주구역 땅 관리), 화면 설정 `/damagenumbers`·`/hpbar`·`/enhanceeffects true|false`. 파티·송금·화면 설정과 레이드·던전 귀환은 모험가 메뉴(;)에서도 된다. 키: R/X/V/Z 스킬, B 고유 기술, K 직업 창, I 캐릭터 정보, N 특성·초월, J 도감·스토리, U 펫·탈것, H 탈것 호출/내리기, Y 레이드 전리품, M 월드 지도(미니맵은 쉼표 키로 켜고 끔), `;` 모험가 메뉴
+명령어: `/wallet`, `/wallet pay <플레이어> <금액>`, `/party create|invite <플레이어>|accept|leave|kick <이름>|promote <이름>|disband|list`, `/raid leave`(레이드에서 바로 귀환), `/raid loot`(전리품 창, 기본 Y 키), `/dungeon leave`(던전에서 귀환), `/story`(현재 장), `/land`(거주구역 땅 관리), `/dice`(1~1000 주사위, 결과는 서버 전체 채팅에 표시, 3초에 한 번), 화면 설정 `/damagenumbers`·`/hpbar`·`/enhanceeffects true|false`. 파티·송금·주사위·화면 설정과 레이드·던전 귀환은 모험가 메뉴(;)에서도 된다. 키: R/X/V/Z 스킬, B 고유 기술, K 직업 창, I 캐릭터 정보, N 특성·초월, J 도감·스토리, U 펫·탈것, H 탈것 호출/내리기, Y 레이드 전리품, M 월드 지도(미니맵은 쉼표 키로 켜고 끔), `;` 모험가 메뉴
 
 관리자 명령어(권한 2): `/job info|set|level|exp|mana|cooldowns|cast`, `/job trainer <직업>`(그 자리에 교관 소환), `/job quest <대상> clear|goals`(시련 취소 / 처치 목표 채우기), `/raid start <보스> [플레이어]`(사령관·레벨 확인 없이 레이드 시작), `/raid list`, `/dungeon start <던전> [단계]|list`, `/worldevent titan [네임드]|invasion|stop`, `/story set <장>`, `/wallet give|set <플레이어> <금액>`, `/locate structure minecraft_mode:lair_<네임드 id>`(소굴 찾기). 대부분은 모험가 메뉴의 **관리자 화면**에서 GUI로도 할 수 있다(위 "관리자 화면")
 

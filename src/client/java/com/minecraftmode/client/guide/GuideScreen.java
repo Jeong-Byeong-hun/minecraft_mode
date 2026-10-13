@@ -44,6 +44,7 @@ import org.jspecify.annotations.Nullable;
 public class GuideScreen extends Screen {
 	private static final int W = 380;
 	private static final int H = 232;
+	private static final int MIN_H = 120;
 	private static final int LIST_W = 116;
 	private static final int ROW = 16;
 	/** The level a class can be chosen at (the leveling topic counts up to it). */
@@ -71,9 +72,13 @@ public class GuideScreen extends Screen {
 	}
 
 	private static Topic topic = Topic.START;
+	/** First topic shown in the list. */
+	private static int topicScroll;
 	private final int guideId;
 	private int left;
 	private int top;
+	private int h = H;
+	private boolean revealTopic = true;
 	private int scroll;
 	private List<Line> lines = List.of();
 
@@ -94,25 +99,33 @@ public class GuideScreen extends Screen {
 
 	@Override
 	protected void init() {
+		// the panel shrinks on short windows; the topic list then scrolls
+		this.h = Math.min(H, Math.max(MIN_H, this.height - 8));
 		this.left = (this.width - W) / 2;
-		this.top = (this.height - H) / 2;
+		this.top = (this.height - this.h) / 2;
 		Topic[] topics = Topic.values();
-		for (int i = 0; i < topics.length; i++) {
+		if (this.revealTopic) {
+			// on opening, scroll the list so the chosen topic shows; later rebuilds keep the wheel's position
+			this.revealTopic = false;
+			topicScroll = Mth.clamp(topicScroll, topic.ordinal() - this.visibleTopics() + 1, topic.ordinal());
+		}
+		topicScroll = Mth.clamp(topicScroll, 0, this.maxTopicScroll());
+		for (int i = topicScroll; i < Math.min(topics.length, topicScroll + this.visibleTopics()); i++) {
 			Topic t = topics[i];
 			Button b = Button.builder(Component.translatable(t.key()), button -> {
 				topic = t;
 				this.scroll = 0;
 				this.rebuildWidgets();
-			}).bounds(this.left + 8, this.top + 24 + i * ROW, LIST_W, 15).build();
+			}).bounds(this.left + 8, this.top + 24 + (i - topicScroll) * ROW, LIST_W, 15).build();
 			b.active = t != topic;
 			this.addRenderableWidget(b);
 		}
-		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + W - 68, this.top + H - 22, 60, 18).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + W - 68, this.top + this.h - 22, 60, 18).build());
 		if (this.guideId >= 0) {
 			this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.guide.handbook"), b -> {
 				ClientPlayNetworking.send(new GuideBookPayload(this.guideId));
 				b.active = false;
-			}).bounds(this.left + TEXT_X - 4, this.top + H - 22, 110, 18).build());
+			}).bounds(this.left + TEXT_X - 4, this.top + this.h - 22, 110, 18).build());
 		}
 		this.lines = this.layout(W - TEXT_X - 16);
 		this.scroll = Mth.clamp(this.scroll, 0, this.maxScroll());
@@ -166,22 +179,30 @@ public class GuideScreen extends Screen {
 	}
 
 	private int visibleLines() {
-		return (H - TEXT_TOP - TEXT_BOTTOM) / LINE;
+		return Math.max(1, (this.h - TEXT_TOP - TEXT_BOTTOM) / LINE);
 	}
 
 	private int maxScroll() {
 		return Math.max(0, this.lines.size() - this.visibleLines());
 	}
 
+	private int visibleTopics() {
+		return Math.max(1, (this.h - 24 - 6) / ROW);
+	}
+
+	private int maxTopicScroll() {
+		return Math.max(0, Topic.values().length - this.visibleTopics());
+	}
+
 	@Override
 	public void extractRenderState(final GuiGraphicsExtractor g, final int mouseX, final int mouseY, final float a) {
 		int x = this.left;
 		int y = this.top;
-		g.fill(x, y, x + W, y + H, 0xE8101018);
-		g.outline(x, y, W, H, 0xFF4AA8E8);
+		g.fill(x, y, x + W, y + this.h, 0xE8101018);
+		g.outline(x, y, W, this.h, 0xFF4AA8E8);
 		g.text(this.font, this.title.copy().withStyle(ChatFormatting.AQUA), x + 10, y + 9, 0xFFFFFFFF, true);
 		int tx = x + TEXT_X;
-		g.fill(tx - 4, y + 24, x + W - 6, y + H - 26, 0x40000000);
+		g.fill(tx - 4, y + 24, x + W - 6, y + this.h - 26, 0x40000000);
 		g.text(this.font, Component.translatable(topic.key()).withStyle(ChatFormatting.GOLD), tx, y + 28, 0xFFFFFFFF, false);
 		int hovered = this.lineAt(mouseX, mouseY);
 		int shown = Math.min(this.visibleLines(), this.lines.size() - this.scroll);
@@ -202,6 +223,15 @@ public class GuideScreen extends Screen {
 			g.fill(x + W - 11, trackTop, x + W - 8, trackTop + track, 0x40FFFFFF);
 			g.fill(x + W - 11, thumbTop, x + W - 8, thumbTop + thumb, 0xC0FFFFFF);
 		}
+		if (this.maxTopicScroll() > 0) {
+			// the topic list's bar, between the list and the answer pane
+			int trackTop = y + 24;
+			int track = this.visibleTopics() * ROW - 1;
+			int thumb = Math.max(8, track * this.visibleTopics() / Topic.values().length);
+			int thumbTop = trackTop + (track - thumb) * topicScroll / this.maxTopicScroll();
+			g.fill(x + LIST_W + 9, trackTop, x + LIST_W + 11, trackTop + track, 0x40FFFFFF);
+			g.fill(x + LIST_W + 9, thumbTop, x + LIST_W + 11, thumbTop + thumb, 0xC0FFFFFF);
+		}
 		super.extractRenderState(g, mouseX, mouseY, a);
 	}
 
@@ -218,6 +248,14 @@ public class GuideScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(final double mouseX, final double mouseY, final double scrollX, final double scrollY) {
+		if (mouseX >= this.left && mouseX < this.left + TEXT_X - 4 && mouseY >= this.top && mouseY < this.top + this.h) {
+			if (this.maxTopicScroll() > 0 && scrollY != 0) {
+				topicScroll = Mth.clamp(topicScroll - (int)Math.signum(scrollY), 0, this.maxTopicScroll());
+				this.rebuildWidgets();
+				return true;
+			}
+			return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+		}
 		if (this.maxScroll() > 0 && scrollY != 0) {
 			this.scroll = Mth.clamp(this.scroll - (int)Math.signum(scrollY) * 3, 0, this.maxScroll());
 			return true;

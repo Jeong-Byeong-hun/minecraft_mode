@@ -1,6 +1,7 @@
 package com.minecraftmode.bag;
 
 import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -53,13 +54,22 @@ public final class BagMenu extends AbstractContainerMenu {
 		this.addStandardInventorySlots(inventory, 8, 18 + 3 * 18 + 13);
 	}
 
+	/** Invisible insertion on the screen title, so the client can tell a bag from a chest of the same name. */
+	private static final String TITLE_MARK = "minecraft_mode:bag";
+
+	/** Whether a container screen titled {@code title} shows a bag (client side; the server marks the title). */
+	public static boolean isBagTitle(final Component title) {
+		return TITLE_MARK.equals(title.getStyle().getInsertion());
+	}
+
 	/** Opens the bag in {@code slot} of the player's inventory (does nothing when that is not a bag). */
 	public static void open(final ServerPlayer player, final int slot) {
 		ItemStack stack = player.getInventory().getItem(slot);
 		if (!(stack.getItem() instanceof BagItem)) {
 			return;
 		}
-		player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new BagMenu(id, inventory, slot), stack.getHoverName()));
+		Component title = stack.getHoverName().copy().withStyle(style -> style.withInsertion(TITLE_MARK));
+		player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new BagMenu(id, inventory, slot), title));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 0.6F, 1.2F);
 	}
 

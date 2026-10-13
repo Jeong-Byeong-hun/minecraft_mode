@@ -6,7 +6,8 @@
 		"AbstractContainerScreenAccessor",
 		"BossHealthOverlayAccessor",
 		"GuiGraphicsExtractorMixin",
-		"LightmapRenderStateExtractorMixin"
+		"LightmapRenderStateExtractorMixin",
+		"MouseHandlerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

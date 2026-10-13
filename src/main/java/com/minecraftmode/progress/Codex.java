@@ -46,7 +46,7 @@ public final class Codex {
 	public static final int[] MILESTONES = {10, 100, 1000};
 	private static final Set<String> NOT_LISTED = Set.of("minecraft:creeper", "minecraft:giant", "minecraft:illusioner");
 	/** Mod items that are never found in play: blocks the world places and items that only stand for projectiles. */
-	private static final Set<String> HIDDEN_ITEMS = Set.of("shop_block", "blacksmith_shop", "grocer_shop", "jeweler_shop", "alchemist_shop", "guild_shop",
+	private static final Set<String> HIDDEN_ITEMS = Set.of("shop_block", "blacksmith_shop", "grocer_shop", "jeweler_shop", "alchemist_shop", "guild_shop", "farmer_shop", "fishmonger_shop",
 		"engraving_table", "kitchen_station", "alchemy_station", "smithing_station", "lair_chest", "lair_cache");
 
 	/** Where a common monster is met. */

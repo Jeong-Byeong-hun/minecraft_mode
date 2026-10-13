@@ -24,9 +24,10 @@ import org.jspecify.annotations.Nullable;
  */
 public class CharacterSelectScreen extends MenuScreenBase {
 	private static final String K = "screen.minecraft_mode.menu.";
-	private static final int W = 384;
+	private static final int W = 424;
 	private static final int H = 224;
-	private static final int CARD_W = 72;
+	/** Widest card; seven slots share the width at 56 each. */
+	private static final int MAX_CARD_W = 72;
 	private static final int CARD_GAP = 4;
 	private static final int FIGURE_H = 70;
 	private static final int FIGURE_SIZE = 30;
@@ -36,6 +37,7 @@ public class CharacterSelectScreen extends MenuScreenBase {
 
 	/** One figure per slot (null for an empty slot), rebuilt whenever new slots arrive. */
 	private final List<@Nullable RemotePlayer> figures = new ArrayList<>();
+	private int cardW = MAX_CARD_W;
 	private int cardsX;
 	private int cardsY;
 
@@ -66,7 +68,8 @@ public class CharacterSelectScreen extends MenuScreenBase {
 			return;
 		}
 		int count = list.entries().size();
-		this.cardsX = this.left + (this.w - count * CARD_W - (count - 1) * CARD_GAP) / 2;
+		this.cardW = Math.min(MAX_CARD_W, (this.w - 8 - (count - 1) * CARD_GAP) / count);
+		this.cardsX = this.left + (this.w - count * this.cardW - (count - 1) * CARD_GAP) / 2;
 		this.cardsY = y;
 		for (int slot = 0; slot < count; slot++) {
 			CharacterListPayload.Entry e = list.entries().get(slot);
@@ -74,7 +77,7 @@ public class CharacterSelectScreen extends MenuScreenBase {
 			boolean current = slot == list.active();
 			Component text = Component.translatable(K + (current ? "character.continue" : e.empty() ? "character.new" : "character.play"));
 			int index = slot;
-			this.button(this.cardX(slot) + 2, y + FIGURE_H + 37, CARD_W - 4, current ? text.copy().withStyle(ChatFormatting.GREEN) : text,
+			this.button(this.cardX(slot) + 2, y + FIGURE_H + 37, this.cardW - 4, current ? text.copy().withStyle(ChatFormatting.GREEN) : text,
 				() -> MenuClient.send(MenuActionPayload.CHARACTER_ENTER, index));
 		}
 		int below = y + CARD_H + 4;
@@ -103,7 +106,7 @@ public class CharacterSelectScreen extends MenuScreenBase {
 	}
 
 	private int cardX(final int slot) {
-		return this.cardsX + slot * (CARD_W + CARD_GAP);
+		return this.cardsX + slot * (this.cardW + CARD_GAP);
 	}
 
 	@Override
@@ -115,11 +118,11 @@ public class CharacterSelectScreen extends MenuScreenBase {
 		for (int slot = 0; slot < this.figures.size() && slot < list.entries().size(); slot++) {
 			int x0 = this.cardX(slot);
 			boolean current = slot == list.active();
-			g.fill(x0, this.cardsY, x0 + CARD_W, this.cardsY + CARD_H, current ? 0x40507F3F : 0x30FFFFFF);
-			g.outline(x0, this.cardsY, CARD_W, CARD_H, current ? 0xFF6FBF5F : 0x60FFFFFF);
+			g.fill(x0, this.cardsY, x0 + this.cardW, this.cardsY + CARD_H, current ? 0x40507F3F : 0x30FFFFFF);
+			g.outline(x0, this.cardsY, this.cardW, CARD_H, current ? 0xFF6FBF5F : 0x60FFFFFF);
 			RemotePlayer figure = this.figures.get(slot);
 			if (figure != null) {
-				InventoryScreen.extractEntityInInventoryFollowsMouse(g, x0 + 2, this.cardsY + 2, x0 + CARD_W - 2, this.cardsY + FIGURE_H, FIGURE_SIZE,
+				InventoryScreen.extractEntityInInventoryFollowsMouse(g, x0 + 2, this.cardsY + 2, x0 + this.cardW - 2, this.cardsY + FIGURE_H, FIGURE_SIZE,
 					0.0625F, mouseX, mouseY, figure);
 			}
 			CharacterListPayload.Entry e = list.entries().get(slot);
@@ -136,9 +139,9 @@ public class CharacterSelectScreen extends MenuScreenBase {
 
 	/** {@code text} centred on the card, cut to the card's width (long class titles). */
 	private void centered(final GuiGraphicsExtractor g, final Component text, final int cardX, final int y, final int color) {
-		FormattedText fitted = this.font.substrByWidth(text, CARD_W - 4);
+		FormattedText fitted = this.font.substrByWidth(text, this.cardW - 4);
 		int width = this.font.width(fitted);
-		g.text(this.font, Language.getInstance().getVisualOrder(fitted), cardX + (CARD_W - width) / 2, y, color, false);
+		g.text(this.font, Language.getInstance().getVisualOrder(fitted), cardX + (this.cardW - width) / 2, y, color, false);
 	}
 
 	/** New character slots arrived from the server. */

@@ -82,7 +82,7 @@ public final class CharacterRoster extends SavedData {
 			Codec.INT.optionalFieldOf("slots", Characters.BASE_SLOTS).forGetter(Account::slots),
 			Stored.CODEC.listOf().optionalFieldOf("stored", List.of()).forGetter(Account::stored),
 			Origin.CODEC.optionalFieldOf("origin").forGetter(a -> Optional.ofNullable(a.origin()))
-		).apply(i, (active, slots, stored, origin) -> new Account(active, slots, stored, origin.orElse(null))));
+		).apply(i, (active, slots, stored, origin) -> new Account(active, Math.max(slots, Characters.BASE_SLOTS), stored, origin.orElse(null))));
 
 		public @Nullable Stored at(final int slot) {
 			return this.stored.stream().filter(s -> s.slot() == slot).findFirst().orElse(null);

@@ -64,6 +64,10 @@ public final class ModLanguageProviders {
 			builder.add(ShopType.GROCER.titleKey(), "Grocer");
 			builder.add(ShopType.JEWELER.titleKey(), "Jeweler");
 			builder.add(ShopType.ALCHEMIST.titleKey(), "Alchemist");
+			builder.add(ModItems.FARMER_SHOP, "Farmer");
+			builder.add(ShopType.FARMER.titleKey(), "Farmer");
+			builder.add(ModItems.FISHMONGER_SHOP, "Fishmonger");
+			builder.add(ShopType.FISHMONGER.titleKey(), "Fishmonger");
 
 			builder.add(ModEntities.MINE_RAIDER, "Mine Raider");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "Mine Raider Spawn Egg");
@@ -135,6 +139,10 @@ public final class ModLanguageProviders {
 			builder.add(ShopType.GROCER.titleKey(), "식료품점");
 			builder.add(ShopType.JEWELER.titleKey(), "보석상");
 			builder.add(ShopType.ALCHEMIST.titleKey(), "연금술사");
+			builder.add(ModItems.FARMER_SHOP, "농산물상");
+			builder.add(ShopType.FARMER.titleKey(), "농산물상");
+			builder.add(ModItems.FISHMONGER_SHOP, "어물상");
+			builder.add(ShopType.FISHMONGER.titleKey(), "어물상");
 
 			builder.add(ModEntities.MINE_RAIDER, "광산 약탈자");
 			builder.add(ModItems.MINE_RAIDER_SPAWN_EGG, "광산 약탈자 생성 알");

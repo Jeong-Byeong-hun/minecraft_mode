@@ -291,6 +291,24 @@ public final class ShopOffers {
 				buy(ModItems.SILVER_COIN, 1, Items.GOLDEN_APPLE, 1),
 				buy(ModItems.SILVER_COIN, 2, Items.GOLDEN_CARROT, 4)
 			), Crops.trades(), Fishing.trades()).flatMap(List::stream).toList();
+			// the residence square's stalls: the grocer's crop and fish lines on their own
+			case FARMER -> Stream.of(List.of(
+				sell(Items.WHEAT, 20, ModItems.COPPER_COIN, 1),
+				sell(Items.CARROT, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.POTATO, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.BEETROOT, 20, ModItems.COPPER_COIN, 1),
+				sell(Items.MELON_SLICE, 32, ModItems.COPPER_COIN, 1),
+				sell(Items.PUMPKIN, 6, ModItems.COPPER_COIN, 1),
+				sell(Items.SUGAR_CANE, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.SWEET_BERRIES, 24, ModItems.COPPER_COIN, 1),
+				sell(Items.COCOA_BEANS, 16, ModItems.COPPER_COIN, 1),
+				buy(ModItems.COPPER_COIN, 2, Items.WHEAT_SEEDS, 16)
+			), Crops.trades()).flatMap(List::stream).toList();
+			case FISHMONGER -> Stream.of(List.of(
+				sell(Items.COD, 12, ModItems.COPPER_COIN, 1),
+				sell(Items.SALMON, 12, ModItems.COPPER_COIN, 1),
+				buy(ModItems.COPPER_COIN, 6, Items.FISHING_ROD, 1)
+			), Fishing.trades()).flatMap(List::stream).toList();
 			case JEWELER -> List.of(
 				sell(Items.GOLD_INGOT, 1, ModItems.COPPER_COIN, 2),
 				sell(Items.LAPIS_LAZULI, 16, ModItems.COPPER_COIN, 2),

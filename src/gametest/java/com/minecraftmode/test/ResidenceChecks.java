@@ -5,13 +5,17 @@ import com.minecraftmode.city.CityServices;
 import com.minecraftmode.client.residence.LandBorders;
 import com.minecraftmode.client.residence.LandScreen;
 import com.minecraftmode.client.travel.TravelScreen;
+import com.minecraftmode.craft.Crops;
+import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.network.LandActionPayload;
 import com.minecraftmode.network.TravelPayload;
+import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.residence.IdleGrowth;
 import com.minecraftmode.residence.LandClaims;
 import com.minecraftmode.residence.LandOffice;
 import com.minecraftmode.residence.ResidenceDimension;
@@ -45,12 +49,15 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.DispenserBlock;
+import net.minecraft.world.level.block.FarmlandBlock;
 import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.DispenserBlockEntity;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.piston.PistonBaseBlock;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -73,6 +80,40 @@ final class ResidenceChecks {
 		checkClaims(server);
 		checkEdges(context, server, connection);
 		checkScreen(context, server, connection);
+		checkIdleGrowth(context, server, connection);
+	}
+
+	private static final BlockPos FIELD = new BlockPos(40, ResidenceDimension.SURFACE_Y + 1, 104);
+
+	/** A chunk with crops that stops ticking (nobody near) waits to catch up; the missed time ripens them, no time changes nothing. */
+	private static void checkIdleGrowth(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		ChunkPos chunk = ChunkPos.containing(FIELD);
+		server.runOnServer(s -> {
+			ServerLevel level = ResidenceDimension.level(s);
+			connection.getServerPlayer().teleportTo(level, FIELD.getX() + 0.5, FIELD.getY(), FIELD.getZ() - 4.5, java.util.Set.of(), 0.0F, 0.0F, true);
+		});
+		context.waitTicks(40);
+		server.runOnServer(s -> {
+			ServerLevel level = ResidenceDimension.level(s);
+			level.setBlockAndUpdate(FIELD.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmlandBlock.MOISTURE, FarmlandBlock.MAX_MOISTURE));
+			level.setBlockAndUpdate(FIELD, Crops.block(Crops.all().getFirst()).defaultBlockState());
+			require(!IdleGrowth.waiting(level, chunk), "a ticking field does not wait");
+		});
+		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5 0 0");
+		context.waitTicks(100);
+		server.runOnServer(s -> {
+			ServerLevel level = ResidenceDimension.level(s);
+			require(IdleGrowth.waiting(level, chunk), "a field nobody is near waits to catch up");
+			LevelChunk field = level.getChunk(chunk.x(), chunk.z());
+			CropBlock crop = (CropBlock)Crops.block(Crops.all().getFirst());
+			level.setBlockAndUpdate(FIELD, crop.getStateForAge(0));
+			IdleGrowth.catchUp(level, field, 0);
+			require(crop.getAge(level.getBlockState(FIELD)) == 0, "no missed time, no growth");
+			IdleGrowth.catchUp(level, field, 24000 * 10);
+			require(crop.isMaxAge(level.getBlockState(FIELD)), "ten missed days ripen a watered crop");
+			level.setBlockAndUpdate(FIELD, Blocks.AIR.defaultBlockState());
+			level.setBlockAndUpdate(FIELD.below(), Blocks.GRASS_BLOCK.defaultBlockState());
+		});
 	}
 
 	// Alice owns chunk 2,2 (x 32..47), Bob chunk 3,2 (x 48..63): every setup sits on Alice's east edge, x 47.
@@ -209,6 +250,15 @@ final class ResidenceChecks {
 			java.util.List<CityNpc> keepers = residence.getEntitiesOfClass(CityNpc.class, new AABB(ResidenceDimension.waymaster()).inflate(4),
 				n -> n.role() == CityNpc.Role.WAYMASTER);
 			require(keepers.size() == 1, "one waymaster stands on the residence square, got " + keepers.size());
+			ResidenceDimension.shops().forEach((block, pos) -> require(residence.getBlockState(pos).is(block), block + " stands on the square at " + pos));
+			BlockPos farmer = ResidenceDimension.shops().get(ModBlocks.FARMER_SHOP);
+			residence.removeBlock(farmer, false);
+			ResidenceDimension.keepShops(residence);
+			require(residence.getBlockState(farmer).is(ModBlocks.FARMER_SHOP), "a missing stall is put back");
+			java.util.List<ShopOffers.Trade> crops = ShopOffers.trades(ShopType.FARMER);
+			java.util.List<ShopOffers.Trade> fish = ShopOffers.trades(ShopType.FISHMONGER);
+			require(crops.containsAll(Crops.trades()), "the farmer buys every crop and sells the seeds");
+			require(fish.containsAll(Fishing.trades()), "the fishmonger buys every fish");
 			player.teleportTo(residence, ResidenceDimension.waymaster().getX() + 0.5, ResidenceDimension.SURFACE_Y + 1, ResidenceDimension.waymaster().getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
 			return keepers.getFirst().getId();
 		});

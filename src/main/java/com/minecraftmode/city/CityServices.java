@@ -431,10 +431,11 @@ public final class CityServices {
 			&& pos.getY() >= level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - CityZone.OUTSKIRTS_SURFACE_DEPTH;
 	}
 
-	/** No player-versus-player damage inside the city, in raid arenas or in dungeons. */
+	/** No player-versus-player damage inside the city, in raid arenas, in dungeons or in the residence. */
 	public static boolean blocksPvp(final Entity victim, final Entity attacker) {
 		return victim instanceof Player && attacker instanceof Player && attacker != victim
-			&& (CityZone.protectedAt(victim.level(), victim.blockPosition()) || RaidDimension.is(victim.level()) || DungeonDimension.is(victim.level()));
+			&& (CityZone.protectedAt(victim.level(), victim.blockPosition()) || RaidDimension.is(victim.level())
+				|| DungeonDimension.is(victim.level()) || ResidenceDimension.is(victim.level()));
 	}
 
 	private CityServices() {

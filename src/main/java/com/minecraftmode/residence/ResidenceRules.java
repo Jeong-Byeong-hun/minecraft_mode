@@ -1,5 +1,6 @@
 package com.minecraftmode.residence;
 
+import com.minecraftmode.block.ShopBlock;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.network.LandBordersPayload;
@@ -55,7 +56,8 @@ public final class ResidenceRules {
 	public static void init() {
 		// break/place and block-changing items go through CityServices.blocksBuilding; these cover the rest
 		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
-			if (player.getItemInHand(hand).is(ModItems.LAND_DEED)) {
+			// shops (the square's stalls) trade with everyone
+			if (player.getItemInHand(hand).is(ModItems.LAND_DEED) || level.getBlockState(hit.getBlockPos()).getBlock() instanceof ShopBlock) {
 				return InteractionResult.PASS;
 			}
 			return refuse(player, level, hit.getBlockPos(), blocks(player, hit.getBlockPos()));
@@ -72,6 +74,7 @@ public final class ResidenceRules {
 			ServerLevel residence = ResidenceDimension.level(server);
 			if (residence != null && server.getTickCount() % WAYMASTER_INTERVAL == 0) {
 				CityServices.keepNpc(residence, CityNpc.Role.WAYMASTER, ResidenceDimension.waymaster());
+				ResidenceDimension.keepShops(residence);
 			}
 		});
 		ServerPlayerEvents.JOIN.register(player -> LandClaims.get(player.level().getServer()).rename(player.getUUID(), player.getPlainTextName()));

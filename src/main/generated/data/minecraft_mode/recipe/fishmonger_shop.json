@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "minecraft_mode:shop_block",
+    "minecraft:fishing_rod"
+  ],
+  "result": {
+    "id": "minecraft_mode:fishmonger_shop"
+  }
+}

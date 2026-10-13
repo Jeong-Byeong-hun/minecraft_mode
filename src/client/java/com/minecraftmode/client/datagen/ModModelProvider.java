@@ -45,6 +45,8 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.GROCER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.JEWELER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.ALCHEMIST_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.FARMER_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.FISHMONGER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.GUILD_SHOP, TexturedModel.COLUMN);
 		// engraving_table_top / _side / _bottom
 		generators.createTrivialBlock(ModBlocks.ENGRAVING_TABLE, TexturedModel.CUBE_BOTTOM_TOP);

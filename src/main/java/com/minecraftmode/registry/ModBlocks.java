@@ -86,6 +86,8 @@ public final class ModBlocks {
 	public static final Block GROCER_SHOP = registerShop("grocer_shop", ShopType.GROCER);
 	public static final Block JEWELER_SHOP = registerShop("jeweler_shop", ShopType.JEWELER);
 	public static final Block ALCHEMIST_SHOP = registerShop("alchemist_shop", ShopType.ALCHEMIST);
+	public static final Block FARMER_SHOP = registerShop("farmer_shop", ShopType.FARMER);
+	public static final Block FISHMONGER_SHOP = registerShop("fishmonger_shop", ShopType.FISHMONGER);
 	/** Sells class weapons of the visitor's class and tier. */
 	public static final Block GUILD_SHOP = registerShop("guild_shop", ShopType.GUILD);
 

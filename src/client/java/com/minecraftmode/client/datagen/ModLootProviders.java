@@ -51,6 +51,8 @@ public final class ModLootProviders {
 			this.dropSelf(ModBlocks.GROCER_SHOP);
 			this.dropSelf(ModBlocks.JEWELER_SHOP);
 			this.dropSelf(ModBlocks.ALCHEMIST_SHOP);
+			this.dropSelf(ModBlocks.FARMER_SHOP);
+			this.dropSelf(ModBlocks.FISHMONGER_SHOP);
 			this.dropSelf(ModBlocks.GUILD_SHOP);
 			this.dropSelf(ModBlocks.ENGRAVING_TABLE);
 			this.dropSelf(ModBlocks.KITCHEN_STATION);

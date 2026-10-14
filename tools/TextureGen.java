@@ -102,6 +102,8 @@ public class TextureGen {
 		write("block/farmer_shop_top", shopTop(0x8A6A2E, 0xF2E6B0));
 		write("block/fishmonger_shop_side", shopSide(0x2A5C8C, 0xF2F2F2, emblem(FISH)));
 		write("block/fishmonger_shop_top", shopTop(0x2A5C8C, 0xF2F2F2));
+		write("block/builder_shop_side", shopSide(0xB0562E, 0xE8D9B0, emblem(BRICKS)));
+		write("block/builder_shop_top", shopTop(0xB0562E, 0xE8D9B0));
 
 		// --- Mob & effect ---
 		write("item/mine_raider_spawn_egg", spawnEgg(0x6B4423, 0xE3B92C, 0x2E1C0F));
@@ -1147,6 +1149,16 @@ public class TextureGen {
 		"MMMMDD",
 		".DDD.D",
 		"......",
+	};
+
+	/** A brick wall: red bricks (R, r for the shaded ends) in grey mortar (C). */
+	static final String[] BRICKS = {
+		"RRrCRR",
+		"CCCCCC",
+		"rCRRRr",
+		"CCCCCC",
+		"RRrCRR",
+		"CCCCCC",
 	};
 
 	static BufferedImage emblem(final String[] rows) {

@@ -57,6 +57,8 @@ final class MenuLang {
 		b.add(s + "setting.enhance_effects.hint", ko ? "+10 이상 장비의 파티클입니다. 테두리와 광택은 꺼지지 않습니다." : "Particles of +10 gear. Frames and glint always stay.");
 		b.add(s + "setting.hp_bar", ko ? "HP·MP 막대" : "HP and MP bars");
 		b.add(s + "setting.hp_bar.hint", ko ? "끄면 바닐라 하트와 방어 아이콘으로 돌아갑니다." : "Off brings back vanilla hearts and armor icons.");
+		b.add(s + "setting.durability", ko ? "도구 내구도 숫자" : "Tool durability numbers");
+		b.add(s + "setting.durability.hint", ko ? "손에 든 도구가 닳으면 남은 내구도를 핫바 오른쪽에 숫자로 보여 줍니다." : "Once the held tool is worn, its durability shows as numbers right of the hotbar.");
 		// characters
 		b.add(s + "characters", ko ? "캐릭터" : "Characters");
 		b.add(s + "character.loading", ko ? "불러오는 중..." : "Loading...");

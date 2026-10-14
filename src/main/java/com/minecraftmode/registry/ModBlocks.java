@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 
 public final class ModBlocks {
 	// Mythril: deep, rare ore. Needs an iron pickaxe.
@@ -90,6 +91,10 @@ public final class ModBlocks {
 	public static final Block FISHMONGER_SHOP = registerShop("fishmonger_shop", ShopType.FISHMONGER);
 	/** Sells class weapons of the visitor's class and tier. */
 	public static final Block GUILD_SHOP = registerShop("guild_shop", ShopType.GUILD);
+	/** Building blocks at fixed prices on the homestead plains and the residence square: a public fixture nobody breaks, pushes or crafts. */
+	public static final Block BUILDER_SHOP = register("builder_shop", p -> new ShopBlock(ShopType.BUILDER, p),
+		BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).instrument(NoteBlockInstrument.BASS).strength(-1.0F, 3600000.0F).sound(SoundType.WOOD)
+			.noLootTable().pushReaction(PushReaction.IMMOVEABLE));
 
 	// Classes: engraves class weapons with essence
 	public static final Block ENGRAVING_TABLE = register(

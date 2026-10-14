@@ -304,6 +304,7 @@ public final class ShopOffers {
 				sell(Items.COCOA_BEANS, 16, ModItems.COPPER_COIN, 1),
 				buy(ModItems.COPPER_COIN, 2, Items.WHEAT_SEEDS, 16)
 			), Crops.trades()).flatMap(List::stream).toList();
+			case BUILDER -> builder();
 			case FISHMONGER -> Stream.of(List.of(
 				sell(Items.COD, 12, ModItems.COPPER_COIN, 1),
 				sell(Items.SALMON, 12, ModItems.COPPER_COIN, 1),
@@ -377,6 +378,41 @@ public final class ShopOffers {
 			}
 		}
 		return carried.values().stream().map(GearShop::buyback).toList();
+	}
+
+	/**
+	 * The builder's list (fixed prices, {@link ShopType#fixedPrices}): blocks by the stack of 64. No price may let a block be turned
+	 * into something a shop pays more for: a plank makes two sticks (1/16 C at the general store) and a log eight, or one charcoal
+	 * (1/8 C), so planks cost 1/8 C and logs 2S a stack; glowstone breaks into up to four dust (1/8 C each), so lights cost 1C each.
+	 * Oak logs stay the general store's.
+	 */
+	private static List<Trade> builder() {
+		List<Trade> list = new ArrayList<>();
+		Consumer<List<Item>> basic = items -> items.forEach(item -> list.add(buy(ModItems.COPPER_COIN, 8, item, 64)));
+		basic.accept(List.of(Items.STONE, Items.SMOOTH_STONE, Items.STONE_BRICKS, Items.MOSSY_STONE_BRICKS, Items.CHISELED_STONE_BRICKS,
+			Items.POLISHED_ANDESITE, Items.POLISHED_DIORITE, Items.POLISHED_GRANITE, Items.DEEPSLATE_BRICKS, Items.DEEPSLATE_TILES,
+			Items.POLISHED_DEEPSLATE, Items.TUFF_BRICKS, Items.BRICKS, Items.MUD_BRICKS, Items.SANDSTONE, Items.SMOOTH_SANDSTONE,
+			Items.RED_SANDSTONE, Items.POLISHED_BLACKSTONE_BRICKS, Items.NETHER_BRICKS, Items.END_STONE_BRICKS));
+		basic.accept(List.of(Items.OAK_PLANKS, Items.SPRUCE_PLANKS, Items.BIRCH_PLANKS, Items.JUNGLE_PLANKS, Items.ACACIA_PLANKS,
+			Items.DARK_OAK_PLANKS, Items.MANGROVE_PLANKS, Items.CHERRY_PLANKS, Items.PALE_OAK_PLANKS, Items.BAMBOO_PLANKS,
+			Items.CRIMSON_PLANKS, Items.WARPED_PLANKS, Items.GLASS, Items.GLASS_PANE));
+		for (Item light : List.of(Items.LANTERN, Items.SEA_LANTERN, Items.GLOWSTONE)) {
+			list.add(buy(ModItems.COPPER_COIN, 4, light, 4));
+		}
+		List<Item> colors = new ArrayList<>(Items.CONCRETE.asList());
+		colors.add(Items.TERRACOTTA);
+		colors.add(Items.WOOL.white());
+		for (Item color : colors) {
+			list.add(buy(ModItems.SILVER_COIN, 2, color, 64));
+		}
+		for (Item log : List.of(Items.SPRUCE_LOG, Items.BIRCH_LOG, Items.JUNGLE_LOG, Items.ACACIA_LOG, Items.DARK_OAK_LOG, Items.MANGROVE_LOG,
+			Items.CHERRY_LOG, Items.PALE_OAK_LOG)) {
+			list.add(buy(ModItems.SILVER_COIN, 2, log, 64));
+		}
+		for (Item fine : List.of(Items.QUARTZ_BLOCK, Items.QUARTZ_BRICKS, Items.QUARTZ_PILLAR, Items.PRISMARINE_BRICKS, Items.DARK_PRISMARINE)) {
+			list.add(buy(ModItems.SILVER_COIN, 4, fine, 64));
+		}
+		return List.copyOf(list);
 	}
 
 	private static Trade sell(final ItemLike goods, final int goodsCount, final ItemLike coin, final int coinCount) {

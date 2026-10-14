@@ -131,6 +131,7 @@ public final class ModItems {
 	public static final Item FARMER_SHOP = registerBlockItem(ModBlocks.FARMER_SHOP);
 	public static final Item FISHMONGER_SHOP = registerBlockItem(ModBlocks.FISHMONGER_SHOP);
 	public static final Item GUILD_SHOP = registerBlockItem(ModBlocks.GUILD_SHOP);
+	public static final Item BUILDER_SHOP = registerBlockItem(ModBlocks.BUILDER_SHOP);
 	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
 	public static final Item LAIR_CHEST = registerBlockItem(ModBlocks.LAIR_CHEST);
 	public static final Item LAIR_CACHE = registerBlockItem(ModBlocks.LAIR_CACHE);

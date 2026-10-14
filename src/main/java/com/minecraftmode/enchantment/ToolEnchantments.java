@@ -19,11 +19,11 @@ import net.minecraft.world.item.enchantment.effects.MultiplyValue;
  */
 public final class ToolEnchantments {
 	public static final EnchantInfo VEIN_MINER = EnchantInfo.of("vein_miner", "Vein Miner", "광맥 채굴",
-		"Mining an ore also mines up to 4 connected ores of the same kind per level. Pickaxes only.",
-		"광석을 캐면 연결된 같은 광석을 레벨당 4개까지 함께 캡니다. 곡괭이 전용.");
+		"Mining an ore also mines up to 4 connected ores of the same kind per level (each uses durability; it stops before the pickaxe breaks). Pickaxes only.",
+		"광석을 캐면 연결된 같은 광석을 레벨당 4개까지 함께 캡니다(하나마다 내구도가 닳고, 곡괭이가 부서지기 직전에 멈춥니다). 곡괭이 전용.");
 	public static final EnchantInfo EXCAVATION = EnchantInfo.of("excavation", "Excavation", "굴착",
-		"Mines a 3x3 (I) or 5x5 (II) area facing you. Incompatible with Vein Miner.",
-		"바라보는 면 기준 3x3(I) 또는 5x5(II) 범위를 한 번에 캡니다. 광맥 채굴과 함께 쓸 수 없습니다.");
+		"Mines a 3x3 (I) or 5x5 (II) area facing you. Every block uses durability (25 per swing at II); it stops before the tool breaks. Incompatible with Vein Miner.",
+		"바라보는 면 기준 3x3(I) 또는 5x5(II) 범위를 한 번에 캡니다. 블록마다 내구도가 닳고(II는 한 번에 25), 도구가 부서지기 직전에 멈춥니다. 광맥 채굴과 함께 쓸 수 없습니다.");
 	public static final EnchantInfo WISDOM = EnchantInfo.of("wisdom", "Wisdom", "지혜",
 		"Blocks drop 50% more experience per level.", "블록에서 나오는 경험치가 레벨당 50% 늘어납니다.");
 	public static final EnchantInfo OVERCLOCK = EnchantInfo.of("overclock", "Overclock", "과부하",

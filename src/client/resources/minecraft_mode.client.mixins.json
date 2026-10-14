@@ -7,6 +7,7 @@
 		"BossHealthOverlayAccessor",
 		"GuiGraphicsExtractorMixin",
 		"LightmapRenderStateExtractorMixin",
+		"MerchantScreenAccessor",
 		"MouseHandlerMixin"
 	],
 	"injectors": {

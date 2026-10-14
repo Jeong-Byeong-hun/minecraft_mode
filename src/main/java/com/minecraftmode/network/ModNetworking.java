@@ -4,6 +4,7 @@ import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
+import com.minecraftmode.economy.SellAll;
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityServices;
@@ -67,6 +68,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(OpenAccessoriesPayload.TYPE, OpenAccessoriesPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(BuybackPayload.TYPE, BuybackPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(SellAllPayload.TYPE, SellAllPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DamageNumberPayload.TYPE, DamageNumberPayload.CODEC);
@@ -91,6 +93,9 @@ public final class ModNetworking {
 		));
 		ServerPlayNetworking.registerGlobalReceiver(BuybackPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> Buyback.buy(context.player(), payload.index())
+		));
+		ServerPlayNetworking.registerGlobalReceiver(SellAllPayload.TYPE, (payload, context) -> context.server().execute(
+			() -> SellAll.sell(context.player(), payload.offer())
 		));
 		ServerPlayNetworking.registerGlobalReceiver(TrashPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> Trash.click(context.player())

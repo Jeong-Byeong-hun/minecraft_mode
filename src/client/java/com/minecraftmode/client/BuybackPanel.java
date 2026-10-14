@@ -25,7 +25,7 @@ import net.minecraft.sounds.SoundEvents;
 public final class BuybackPanel {
 	private static final String SHOP_TITLE = "container.minecraft_mode.shop.";
 	/** Half the merchant window's width. */
-	private static final int HALF_WIDTH = 138;
+	static final int HALF_WIDTH = 138;
 	private static final int COLUMNS = 2;
 	private static final int CELL = 18;
 	private static final int HEADER = 11;
@@ -36,7 +36,8 @@ public final class BuybackPanel {
 			if (!isShop(screen)) {
 				return;
 			}
-			ScreenEvents.afterExtract(screen).register((s, g, mouseX, mouseY, delta) -> {
+			// inside the screen's own pass (afterExtract runs after this frame's tooltip is drawn, so one set there never shows)
+			ScreenEvents.afterForeground(screen).register((s, g, mouseX, mouseY, delta) -> {
 				Minecraft minecraft = Minecraft.getInstance();
 				if (minecraft.player == null) {
 					return;
@@ -94,12 +95,12 @@ public final class BuybackPanel {
 		});
 	}
 
-	private static boolean isShop(final Screen screen) {
+	static boolean isShop(final Screen screen) {
 		return screen instanceof MerchantScreen && screen.getTitle().getContents() instanceof TranslatableContents title && title.getKey().startsWith(SHOP_TITLE);
 	}
 
 	/** Right of the trade window, or left of it when the screen is too narrow; -1 when neither fits. */
-	private static int left(final Screen screen) {
+	static int left(final Screen screen) {
 		int right = screen.width / 2 + HALF_WIDTH + 4;
 		if (right + WIDTH <= screen.width) {
 			return right;
@@ -110,6 +111,11 @@ public final class BuybackPanel {
 
 	private static int top(final Screen screen) {
 		return screen.height / 2 - 83;
+	}
+
+	/** The panel's lower edge (the sell-all buttons go below it). */
+	static int bottom(final Screen screen) {
+		return top(screen) + HEADER + (Buyback.LIMIT + COLUMNS - 1) / COLUMNS * CELL + 2;
 	}
 
 	private static int cellX(final int x, final int i) {

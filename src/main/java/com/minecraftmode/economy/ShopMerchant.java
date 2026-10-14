@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Server-side merchant for a shop block. One instance per opened screen; offers never run out but
- * their prices follow the shared {@link MarketData}. Not an entity, so {@code MerchantMenuMixin}
+ * their prices follow the shared {@link MarketData} (not at {@link ShopType#fixedPrices fixed-price} shops). Not an entity, so {@code MerchantMenuMixin}
  * routes the trade sound through {@link #playTradeSound()}.
  */
 public class ShopMerchant implements Merchant {
@@ -42,7 +42,9 @@ public class ShopMerchant implements Merchant {
 		this.market = MarketData.get(level.getServer());
 		for (ShopOffers.Trade trade : ShopOffers.trades(type, player)) {
 			MerchantOffer offer = trade.toOffer();
-			offer.setSpecialPriceDiff(MarketData.priceIncrease(trade.costCount(), this.market.pressure(this.marketKey(trade), level.getGameTime())));
+			if (!type.fixedPrices()) {
+				offer.setSpecialPriceDiff(MarketData.priceIncrease(trade.costCount(), this.market.pressure(this.marketKey(trade), level.getGameTime())));
+			}
 			this.offers.add(offer);
 			this.trades.put(offer, trade);
 		}
@@ -78,18 +80,31 @@ public class ShopMerchant implements Merchant {
 
 	@Override
 	public void notifyTrade(final MerchantOffer offer) {
-		ShopOffers.Trade trade = this.trades.get(offer);
-		if (trade != null) {
-			String key = this.marketKey(trade);
-			long time = this.level.getGameTime();
-			this.market.recordTrade(key, time);
-			offer.setSpecialPriceDiff(MarketData.priceIncrease(trade.costCount(), this.market.pressure(key, time)));
-			// Show the new price right away
-			if (this.tradingPlayer instanceof ServerPlayer player && player.containerMenu instanceof MerchantMenu menu) {
-				player.sendMerchantOffers(menu.containerId, this.offers, 1, 0, false, false);
-			}
+		// Show the new price right away
+		if (this.traded(offer) && this.tradingPlayer instanceof ServerPlayer player) {
+			this.sendOffers(player);
 		}
 		this.playTradeSound();
+	}
+
+	/** One trade of {@code offer} for the market: its pressure grows and its price follows. False when nothing moved (fixed prices). */
+	boolean traded(final MerchantOffer offer) {
+		ShopOffers.Trade trade = this.trades.get(offer);
+		if (trade == null || this.type.fixedPrices()) {
+			return false;
+		}
+		String key = this.marketKey(trade);
+		long time = this.level.getGameTime();
+		this.market.recordTrade(key, time);
+		offer.setSpecialPriceDiff(MarketData.priceIncrease(trade.costCount(), this.market.pressure(key, time)));
+		return true;
+	}
+
+	/** The current prices to the trading screen {@code player} has open. */
+	void sendOffers(final ServerPlayer player) {
+		if (player.containerMenu instanceof MerchantMenu menu) {
+			player.sendMerchantOffers(menu.containerId, this.offers, 1, 0, false, false);
+		}
 	}
 
 	@Override

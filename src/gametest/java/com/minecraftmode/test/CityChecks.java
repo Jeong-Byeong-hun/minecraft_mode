@@ -836,6 +836,12 @@ final class CityChecks {
 			}
 			require(bumps == 0, "the homestead plains are flat at the city floor, bumps at " + where);
 			require(level.getBlockState(Homestead.waystone(base)).is(Blocks.LODESTONE), "the homestead travel circle is there");
+			BlockPos builder = Homestead.shop(base);
+			require(level.getBlockState(builder).is(ModBlocks.BUILDER_SHOP), "the builder's stall stands on the homestead circle");
+			require(level.getBlockState(builder).getDestroySpeed(level, builder) < 0, "nobody can break the builder's stall");
+			level.removeBlock(builder, false);
+			CityFixtures.ensure(level);
+			require(level.getBlockState(builder).is(ModBlocks.BUILDER_SHOP), "a missing builder's stall is put back");
 			require(CityZone.outskirts(Homestead.CENTER_X, Homestead.CENTER_Z) && CityZone.outskirts(Homestead.X1, Homestead.HALF_Z),
 				"the homestead plains count as outskirts");
 			require(CityServices.blocksSpawn(level, new BlockPos(Homestead.CENTER_X + 20, base, 20), true), "no hostile spawns on the homestead surface");

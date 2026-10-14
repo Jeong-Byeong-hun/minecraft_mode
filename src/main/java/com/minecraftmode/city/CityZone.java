@@ -135,7 +135,7 @@ public final class CityZone {
 	}
 
 	/**
-	 * Shops and work places players look for (x, z of the shop or work block, as built by {@code CitySouth} and {@code CityNorth}),
+	 * Shops and work places players look for (x, z of the shop or work block, as built by {@code CitySouth}, {@code CityNorth} and {@link Homestead}),
 	 * named by the block they are: the guide's directions and the world map list them.
 	 */
 	public enum Spot {
@@ -150,7 +150,9 @@ public final class CityZone {
 		ALCHEMY_STATION("block.minecraft_mode.alchemy_station", -13, 59, 0x60D0A0),
 		SMITHING_STATION("block.minecraft_mode.smithing_station", -25, 91, 0xA0A0A0),
 		ENCHANTERS_HALL("screen.minecraft_mode.guide.enchanters_hall", (HALL_X0 + HALL_X1) / 2, (HALL_Z0 + HALL_Z1) / 2, 0xB040E0),
-		ENDER_CHESTS("screen.minecraft_mode.guide.ender_chests", 0, 17, 0x208070);
+		ENDER_CHESTS("screen.minecraft_mode.guide.ender_chests", 0, 17, 0x208070),
+		/** Outside the walls, on the homestead plains' travel circle. */
+		BUILDER_SHOP("block.minecraft_mode.builder_shop", Homestead.SHOP_X, Homestead.SHOP_Z, 0xC87850);
 
 		public final String nameKey;
 		public final int x;

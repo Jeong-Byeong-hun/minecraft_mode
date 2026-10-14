@@ -1,5 +1,6 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -9,7 +10,8 @@ import net.minecraft.world.phys.Vec3;
  * The homestead plains: open, flat land east of the capital's walls where players build their homes (beds, farms, storage). The
  * generator flattens it to the city floor like the city itself ({@code CityGenerator}), with no trees or structures; a gravel road
  * leads there from the east gate to a travel circle in the middle that goes back to the plaza (and the plaza's circle comes here,
- * see {@link CityFixtures#useWaystone}). It is part of the outskirts: no hostile mobs spawn on its surface. Building is allowed.
+ * see {@link CityFixtures#useWaystone}), beside the builder's stall ({@link #shop}: building blocks at fixed prices). It is part of the
+ * outskirts: no hostile mobs spawn on its surface. Building is allowed.
  * Worlds generated before it existed get it once at runtime ({@link HomesteadLand}).
  */
 public final class Homestead {
@@ -21,6 +23,9 @@ public final class Homestead {
 	/** The middle, with the travel circle. */
 	public static final int CENTER_X = 192;
 	public static final int CENTER_Z = 0;
+	/** The builder's stall (building blocks at fixed prices) on the circle's platform, north of the lodestone. */
+	public static final int SHOP_X = CENTER_X;
+	public static final int SHOP_Z = CENTER_Z - 2;
 
 	public static boolean inside(final int x, final int z) {
 		return x >= X0 && x <= X1 && Math.abs(z) <= HALF_Z;
@@ -63,6 +68,8 @@ public final class Homestead {
 			b.lampPost(CENTER_X + c[0], CENTER_Z + c[1], false);
 		}
 		CityFixtures.waystone(b, CENTER_X, CENTER_Z);
+		b.set(SHOP_X, 0, SHOP_Z, ModBlocks.BUILDER_SHOP);
+		b.lantern(SHOP_X, 1, SHOP_Z, false, false);
 	}
 
 	/**
@@ -72,11 +79,24 @@ public final class Homestead {
 	static void ensure(final ServerLevel level) {
 		int base = CityZone.baseY(level);
 		BlockPos stone = waystone(base);
-		if (!level.isLoaded(stone) || level.getBlockState(stone).is(Blocks.LODESTONE)
-			|| !level.getBlockState(stone.offset(1, -1, 0)).is(Blocks.POLISHED_ANDESITE)) {
+		if (!level.isLoaded(stone) || !level.getBlockState(stone.offset(1, -1, 0)).is(Blocks.POLISHED_ANDESITE)) {
 			return;
 		}
-		build(new Build(level, base, (CENTER_X >> 4) << 4, (CENTER_Z >> 4) << 4));
+		if (!level.getBlockState(stone).is(Blocks.LODESTONE)) {
+			build(new Build(level, base, (CENTER_X >> 4) << 4, (CENTER_Z >> 4) << 4));
+		}
+		// the builder's stall came later (and stands in the next chunk north): set it on the platform when that spot is free
+		BlockPos shop = shop(base);
+		if (level.isLoaded(shop) && level.getBlockState(shop).isAir()) {
+			level.setBlockAndUpdate(shop, ModBlocks.BUILDER_SHOP.defaultBlockState());
+			if (level.getBlockState(shop.above()).isAir()) {
+				level.setBlockAndUpdate(shop.above(), Blocks.LANTERN.defaultBlockState());
+			}
+		}
+	}
+
+	public static BlockPos shop(final int base) {
+		return new BlockPos(SHOP_X, base, SHOP_Z);
 	}
 
 	private Homestead() {

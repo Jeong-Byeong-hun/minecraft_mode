@@ -39,6 +39,10 @@ final class TownLang {
 		b.add("message.minecraft_mode.hp_bar.on", ko ? "하트 대신 HP·MP 막대를 표시합니다. (모험가 메뉴 → 설정)" : "HP and MP bars instead of hearts. (Adventurer's menu > Settings)");
 		b.add("message.minecraft_mode.hp_bar.off", ko ? "바닐라 하트와 방어 아이콘을 표시합니다(MP는 왼쪽 위 패널). (모험가 메뉴 → 설정)"
 			: "Vanilla hearts and armor icons (MP in the top-left panel). (Adventurer's menu > Settings)");
+		b.add("message.minecraft_mode.durability.on", ko ? "손에 든 도구의 남은 내구도를 핫바 오른쪽에 표시합니다. (모험가 메뉴 → 설정)"
+			: "The held tool's durability shows right of the hotbar. (Adventurer's menu > Settings)");
+		b.add("message.minecraft_mode.durability.off", ko ? "도구 내구도 숫자를 숨깁니다. (모험가 메뉴 → 설정)" : "Tool durability numbers off. (Adventurer's menu > Settings)");
+		b.add("message.minecraft_mode.tool_saved", ko ? "도구가 부서지지 않도록 범위 채굴을 멈췄습니다 (남은 내구도 %s)." : "Area mining stopped so the tool does not break (%s durability left).");
 		// trash
 		b.add("screen.minecraft_mode.trash.button", ko ? "버림" : "Bin");
 		b.add("screen.minecraft_mode.trash.tooltip", ko ? "쓰레기통: 커서에 든 아이템을 들고 누르면 없앱니다. 빈 커서로 누르면 마지막에 버린 것을 되돌립니다."

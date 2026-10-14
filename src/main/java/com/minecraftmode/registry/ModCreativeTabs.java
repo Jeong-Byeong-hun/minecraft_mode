@@ -77,6 +77,7 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.FARMER_SHOP);
 					output.accept(ModItems.FISHMONGER_SHOP);
 					output.accept(ModItems.GUILD_SHOP);
+					output.accept(ModItems.BUILDER_SHOP);
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 					output.accept(ModItems.RETURN_SCROLL);

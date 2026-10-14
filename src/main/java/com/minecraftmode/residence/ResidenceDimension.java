@@ -67,10 +67,14 @@ public final class ResidenceDimension {
 		return new BlockPos(ResidenceTown.MID, SURFACE_Y + 1, ResidenceTown.MID + 8);
 	}
 
-	/** The square's market stalls (shop block -> where it stands), either side of the waymaster. */
+	/**
+	 * The square's market stalls (shop block -> where it stands): the farmer and the fishmonger either side of the waymaster, the
+	 * builder (building blocks at fixed prices) across the fountain from the waymaster.
+	 */
 	public static Map<Block, BlockPos> shops() {
 		return Map.of(ModBlocks.FARMER_SHOP, new BlockPos(ResidenceTown.MID - 4, SURFACE_Y + 1, ResidenceTown.MID + 8),
-			ModBlocks.FISHMONGER_SHOP, new BlockPos(ResidenceTown.MID + 4, SURFACE_Y + 1, ResidenceTown.MID + 8));
+			ModBlocks.FISHMONGER_SHOP, new BlockPos(ResidenceTown.MID + 4, SURFACE_Y + 1, ResidenceTown.MID + 8),
+			ModBlocks.BUILDER_SHOP, new BlockPos(ResidenceTown.MID, SURFACE_Y + 1, ResidenceTown.MID - 8));
 	}
 
 	/** Puts back a missing stall shop block (older residences were generated without them, loaded chunks only). */

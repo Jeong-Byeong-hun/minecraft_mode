@@ -18,7 +18,7 @@ import net.minecraft.network.chat.Component;
 
 /**
  * The adventurer's menu (semicolon, or the pause menu): the party ({@code /party}), paying another player ({@code /wallet pay}) and
- * this client's display settings ({@code /damagenumbers}, {@code /enhanceeffects}, {@code /hpbar}) and character select
+ * this client's display settings ({@code /damagenumbers}, {@code /enhanceeffects}, {@code /hpbar}, {@code /durability}) and character select
  * ({@code character/Characters}: play another slot, start a new character, buy a slot with merit). A dice button on top rolls
  * {@code /dice} for everyone to see; operators also get a button to the admin screen. The party part follows {@link RaidClient#party()}, which the server syncs twice a second.
  */
@@ -167,6 +167,7 @@ public class AdventurerScreen extends MenuScreenBase {
 		this.toggle(x, y, "damage_numbers", ClientSettings.damageNumbers, ClientSettings::setDamageNumbers);
 		this.toggle(x, y + ROW + 4, "enhance_effects", ClientSettings.enhanceEffects, ClientSettings::setEnhanceEffects);
 		this.toggle(x, y + 2 * (ROW + 4), "hp_bar", ClientSettings.hpBar, ClientSettings::setHpBar);
+		this.toggle(x, y + 3 * (ROW + 4), "durability", ClientSettings.durability, ClientSettings::setDurability);
 	}
 
 	private void toggle(final int x, final int y, final String key, final boolean on, final Consumer<Boolean> set) {

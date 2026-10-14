@@ -19,12 +19,13 @@ import net.minecraft.network.chat.Component;
  * This client's own display choices (the settings tab of the adventurer's menu, or a command), saved in
  * {@code <gamedir>/minecraft_mode/client.properties}: floating damage numbers
  * ({@code /damagenumbers [true|false]}), the particles of enhanced gear ({@code /enhanceeffects [true|false]}) and the HP/MP bars
- * instead of vanilla hearts ({@code /hpbar [true|false]}).
+ * instead of vanilla hearts ({@code /hpbar [true|false]}) and the held tool's durability beside the hotbar ({@code /durability [true|false]}).
  */
 public final class ClientSettings {
 	public static boolean damageNumbers = true;
 	public static boolean enhanceEffects = true;
 	public static boolean hpBar = true;
+	public static boolean durability = true;
 
 	private static Path file() {
 		return MapClient.root().resolve("client.properties");
@@ -36,6 +37,7 @@ public final class ClientSettings {
 			toggle(dispatcher, "damagenumbers", "damage_numbers", () -> damageNumbers, on -> damageNumbers = on);
 			toggle(dispatcher, "enhanceeffects", "enhance_effects", () -> enhanceEffects, on -> enhanceEffects = on);
 			toggle(dispatcher, "hpbar", "hp_bar", () -> hpBar, on -> hpBar = on);
+			toggle(dispatcher, "durability", "durability", () -> durability, on -> durability = on);
 		});
 	}
 
@@ -75,6 +77,11 @@ public final class ClientSettings {
 		save();
 	}
 
+	public static void setDurability(final boolean on) {
+		durability = on;
+		save();
+	}
+
 	private static void load() {
 		Path file = file();
 		if (!Files.isRegularFile(file)) {
@@ -86,6 +93,7 @@ public final class ClientSettings {
 			damageNumbers = Boolean.parseBoolean(p.getProperty("damage_numbers", "true"));
 			enhanceEffects = Boolean.parseBoolean(p.getProperty("enhance_effects", "true"));
 			hpBar = Boolean.parseBoolean(p.getProperty("hp_bar", "true"));
+			durability = Boolean.parseBoolean(p.getProperty("durability", "true"));
 		} catch (IOException | RuntimeException e) {
 			MinecraftMode.LOGGER.warn("Could not read {}", file, e);
 		}
@@ -96,6 +104,7 @@ public final class ClientSettings {
 		p.setProperty("damage_numbers", String.valueOf(damageNumbers));
 		p.setProperty("enhance_effects", String.valueOf(enhanceEffects));
 		p.setProperty("hp_bar", String.valueOf(hpBar));
+		p.setProperty("durability", String.valueOf(durability));
 		Path file = file();
 		try {
 			Files.createDirectories(file.getParent());

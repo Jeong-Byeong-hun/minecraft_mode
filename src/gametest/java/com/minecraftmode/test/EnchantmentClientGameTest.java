@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
@@ -46,6 +47,7 @@ public class EnchantmentClientGameTest implements FabricClientGameTest {
 			checkRegistry(server);
 			checkAuras(context, server, connection);
 			checkVeinMinerTimberExcavationMagnet(context, server, connection);
+			checkExcavationDurability(context, server, connection);
 			checkQuickDraw(server, connection);
 			checkVenom(context, server, connection);
 			nightSightScreenshots(context, server);
@@ -163,6 +165,65 @@ public class EnchantmentClientGameTest implements FabricClientGameTest {
 		require(remaining[3] == 1 && looseCobble == 0, "magnet: " + remaining[3] + " cobblestone in inventory, " + looseCobble + " on the ground");
 		server.runCommand("kill @e[type=minecraft:item]");
 		MinecraftMode.LOGGER.info("[ench] vein miner (6/6 ores), timber (5/5 logs), excavation (9/9 stone), magnet (drop in inventory) OK");
+	}
+
+	/**
+	 * Excavation II mined by the real client: every swing takes 25 durability and the client's copy follows the server's (the durability
+	 * numbers right of the hotbar show it, screenshot). The extra blocks stop while the pickaxe has one use left, so they never break it.
+	 */
+	private static void checkExcavationDurability(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("tp @p 0.5 -60 0.5 180 0");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			stoneWall(player.level(), -2);
+			ItemStack pick = enchanted(s, new ItemStack(Items.DIAMOND_PICKAXE), ToolEnchantments.EXCAVATION, 2);
+			pick.setDamageValue(pick.getMaxDamage() - 300);
+			player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pick);
+		});
+		context.waitTicks(5);
+		context.getInput().lookAt(new BlockPos(0, -58, -2));
+		context.getInput().holdMouseFor(InputConstants.MOUSE_BUTTON_LEFT, 12);
+		context.waitTicks(5);
+		int serverSide = server.computeOnServer(s -> connection.getServerPlayer().getMainHandItem().getDamageValue());
+		int clientSide = context.computeOnClient(c -> c.player.getMainHandItem().getDamageValue());
+		int max = new ItemStack(Items.DIAMOND_PICKAXE).getMaxDamage();
+		require(serverSide == max - 300 + 25, "one Excavation II swing uses 25 durability, damage " + (max - 300) + " -> " + serverSide);
+		require(clientSide == serverSide, "the client sees the pickaxe's real durability: client " + clientSide + ", server " + serverSide);
+		context.takeScreenshot("enchantment_durability_numbers");
+
+		// a pickaxe with 10 uses left: the mined block takes one, the extra blocks stop at the last one
+		int[] saved = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			stoneWall(level, -2);
+			player.setYRot(180.0F);
+			player.setXRot(0.0F);
+			ItemStack pick = enchanted(s, new ItemStack(Items.DIAMOND_PICKAXE), ToolEnchantments.EXCAVATION, 2);
+			pick.setDamageValue(pick.getMaxDamage() - 10);
+			player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, pick);
+			player.gameMode.destroyBlock(new BlockPos(0, -58, -2));
+			int broken = 0;
+			for (int x = -2; x <= 2; x++) {
+				for (int y = -60; y <= -56; y++) {
+					broken += level.getBlockState(new BlockPos(x, y, -2)).isAir() ? 1 : 0;
+				}
+			}
+			ItemStack held = player.getMainHandItem();
+			return new int[] {broken, held.isEmpty() ? -1 : held.getMaxDamage() - held.getDamageValue()};
+		});
+		require(saved[1] == 1, "excavation stops with the pickaxe at its last use, left " + saved[1]);
+		require(saved[0] == 9, "the mined block and 8 of the area (one use each) break before it stops, got " + saved[0]);
+		server.runCommand("kill @e[type=minecraft:item]");
+		server.runCommand("fill -2 -60 -2 2 -56 -2 minecraft:air");
+		MinecraftMode.LOGGER.info("[ench] excavation II: 25 durability a swing, client in step ({}), stops at the last use ({} blocks)", clientSide, saved[0]);
+	}
+
+	private static void stoneWall(final ServerLevel level, final int z) {
+		for (int x = -2; x <= 2; x++) {
+			for (int y = -60; y <= -56; y++) {
+				level.setBlockAndUpdate(new BlockPos(x, y, z), Blocks.STONE.defaultBlockState());
+			}
+		}
 	}
 
 	private static void checkQuickDraw(final TestServerContext server, final TestServerConnection connection) {

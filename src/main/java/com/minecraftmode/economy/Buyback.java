@@ -70,15 +70,23 @@ public final class Buyback {
 	}
 
 	static void record(final ServerPlayer player, final ItemStack sold, final int paid) {
+		recordAll(player, List.of(new Entry(sold, paid)));
+	}
+
+	/** Several sales at once ({@link SellAll}: one entry per trade, oldest first), as {@link #record} would remember them one by one. */
+	static void recordAll(final ServerPlayer player, final List<Entry> sales) {
 		List<Entry> entries = new ArrayList<>(list(player));
-		Entry newest = entries.isEmpty() ? null : entries.getFirst();
-		if (newest != null && ItemStack.isSameItemSameComponents(newest.stack(), sold) && newest.stack().getCount() + sold.getCount() <= sold.getMaxStackSize()) {
-			entries.set(0, new Entry(newest.stack().copyWithCount(newest.stack().getCount() + sold.getCount()), newest.paid() + paid));
-		} else {
-			entries.addFirst(new Entry(sold, paid));
-		}
-		while (entries.size() > LIMIT) {
-			entries.removeLast();
+		for (Entry sale : sales) {
+			ItemStack sold = sale.stack();
+			Entry newest = entries.isEmpty() ? null : entries.getFirst();
+			if (newest != null && ItemStack.isSameItemSameComponents(newest.stack(), sold) && newest.stack().getCount() + sold.getCount() <= sold.getMaxStackSize()) {
+				entries.set(0, new Entry(newest.stack().copyWithCount(newest.stack().getCount() + sold.getCount()), newest.paid() + sale.paid()));
+			} else {
+				entries.addFirst(sale);
+			}
+			while (entries.size() > LIMIT) {
+				entries.removeLast();
+			}
 		}
 		player.setAttached(ModAttachments.SOLD, List.copyOf(entries));
 	}

@@ -8,8 +8,12 @@ import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.economy.Essence;
+import com.minecraftmode.economy.MarketData;
+import com.minecraftmode.economy.SellAll;
 import com.minecraftmode.economy.ShopMerchant;
+import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.entity.boss.RaidBoss;
@@ -38,12 +42,16 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -88,6 +96,8 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			checkWallet(context, server, connection);
 			checkShop(context, server, connection);
 			checkSellFromBags(context, server, connection);
+			checkSellAll(context, server, connection);
+			checkBuilder(server, connection);
 			checkEssence(context, server, connection);
 			GearCareChecks.run(context, server, connection);
 			checkConsumables(context, server, connection);
@@ -302,6 +312,144 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[economy] selling from bags: {}", report);
 		server.runCommand("setblock 0 -60 -3 minecraft:air");
 		context.waitTicks(2);
+	}
+
+	/**
+	 * The shop's sell-all buttons, clicked with the real mouse: "sell all of this" sells every whole trade of the picked line (the
+	 * general store's first, cobblestone) from the inventory and the bags at prices that fall trade by trade, as the preview estimated;
+	 * "sell everything" takes two clicks and sells the other lines the shop buys. The hotbar and a named stack are never sold.
+	 */
+	private static void checkSellAll(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("setblock 0 -60 -3 minecraft_mode:shop_block");
+		context.waitTicks(2);
+		int[] expected = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			player.removeAttached(ModAttachments.SOLD);
+			player.getInventory().setItem(0, new ItemStack(Items.COBBLESTONE, 64));
+			for (int slot = 9; slot < 13; slot++) {
+				player.getInventory().setItem(slot, new ItemStack(Items.COBBLESTONE, 64));
+			}
+			ItemStack named = new ItemStack(Items.COBBLESTONE, 10);
+			named.set(DataComponents.CUSTOM_NAME, Component.literal("keepsake"));
+			player.getInventory().setItem(13, named);
+			player.getInventory().setItem(14, new ItemStack(Items.GRAVEL, 40));
+			ItemStack bag = new ItemStack(ModItems.ORE_BAG);
+			Bags.insert(bag, new ItemStack(Items.COBBLESTONE, 64));
+			Bags.insert(bag, new ItemStack(Items.COBBLESTONE, 30));
+			Bags.insert(bag, new ItemStack(Items.DIRT, 64));
+			Bags.insert(bag, new ItemStack(Items.DIRT, 64));
+			player.getInventory().setItem(15, bag);
+			new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.GENERAL)
+				.openTradingScreen(player, Component.translatable(ShopType.GENERAL.titleKey()), 1);
+			MerchantMenu menu = (MerchantMenu)player.containerMenu;
+			// 256 in the inventory and 94 in the bag; the hotbar's 64 and the named 10 stay out of it
+			SellAll.Line line = SellAll.estimate(menu.getOffers().getFirst(), SellAll.stock(player, menu, menu.getOffers().getFirst()), false);
+			return new int[] {SellAll.stock(player, menu, menu.getOffers().getFirst()), line.count(), line.copper(), Wallet.balance(player)};
+		});
+		require(expected[0] == 4 * 64 + 94, "sell all counts the inventory and the bag but not the hotbar or a named stack, got " + expected[0]);
+		require(expected[1] > 0 && expected[2] > 0, "the preview expects a sale, got " + expected[1] + " for " + expected[2]);
+		context.waitForScreen(MerchantScreen.class);
+		context.waitTicks(10);
+		clickSellButton(context, "screen.minecraft_mode.sell_all.one", true);
+		context.waitTicks(10);
+		String one = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			MerchantMenu menu = (MerchantMenu)player.containerMenu;
+			int earned = Wallet.balance(player) - expected[3];
+			int left = SellAll.stock(player, menu, menu.getOffers().getFirst());
+			int need = menu.getOffers().getFirst().getCostA().getCount();
+			require(earned == expected[2], "selling all cobblestone pays what the preview said: " + earned + " vs " + expected[2]);
+			require(left == expected[0] - expected[1] && left < need, "all whole trades are sold: " + left + " left, the next trade asks " + need);
+			require(player.getInventory().getItem(0).getCount() == 64, "the hotbar keeps its cobblestone");
+			require(player.getInventory().getItem(13).has(DataComponents.CUSTOM_NAME), "the named stack stays");
+			require(need > 32, "the price moved with the sales (" + need + " cobblestone per coin now)");
+			require(!Buyback.list(player).isEmpty() && Buyback.list(player).getFirst().stack().is(Items.COBBLESTONE), "the sales can be bought back");
+			return "sold " + expected[1] + " cobblestone for " + Coins.format(earned) + ", " + left + " left, now " + need + " per coin";
+		});
+		MinecraftMode.LOGGER.info("[economy] sell all of this: {}", one);
+		// "sell everything" arms on the first click and sells on the second
+		hoverSellButton(context, "screen.minecraft_mode.sell_all.all");
+		context.waitTicks(5);
+		context.takeScreenshot("economy_sell_all");
+		clickSellButton(context, "screen.minecraft_mode.sell_all.all", true);
+		context.waitTicks(5);
+		int gravel = server.computeOnServer(s -> connection.getServerPlayer().getInventory().countItem(Items.GRAVEL));
+		require(gravel == 40, "one click on 'sell everything' only arms it, gravel " + gravel);
+		clickSellButton(context, "screen.minecraft_mode.sell_all.all", true);
+		context.waitTicks(10);
+		String all = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int dirt = Bags.countInBags(player, new ItemStack(Items.DIRT));
+			int leftGravel = player.getInventory().countItem(Items.GRAVEL);
+			require(leftGravel < 32 && dirt < 64, "sell everything sells the gravel and the bag's dirt, left " + leftGravel + " gravel, " + dirt + " dirt");
+			require(player.getInventory().getItem(0).getCount() == 64, "the hotbar keeps its cobblestone");
+			player.closeContainer();
+			player.getInventory().clearContent();
+			player.removeAttached(ModAttachments.SOLD);
+			return leftGravel + " gravel and " + dirt + " dirt left, wallet " + Coins.format(Wallet.balance(player));
+		});
+		MinecraftMode.LOGGER.info("[economy] sell everything: {}", all);
+		server.runCommand("setblock 0 -60 -3 minecraft:air");
+		context.waitTicks(2);
+	}
+
+	/** Clicks a sell-all button of the open shop screen with the real mouse; it must be shown and (when {@code active}) enabled. */
+	private static void clickSellButton(final ClientGameTestContext context, final String key, final boolean active) {
+		double[] pos = sellButton(context, key);
+		require(pos[2] > 0 == active, key + " should be " + (active ? "enabled" : "disabled"));
+		context.getInput().setCursorPos(pos[0], pos[1]);
+		context.waitTicks(2);
+		context.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+	}
+
+	private static void hoverSellButton(final ClientGameTestContext context, final String key) {
+		double[] pos = sellButton(context, key);
+		context.getInput().setCursorPos(pos[0], pos[1]);
+	}
+
+	/** Window position of a sell-all button's middle, and 1 when it is enabled. */
+	private static double[] sellButton(final ClientGameTestContext context, final String key) {
+		double[] pos = context.computeOnClient(minecraft -> {
+			double scale = minecraft.getWindow().getGuiScale();
+			for (GuiEventListener child : minecraft.gui.screen().children()) {
+				if (child instanceof Button button && button.visible && button.getMessage().getContents() instanceof TranslatableContents text
+					&& (text.getKey().equals(key) || key.endsWith(".all") && text.getKey().equals("screen.minecraft_mode.sell_all.confirm"))) {
+					return new double[] {(button.getX() + button.getWidth() / 2.0) * scale, (button.getY() + button.getHeight() / 2.0) * scale, button.active ? 1 : 0};
+				}
+			}
+			return null;
+		});
+		require(pos != null, "the shop screen should show the " + key + " button");
+		return pos;
+	}
+
+	/**
+	 * The builder's merchant keeps its prices however much is bought (no market pressure), and sells blocks by the stack.
+	 */
+	private static void checkBuilder(final TestServerContext server, final TestServerConnection connection) {
+		String report = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			ShopMerchant builder = new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.BUILDER);
+			MerchantOffer stone = builder.getOffers().getFirst();
+			require(stone.getResult().is(Items.STONE) && stone.getResult().getCount() == 64, "the builder sells stone by the stack, got " + stone.getResult());
+			int cost = stone.getCostA().getCount();
+			for (int i = 0; i < MarketData.MAX_PRESSURE + 5; i++) {
+				builder.notifyTrade(stone);
+			}
+			String key = ShopType.BUILDER.marketId() + ":" + ShopOffers.trades(ShopType.BUILDER).getFirst().key();
+			int pressure = MarketData.get(s).pressure(key, player.level().getGameTime());
+			ShopMerchant again = new ShopMerchant(player, player.level(), new BlockPos(0, -60, -3), ShopType.BUILDER);
+			require(stone.getCostA().getCount() == cost && again.getOffers().getFirst().getCostA().getCount() == cost && pressure == 0,
+				"the builder's prices never move: " + cost + " -> " + stone.getCostA().getCount() + " / " + again.getOffers().getFirst().getCostA().getCount()
+					+ ", pressure " + pressure);
+			for (MerchantOffer offer : builder.getOffers()) {
+				require(!SellAll.isSale(offer), "the builder only sells, but buys " + offer.getCostA());
+			}
+			return builder.getOffers().size() + " lines, stone " + cost + "C a stack after " + (MarketData.MAX_PRESSURE + 5) + " trades";
+		});
+		MinecraftMode.LOGGER.info("[economy] builder: {}", report);
 	}
 
 	/** Essence pays as one currency: condensed essence is broken for an essence trade (change back as essence), and both convert on use. */

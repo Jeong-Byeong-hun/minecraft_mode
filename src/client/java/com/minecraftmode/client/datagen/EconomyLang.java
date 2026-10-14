@@ -35,6 +35,25 @@ final class EconomyLang {
 		b.add("screen.minecraft_mode.buyback.click", ko ? "클릭해서 되사기 · 최근 판매 10개까지" : "Click to buy it back · last 10 sales");
 		b.add("message.minecraft_mode.buyback.full", ko ? "가방과 인벤토리에 자리가 없습니다." : "No room in your bags or inventory.");
 		b.add("message.minecraft_mode.buyback.short", ko ? "동전이 부족합니다 (%s 필요)." : "Not enough coins (%s needed).");
+		String s = "screen.minecraft_mode.sell_all.";
+		b.add(s + "one", ko ? "이 품목 다 팔기" : "Sell this");
+		b.add(s + "all", ko ? "전부 팔기" : "Sell all");
+		b.add(s + "confirm", ko ? "다시 눌러 확인" : "Click again");
+		b.add(s + "one.title", ko ? "고른 품목을 가진 만큼 모두 팝니다" : "Sells all you carry of the chosen line");
+		b.add(s + "all.title", ko ? "이 상점이 사는 물건을 전부 팝니다 (두 번 눌러 판매)" : "Sells everything this shop buys (click twice)");
+		b.add(s + "line", ko ? "%s %s개 → 약 %s" : "%2$s %1$s → about %3$s");
+		b.add(s + "more", ko ? "외 %s종" : "and %s more kinds");
+		b.add(s + "total", ko ? "합계 %s개 → 약 %s" : "In all %s items → about %s");
+		b.add(s + "pick", ko ? "파는 줄(물건을 주고 동전을 받는 거래)을 고르세요." : "Pick a line that pays coins for goods.");
+		b.add(s + "nothing", ko ? "팔 물건이 없습니다." : "Nothing to sell.");
+		b.add(s + "rules", ko ? "가방·인벤토리·거래 칸에서 팝니다. 단축바와 이름·인챈트·손상이 있는 물건은 팔지 않고, 팔수록 시세가 내려가는 것은 하나씩 팔 때와 같습니다."
+			: "Sells from your bags, inventory and the trade slots. The hotbar and named, enchanted or damaged items stay, and prices fall as you sell, as with single trades.");
+		b.add(s + "no_essence", ko ? "정수는 '전부 팔기'에서 빠집니다." : "Essence is never part of 'Sell all'.");
+		String m = "message.minecraft_mode.sell_all.";
+		b.add(m + "one", ko ? "%s %s개를 팔아 %s을(를) 받았습니다." : "Sold %2$s %1$s for %3$s.");
+		b.add(m + "many", ko ? "%s종 %s개를 팔아 %s을(를) 받았습니다." : "Sold %2$s items of %1$s kinds for %3$s.");
+		b.add(m + "none", ko ? "팔 수 있는 물건이 없습니다. 단축바와 이름·인챈트가 붙은 물건은 이렇게 팔지 않습니다."
+			: "Nothing to sell. The hotbar and named or enchanted items are never sold this way.");
 		b.add("tooltip.minecraft_mode.gear.pending",ko ? "새 옵션 (대장장이에게서 선택 대기)" : "New options (waiting for your choice at the blacksmith)");
 	}
 

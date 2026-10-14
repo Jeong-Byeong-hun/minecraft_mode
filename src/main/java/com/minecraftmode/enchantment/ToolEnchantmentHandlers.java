@@ -13,8 +13,11 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.fabricmc.fabric.api.tag.convention.v2.ConventionalBlockTags;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -25,6 +28,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
@@ -96,14 +100,38 @@ public final class ToolEnchantmentHandlers {
 		}
 	}
 
-	/** Breaks the blocks with the player's tool (durability, drops and enchantments all apply) until the tool breaks. */
+	/**
+	 * Breaks the blocks with the player's tool (durability, drops and enchantments all apply), each costing the tool's own damage per
+	 * block. A 5x5 swing takes 25 points, far more than the durability bar shows moving, so the extra blocks stop while the tool still
+	 * has one block's worth left: only the block the player mined can break it.
+	 */
 	private static void breakAll(final ServerPlayer player, final List<BlockPos> positions) {
 		for (BlockPos target : positions) {
-			if (player.getMainHandItem().isEmpty()) {
+			ItemStack tool = player.getMainHandItem();
+			if (tool.isEmpty()) {
+				return;
+			}
+			if (worn(tool)) {
+				player.sendOverlayMessage(Component.translatable("message.minecraft_mode.tool_saved", tool.getMaxDamage() - tool.getDamageValue() - perBlock(tool))
+					.withStyle(ChatFormatting.GOLD));
 				return;
 			}
 			player.gameMode.destroyBlock(target);
 		}
+	}
+
+	/**
+	 * Whether one more extra block would leave the tool unable to pay for the mined block and keep a use. Fabric's AFTER event fires
+	 * at {@code Block.destroy}, before {@code ServerPlayerGameMode.destroyBlock} takes the mined block's own durability, so that
+	 * block's share is still owed here: stopping at one use left would let the mined block break the tool after all.
+	 */
+	static boolean worn(final ItemStack tool) {
+		return tool.isDamageableItem() && tool.getMaxDamage() - tool.getDamageValue() <= 2 * perBlock(tool);
+	}
+
+	private static int perBlock(final ItemStack tool) {
+		Tool component = tool.get(DataComponents.TOOL);
+		return component == null ? 1 : Math.max(1, component.damagePerBlock());
 	}
 
 	/** Blocks touching the start (diagonals included) that match, breadth first, up to {@code limit}; the start itself excluded. */

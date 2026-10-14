@@ -34,6 +34,7 @@ import com.minecraftmode.dungeon.Dungeons;
 import com.minecraftmode.dungeon.Keystone;
 import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
@@ -694,6 +695,10 @@ public class GearDocProvider implements DataProvider {
 			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 이 평야가 생기기 전에 만든 월드는 서버가 처음 켜질 때 한 번 평야 구역을 평지로 깎습니다(그 자리의 지형·나무·건물은 사라지고, 이후 지은 건물은 그대로).\n");
 		md.append("- **이동 마법진**(자석석): 광장 스폰 바로 뒤(x 0, z ").append(CityFixtures.WAYSTONE.getZ()).append(")와 건축 평야 한가운데(x ").append(Homestead.CENTER_X)
 			.append(", z ").append(Homestead.CENTER_Z).append("). 우클릭하면 서로 이동합니다(3초 재사용 대기). 귀환 주문서로도 광장에 돌아올 수 있습니다.\n");
+		md.append("- **건축 자재상**: 건축 평야 이동 마법진 북쪽(x ").append(Homestead.SHOP_X).append(", z ").append(Homestead.SHOP_Z)
+			.append(")과 거주구역 광장 분수 북쪽. 돌·벽돌·판자·유리·콘크리트·통나무·석영·조명 ").append(ShopOffers.trades(ShopType.BUILDER).size())
+			.append("종을 64개(조명은 4개)씩 팔고, 아무리 많이 사도 값이 오르지 않습니다(시장 압력 없음). 부서지지 않는 공용 상점이라 조합법이 없습니다.\n");
+		md.append("- **일괄 판매**: 상점 창의 재구매 칸 아래 버튼. '이 품목 다 팔기'는 고른 줄의 물건을, '전부 팔기'(두 번 눌러 확인, 정수 제외)는 그 상점이 사는 물건을 가방·인벤토리에서 한 번에 팝니다. 단축바와 이름·인챈트·손상이 있는 물건은 팔지 않고, 시세는 하나씩 팔 때처럼 거래마다 내려갑니다.\n");
 		BlockPos waymaster = CityZone.npcHome(CityNpc.Role.WAYMASTER, 0);
 		md.append("- **이동술사 오린**: 광장 분수 서쪽(x ").append(waymaster.getX()).append(", z ").append(waymaster.getZ())
 			.append("). 우클릭하면 갈 수 있는 곳 목록이 뜨고, 고르면 바로 이동합니다. 지금은 거주구역(거주구역 광장의 오린에게서는 수도 광장).\n");

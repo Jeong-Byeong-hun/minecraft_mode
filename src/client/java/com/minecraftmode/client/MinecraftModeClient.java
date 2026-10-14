@@ -14,6 +14,7 @@ import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
 import com.minecraftmode.client.style.StylistScreen;
 import com.minecraftmode.client.hud.DamageNumbers;
+import com.minecraftmode.client.hud.DurabilityHud;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
 import com.minecraftmode.client.hud.TrashButton;
@@ -121,6 +122,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		JobKeys.init();
 		JobHud.init();
 		VitalsHud.init();
+		DurabilityHud.init();
 		BossBarLayout.init();
 		JobTooltips.init();
 		AccessoryTooltips.init();
@@ -129,6 +131,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		DungeonClient.init();
 		WalletDisplay.init();
 		BuybackPanel.init();
+		SellAllButtons.init();
 		EnhanceVisuals.init();
 		TargetHealthHud.init();
 		TrashButton.init();

@@ -48,7 +48,8 @@ public final class WeaponEnchantments {
 
 	// --- Axe
 	public static final EnchantInfo TIMBER = EnchantInfo.of("timber", "Timber", "벌목",
-		"Chopping a log fells up to 16 connected logs per level.", "통나무를 베면 연결된 통나무를 레벨당 16개까지 함께 벱니다.");
+		"Chopping a log fells up to 16 connected logs per level (each uses durability; it stops before the axe breaks).",
+		"통나무를 베면 연결된 통나무를 레벨당 16개까지 함께 벱니다(하나마다 내구도가 닳고, 도끼가 부서지기 직전에 멈춥니다).");
 	public static final EnchantInfo CLEAVE = EnchantInfo.of("cleave", "Cleave", "가르기",
 		"Melee hits also deal 20% of the damage per level to enemies within 2.5 blocks.", "근접 공격 시 2.5블록 안의 다른 적에게도 피해의 레벨당 20%를 줍니다.");
 	public static final EnchantInfo SUNDER = EnchantInfo.of("sunder", "Sunder", "갑옷 파쇄",

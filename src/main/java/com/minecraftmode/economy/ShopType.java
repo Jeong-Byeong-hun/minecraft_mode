@@ -16,7 +16,9 @@ public enum ShopType {
 	/** Crops and seeds, on the residence square: the grocer's lines, under the grocer's market pressure. */
 	FARMER("farmer", "grocer"),
 	/** Fish, on the residence square: the grocer's lines, under the grocer's market pressure. */
-	FISHMONGER("fishmonger", "grocer");
+	FISHMONGER("fishmonger", "grocer"),
+	/** Building blocks, at the homestead plains and the residence square: fixed prices that buying never raises ({@link #fixedPrices}). */
+	BUILDER("builder");
 
 	private final String id;
 	private final String market;
@@ -40,6 +42,11 @@ public enum ShopType {
 	 */
 	public String marketId() {
 		return this.market;
+	}
+
+	/** No market pressure: builders buy blocks by the thousand, and a price that climbed with every stack would punish building. */
+	public boolean fixedPrices() {
+		return this == BUILDER;
 	}
 
 	public String titleKey() {

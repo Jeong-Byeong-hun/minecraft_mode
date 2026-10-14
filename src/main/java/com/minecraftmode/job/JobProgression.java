@@ -64,7 +64,8 @@ public final class JobProgression {
 		}
 		JobData data = get(player);
 		int level = data.level();
-		int exp = data.exp() + amount;
+		// long sum: a huge grant (admin, command) must not wrap to negative experience
+		int exp = (int)Math.min(Integer.MAX_VALUE, (long)data.exp() + amount);
 		int gained = 0;
 		while (level < MAX_LEVEL && exp >= expToNext(level)) {
 			exp -= expToNext(level);

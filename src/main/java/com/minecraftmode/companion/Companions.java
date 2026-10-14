@@ -428,8 +428,8 @@ public final class Companions {
 		SUMMONED.remove(owner.getUUID());
 	}
 
-	/** After join, respawn or a world change: the active pet comes along (not into the character lobby). */
-	private static void restore(final ServerPlayer player) {
+	/** After join, respawn, a world change or a character switch: the active pet comes along (not into the character lobby). */
+	public static void restore(final ServerPlayer player) {
 		dismissPet(player);
 		if (com.minecraftmode.character.Lobby.is(player.level())) {
 			return;

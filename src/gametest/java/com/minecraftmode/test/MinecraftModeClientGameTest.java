@@ -48,6 +48,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.level.biome.Biomes;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.phys.AABB;
@@ -128,34 +129,49 @@ public class MinecraftModeClientGameTest implements FabricClientGameTest {
 	}
 
 	private static void checkOreFeaturePlaces(final ClientGameTestContext context, final TestServerContext server) {
-		// The test world is superflat (no stone), so build a stone cube in the air and place the ore inside it.
-		server.runCommand("fill -4 100 -4 4 108 4 minecraft:stone");
+		// The test world is superflat (no stone), so build stone cubes in the air and place the ores inside them. Each ore gets its
+		// own cube: both veins start at the given point, and in one shared cube a big mythril vein (8-9 blocks) took every stone block
+		// the next aluminum veins could reach (mythril ore is not stone), so all retries missed together about one run in 4000.
+		int[] mythrilAt = {-8, 104, 0};
+		int[] aluminumAt = {8, 104, 0};
+		for (int[] at : new int[][] {mythrilAt, aluminumAt}) {
+			server.runCommand(cube(at, "minecraft:stone"));
+		}
 		// placement is random and the cube is small, so a vein can miss now and then: try a few times
 		int[] counts = {0, 0};
 		for (int attempt = 0; attempt < 4 && (counts[0] == 0 || counts[1] == 0); attempt++) {
 			if (counts[0] == 0) {
-				server.runCommand("place feature minecraft_mode:ore_mythril 0 104 0");
+				server.runCommand("place feature minecraft_mode:ore_mythril " + mythrilAt[0] + " " + mythrilAt[1] + " " + mythrilAt[2]);
 			}
 			if (counts[1] == 0) {
-				server.runCommand("place feature minecraft_mode:ore_aluminum 0 104 0");
+				server.runCommand("place feature minecraft_mode:ore_aluminum " + aluminumAt[0] + " " + aluminumAt[1] + " " + aluminumAt[2]);
 			}
 			context.waitTicks(2);
-			counts = server.computeOnServer(s -> {
-				ServerLevel level = s.overworld();
-				int mythril = 0, aluminum = 0;
-				for (BlockPos pos : BlockPos.betweenClosed(-4, 100, -4, 4, 108, 4)) {
-					if (level.getBlockState(pos).is(ModBlocks.MYTHRIL_ORE)) {
-						mythril++;
-					} else if (level.getBlockState(pos).is(ModBlocks.ALUMINUM_ORE)) {
-						aluminum++;
-					}
-				}
-				return new int[] {mythril, aluminum};
+			counts = server.computeOnServer(s -> new int[] {
+				count(s.overworld(), mythrilAt, ModBlocks.MYTHRIL_ORE), count(s.overworld(), aluminumAt, ModBlocks.ALUMINUM_ORE)
 			});
 		}
 		require(counts[0] > 0 && counts[1] > 0, "ore features placed nothing: mythril=" + counts[0] + " aluminum=" + counts[1]);
-		server.runCommand("fill -4 100 -4 4 108 4 minecraft:air");
+		for (int[] at : new int[][] {mythrilAt, aluminumAt}) {
+			server.runCommand(cube(at, "minecraft:air"));
+		}
 		MinecraftMode.LOGGER.info("[test] ore features placed mythril={} aluminum={}", counts[0], counts[1]);
+	}
+
+	/** A fill command for the 9x9x9 cube around {@code at}. */
+	private static String cube(final int[] at, final String block) {
+		return "fill " + (at[0] - 4) + " " + (at[1] - 4) + " " + (at[2] - 4) + " " + (at[0] + 4) + " " + (at[1] + 4) + " " + (at[2] + 4) + " " + block;
+	}
+
+	/** Blocks of {@code ore} in the cube around {@code at}. */
+	private static int count(final ServerLevel level, final int[] at, final Block ore) {
+		int found = 0;
+		for (BlockPos pos : BlockPos.betweenClosed(at[0] - 4, at[1] - 4, at[2] - 4, at[0] + 4, at[1] + 4, at[2] + 4)) {
+			if (level.getBlockState(pos).is(ore)) {
+				found++;
+			}
+		}
+		return found;
 	}
 
 	private static void checkBleeding(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

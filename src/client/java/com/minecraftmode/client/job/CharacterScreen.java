@@ -1,5 +1,6 @@
 package com.minecraftmode.client.job;
 
+import com.minecraftmode.client.accessory.AccessoryButton;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -52,6 +53,8 @@ public class CharacterScreen extends Screen {
 		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + W - 72, this.top + H - 26, 64, 20).build());
 		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.job"), b -> this.minecraft.gui.setScreen(new JobScreen()))
 			.bounds(this.left + 8, this.top + H - 26, 64, 20).build());
+		this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.accessories.open"), b -> AccessoryButton.open())
+			.bounds(this.left + 76, this.top + H - 26, 64, 20).build());
 	}
 
 	/** The stats with a value, in the enum's order (offence, defence, utility). */

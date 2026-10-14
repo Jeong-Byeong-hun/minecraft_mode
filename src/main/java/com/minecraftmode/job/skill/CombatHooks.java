@@ -348,7 +348,8 @@ public final class CombatHooks {
 			bonus += mods.fraction(EngraveStat.FIRST_STRIKE);
 		}
 		bonus += state.markBonus(victim.getUUID(), now);
-		return amount * (1.0F + bonus) * crit;
+		// final damage (enhancement past +10) multiplies the whole hit, past every pool above
+		return amount * (1.0F + bonus) * crit * (1.0F + mods.fraction(EngraveStat.FINAL_DAMAGE));
 	}
 
 	/** Brings every running skill cooldown of {@code player} forward by {@code ticks}. */
@@ -408,7 +409,12 @@ public final class CombatHooks {
 				player.level().sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY(0.6), player.getZ(), 8, 0.4, 0.5, 0.4, 0.4);
 			}
 		}
-		float amount = hit.amount();
+		if (damage <= 0.0F) {
+			// fully blocked with a shield: nothing landed, nothing to reflect (until 0.5.24 thorns and counter still hit back)
+			return result;
+		}
+		// what landed: during the hurt cooldown only the part above the last hit
+		float amount = Math.min(hit.amount(), damage);
 		DamageKind kind = hit.kind();
 		// Thorns: melee attackers take part of the hit back
 		float thorns = mods.fraction(EngraveStat.THORNS);

@@ -1,5 +1,8 @@
 package com.minecraftmode.client.endgame;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryEnhance;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.enhance.EnhanceMenu;
@@ -24,7 +27,8 @@ import net.minecraft.world.inventory.Slot;
 /**
  * Artisan Brokk's bench: the gear slot on the left; on the right the next level, the success chance (with artisan's spirit), what
  * one attempt costs (green when carried), the risk from +{@value Enhancement#RISKY_FROM}, and the enhance and protected enhance
- * buttons. Hovering a button shows what the next level adds.
+ * buttons. Hovering a button shows what the next level adds. A raid accessory shows its own panel instead: orbs and coins, the chance
+ * and one enhance button (failures never drop its level).
  */
 public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	private static final int PX = 40;
@@ -50,6 +54,12 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 
 	private boolean ready() {
 		return ClassGear.of(this.menu.input()) != null && Enhancement.level(this.menu.input()) < Enhancement.MAX;
+	}
+
+	/** The raid accessory in the slot that can still go up a level, or null. */
+	private AccessoryDef accessory() {
+		AccessoryDef def = Accessories.def(this.menu.input());
+		return def != null && Enhancement.level(this.menu.input()) < AccessoryEnhance.MAX ? def : null;
 	}
 
 	private boolean canPay(final boolean protect) {
@@ -100,6 +110,11 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			return;
 		}
 		Enhancement now = Enhancement.of(this.menu.input());
+		AccessoryDef accessory = Accessories.def(this.menu.input());
+		if (accessory != null) {
+			this.accessoryPanel(g, x, y, px, ty, accessory, now, mouseX, mouseY);
+			return;
+		}
 		if (now.level() >= Enhancement.MAX) {
 			this.awakenPanel(g, x, y, px, ty, now, mouseX, mouseY);
 			return;
@@ -147,6 +162,40 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 		}
 	}
 
+	/** A raid accessory: the next level, its chance, coins and orbs, and the enhance button (or the fully enhanced note). */
+	private void accessoryPanel(final GuiGraphicsExtractor g, final int x, final int y, final int px, int ty, final AccessoryDef def, final Enhancement now,
+		final int mouseX, final int mouseY) {
+		if (now.level() >= AccessoryEnhance.MAX) {
+			g.text(this.font, Component.literal("+" + AccessoryEnhance.MAX).withStyle(ChatFormatting.BOLD), px, ty, darker(AccessoryEnhance.color(AccessoryEnhance.MAX)), false);
+			g.textWithWordWrap(this.font, Component.translatable("screen.minecraft_mode.enhance.max"), px, ty + 12, PW, 0xFF404040);
+			return;
+		}
+		int target = now.level() + 1;
+		g.text(this.font, Component.literal("+" + now.level()), px, ty, darker(AccessoryEnhance.color(now.level())), false);
+		int ax = px + this.font.width("+" + now.level()) + 4;
+		g.text(this.font, "➜", ax, ty, 0xFF404040, false);
+		g.text(this.font, Component.literal("+" + target).withStyle(ChatFormatting.BOLD), ax + 12, ty, darker(AccessoryEnhance.color(target)), false);
+		int chance = AccessoryEnhance.chance(target, now.pity());
+		String rate = Component.translatable("screen.minecraft_mode.enhance.chance", chance).getString();
+		g.text(this.font, rate, px + PW - this.font.width(rate), ty, chance >= 100 ? 0xFF1E8A2E : chance >= 50 ? 0xFF6A6A1E : 0xFFB02A2A, false);
+		ty += 10;
+		if (now.pity() > 0) {
+			g.text(this.font, Component.translatable("screen.minecraft_mode.enhance.pity", AccessoryEnhance.baseRate(target), now.pity()), px, ty, 0xFF2A6AB0, false);
+		}
+		ty += 11;
+		boolean creative = this.minecraft.player.isCreative();
+		int coins = AccessoryEnhance.coins(def, target);
+		this.costLine(g, px, ty, Component.translatable("screen.minecraft_mode.enhance.coins"), Coins.format(coins), creative || Coins.total(this.minecraft.player) >= coins);
+		ty += 9;
+		int orbs = Bags.count(this.minecraft.player, ModItems.ACCESSORY_ORB);
+		this.costLine(g, px, ty, Component.translatable(ModItems.ACCESSORY_ORB.getDescriptionId()), orbs + "/" + AccessoryEnhance.orbs(target),
+			creative || orbs >= AccessoryEnhance.orbs(target));
+		ty += 19;
+		g.text(this.font, Component.translatable("screen.minecraft_mode.enhance.safe"), px, ty, 0xFF505050, false);
+		this.button(g, x + PX, y + BUTTON_Y, Component.translatable("screen.minecraft_mode.enhance.button"), EnhanceMenu.canPayAccessory(this.minecraft.player, def, target),
+			mouseX, mouseY);
+	}
+
 	/** +15 gear: the awakening step, its cost and the button (or the fully awakened note). */
 	private void awakenPanel(final GuiGraphicsExtractor g, final int x, final int y, final int px, int ty, final Enhancement now, final int mouseX, final int mouseY) {
 		g.text(this.font, Component.literal("+" + Enhancement.MAX + (now.awaken() > 0 ? " ✦" + now.awaken() : "")).withStyle(ChatFormatting.BOLD), px, ty, 0xFFB02AB0, false);
@@ -192,6 +241,20 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	@Override
 	protected void extractTooltip(final GuiGraphicsExtractor g, final int mouseX, final int mouseY) {
 		super.extractTooltip(g, mouseX, mouseY);
+		AccessoryDef accessory = this.accessory();
+		if (accessory != null && inside(mouseX, mouseY, this.leftPos + PX, this.topPos + BUTTON_Y, BUTTON_W, BUTTON_H)) {
+			int target = Enhancement.level(this.menu.input()) + 1;
+			List<Component> tip = new ArrayList<>();
+			tip.add(Component.translatable("screen.minecraft_mode.enhance.next", target).withColor(AccessoryEnhance.color(target)));
+			tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable("tooltip.minecraft_mode.accessory.enhanced",
+				JobTooltips.num(Math.round(AccessoryEnhance.PER_LEVEL * target * 100.0F))).withStyle(ChatFormatting.GREEN)));
+			for (StatLine line : AccessoryEnhance.bonus(target)) {
+				tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+					.append(Component.translatable(line.stat().key(), JobTooltips.num(line.value())).withStyle(ChatFormatting.GREEN)));
+			}
+			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
+			return;
+		}
 		ClassGear gear = ClassGear.of(this.menu.input());
 		if (gear != null && this.menu.canAwaken() && inside(mouseX, mouseY, this.leftPos + PX, this.topPos + BUTTON_Y, BUTTON_W, BUTTON_H)) {
 			int target = Enhancement.of(this.menu.input()).awaken() + 1;
@@ -233,6 +296,12 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 			&& this.menu.clickMenuButton(this.minecraft.player, EnhanceMenu.BUTTON_AWAKEN)) {
 			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
 			this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, EnhanceMenu.BUTTON_AWAKEN);
+			return true;
+		}
+		if (this.accessory() != null && this.minecraft.player != null && inside(event.x(), event.y(), bx, by, BUTTON_W, BUTTON_H)
+			&& this.menu.clickMenuButton(this.minecraft.player, EnhanceMenu.BUTTON_ENHANCE)) {
+			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+			this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, EnhanceMenu.BUTTON_ENHANCE);
 			return true;
 		}
 		if (this.ready() && this.minecraft.player != null) {

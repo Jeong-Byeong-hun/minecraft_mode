@@ -127,7 +127,8 @@ final class JobLang {
 			{"weapon", "무기 각인", "Weapon engravings"}, {"armor", "방어구 (기본·추가 옵션·각인)", "Armor (base, options, engravings)"},
 			{"enhancement", "강화·각성", "Enhancement"}, {"set", "세트 효과", "Set bonuses"}, {"level", "레벨 보상", "Level rewards"},
 			{"passive", "직업 패시브", "Class passives"}, {"buff", "버프 (소모품)", "Buffs (consumables)"}, {"talent", "특성", "Talents"},
-			{"collection", "도감 수집", "Codex collection"}, {"paragon", "초월", "Paragon"}, {"companion", "펫·탈것", "Pets and mounts"}
+			{"collection", "도감 수집", "Codex collection"}, {"paragon", "초월", "Paragon"}, {"companion", "펫·탈것", "Pets and mounts"},
+			{"accessory", "장신구 (기본·추가 옵션·세트)", "Accessories (base, options, sets)"}
 		};
 		for (String[] s : sources) {
 			b.add(c + "source." + s[0], ko ? s[1] : s[2]);
@@ -228,6 +229,7 @@ final class JobLang {
 		CodexLang.add(b, ko);
 		ResidenceLang.add(b, ko);
 		MenuLang.add(b, ko);
+		AccessoryLang.add(b, ko);
 	}
 
 	private JobLang() {

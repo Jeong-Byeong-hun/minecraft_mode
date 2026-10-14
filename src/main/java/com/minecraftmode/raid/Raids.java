@@ -1,5 +1,6 @@
 package com.minecraftmode.raid;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
@@ -118,6 +119,15 @@ public final class Raids {
 		}
 		RaidInstance.Member member = instance.member(player.getUUID());
 		return member != null && member.active ? instance : null;
+	}
+
+	/**
+	 * Whether {@code player} still counts for a raid that has not closed: fighting, fallen and waiting for the party, or won and not
+	 * left. Rewards go to whoever plays that account at the victory, so the character must not change until then.
+	 */
+	public static boolean committed(final UUID player) {
+		RaidInstance instance = BY_PLAYER.get(player);
+		return instance != null && instance.state != RaidInstance.State.CLOSED && instance.member(player) != null;
 	}
 
 	/** True while {@code boss} belongs to a running instance. */
@@ -580,6 +590,10 @@ public final class Raids {
 				items.add(stack);
 			}
 		}
+		// the raid-only accessories: each rewarded member rolls the boss's and difficulty's chance, the pieces are shared out like the gear
+		items.addAll(Accessories.raidDrops(def, difficulty, participants.size(), random));
+		// tier 2 and 3 bosses: tickets that inherit an accessory of the tier below into theirs, shared out the same way
+		items.addAll(Accessories.ticketLots(def, difficulty, participants.size(), random));
 		tell(server, instance, msg("victory", Component.translatable(def.nameKey()), VICTORY_TICKS / 20).withStyle(ChatFormatting.GOLD));
 		int place = RaidRecordsData.get(server).submit(def, difficulty, names, fightTicks, ResetCycle.day(level));
 		tell(server, instance, msg("time", clock(fightTicks), Component.translatable(difficulty.nameKey())).withStyle(ChatFormatting.AQUA));
@@ -610,6 +624,9 @@ public final class Raids {
 			give(player, new ItemStack(ModItems.PROTECTION_SCROLL));
 		}
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
+		if (Accessories.orbs(difficulty) > 0) {
+			give(player, new ItemStack(ModItems.ACCESSORY_ORB, Accessories.orbs(difficulty)));
+		}
 		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def == RaidBosses.AETHRYX, random)) {
 			give(player, supply);
 		}

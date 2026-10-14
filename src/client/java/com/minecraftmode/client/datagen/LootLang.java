@@ -15,8 +15,8 @@ final class LootLang {
 
 		b.add("container.minecraft_mode.upgrade", ko ? "장비 진화" : "Gear Evolution");
 		b.add("screen.minecraft_mode.upgrade.insert", ko
-			? "직업 무기나 방어구를 왼쪽 칸에 넣으세요. 같은 직업·종류의 다음 장비로 바꿀 수 있습니다 (해당 레벨대 진화의 에테르 %s~%s개)."
-			: "Put a class weapon or armor piece in the slot to turn it into the next piece of its kind (%s-%s Evolution Ether of that bracket).");
+			? "직업 무기나 방어구를 왼쪽 칸에 넣으세요. 같은 직업·종류의 다음 장비로 바꿀 수 있습니다 (해당 레벨대 진화의 에테르 %s~%s개). 레이드 장신구는 계승권으로 다음 티어로 계승합니다."
+			: "Put a class weapon or armor piece in the slot to turn it into the next piece of its kind (%s-%s Evolution Ether of that bracket). Raid accessories move up a tier with an inheritance ticket.");
 		b.add("item.minecraft_mode.evolution_ether.cost", ko ? "Lv.%s 장비 진화에 %s개" : "Evolving into Lv %s gear takes %s");
 		b.add("item.minecraft_mode.evolution_ether.fuse", ko ? "우클릭: %s개 → Lv.%s 에테르 1개" : "Use: %s → 1 Lv %s Ether");
 		b.add("item.minecraft_mode.evolution_ether.split", ko ? "웅크리고 우클릭: 1개 → Lv.%2$s 에테르 %1$s개" : "Sneak-use: 1 → %s Lv %s Ether");

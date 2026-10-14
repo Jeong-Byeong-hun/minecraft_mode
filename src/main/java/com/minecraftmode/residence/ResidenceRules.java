@@ -56,8 +56,11 @@ public final class ResidenceRules {
 	public static void init() {
 		// break/place and block-changing items go through CityServices.blocksBuilding; these cover the rest
 		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
-			// shops (the square's stalls) trade with everyone
-			if (player.getItemInHand(hand).is(ModItems.LAND_DEED) || level.getBlockState(hit.getBlockPos()).getBlock() instanceof ShopBlock) {
+			// shops (the square's stalls) trade with everyone; a sneaking click with an item would use the item on the stall instead (an
+			// armor stand placed on someone's land), so that one is judged like any other block
+			boolean trade = level.getBlockState(hit.getBlockPos()).getBlock() instanceof ShopBlock
+				&& (!player.isSecondaryUseActive() || player.getItemInHand(hand).isEmpty());
+			if (player.getItemInHand(hand).is(ModItems.LAND_DEED) || trade) {
 				return InteractionResult.PASS;
 			}
 			return refuse(player, level, hit.getBlockPos(), blocks(player, hit.getBlockPos()));

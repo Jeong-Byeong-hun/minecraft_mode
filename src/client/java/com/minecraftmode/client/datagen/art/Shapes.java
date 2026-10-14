@@ -40,6 +40,13 @@ final class Shapes {
 			case MUSKET -> musket(k, t, v);
 			case HAND_CANNON -> handCannon(k, t, v);
 			case HARPOON -> harpoon(k, t, v);
+			case GREATSHIELD -> greatshield(k, t, v);
+			case WAR_FAN -> warFan(k, t, v);
+			case SPELLBLADE -> spellblade(k, t, v);
+			case CHAKRAM -> chakram(k, t, v);
+			case BLUNDERBUSS -> blunderbuss(k, t, v);
+			case WHIP_SWORD -> whipSword(k, t, v);
+			case NEEDLE -> needles(k, t, v);
 			default -> throw new IllegalArgumentException("no drawing for " + type);
 		}
 	}
@@ -837,6 +844,197 @@ final class Shapes {
 	}
 
 	/** Hollow circle (ring) in pixel space. */
+	// ------------------------------------------------------------------ 0.5.24 shapes
+
+	/** Upright heater shield: metal rim, grip-coloured face, accent cross from tier 2, a boss in the middle. */
+	static void greatshield(final Canvas k, final int t, final int v) {
+		for (int y = 1; y <= 14; y++) {
+			double half = y <= 8 ? 5.5 : 5.5 - (y - 8) * 0.95;
+			for (int x = 0; x < 16; x++) {
+				double dx = x - 7.5;
+				if (Math.abs(dx) > half) {
+					continue;
+				}
+				boolean rim = y == 1 || Math.abs(dx) > half - 1.0 || y == 14;
+				if (rim) {
+					k.put(x, y, dx < 0 || y == 1 ? 'l' : 'd');
+				} else if (t >= 2 && (x == 7 || x == 8) && y >= 3 && y <= 11 || t >= 2 && y == 6 && Math.abs(dx) <= 3.5) {
+					k.put(x, y, t >= 4 ? '5' : '3');
+				} else {
+					k.put(x, y, dx + (y - 7) * 0.6 < 0 ? 'L' : 'M');
+				}
+			}
+		}
+		ring(k, 7.5, 6.5, 0.0, 1.2, v == 1 ? 'h' : 'm');
+		if (t >= 3) {
+			k.put(7, 6, '4');
+		}
+		if (t >= 4) {
+			k.put(4, 3, 'w');
+		}
+		k.outline();
+	}
+
+	/** Open folding fan from a pivot in the lower left: grip ribs, metal leaves, an accent rim from tier 2. */
+	static void warFan(final Canvas k, final int t, final int v) {
+		double px = 2.5;
+		double py = 12.5;
+		for (int y = 0; y < 16; y++) {
+			for (int x = 0; x < 16; x++) {
+				double dx = x - px;
+				double dy = py - y;
+				double r = Math.hypot(dx, dy);
+				double angle = Math.toDegrees(Math.atan2(dy, dx));
+				if (r > 12.4 || r < 2.0 || angle < -12 || angle > 102) {
+					continue;
+				}
+				int rib = (int)Math.floor((angle + 12) / 12.0);
+				boolean ribLine = Math.abs((angle + 12) - rib * 12.0 - 6.0) > 4.8;
+				if (r > 11.0) {
+					k.put(x, y, t >= 2 ? (t >= 4 && rib % 2 == 0 ? '5' : '3') : 'd');
+				} else if (ribLine) {
+					k.put(x, y, 'D');
+				} else {
+					k.put(x, y, rib % 2 == (v == 2 ? 1 : 0) ? 'l' : 'm');
+				}
+			}
+		}
+		k.rect(1, 12, 3, 14, 'D');
+		k.put(2, 13, t >= 3 ? '4' : 'L');
+		k.outline();
+	}
+
+	/** Slim sword with glowing runes down the fuller. */
+	static void spellblade(final Canvas k, final int t, final int v) {
+		k.diag((a, c) -> {
+			int ac = Math.abs(c);
+			if (ac <= 1 && a >= -2 && a <= 13 - ac) {
+				if (c == 0 && a >= 0 && a <= 10 && Math.floorMod(a + v, 3) == 0) {
+					return t >= 3 ? '5' : '4';
+				}
+				return edge(c, 1);
+			}
+			if (a >= -4 && a <= -3 && ac <= 3 + (t >= 3 ? 1 : 0)) {
+				return ac >= 3 ? '3' : 'm';
+			}
+			if (c == 0 && a >= -11 && a <= -5) {
+				return wrap(a, t);
+			}
+			if (a >= -14 && a <= -12 && ac <= 1) {
+				return t >= 2 ? '4' : 'd';
+			}
+			return '.';
+		});
+		k.outline();
+	}
+
+	/** Bladed ring with a wrapped grip on one side and gems from tier 2. */
+	static void chakram(final Canvas k, final int t, final int v) {
+		for (int y = 0; y < 16; y++) {
+			for (int x = 0; x < 16; x++) {
+				double dx = x - 7.5;
+				double dy = y - 7.5;
+				double r = Math.hypot(dx, dy);
+				if (r < 3.2 || r > 7.2) {
+					continue;
+				}
+				if (r > 6.3) {
+					k.put(x, y, dx + dy < 0 ? 'h' : 'l');
+				} else if (dy > 3.0 && Math.abs(dx) < 2.6) {
+					// the wrapped grip on the inner rim
+					k.put(x, y, Math.floorMod(x, 2) == 0 ? 'L' : 'M');
+				} else {
+					k.put(x, y, dx + dy < 0 ? 'l' : 'd');
+				}
+			}
+		}
+		if (t >= 2) {
+			for (int[] p : new int[][] {{7, 1}, {14, 7}, {1, 8}}) {
+				k.put(p[0], p[1], t >= 4 ? '5' : '3');
+			}
+		}
+		if (t >= 3) {
+			for (int[] p : new int[][] {{3, 3}, {12, 3}, {12, 12}, {3, 12}}) {
+				k.put(p[0], p[1], 'h');
+			}
+		}
+		k.outline();
+	}
+
+	/** Short gun with a flared bell muzzle. */
+	static void blunderbuss(final Canvas k, final int t, final int v) {
+		k.diag((a, c) -> {
+			if (a >= -15 && a <= -7) {
+				int w = a <= -11 ? 2 : 1;
+				if (Math.abs(c) <= w) {
+					return c < 0 ? 'L' : c == 0 ? 'M' : 'D';
+				}
+			}
+			if (a >= -7 && a <= -4 && c >= -1 && c <= 1) {
+				return t >= 2 && c == 0 ? '3' : 'm';
+			}
+			if (a == -8 && c == 2) {
+				return 'd';
+			}
+			if (a >= -4 && a <= 9 && c >= -1 && c <= 0) {
+				if (t >= 2 && (a == 0 || a == 1 || a == 6)) {
+					return t >= 4 ? '5' : '3';
+				}
+				return c == -1 ? 'l' : 'd';
+			}
+			int flare = a - 8;
+			if (a >= 10 && a <= 14 && c >= -flare && c <= flare - 1) {
+				return c < 0 ? 'h' : 'm';
+			}
+			return '.';
+		});
+		k.outline();
+	}
+
+	/** Segmented blade snaking up from the grip. */
+	static void whipSword(final Canvas k, final int t, final int v) {
+		k.diag((a, c) -> {
+			if (a >= -1 && a <= 14) {
+				int off = (int)Math.round(1.6 * Math.sin((a + v) / 2.2));
+				int cc = c - off;
+				boolean gap = Math.floorMod(a, 3) == 0;
+				if (cc >= -1 && cc <= (a >= 13 ? 0 : 1) && !gap) {
+					if (cc == 1) {
+						return t >= 3 ? '4' : 'h';
+					}
+					return cc == 0 ? 'l' : 'd';
+				}
+				if (gap && cc == 0) {
+					return t >= 2 ? '3' : 'd';
+				}
+			}
+			if (a >= -3 && a <= -2 && Math.abs(c) <= 2) {
+				return Math.abs(c) == 2 ? '2' : '3';
+			}
+			if (c == 0 && a >= -13 && a <= -4) {
+				return wrap(a, t);
+			}
+			return '.';
+		});
+		k.outline();
+	}
+
+	/** Three long needles fanned out, accent grips at the base. */
+	static void needles(final Canvas k, final int t, final int v) {
+		int[][] lines = {{2, 13, 14, 1}, {2, 13, 8, 0}, {2, 13, 15, 7}};
+		for (int i = 0; i < lines.length; i++) {
+			int[] l = lines[i];
+			k.line(l[0], l[1], l[2], l[3], i == 0 ? 'l' : 'm');
+			k.put(l[2], l[3], 'h');
+		}
+		k.rect(1, 13, 3, 14, 'D');
+		k.put(2, 13, t >= 2 ? (t >= 4 ? '5' : '3') : 'L');
+		if (t >= 3) {
+			k.put(14, 1, '4');
+		}
+		k.outline();
+	}
+
 	static void ring(final Canvas k, final double cx, final double cy, final double inner, final double outer, final char ch) {
 		for (int y = 0; y < 16; y++) {
 			for (int x = 0; x < 16; x++) {

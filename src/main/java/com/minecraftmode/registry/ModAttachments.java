@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.world.item.ItemStack;
 
 public final class ModAttachments {
 	/** Class, level, MP and cooldowns. Kept through death; synced to the owning player for the HUD. */
@@ -198,6 +199,18 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(List::of)
 			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * The worn accessories (0.5.24, {@code accessory/Accessories}): one stack per accessory slot, empty when free. Per character, kept
+	 * through death; synced to the owner for the accessory window, tooltips and the character screen's stat totals.
+	 */
+	public static final AttachmentType<List<ItemStack>> ACCESSORIES = AttachmentRegistry.create(
+		MinecraftMode.id("accessories"),
+		builder -> builder.persistent(ItemStack.OPTIONAL_CODEC.listOf())
+			.copyOnDeath()
+			.initializer(List::of)
+			.syncWith(ItemStack.OPTIONAL_LIST_STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 	);
 
 	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */

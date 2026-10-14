@@ -1,6 +1,10 @@
 package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryEnhance;
+import com.minecraftmode.accessory.AccessorySet;
+import com.minecraftmode.accessory.AccessorySlot;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityFixtures;
@@ -134,9 +138,11 @@ public class GearDocProvider implements DataProvider {
 		LairDef.Shape.FORTRESS, "요새", LairDef.Shape.DOME, "돔", LairDef.Shape.SPIRE, "첨탑", LairDef.Shape.TREE, "거목", LairDef.Shape.NONE, "지하 미궁");
 	private static final Map<ConsumableDef.Shop, String> SHOPS = Map.of(ConsumableDef.Shop.GENERAL, "잡화점", ConsumableDef.Shop.GROCER, "식료품점",
 		ConsumableDef.Shop.ALCHEMIST, "연금술사");
-	private static final Map<String, String> VANILLA_EFFECTS = Map.of("effect.minecraft.absorption", "흡수", "effect.minecraft.fire_resistance", "화염 저항",
-		"effect.minecraft.haste", "성급함", "effect.minecraft.health_boost", "생명력 강화", "effect.minecraft.resistance", "저항", "effect.minecraft.speed", "신속",
-		"effect.minecraft.regeneration", "재생", "effect.minecraft.strength", "힘", "effect.minecraft.night_vision", "야간 투시", "effect.minecraft.water_breathing", "수중 호흡");
+	private static final Map<String, String> VANILLA_EFFECTS = Map.ofEntries(Map.entry("effect.minecraft.absorption", "흡수"),
+		Map.entry("effect.minecraft.fire_resistance", "화염 저항"), Map.entry("effect.minecraft.haste", "성급함"), Map.entry("effect.minecraft.health_boost", "생명력 강화"),
+		Map.entry("effect.minecraft.resistance", "저항"), Map.entry("effect.minecraft.speed", "신속"), Map.entry("effect.minecraft.regeneration", "재생"),
+		Map.entry("effect.minecraft.strength", "힘"), Map.entry("effect.minecraft.night_vision", "야간 투시"), Map.entry("effect.minecraft.water_breathing", "수중 호흡"),
+		Map.entry("effect.minecraft.luck", "행운"));
 	private static final Map<String, String> BIOMES = Map.ofEntries(
 		Map.entry("plains", "평원"), Map.entry("sunflower_plains", "해바라기 평원"), Map.entry("meadow", "초원"), Map.entry("flower_forest", "꽃 숲"),
 		Map.entry("forest", "숲"), Map.entry("birch_forest", "자작나무 숲"), Map.entry("savanna", "사바나"), Map.entry("savanna_plateau", "사바나 고원"),
@@ -297,7 +303,70 @@ public class GearDocProvider implements DataProvider {
 				md.append(" |\n");
 			}
 		}
+		this.accessories(md);
 		return md.toString();
+	}
+
+	/** The raid-only accessories (0.5.24): slots, fixed lines, option pools, tiers and drop chances, enhancement and every boss's set. */
+	private void accessories(final StringBuilder md) {
+		md.append("\n## 장신구 (레이드 전용)\n\n");
+		md.append("- 방어구와 따로 **장신구 칸 ").append(Accessories.SLOTS).append("개**(목걸이·귀걸이·반지·팔찌·부적)에 하나씩 찹니다. 인벤토리 오른쪽의 \"보석\" 버튼(\"버림\" 위)이나 캐릭터 창(I)의 \"장신구\" 버튼으로 엽니다. 캐릭터마다 따로이고 죽어도 남습니다.\n");
+		md.append("- **레이드에서만** 나옵니다(상점·소굴·던전·네임드는 주지 않음). 레이드 보스마다 자기 세트(5부위)가 있고 세트는 3티어로 나뉩니다: ");
+		for (int tier = 1; tier <= Accessories.TOP_TIER; tier++) {
+			final int t = tier;
+			md.append(tier > 1 ? " · " : "").append(tier).append("티어 ").append(Accessories.sets().stream().filter(set -> set.tier() == t).map(set -> set.boss().ko())
+				.collect(Collectors.joining("·")));
+		}
+		md.append(".\n");
+		md.append("- 보스를 잡으면 **보상을 받는 파티원마다 한 번씩** 확률을 굴려, 나온 장신구를 분배 품목(경매·주사위)에 넣습니다. **노말**은 그 보스의 세트가, **영웅·악몽**은 어느 보스든 **3티어 세트만** 나옵니다(1·2티어 보스는 3티어 세트 중 무작위, 3티어 보스는 자기 세트). 확률은 보스가 강할수록, 난이도가 높을수록 올라 영웅 베르데사가 노말 에테릭스보다 잘 나옵니다(아래 표).\n");
+		md.append("- 직업 제한은 없고 **세트 보스의 레벨**(레이드 입장 레벨)이 되어야 찰 수 있습니다. 부위마다 고정 기본 옵션 1줄 + 추가 옵션이 노말 1줄 · 영웅 2줄 · 악몽 3줄(수치는 방어구 추가 옵션처럼 레벨 최대치의 60–100%). 같은 세트를 2·3·5부위 차면 세트 효과가 붙습니다.\n");
+		md.append("- **추가 옵션 재설정**: 대장장이 진화대의 \"추가 옵션\" 탭에서 방어구처럼 다시 굴립니다(응축 정수 ").append(GearUpgrades.REROLL_CONDENSED)
+			.append("개 + 레벨대 가격의 1/4 코인). 줄 수는 그대로이고, 새 옵션은 따로 보관되어 ✔로 적용하거나 ✖로 기존 옵션을 유지합니다.\n");
+		md.append("- **강화**: 장인 브록의 강화대에서 **장신구 강화 구슬**과 코인(장비 강화와 같은 곡선: 레벨대 무기 가격 × (0.1 + 0.05 × 단계))으로 +")
+			.append(AccessoryEnhance.MAX).append("까지 올립니다. 단계마다 그 장신구의 고정·추가 옵션 수치가 ").append(ClassDocProvider.num(AccessoryEnhance.PER_LEVEL * 100))
+			.append("%씩 오르고(+").append(AccessoryEnhance.MAX).append(" = +").append(ClassDocProvider.num(AccessoryEnhance.PER_LEVEL * AccessoryEnhance.MAX * 100))
+			.append("%), +").append(AccessoryEnhance.MAX).append("에서 피해 +").append(ClassDocProvider.num(AccessoryEnhance.MAX_DAMAGE))
+			.append("%가 붙습니다. 실패해도 단계는 내려가지 않고 장인의 기운(+").append(Enhancement.PITY_STEP).append("%p)이 쌓입니다. 세트 효과는 강화로 오르지 않습니다.\n");
+		md.append("- 장신구 강화 구슬은 **영웅·악몽 클리어 보상**입니다(보상을 받는 파티원마다 영웅 ").append(Accessories.orbs(RaidDifficulty.HEROIC)).append("개 · 악몽 ")
+			.append(Accessories.orbs(RaidDifficulty.NIGHTMARE)).append("개). 재료 가방에 들어갑니다.\n");
+		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**을 보상을 받는 파티원마다 한 번씩 굴려 분배 품목(경매·주사위)에 넣습니다(");
+		for (RaidDifficulty difficulty : RaidDifficulty.values()) {
+			md.append(difficulty.ordinal() > 0 ? " · " : "").append(this.ko(difficulty.nameKey())).append(' ')
+				.append(ClassDocProvider.num(Math.round(Accessories.ticketChance(difficulty) * 100))).append('%');
+		}
+		md.append("; 경매 시작가는 다음 티어 첫 레벨대의 무기 가격). 대장장이 진화대에 1·2티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
+			.append("강화 단계·장인의 기운과 추가 옵션(같은 능력치, 새 레벨 최대치에 대한 비율 그대로)이 이어집니다. 재료 가방에 들어갑니다.\n");
+		md.append("- 직업 비교 표(CLASSES.md)에는 넣지 않습니다(추가 옵션·각인처럼 뽑기 장비).\n\n");
+		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
+		for (AccessorySlot slot : AccessorySlot.values()) {
+			String pool = slot.pool().entrySet().stream().map(e -> this.stat(e.getKey(), ArmorOptions.max(e.getValue(), 100))).collect(Collectors.joining(", "));
+			md.append("| ").append(slot.ko()).append(" | ").append(this.stat(slot.baseLine(50))).append(" | ").append(pool).append(" |\n");
+		}
+		md.append("\n### 드롭 확률 (보상을 받는 파티원 1명당)\n\n| 보스 | 세트 티어 | 노말 | 영웅 (3티어만) | 악몽 (3티어만) |\n|---|---|---|---|---|\n");
+		for (AccessorySet set : Accessories.sets()) {
+			md.append("| ").append(set.boss().ko()).append(" | ").append(set.tier());
+			for (RaidDifficulty difficulty : RaidDifficulty.values()) {
+				md.append(" | ").append(ClassDocProvider.num(Math.round(Accessories.dropChance(set.boss(), difficulty) * 1000.0F) / 10.0F)).append("%");
+			}
+			md.append(" |\n");
+		}
+		md.append("\n### 강화\n\n| 단계 | 성공 확률 | 구슬 | 옵션 수치 |\n|---|---|---|---|\n");
+		for (int target = 1; target <= AccessoryEnhance.MAX; target++) {
+			md.append("| +").append(target).append(" | ").append(AccessoryEnhance.baseRate(target)).append("% | ").append(AccessoryEnhance.orbs(target)).append(" | +")
+				.append(ClassDocProvider.num(AccessoryEnhance.PER_LEVEL * target * 100)).append("%");
+			for (StatLine line : AccessoryEnhance.bonus(target)) {
+				md.append(", ").append(this.stat(line));
+			}
+			md.append(" |\n");
+		}
+		md.append("\n| 보스 | Lv | 티어 | 세트 | 2세트 | 3세트 | 5세트 |\n|---|---|---|---|---|---|---|\n");
+		for (AccessorySet set : Accessories.sets()) {
+			md.append("| ").append(set.boss().ko()).append(" | ").append(set.level()).append(" | ").append(set.tier()).append(" | **").append(set.adjKo()).append(" 장신구**");
+			for (ArmorSetDef.SetBonus bonus : set.bonuses()) {
+				md.append(" | ").append(bonus.lines().stream().map(this::stat).collect(Collectors.joining(", ")));
+			}
+			md.append(" |\n");
+		}
 	}
 
 	// ------------------------------------------------------------------ MONSTERS.md
@@ -416,10 +485,12 @@ public class GearDocProvider implements DataProvider {
 			if (ModRecipeProvider.COOKED.contains(def.id())) {
 				sources.add("조합");
 			}
-			if (def.tier() <= 4) {
+			if (Consumables.isDish(def)) {
+				sources.add("요리(생활 기술)");
+			} else if (def.tier() <= 4) {
 				sources.add(def.tier() == 4 ? "네임드·소굴(드묾)" : "네임드·소굴");
 			}
-			if (def.tier() >= 3) {
+			if (def.tier() >= 3 && !Consumables.isDish(def)) {
 				sources.add("레이드");
 			}
 			md.append("| **").append(def.ko()).append("** | ").append("★".repeat(def.tier())).append(" | ").append(String.join(" · ", effects)).append(" | ")
@@ -457,14 +528,15 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 보물 상자를 그 주기에 처음 열면 소굴 정복으로 기록됩니다(도감·업적·의뢰). 보물 상자에 강화석 1–2개, 보급품에 25% 확률로 강화석.\n");
 		md.append("- **소굴 지도**: 사용하면 가장 가까운 네임드 소굴을 표시한 지도가 됩니다(잡화점 5S, 공적 상점).\n\n");
 
-		md.append("## 레이드 난이도\n\n| 난이도 | 보스 체력 | 보스 피해 | 입장료 | 추가 분배 | 에테르 | 강화석 | 보호 주문서 | 장비 강화 |\n|---|---|---|---|---|---|---|---|---|\n");
+		md.append("## 레이드 난이도\n\n| 난이도 | 보스 체력 | 보스 피해 | 입장료 | 추가 분배 | 에테르 | 강화석 | 보호 주문서 | 장비 강화 | 장신구 구슬 |\n|---|---|---|---|---|---|---|---|---|---|\n");
 		for (RaidDifficulty d : RaidDifficulty.values()) {
 			md.append("| ").append(this.ko(d.nameKey())).append(" | ×").append(ClassDocProvider.num(d.health)).append(" | ×").append(ClassDocProvider.num(d.damage))
 				.append(" | ×").append(ClassDocProvider.num(d.fee)).append(" | +").append(d.extraLots).append(" | ×").append(ClassDocProvider.num(d.ether))
 				.append(" | ").append(d.stones).append(" | ").append(Math.round(d.scrollChance * 100)).append("% | ")
-				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" |\n");
+				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" | ").append(Accessories.orbs(d) == 0 ? "-" : String.valueOf(Accessories.orbs(d))).append(" |\n");
 		}
 		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
+		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스의 분배 품목으로 확률로 나옵니다.\n");
 		md.append("- **보상 귀속**: 보스·난이도마다 레이드 주기(현실 3일)에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
 		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
 		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");
@@ -498,7 +570,11 @@ public class GearDocProvider implements DataProvider {
 		md.append("- +").append(Enhancement.GLOW_FROM).append("부터 장비가 빛납니다: 광택, 슬롯 테두리(+").append(Enhancement.GLOW_FROM).append(" 파랑, +")
 			.append(Enhancement.GLOW_BRIGHT).append(" 보라, +").append(Enhancement.MAX).append(" 금색, 각성 붉은 금색과 ✦), 든 무기 주변 파티클, 직업 방어구 4부위가 모두 +")
 			.append(Enhancement.GLOW_FROM).append(" 이상이면 발밑의 고리. 모험가 메뉴(;)의 설정 탭에서 파티클만 끌 수 있습니다.\n");
-		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n\n");
+		md.append("- 비용: 동전 = 장비 구간 가격 × (0.1 + 0.05 × 목표 단계), 정수(+5까지 정수, 이후 응축된 정수), +6부터 강화석. +10 이상 성공은 서버 전체에 알립니다.\n");
+		md.append("- 무기 +").append(Enhancement.FINAL_FROM).append("~+").append(Enhancement.FINAL_TO).append("는 단계마다 **최종 피해** +")
+			.append(ClassDocProvider.num(Enhancement.FINAL_PER_STEP)).append("%, 방어구 +").append(Enhancement.FINAL_FROM)
+			.append("부터는 단계마다 받는 피해 감소가 ").append(ClassDocProvider.num(Enhancement.ARMOR_LATE_REDUCTION)).append("%(+10까지는 0.5%)로 줄고 **최종 피해** +")
+			.append(ClassDocProvider.num(Enhancement.ARMOR_FINAL_PER_STEP)).append("%. 최종 피해는 다른 피해 보너스와 치명타를 모두 계산한 뒤 곱해져서, 기본 공격·스킬 피해가 이미 많이 쌓인 장비에서도 그대로 오르고 모든 직업에 똑같이 듭니다.\n\n");
 		md.append("| 단계 | 성공률 | 정수 | 강화석 | 실패 시 | 무기 (누적) | 방어구 (누적) |\n|---|---|---|---|---|---|---|\n");
 		ClassGear weapon = ClassGear.of(JobWeapons.of(JobClass.WARRIOR).getFirst());
 		ClassGear armor = ClassGear.of(ClassArmor.pieces().iterator().next());
@@ -629,7 +705,7 @@ public class GearDocProvider implements DataProvider {
 			.append("주인 없는 땅에는 아무도 짓지 못하고, 폭발은 거주구역의 블록을 부수지 않습니다. 물·용암·불, 피스톤, 디스펜서·공급기·제작기, 호퍼는 주인이 다른 땅으로 넘어가지 않고, 다른 사람이 쏜 화살이나 불붙인 TNT도 내 땅의 동물·액자·탈것을 다치게 하지 못합니다. 땅에 들어서면 액션 바에 주인이 표시되고, 주변 ").append(LandBorders.RANGE).append("블록 안의 땅 테두리가 실선으로 보입니다(내 땅 초록, 허용받은 땅 노랑, 남의 땅 빨강). 증서를 웅크린 채 쓰거나 /land로 관리 화면(땅 목록·포기·허용 목록)을 엽니다. 땅을 포기하면 그 범위가 처음 초원으로 돌아가고(지은 블록·액자·갑옷 거치대·탈것은 사라짐), 보관함·액자·갑옷 거치대에 있던 물건과 증서를 돌려받습니다.\n");
 		md.append("- **부활**: 평소에는 광장, 침대에서 자거나 침대를 우클릭하면 그 침대에서 부활합니다(침대가 부서지면 다시 광장).\n");
 		md.append("- **가방**: 보급관 브람이 장비·소비·재료 가방을 한 번씩 줍니다(잡화점에서 은화 ").append(ShopOffers.BAG_PRICE / Coins.SILVER).append("개에 추가 구매). 가방마다 ")
-			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
+			.append(Bags.SIZE).append("칸이고, 주운 물건이 종류에 맞는 가방에 먼저 들어갑니다 — 장비 가방: 직업 장비·무기·방어구·도구, 소비 가방: 음식·물약·소모품, 재료 가방: 광석·원석·주괴·보석·돌·흙과 강화석·보호 주문서·각성 결정·장신구 강화 구슬·장신구 계승권·거신 파편(강화대·제작대는 가방 속 재료도 쓰고, 상점에 팔 때도 판매 거래를 고르면 가방 속 같은 물건이 거래 칸에 함께 올라감). 레이드·던전·의뢰 보상과 제작품도 가방에 먼저 들어가고, 던전·레이드 보상이 넘치면 우편함으로 갑니다. ")
 			.append("동전·정수·진화의 에테르·시련 증표·쐐기돌·화살·불사의 토템은 가방에 들어가지 않습니다(상점과 교관이 인벤토리에서 찾음). 들고 우클릭하거나 인벤토리에서 우클릭하면 열리고, 아이템을 든 채 가방을 우클릭하면 넣습니다. 가방에는 가방·셜커 상자를 넣을 수 없습니다.\n");
 		md.append("- **쓰레기통**: 인벤토리 오른쪽의 \"버림\" 버튼. 커서에 든 아이템을 없애고, 빈 커서로 누르면 마지막에 버린 것을 한 번 되돌립니다. 잡템(막대기·씨앗·켈프·네더랙·석영 등)은 잡화점이 싸게 사 줍니다(가방에 든 것도 판매 거래를 고르면 함께 팔림).\n");
 		md.append("- **대상 체력 바**: 마지막으로 때린 몬스터의 이름과 체력이 화면 위(보스 바 아래)에 ").append(TargetHealthHud.SHOW_TICKS / 20).append("초 동안 보입니다.\n");

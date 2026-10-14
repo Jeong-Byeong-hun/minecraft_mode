@@ -19,8 +19,8 @@ import net.minecraft.network.chat.Component;
 /**
  * The adventurer's menu (semicolon, or the pause menu): the party ({@code /party}), paying another player ({@code /wallet pay}) and
  * this client's display settings ({@code /damagenumbers}, {@code /enhanceeffects}, {@code /hpbar}) and character select
- * ({@code character/Characters}: play another slot, start a new character, buy a slot with merit). Operators also get a button to
- * the admin screen. The party part follows {@link RaidClient#party()}, which the server syncs twice a second.
+ * ({@code character/Characters}: play another slot, start a new character, buy a slot with merit). A dice button on top rolls
+ * {@code /dice} for everyone to see; operators also get a button to the admin screen. The party part follows {@link RaidClient#party()}, which the server syncs twice a second.
  */
 public class AdventurerScreen extends MenuScreenBase {
 	static final String K = "screen.minecraft_mode.menu.";
@@ -56,6 +56,8 @@ public class AdventurerScreen extends MenuScreenBase {
 
 	@Override
 	protected void initTab(final int x, final int y) {
+		this.button(this.left + this.w - 186, this.top + 4, 64, Component.translatable(K + "dice").withStyle(ChatFormatting.GOLD),
+			() -> send(MenuActionPayload.DICE, "", 0));
 		if (MenuClient.isOperator(this.minecraft)) {
 			this.button(this.left + this.w - 120, this.top + 4, 64, Component.translatable(K + "admin").withStyle(ChatFormatting.RED), MenuClient::openAdmin);
 		}
@@ -141,6 +143,7 @@ public class AdventurerScreen extends MenuScreenBase {
 		this.heading(x, y + 18, Component.translatable(K + "payee"));
 		this.names(x, y + 30, MenuClient.onlineNames(this.minecraft), name -> {
 			this.payee = name;
+			this.disarm();
 			this.rebuildWidgets();
 		}, this.payee);
 		int ay = y + 30 + (NAMES_PER_PAGE / 2) * ROW + 22;

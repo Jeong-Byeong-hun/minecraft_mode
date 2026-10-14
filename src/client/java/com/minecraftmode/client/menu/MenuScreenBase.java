@@ -87,6 +87,11 @@ abstract class MenuScreenBase extends Screen {
 		return b;
 	}
 
+	/** Disarms a "Sure?" button, e.g. when the player it acts on changes (its key does not name the player). */
+	protected void disarm() {
+		this.armed = null;
+	}
+
 	/** A button that asks "Sure?" on the first click and runs {@code action} on the second; {@code key} tells the buttons apart. */
 	protected Button confirm(final int x, final int y, final int width, final String key, final Component text, final Runnable action) {
 		boolean isArmed = key.equals(this.armed);

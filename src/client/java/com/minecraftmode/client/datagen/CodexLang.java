@@ -52,6 +52,7 @@ final class CodexLang {
 		b.add(Codex.Category.ARMOR.key(), ko ? "방어구" : "Armor");
 		b.add(Codex.Category.CONSUMABLE.key(), ko ? "소모품" : "Consum.");
 		b.add(Codex.Category.MATERIAL.key(), ko ? "재료·기타" : "Other");
+		b.add(Codex.Category.ACCESSORY.key(), ko ? "장신구" : "Jewelry");
 		b.add(i + "any_class", ko ? "직업 전체" : "Any class");
 		b.add(i + "any_level", ko ? "Lv 전체" : "Any Lv");
 		b.add(i + "search", ko ? "이름 검색" : "Search name");
@@ -70,6 +71,8 @@ final class CodexLang {
 		b.add(s + "drops", ko ? "네임드·소굴·레이드·던전 드롭 (Lv %s 구간)" : "Named, lair, raid and dungeon drops (Lv %s bracket)");
 		b.add(s + "evolve", ko ? "대장장이 진화 (아래 구간 장비 + 진화의 에테르)" : "Blacksmith evolution (lower gear + Evolution Ether)");
 		b.add(s + "raid", ko ? "레이드 보상" : "Raid rewards");
+		b.add(s + "raid_boss", ko ? "레이드 전용: %s 처치 분배 (Lv %s)" : "Raid only: %s's loot (Lv %s)");
+		b.add(s + "raid_top", ko ? "영웅·악몽 난이도: 모든 레이드 보스 (3티어)" : "Heroic and Nightmare: every raid boss (tier 3)");
 		b.add(s + "adventure", ko ? "모험 중 획득" : "Found while adventuring");
 		String[][] known = {
 			{"essence", "몬스터 처치·광석 채굴", "Monster kills and mining ores"},
@@ -78,6 +81,9 @@ final class CodexLang {
 			{"enhancement_stone", "소굴 군주, 레이드, 던전, 거신·침공, 현상금 공적", "Lair lords, raids, dungeons, titans and invasions, bounty merit"},
 			{"protection_scroll", "소굴 군주(10%), 레이드(난이도별 확률), 현상금 공적", "Lair lords (10%), raids (chance by difficulty), bounty merit"},
 			{"awakening_crystal", "쐐기 던전 +5 이상 보상", "Keystone dungeons at +5 and up"},
+			{"accessory_inherit_1", "2티어 레이드(네프레케트·크라켄·이그니스) 분배 품목 (확률, 경매·주사위)", "Tier 2 raid loot: Nefrekhet, Kraken, Ignis (chance, auction or dice)"},
+			{"accessory_inherit_2", "3티어 레이드(라이진·말라카르·에테릭스) 분배 품목 (확률, 경매·주사위)", "Tier 3 raid loot: Raijin, Malachar, Aethryx (chance, auction or dice)"},
+			{"accessory_orb", "영웅·악몽 레이드 클리어 보상 (영웅 1개, 악몽 2개)", "Heroic and Nightmare raid clears (1 on Heroic, 2 on Nightmare)"},
 			{"titan_shard", "거신 처치", "Titan kills"},
 			{"lair_map", "현상금 공적", "Bounty merit"},
 			{"dungeon_keystone", "던전 클리어·주기마다 던전 관리인", "Dungeon clears and the warden each cycle"},

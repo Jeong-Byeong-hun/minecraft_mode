@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
@@ -101,6 +102,7 @@ public final class ModCreativeTabs {
 					}
 					Crops.items().forEach(output::accept);
 					Fishing.items().forEach(output::accept);
+					Accessories.items().forEach(output::accept);
 					for (ConsumableDef def : Consumables.all()) {
 						output.accept(Consumables.item(def));
 					}
@@ -123,6 +125,9 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.ENHANCEMENT_STONE);
 					output.accept(ModItems.PROTECTION_SCROLL);
 					output.accept(ModItems.AWAKENING_CRYSTAL);
+					output.accept(ModItems.ACCESSORY_ORB);
+					output.accept(ModItems.ACCESSORY_INHERIT_1);
+					output.accept(ModItems.ACCESSORY_INHERIT_2);
 					output.accept(ModItems.TITAN_SHARD);
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));

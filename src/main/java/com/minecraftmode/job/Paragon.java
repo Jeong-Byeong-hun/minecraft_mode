@@ -147,7 +147,7 @@ public final class Paragon {
 		}
 		ParagonData data = get(player);
 		int level = data.level();
-		int exp = data.exp() + amount;
+		int exp = (int)Math.min(Integer.MAX_VALUE, (long)data.exp() + amount);
 		int gained = 0;
 		while (exp >= expToNext(level)) {
 			exp -= expToNext(level);

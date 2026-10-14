@@ -25,8 +25,10 @@ import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.engrave.Engraving;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.job.engrave.Engravings;
+import com.minecraftmode.job.gear.ArmorOptions;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.GearStats;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
@@ -157,7 +159,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 	// ------------------------------------------------------------------ content and assets
 
 	private static void checkContent(final ClientGameTestContext context) {
-		require(JobWeapons.all().size() == 161, "expected 161 class weapons, got " + JobWeapons.all().size());
+		require(JobWeapons.all().size() == 182, "expected 182 class weapons, got " + JobWeapons.all().size());
 		int skills = 0;
 		for (JobClass job : JobClass.PLAYABLE) {
 			int[] perTier = new int[5];
@@ -167,10 +169,16 @@ public class JobClientGameTest implements FabricClientGameTest {
 				require(def.skills().size() >= need, def.id() + " has " + def.skills().size() + " skills");
 				skills += def.skills().size();
 			}
-			require(perTier[1] == 3 && perTier[2] == 6 && perTier[3] == 6 && perTier[4] == 8,
-				job.id() + " weapons per tier 3/6/6/8, got " + perTier[1] + "/" + perTier[2] + "/" + perTier[3] + "/" + perTier[4]);
+			require(perTier[1] == 3 && perTier[2] == 7 && perTier[3] == 7 && perTier[4] == 9,
+				job.id() + " weapons per tier 3/7/7/9, got " + perTier[1] + "/" + perTier[2] + "/" + perTier[3] + "/" + perTier[4]);
 			long engravings = java.util.Arrays.stream(Engraving.values()).filter(e -> e.job() == job).count();
 			require(engravings >= 10, job.id() + " has only " + engravings + " engravings");
+			for (GearSlot slot : GearSlot.ARMOR) {
+				// 0.5.24: every armor slot offers at least ten engravings and ten random options
+				int pool = Engraving.pool(job, slot).size();
+				require(pool >= Engraving.MIN_ARMOR_POOL, job.id() + " " + slot + " has only " + pool + " armor engravings");
+				require(ArmorOptions.pool(slot).size() >= ArmorOptions.MIN_POOL, slot + " has only " + ArmorOptions.pool(slot).size() + " armor options");
+			}
 		}
 		require(skills == JobWeapons.skillCount(), "skill ids are not unique");
 		require(Quests.all().size() == 28 && Quests.tokens().size() == 28, "expected 28 trials and 28 tokens");
@@ -249,7 +257,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 				require(resources.getResource(MinecraftMode.id("textures/particle/" + particle + ".png")).isPresent(), "missing particle " + particle);
 			}
 		});
-		MinecraftMode.LOGGER.info("[job] 161 weapons (3/6/6/8 per class), {} skills, textures/models/lang (en+ko) for all", skillTotal);
+		MinecraftMode.LOGGER.info("[job] 182 weapons (3/7/7/9 per class), {} skills, textures/models/lang (en+ko) for all", skillTotal);
 	}
 
 	private static JsonObject lang(final Minecraft minecraft, final String code) {
@@ -1285,7 +1293,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		server.runCommand("time set noon");
 		require(casts == JobWeapons.skillCount(), "cast " + casts + " of " + JobWeapons.skillCount() + " skills");
-		MinecraftMode.LOGGER.info("[job] cast all {} skills of all 161 weapons without errors", casts);
+		MinecraftMode.LOGGER.info("[job] cast all {} skills of all 182 weapons without errors", casts);
 	}
 
 	/** Living skill summons fighting for {@code player}. */

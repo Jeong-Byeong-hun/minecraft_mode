@@ -1,10 +1,12 @@
 package com.minecraftmode;
 
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.AdminState;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.DummyMeter;
+import com.minecraftmode.command.DiceCommand;
 import com.minecraftmode.command.EventCommands;
 import com.minecraftmode.command.JobCommand;
 import com.minecraftmode.command.LandCommand;
@@ -78,6 +80,7 @@ public class MinecraftMode implements ModInitializer {
 		Fishing.init();
 		JobWeapons.init();
 		ClassArmor.init();
+		Accessories.init();
 		Quests.init();
 		ModMenus.init();
 		ModCreativeTabs.init();
@@ -118,6 +121,7 @@ public class MinecraftMode implements ModInitializer {
 		EventCommands.init();
 		WalletCommand.init();
 		LandCommand.init();
+		DiceCommand.init();
 
 		LOGGER.info("Minecraft Mode initialized");
 	}

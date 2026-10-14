@@ -1,6 +1,7 @@
 package com.minecraftmode.registry;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.craft.CraftMenu;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.enhance.EnhanceMenu;
@@ -40,6 +41,10 @@ public final class ModMenus {
 	public static final MenuType<CraftMenu> CRAFT_SMITHING = Registry.register(
 		BuiltInRegistries.MENU, MinecraftMode.id("craft_smithing"), new MenuType<>((id, inventory) -> new CraftMenu(ModMenus.CRAFT_SMITHING, id, inventory, Profession.SMITHING, null),
 			FeatureFlags.VANILLA_SET)
+	);
+
+	public static final MenuType<AccessoryMenu> ACCESSORIES = Registry.register(
+		BuiltInRegistries.MENU, MinecraftMode.id("accessories"), new MenuType<>(AccessoryMenu::new, FeatureFlags.VANILLA_SET)
 	);
 
 	public static void init() {

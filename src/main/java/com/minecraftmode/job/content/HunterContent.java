@@ -151,9 +151,9 @@ public final class HunterContent extends ClassContent {
 		weapon("adult_gon", 4, 78, KNUCKLE, "Adult Gon", "어른 곤",
 			art(0x2A6A2A, 0xE8E0D0, 0xF5D040), fx(Fx.Kind.ORB, 0xFFE070),
 			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, boost(DAMAGE, 10, 40), lifestealFor(10, 10)),
-			skill("first_comes_rock", "First Comes Rock", "처음은 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
+			skill("first_comes_rock", "First Comes Rock", "처음에는 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
 			skill("long_scissors", "Long Scissors", "긴 가위", ATTACK, 12, 26, beam(18, 2.6)),
-			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝이라도 좋아", ULTIMATE, 75, 60, delay(1.0, nova(7, 13.2)), stun(2.0)));
+			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝나도 좋아", ULTIMATE, 75, 60, delay(1.0, nova(7, 13.2)), stun(2.0)));
 
 		weapon("skill_hunter", 4, 82, GRIMOIRE, "Skill Hunter", "도적의 극의",
 			art(0x3A2A1A, 0x1A1A1A, 0xC8A040), fx(Fx.Kind.RUNE, 0xE0C080),
@@ -188,9 +188,9 @@ public final class HunterContent extends ClassContent {
 			skill("prayer", "Prayer", "기도", DEFENSE, 14, 20, boost(DAMAGE, 3, 30), restoreMana(15), heal(10)),
 			skill("third_hand", "Third Hand", "삼내장", ATTACK, 10, 26, slash(8, 200, 3.0), launch(6, 1.0)),
 			skill("ninety_ninth_hand", "Ninety-Ninth Hand", "구십구장", ATTACK, 18, 34, repeat(6, 4, nova(7, 0.9)), stun(1.5)),
-			skill("zero_hand", "Zero Hand", "제로의 손", ULTIMATE, 90, 60, zone(9, 3, 3.0).at(6), beam(30, 6.0)));
+			skill("zero_hand", "Zero Hand", "제로", ULTIMATE, 90, 60, zone(9, 3, 3.0).at(6), beam(30, 6.0)));
 
-		weapon("illumi_needles", 4, 84, NEEDLE, "Illumi's Needles", "일루미의 침",
+		weapon("illumi_needles", 4, 84, NEEDLE, "Illumi's Needles", "이르미의 침",
 			art(0xE6E6F0, 0x1A1426, 0x9A4AFF), fx(Fx.Kind.SPARK, 0xB98CFF),
 			skill("thousand_needles", "Thousand Needles", "천침", ULTIMATE, 50, 40, rain(ProjectileStyle.KNIFE, 16, 6, 10, 0.55)),
 			skill("needle_throw", "Needle Throw", "침 투척", ATTACK, 6, 16, shoot(ProjectileStyle.KNIFE, 1.4).count(3).spread(20).pierce(2)),

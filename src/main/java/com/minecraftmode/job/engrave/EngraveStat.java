@@ -57,7 +57,7 @@ public enum EngraveStat {
 	BOSS_DAMAGE("boss_damage", "+%s%% damage to bosses and named monsters", "보스·네임드에게 주는 피해 +%s%%", 0),
 	CHAIN_LIGHTNING("chain_lightning", "%s%% chance on hit to chain lightning through the target and 2 nearby enemies", "적중 시 %s%% 확률로 대상과 주변 적 2명에게 연쇄 번개", 50),
 	STEALTH_ON_KILL("stealth_on_kill", "Invisible for %ss after a kill", "처치 후 %s초간 투명", 5),
-	SPEED_ON_KILL("speed_on_kill", "Swiftness for %ss after a kill", "처치 후 %s초간 신속", 10),
+	SPEED_ON_KILL("speed_on_kill", "Swiftness for %ss after a kill", "처치 후 %s초간 속도 증가", 10),
 	CRIT_REFUND("crit_refund", "Critical hits cut skill cooldowns by %ss", "치명타 시 스킬 재사용 대기시간 %s초 감소", 2),
 	MANA_SHIELD("mana_shield", "%s%% of damage taken is paid with MP", "받는 피해의 %s%%를 MP로 대신 받음", 50),
 	DOUBLE_STRIKE("double_strike", "%s%% chance for basic attacks to hit twice", "%s%% 확률로 기본 공격이 두 번 적중", 50),

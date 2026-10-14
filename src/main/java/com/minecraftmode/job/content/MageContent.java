@@ -139,7 +139,7 @@ public final class MageContent extends ClassContent {
 			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 0.56, 2.0F), inflict(SLOWNESS, 3, 1)),
 			skill("rule_breaker", "Rule Breaker", "파계해야 할 모든 부적", ATTACK, 14, 24, shadowstep(10, 2.87), inflict(VULNERABLE, 8, 2)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, refresh(50), buff(MANA_FLOW, 10, 0)),
-			skill("argon_coin", "Argon Coin", "아르곤 코인", DEFENSE, 26, 22, heal(25), shield(8, 10)));
+			skill("argon_coin", "Argon Coin", "황금양모", DEFENSE, 26, 22, heal(25), shield(8, 10)));
 
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
@@ -165,7 +165,7 @@ public final class MageContent extends ClassContent {
 			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, mark(24, 10, 40), allyBoost(10, DAMAGE, 10, 20)),
 			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, allyBoost(10, DAMAGE, 10, 20), allyHeal(10, 15)));
 
-		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 히스토리아",
+		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 이스트왈",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
 			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
 			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28, shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing(), inflict(VULNERABLE, 6, 1)),
@@ -195,9 +195,9 @@ public final class MageContent extends ClassContent {
 
 		weapon("rule_breaker", 4, 92, SPELLBLADE, "Rule Breaker", "룰 브레이커",
 			art(0xB89BE0, 0x3A1F5C, 0xF0E6FF), fx(Fx.Kind.RUNE, 0xD6B8FF),
-			skill("all_spells_broken", "All Spells Must Be Broken", "파계하는 모든 부적", ULTIMATE, 45, 40, cleanse(), mark(20, 10, 40), beam(14, 5.8)),
+			skill("all_spells_broken", "All Spells Must Be Broken", "파계해야 할 모든 부적", ULTIMATE, 45, 40, cleanse(), mark(20, 10, 40), beam(14, 5.8)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", ATTACK, 8, 20, barrage(ProjectileStyle.ORB, 4, 0.5)),
 			skill("witch_dagger", "Witch's Dagger", "마녀의 단검", ATTACK, 7, 16, slash(4, 180, 1.9)),
-			skill("territory_creation", "Territory Creation", "진지 작성", UTILITY, 26, 12, allyBoost(10, DAMAGE, 12, 15), restoreMana(25)));
+			skill("territory_creation", "Territory Creation", "진지작성", UTILITY, 26, 12, allyBoost(10, DAMAGE, 12, 15), restoreMana(25)));
 	}
 }

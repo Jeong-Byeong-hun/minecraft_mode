@@ -76,7 +76,7 @@ public final class RogueContent extends ClassContent {
 		weapon("chidori_blade", 2, 39, NINJATO, "Chidori Blade", "치도리 도",
 			art(0xD6E4F0, 0x1C1C3C, 0x6EC6FF), fx(Fx.Kind.BOLT, 0x8FD3FF),
 			skill("chidori", "Chidori", "치도리", ATTACK, 9, 18, dash(8, 2.0), stun(0.8)),
-			skill("chidori_current", "Chidori Current", "치도리 나가시", DEFENSE, 14, 16, nova(3.5, 1.2), stun(1.2)),
+			skill("chidori_current", "Chidori Current", "치도리류", DEFENSE, 14, 16, nova(3.5, 1.2), stun(1.2)),
 			skill("sharingan", "Sharingan", "사륜안", UTILITY, 18, 14, boost(CRIT_CHANCE, 6, 20), mark(16, 8, 25)));
 
 		weapon("rasenshuriken", 2, 43, SHURIKEN, "Rasenshuriken", "나선수리검",
@@ -90,15 +90,15 @@ public final class RogueContent extends ClassContent {
 		weapon("suna_war_fan", 2, 44, WAR_FAN, "Sand Village War Fan", "모래 마을의 부채",
 			art(0xD8C8A0, 0x5A4632, 0x7A3EB0), fx(Fx.Kind.SLASH, 0xE8E0C8),
 			skill("cutting_whirlwind", "Cutting Whirlwind", "베는 회오리", ATTACK, 8, 14, shoot(ProjectileStyle.WAVE, 1.6).count(3).spread(40).pierce(4)),
-			skill("kamaitachi", "Kamaitachi", "카마이타치", ATTACK, 10, 16, slash(6, 200, 1.7)),
+			skill("kamaitachi", "Kamaitachi", "족제비 바람", ATTACK, 10, 16, slash(6, 200, 1.7)),
 			skill("gale_wall", "Gale Wall", "돌풍 장벽", UTILITY, 14, 12, push(6, 1.6), debuff(6, SLOWNESS, 4, 1)));
 
 		// ---------------------------------------------------------------- tier 3: Assassin
-		weapon("hidden_blade", 3, 45, CLAW, "Hidden Blade", "히든 블레이드",
+		weapon("hidden_blade", 3, 45, CLAW, "Hidden Blade", "암살검",
 			art(0xC8CCD2, 0xEDE6D6, 0xA31515), fx(Fx.Kind.SLASH, 0xF2F2F2),
 			skill("silent_assassination", "Silent Assassination", "소리 없는 암살", ATTACK, 10, 20, execute(6, 2.0, 40, 2.2), stealth(2, 40)),
 			skill("eagle_vision", "Eagle Vision", "독수리의 눈", UTILITY, 18, 16, debuff(20, GLOWING, 10, 0), mark(20, 10, 30)),
-			skill("leap_of_faith", "Leap of Faith", "신념의 도약", MOVEMENT, 12, 16, leap(7, 3, 1.6), stealth(3, 30)));
+			skill("leap_of_faith", "Leap of Faith", "신뢰의 도약", MOVEMENT, 12, 16, leap(7, 3, 1.6), stealth(3, 30)));
 
 		weapon("hassan_dirks", 3, 49, KUNAI, "Hassan's Dirks", "하산의 단검",
 			art(0x3A3A40, 0x1A1A1A, 0xEDEDED), fx(Fx.Kind.SMOKE, 0x3B2A4D),
@@ -128,7 +128,7 @@ public final class RogueContent extends ClassContent {
 			art(0xD8D8E0, 0x5B3A1E, 0x2E86DE), fx(Fx.Kind.SLASH, 0x2E86DE),
 			skill("mystic_eyes", "Mystic Eyes of Death Perception", "직사의 마안", UTILITY, 18, 20, mark(20, 10, 40), debuff(10, VULNERABLE, 6, 1)),
 			skill("seventeen_dismemberment", "Seventeen Dismemberment", "17분할", ATTACK, 16, 28, shadowstep(10, 1.4), repeat(17, 1, slash(3, 120, 0.2))),
-			skill("flash_run", "Nanaya Arts: Flash Run", "칠야 비전: 섬주", MOVEMENT, 9, 16, blink(12), slash(3.5, 360, 1.4)));
+			skill("flash_run", "Nanaya Arts: Flash Run", "나나야 체술: 섬주", MOVEMENT, 9, 16, blink(12), slash(3.5, 360, 1.4)));
 
 		weapon("bashosen", 3, 64, WAR_FAN, "Bashosen", "파초선",
 			art(0xE6D2A0, 0x8B2E1A, 0xFF7A1A), fx(Fx.Kind.ORB, 0xFF8C3A),
@@ -197,7 +197,7 @@ public final class RogueContent extends ClassContent {
 
 		weapon("madara_gunbai", 4, 88, WAR_FAN, "Madara's Gunbai", "마다라의 군배",
 			art(0xB33A2E, 0x2A1A14, 0xF2F2F2), fx(Fx.Kind.ORB, 0xFF4A2A),
-			skill("uchiha_return", "Uchiha Return", "우치하 되받아치기", ULTIMATE, 50, 40, shield(12, 4), delay(1.0, nova(7, 6.0))),
+			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, shield(12, 4), delay(1.0, nova(7, 6.0))),
 			skill("great_fire_annihilation", "Great Fire Annihilation", "호화멸각", ATTACK, 12, 24, burn(6), strike(12, 5, 1, 2.8)),
 			skill("gunbai_sweep", "Gunbai Sweep", "군배 휩쓸기", ATTACK, 7, 18, slash(6, 180, 1.7), push(5, 1.2)),
 			skill("gunbai_leap", "Gunbai Leap", "군배 도약", MOVEMENT, 10, 14, leap(5, 4, 1.4)));

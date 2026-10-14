@@ -41,7 +41,7 @@ final class ConsumableLang {
 		b.add(k + "effect", ko ? "%s (%s분)" : "%s (%s min)");
 		b.add(k + "revive", ko ? "지니고 있으면 죽을 피해를 받을 때 체력 50%로 부활 (소모)" : "While carried: survive a lethal blow at 50% health (used up)");
 		b.add(k + "exp", ko ? "직업 경험치: 다음 레벨까지 필요한 양의 절반" : "Class EXP: half of what your level needs");
-		b.add(k + "star", ko ? "8초 동안 무적(저항 V)과 신속 II" : "8 seconds of invulnerability (Resistance V) and Speed II");
+		b.add(k + "star", ko ? "8초 동안 무적(저항 V)과 속도 증가 II" : "8 seconds of invulnerability (Resistance V) and Speed II");
 		b.add(k + "feast", ko ? "배고픔을 가득 채움" : "Fills your hunger completely");
 		b.add(k + "cooldown", ko ? "재사용 대기 %s초 (%s 공유)" : "%ss cooldown (shared: %s)");
 		for (String[] g : new String[][] {{"heal", "Healing", "체력 회복"}, {"mana", "MP", "MP 회복"}, {"cure", "Cures", "해독"}, {"snack", "Snacks", "간식"},

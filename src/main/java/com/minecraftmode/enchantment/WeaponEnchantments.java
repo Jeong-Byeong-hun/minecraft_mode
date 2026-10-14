@@ -28,7 +28,7 @@ public final class WeaponEnchantments {
 	public static final EnchantInfo VENOM = EnchantInfo.of("venom", "Venom", "독날",
 		"Melee hits poison the target for 3-7 seconds.", "근접 공격 시 대상을 3~7초 동안 중독시킵니다.");
 	public static final EnchantInfo FROSTBITE = EnchantInfo.of("frostbite", "Frostbite", "서리 칼날",
-		"Melee hits slow the target; longer and stronger with each level.", "근접 공격 시 대상에게 구속을 겁니다. 레벨이 오를수록 길고 강해집니다.");
+		"Melee hits slow the target; longer and stronger with each level.", "근접 공격 시 대상에게 속도 감소를 겁니다. 레벨이 오를수록 길고 강해집니다.");
 	public static final EnchantInfo ENFEEBLE = EnchantInfo.of("enfeeble", "Enfeeble", "약화",
 		"Melee hits weaken the target for 3-7 seconds.", "근접 공격 시 대상에게 3~7초 동안 나약함을 겁니다.");
 	public static final EnchantInfo WITHERING_BLADE = EnchantInfo.of("withering_blade", "Withering Blade", "시듦의 칼날",
@@ -40,7 +40,7 @@ public final class WeaponEnchantments {
 	public static final EnchantInfo RAIDER_BANE = EnchantInfo.of("raider_bane", "Raider's Bane", "토벌",
 		"+2.5 damage per level against illagers, witches and ravagers.", "약탈자 무리(일리저·마녀·파괴수)에게 레벨당 피해 +2.5.");
 	public static final EnchantInfo MOMENTUM = EnchantInfo.of("momentum", "Momentum", "기세",
-		"Melee hits grant Speed I for 2-6 seconds.", "근접 공격 시 2~6초 동안 신속 I을 얻습니다.");
+		"Melee hits grant Speed I for 2-6 seconds.", "근접 공격 시 2~6초 동안 속도 증가 I을 얻습니다.");
 	public static final EnchantInfo BULWARK_STRIKE = EnchantInfo.of("bulwark_strike", "Bulwark Strike", "방벽 일격",
 		"8% chance per level on hit to gain Absorption I for 5 seconds.", "공격 시 레벨당 8% 확률로 5초 동안 흡수 I을 얻습니다.");
 	public static final EnchantInfo SOUL_HARVEST = EnchantInfo.of("soul_harvest", "Soul Harvest", "영혼 수확",
@@ -56,7 +56,7 @@ public final class WeaponEnchantments {
 	public static final EnchantInfo HEAVY_BLOW = EnchantInfo.of("heavy_blow", "Heavy Blow", "강타",
 		"+0.5 knockback per level.", "레벨당 밀치기 +0.5.");
 	public static final EnchantInfo STUN = EnchantInfo.of("stun", "Stun", "기절",
-		"6% chance per level to stun the target (Slowness V and Mining Fatigue III) for 1.5 seconds.", "레벨당 6% 확률로 대상을 1.5초 동안 기절시킵니다(구속 V, 채굴 피로 III).");
+		"6% chance per level to stun the target (Slowness V and Mining Fatigue III) for 1.5 seconds.", "레벨당 6% 확률로 대상을 1.5초 동안 기절시킵니다(속도 감소 V, 채굴 피로 III).");
 	public static final EnchantInfo EMBER = EnchantInfo.of("ember", "Ember", "불씨",
 		"Sets the target on fire for 3-7 seconds.", "대상을 3~7초 동안 불태웁니다.");
 	public static final EnchantInfo SEARING = EnchantInfo.of("searing", "Searing", "작열",

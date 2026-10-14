@@ -126,7 +126,7 @@ public final class WarriorContent extends ClassContent {
 		weapon("spartan_hoplon", 3, 63, GREATSHIELD, "Spartan Hoplon", "스파르타의 호플론",
 			art(0xC8A050, 0x5A2A14, 0xB22222), fx(Fx.Kind.SHARD, 0xFFCC66),
 			skill("phalanx_strike", "Phalanx Strike", "밀집 진형 일격", ATTACK, 8, 18, slash(5, 140, 2.6)),
-			skill("thermopylae", "Thermopylae Enomotia", "테르모필라이 에노모티아", DEFENSE, 26, 24, shield(14, 10), taunt(10), allyBoost(8, DAMAGE, 10, 10)),
+			skill("thermopylae", "Thermopylae Enomotia", "테르모필레 에노모티아", DEFENSE, 26, 24, shield(14, 10), taunt(10), allyBoost(8, DAMAGE, 10, 10)),
 			skill("spartan_charge", "Spartan Charge", "스파르타의 돌격", ATTACK, 13, 22, dash(8, 1.8), nova(4, 1.4)));
 
 		// ---------------------------------------------------------------- tier 4: King of Knights
@@ -174,7 +174,7 @@ public final class WarriorContent extends ClassContent {
 
 		weapon("ascalon", 4, 95, SPEAR, "Ascalon", "아스칼론",
 			art(0xE6E6E6, 0x4B3621, 0x2ECC71), fx(Fx.Kind.RING, 0x7DFFB0),
-			skill("abyssus_draconis", "Abyssus Draconis", "역성의 용", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 6.3)),
+			skill("abyssus_draconis", "Abyssus Draconis", "그대는 용이니라", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 6.3)),
 			skill("dragonbane_thrust", "Dragonbane Thrust", "용살 찌르기", ATTACK, 7, 18, inflict(VULNERABLE, 6, 1), beam(10, 2.08)),
 			skill("martyrs_shield", "Martyr's Shield", "순교자의 방패", DEFENSE, 26, 24, shield(16, 10), taunt(10)),
 			skill("saints_ward", "Saint's Ward", "성자의 수호", UTILITY, 30, 26, allyHeal(10, 30), cleanse()));
@@ -188,9 +188,9 @@ public final class WarriorContent extends ClassContent {
 
 		weapon("round_table_shield", 4, 84, GREATSHIELD, "Round Table Shield", "원탁의 대방패",
 			art(0xDCE3EE, 0x3B4A6B, 0x9FD4FF), fx(Fx.Kind.RING, 0xBFE4FF),
-			skill("lord_camelot", "Lord Camelot", "로드 캐멀롯", ULTIMATE, 50, 40, shield(20, 10), allyBoost(12, DAMAGE, 12, 20), nova(6, 5.5)),
-			skill("snowflake_bulwark", "Bulwark of Snowflakes", "설화의 벽", DEFENSE, 24, 20, allyHeal(8, 15), shield(10, 8)),
+			skill("lord_camelot", "Lord Camelot", "로드 카멜롯", ULTIMATE, 50, 40, shield(20, 10), allyBoost(12, DAMAGE, 12, 20), nova(6, 5.5)),
+			skill("snowflake_bulwark", "Bulwark of Snowflakes", "눈꽃의 벽", DEFENSE, 24, 20, allyHeal(8, 15), shield(10, 8)),
 			skill("round_table_bash", "Round Table Bash", "원탁 강타", ATTACK, 7, 18, slash(5, 160, 2.5)),
-			skill("camelot_charge", "Camelot Charge", "캐멀롯 돌격", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)));
+			skill("camelot_charge", "Camelot Charge", "카멜롯 돌격", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)));
 	}
 }

@@ -127,8 +127,8 @@ public class GearDocProvider implements DataProvider {
 		Map.entry(Habitat.GLOOM, "어두운 숲·버섯 들판·창백한 정원"), Map.entry(Habitat.JUNGLE, "정글"), Map.entry(Habitat.COAST, "해안"),
 		Map.entry(Habitat.BADLANDS, "악지"), Map.entry(Habitat.TAIGA, "타이가"), Map.entry(Habitat.DEEP_CAVES, "점적석·무성한 동굴"),
 		Map.entry(Habitat.OLD_FOREST, "오래된 숲"), Map.entry(Habitat.NETHER_WASTES, "네더 황무지·현무암 삼각주"), Map.entry(Habitat.SOUL_VALLEY, "영혼 모래 골짜기"),
-		Map.entry(Habitat.CRIMSON, "진홍빛 숲"), Map.entry(Habitat.WARPED, "뒤틀린 숲"), Map.entry(Habitat.DEEP_DARK, "딥 다크"),
-		Map.entry(Habitat.END_HIGHLANDS, "엔드 고지대"), Map.entry(Habitat.END_ISLANDS, "엔드 외곽 섬"));
+		Map.entry(Habitat.CRIMSON, "진홍빛 숲"), Map.entry(Habitat.WARPED, "뒤틀린 숲"), Map.entry(Habitat.DEEP_DARK, "깊은 어둠"),
+		Map.entry(Habitat.END_HIGHLANDS, "엔드 고지"), Map.entry(Habitat.END_ISLANDS, "엔드 외곽 섬"));
 	private static final Map<Ability.Type, String> ABILITIES = Map.ofEntries(
 		Map.entry(Ability.Type.LEAP, "도약 강타"), Map.entry(Ability.Type.CHARGE, "돌진"), Map.entry(Ability.Type.BOLT, "투사체"), Map.entry(Ability.Type.SUMMON, "소환"),
 		Map.entry(Ability.Type.TELEPORT, "순간이동"), Map.entry(Ability.Type.AURA, "오라"), Map.entry(Ability.Type.ROAR, "포효"), Map.entry(Ability.Type.SPIKES, "가시 분출"),
@@ -140,23 +140,23 @@ public class GearDocProvider implements DataProvider {
 		ConsumableDef.Shop.ALCHEMIST, "연금술사");
 	private static final Map<String, String> VANILLA_EFFECTS = Map.ofEntries(Map.entry("effect.minecraft.absorption", "흡수"),
 		Map.entry("effect.minecraft.fire_resistance", "화염 저항"), Map.entry("effect.minecraft.haste", "성급함"), Map.entry("effect.minecraft.health_boost", "생명력 강화"),
-		Map.entry("effect.minecraft.resistance", "저항"), Map.entry("effect.minecraft.speed", "신속"), Map.entry("effect.minecraft.regeneration", "재생"),
+		Map.entry("effect.minecraft.resistance", "저항"), Map.entry("effect.minecraft.speed", "속도 증가"), Map.entry("effect.minecraft.regeneration", "재생"),
 		Map.entry("effect.minecraft.strength", "힘"), Map.entry("effect.minecraft.night_vision", "야간 투시"), Map.entry("effect.minecraft.water_breathing", "수중 호흡"),
 		Map.entry("effect.minecraft.luck", "행운"));
 	private static final Map<String, String> BIOMES = Map.ofEntries(
-		Map.entry("plains", "평원"), Map.entry("sunflower_plains", "해바라기 평원"), Map.entry("meadow", "초원"), Map.entry("flower_forest", "꽃 숲"),
+		Map.entry("plains", "평원"), Map.entry("sunflower_plains", "해바라기 평원"), Map.entry("meadow", "목초지"), Map.entry("flower_forest", "꽃 숲"),
 		Map.entry("forest", "숲"), Map.entry("birch_forest", "자작나무 숲"), Map.entry("savanna", "사바나"), Map.entry("savanna_plateau", "사바나 고원"),
-		Map.entry("windswept_savanna", "바람이 부는 사바나"), Map.entry("taiga", "타이가"), Map.entry("windswept_hills", "바람이 부는 언덕"),
+		Map.entry("windswept_savanna", "바람이 세찬 사바나"), Map.entry("taiga", "타이가"), Map.entry("windswept_hills", "바람이 세찬 언덕"),
 		Map.entry("snowy_plains", "눈 덮인 평원"), Map.entry("snowy_taiga", "눈 덮인 타이가"), Map.entry("grove", "산림"), Map.entry("snowy_slopes", "눈 덮인 비탈"),
 		Map.entry("ice_spikes", "역고드름"), Map.entry("desert", "사막"), Map.entry("swamp", "늪"), Map.entry("mangrove_swamp", "맹그로브 늪"),
 		Map.entry("dark_forest", "어두운 숲"), Map.entry("mushroom_fields", "버섯 들판"), Map.entry("pale_garden", "창백한 정원"), Map.entry("jungle", "정글"),
 		Map.entry("sparse_jungle", "듬성듬성한 정글"), Map.entry("bamboo_jungle", "대나무 정글"), Map.entry("beach", "해변"), Map.entry("stony_shore", "돌 해안"),
 		Map.entry("snowy_beach", "눈 덮인 해변"), Map.entry("badlands", "악지"), Map.entry("eroded_badlands", "침식된 악지"), Map.entry("wooded_badlands", "나무가 우거진 악지"),
-		Map.entry("old_growth_pine_taiga", "원시 소나무 타이가"), Map.entry("old_growth_spruce_taiga", "원시 가문비나무 타이가"),
-		Map.entry("old_growth_birch_forest", "원시 자작나무 숲"), Map.entry("stony_peaks", "돌 봉우리"), Map.entry("dripstone_caves", "점적석 동굴"),
+		Map.entry("old_growth_pine_taiga", "소나무 원시 타이가"), Map.entry("old_growth_spruce_taiga", "가문비나무 원시 타이가"),
+		Map.entry("old_growth_birch_forest", "자작나무 원시림"), Map.entry("stony_peaks", "돌 봉우리"), Map.entry("dripstone_caves", "점적석 동굴"),
 		Map.entry("lush_caves", "무성한 동굴"), Map.entry("nether_wastes", "네더 황무지"), Map.entry("basalt_deltas", "현무암 삼각주"),
-		Map.entry("soul_sand_valley", "영혼 모래 골짜기"), Map.entry("crimson_forest", "진홍빛 숲"), Map.entry("warped_forest", "뒤틀린 숲"), Map.entry("deep_dark", "딥 다크"),
-		Map.entry("end_highlands", "엔드 고지대"), Map.entry("end_midlands", "엔드 중지대"), Map.entry("end_barrens", "엔드 불모지"));
+		Map.entry("soul_sand_valley", "영혼 모래 골짜기"), Map.entry("crimson_forest", "진홍빛 숲"), Map.entry("warped_forest", "뒤틀린 숲"), Map.entry("deep_dark", "깊은 어둠"),
+		Map.entry("end_highlands", "엔드 고지"), Map.entry("end_midlands", "엔드 중지"), Map.entry("end_barrens", "엔드 불모지"));
 
 	private final FabricPackOutput output;
 	private final Map<String, String> ko = new HashMap<>();
@@ -639,9 +639,9 @@ public class GearDocProvider implements DataProvider {
 
 	private static final String[][] VANILLA_KO = {
 		{"item.minecraft.dried_kelp", "말린 켈프"}, {"item.minecraft.wheat", "밀"}, {"item.minecraft.carrot", "당근"}, {"item.minecraft.sweet_berries", "달콤한 열매"},
-		{"item.minecraft.baked_potato", "구운 감자"}, {"item.minecraft.sugar", "설탕"}, {"item.minecraft.cod", "생대구"}, {"item.minecraft.cooked_salmon", "익힌 연어"},
-		{"item.minecraft.chicken", "생닭고기"}, {"item.minecraft.bowl", "그릇"}, {"item.minecraft.cooked_beef", "스테이크"}, {"item.minecraft.bone", "뼈"},
-		{"item.minecraft.paper", "종이"}, {"item.minecraft.bread", "빵"}, {"block.minecraft.red_mushroom", "빨간 버섯"}, {"item.minecraft.golden_carrot", "황금 당근"},
+		{"item.minecraft.baked_potato", "구운 감자"}, {"item.minecraft.sugar", "설탕"}, {"item.minecraft.cod", "익히지 않은 대구"}, {"item.minecraft.cooked_salmon", "익힌 연어"},
+		{"item.minecraft.chicken", "익히지 않은 닭고기"}, {"item.minecraft.bowl", "그릇"}, {"item.minecraft.cooked_beef", "스테이크"}, {"item.minecraft.bone", "뼈다귀"},
+		{"item.minecraft.paper", "종이"}, {"item.minecraft.bread", "빵"}, {"block.minecraft.red_mushroom", "빨간색 버섯"}, {"item.minecraft.golden_carrot", "황금 당근"},
 		{"item.minecraft.glass_bottle", "유리병"}, {"item.minecraft.spider_eye", "거미 눈"}, {"item.minecraft.honey_bottle", "꿀이 든 병"},
 		{"item.minecraft.iron_ingot", "철 주괴"}, {"item.minecraft.cocoa_beans", "코코아 콩"}, {"item.minecraft.gold_ingot", "금 주괴"},
 		{"item.minecraft.lapis_lazuli", "청금석"}, {"item.minecraft.ender_pearl", "엔더 진주"}, {"item.minecraft.compass", "나침반"}, {"item.minecraft.diamond", "다이아몬드"},

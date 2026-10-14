@@ -234,7 +234,7 @@ public final class NamedMobs {
 			.ability(roar(240, 0.4F, 8).effect(MobEffects.DARKNESS, 140, 0))
 			.done();
 		named("chorus_wraith", "Chorus Wraith", "코러스 망령", 80, 90, 0.03F, 260, 17, 8, 0.30, 0.8F, 2.6F, Habitat.END_HIGHLANDS,
-			"The ghost of a traveler who ate far too much chorus fruit.", "코러스 열매를 너무 많이 먹은 여행자의 망령.")
+			"The ghost of a traveler who ate far too much chorus fruit.", "후렴과를 너무 많이 먹은 여행자의 망령.")
 			.flying()
 			.ability(bolt(80, 0.8F, 22, 3, 20, Fx.Kind.PETAL, 0xD080FF, Items.CHORUS_FRUIT).effect(MobEffects.LEVITATION, 50, 1).seeking())
 			.ability(teleport(140, 20))

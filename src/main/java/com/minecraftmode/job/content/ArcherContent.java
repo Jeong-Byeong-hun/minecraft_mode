@@ -34,7 +34,7 @@ public final class ArcherContent extends ClassContent {
 			skill("hunters_mark", "Hunter's Mark", "사냥꾼의 표식", UTILITY, 14, 10, mark(16, 8, 25), empower(2, 25, 8)),
 			skill("nimble_step", "Nimble Step", "날렵한 발걸음", MOVEMENT, 10, 8, buff(SPEED, 6, 1), boost(CRIT_CHANCE, 4, 15)));
 
-		weapon("trapper_crossbow", 1, 15, CROSSBOW, "Trapper's Crossbow", "덫사냥꾼의 석궁",
+		weapon("trapper_crossbow", 1, 15, CROSSBOW, "Trapper's Crossbow", "덫사냥꾼의 쇠뇌",
 			art(0x7A7F86, 0x5C3A1E, 0xC0392B), fx(Fx.Kind.SPARK, 0xD9C27A),
 			skill("heavy_bolt", "Heavy Bolt", "헤비 볼트", ATTACK, 7, 10, shoot(ProjectileStyle.ARROW, 1.6).pierce(2).speed(3.6F), stun(0.5)),
 			skill("snare_trap", "Snare Trap", "올가미 덫", UTILITY, 14, 12, zone(3, 5, 0.4).at(12).effect(SLOWNESS, 2)),
@@ -201,7 +201,7 @@ public final class ArcherContent extends ClassContent {
 			art(0xE8F0FF, 0x1F2A5C, 0x4AD7FF), fx(Fx.Kind.BOLT, 0x9FE8FF),
 			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 50, 40, mark(20, 8, 30), strike(20, 5, 1, 6.5)),
 			skill("divine_discus", "Divine Discus", "신성한 원반", ATTACK, 7, 18, shoot(ProjectileStyle.BLADE, 1.7).count(3).spread(30).pierce(3)),
-			skill("mana_burst_flame", "Mana Burst (Flame)", "마력 방출 (불꽃)", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
-			skill("hero_of_the_endowed", "Hero of the Endowed", "수수의 영웅", UTILITY, 26, 20, heal(15), boost(DAMAGE, 8, 15)));
+			skill("mana_burst_flame", "Mana Burst (Flame)", "마력방출(불꽃)", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, heal(15), boost(DAMAGE, 8, 15)));
 	}
 }

@@ -124,7 +124,7 @@ public final class TalentTree {
 			branch("kido", "Kido", "귀도", 0x8A5AFF,
 				n("Hado", "파도", l(SKILL_DAMAGE, 2.5F)), n("Incantation", "영창", l(COOLDOWN, 1.5F)),
 				n("Reiryoku", "영력", l(MAX_MANA, 6)), n("Bakudo", "박도", l(SKILL_AREA, 2)),
-				n("Hado #90", "파도 90번", l(SKILL_DAMAGE, 12), l(ECHO, 5))),
+				n("Hado #90", "파도의 90", l(SKILL_DAMAGE, 12), l(ECHO, 5))),
 			branch("hoho", "Hoho", "보법", 0xE8E8F0,
 				n("Light Step", "가벼운 걸음", l(MOVE_SPEED, 1.5F)), n("Afterimage", "잔상", l(DODGE, 1)),
 				n("Quickened Mind", "가속된 정신", l(COOLDOWN_FLAT, 0.06F)), n("Pursuit", "추격", l(SPEED_ON_KILL, 0.4F)),

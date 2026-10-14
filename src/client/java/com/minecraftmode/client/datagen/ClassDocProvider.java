@@ -291,13 +291,13 @@ public class ClassDocProvider implements DataProvider {
 
 	private void vanillaNames() {
 		Object[][] effects = {
-			{MobEffects.SPEED, "신속"}, {MobEffects.SLOWNESS, "구속"}, {MobEffects.HASTE, "성급함"}, {MobEffects.MINING_FATIGUE, "채굴 피로"},
+			{MobEffects.SPEED, "속도 증가"}, {MobEffects.SLOWNESS, "속도 감소"}, {MobEffects.HASTE, "성급함"}, {MobEffects.MINING_FATIGUE, "채굴 피로"},
 			{MobEffects.STRENGTH, "힘"}, {MobEffects.JUMP_BOOST, "점프 강화"}, {MobEffects.NAUSEA, "멀미"}, {MobEffects.REGENERATION, "재생"},
 			{MobEffects.RESISTANCE, "저항"}, {MobEffects.FIRE_RESISTANCE, "화염 저항"}, {MobEffects.WATER_BREATHING, "수중 호흡"},
-			{MobEffects.INVISIBILITY, "투명화"}, {MobEffects.BLINDNESS, "실명"}, {MobEffects.NIGHT_VISION, "야간 투시"}, {MobEffects.HUNGER, "허기"},
+			{MobEffects.INVISIBILITY, "투명"}, {MobEffects.BLINDNESS, "실명"}, {MobEffects.NIGHT_VISION, "야간 투시"}, {MobEffects.HUNGER, "허기"},
 			{MobEffects.WEAKNESS, "나약함"}, {MobEffects.POISON, "독"}, {MobEffects.WITHER, "시듦"}, {MobEffects.HEALTH_BOOST, "생명력 강화"},
 			{MobEffects.ABSORPTION, "흡수"}, {MobEffects.GLOWING, "발광"}, {MobEffects.LEVITATION, "공중 부양"}, {MobEffects.LUCK, "행운"},
-			{MobEffects.SLOW_FALLING, "느린 낙하"}, {MobEffects.DOLPHINS_GRACE, "돌고래의 우아함"}, {MobEffects.DARKNESS, "어둠"},
+			{MobEffects.SLOW_FALLING, "느린 낙하"}, {MobEffects.DOLPHINS_GRACE, "돌고래의 가호"}, {MobEffects.DARKNESS, "어둠"},
 			{MobEffects.CONDUIT_POWER, "전달체의 힘"}, {com.minecraftmode.registry.ModEffects.BLEEDING, "출혈"}
 		};
 		for (Object[] e : effects) {

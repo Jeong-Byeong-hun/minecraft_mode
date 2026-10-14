@@ -32,7 +32,7 @@ public enum Archetype {
 	SHORTBOW("shortbow", "Shortbow", "단궁", 0.40F, 1.6F, 15, 0.90F),
 	LONGBOW("longbow", "Longbow", "장궁", 0.40F, 1.2F, 25, 1.30F),
 	GREATBOW("greatbow", "Greatbow", "대궁", 0.50F, 1.0F, 30, 1.60F),
-	CROSSBOW("crossbow", "Crossbow", "석궁", 0.50F, 1.0F, 0.0F, ProjectileStyle.ARROW, 22, 1.10F),
+	CROSSBOW("crossbow", "Crossbow", "쇠뇌", 0.50F, 1.0F, 0.0F, ProjectileStyle.ARROW, 22, 1.10F),
 	TWIN_BLADES("twin_blades", "Twin Blades", "쌍검", BasicMode.MELEE, 0.85F, 1.9F, 0.0F),
 	// Pirate
 	CUTLASS("cutlass", "Cutlass", "커틀러스", BasicMode.MELEE, 1.00F, 1.6F, 0.0F),

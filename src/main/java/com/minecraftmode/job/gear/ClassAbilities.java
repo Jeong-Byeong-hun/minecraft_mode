@@ -36,11 +36,11 @@ public final class ClassAbilities {
 		BLINK(JobClass.MAGE, 8, 10, "blink", "Blink", "블링크",
 			"Teleport up to 8 blocks where you look (10 MP).", "바라보는 방향으로 최대 8블록 순간이동 (MP 10)."),
 		BACKSTEP(JobClass.ARCHER, 12, 0, "backstep", "Backstep", "백스텝",
-			"Leap backwards and gain Swiftness for 2s.", "뒤로 크게 도약하고 2초간 신속."),
+			"Leap backwards and gain Swiftness for 2s.", "뒤로 크게 도약하고 2초간 속도 증가."),
 		GRAPPLING_HOOK(JobClass.PIRATE, 14, 0, "grappling_hook", "Grappling Hook", "갈고리",
 			"Hook a block up to 24 blocks away and get pulled to it.", "24블록 안의 블록에 갈고리를 걸어 끌려갑니다."),
 		FLASH_STEP(JobClass.SHINIGAMI, 10, 10, "flash_step", "Flash Step", "순보",
-			"Vanish and reappear up to 11 blocks where you look, then 3s of Swiftness II (10 MP).", "바라보는 방향으로 최대 11블록 순식간에 이동하고 3초간 신속 II (MP 10)."),
+			"Vanish and reappear up to 11 blocks where you look, then 3s of Swiftness II (10 MP).", "바라보는 방향으로 최대 11블록 순식간에 이동하고 3초간 속도 증가 II (MP 10)."),
 		EN(JobClass.HUNTER, 20, 10, "nen_en", "En", "엔",
 			"Spread your aura 32 blocks: every enemy in it glows for 10s and you gain Night Vision (10 MP).", "아우라를 32블록까지 펼쳐 범위 안의 모든 적을 10초간 드러내고 야간 투시를 얻습니다 (MP 10).");
 

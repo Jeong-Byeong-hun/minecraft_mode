@@ -161,7 +161,7 @@ public final class WarriorContent extends ClassContent {
 
 		weapon("ascalon", 4, 95, SPEAR, "Ascalon", "아스칼론",
 			art(0xE6E6E6, 0x4B3621, 0x2ECC71), fx(Fx.Kind.RING, 0x7DFFB0),
-			skill("abyssus_draconis", "Abyssus Draconis", "역성의 용", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 6.3)),
+			skill("abyssus_draconis", "Abyssus Draconis", "그대는 용이니라", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 6.3)),
 			skill("dragonbane_thrust", "Dragonbane Thrust", "용살 찌르기", ATTACK, 7, 18, inflict(VULNERABLE, 6, 1), beam(10, 2.08)),
 			skill("martyrs_shield", "Martyr's Shield", "순교자의 방패", DEFENSE, 26, 24, shield(16, 10), taunt(10)),
 			skill("saints_ward", "Saint's Ward", "성자의 수호", UTILITY, 30, 26, allyHeal(10, 30), cleanse()));

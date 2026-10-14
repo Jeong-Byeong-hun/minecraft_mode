@@ -154,9 +154,9 @@ public final class PirateContent extends ClassContent {
 
 		weapon("napoleon_rapier", 4, 85, RAPIER, "Napoleon", "나폴레옹",
 			art(0xE8E3D3, 0xD81B60, 0xFFC107), fx(Fx.Kind.PETAL, 0xFF8FC7),
-			skill("ikoku_sovereignty", "Ikoku Sovereignty", "이코쿠", ULTIMATE, 50, 40, shoot(ProjectileStyle.WAVE, 6.72).pierce(12), push(6, 2.0)),
+			skill("ikoku_sovereignty", "Ikoku Sovereignty", "위국", ULTIMATE, 50, 40, shoot(ProjectileStyle.WAVE, 6.72).pierce(12), push(6, 2.0)),
 			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), nova(6, 1.8), inflict(WEAKNESS, 6, 1)),
-			skill("zeus_raitei", "Zeus: Raitei", "제우스: 라이테이", ATTACK, 10, 22, lightning(18, 4, 2.6), stun(0.8)),
+			skill("zeus_raitei", "Zeus: Raitei", "제우스: 뇌정", ATTACK, 10, 22, lightning(18, 4, 2.6), stun(0.8)),
 			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, heal(25), boost(DAMAGE, 10, 30), buff(SPEED, 10, 1)));
 
 		weapon("moby_dick_anchor", 4, 89, ANCHOR, "Moby Dick's Anchor", "모비딕호의 닻",

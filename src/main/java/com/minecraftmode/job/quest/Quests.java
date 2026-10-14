@@ -192,7 +192,7 @@ public final class Quests {
 			MAP_SCRAP);
 		add("pirate_2", JobClass.PIRATE, 2, "Captain's Bounty", "선장의 현상금",
 			"Every captain needs a bounty. Raid the guardians of the monuments and the pillagers' outposts.",
-			"모든 선장에게는 현상금이 필요하다. 해저 유적의 가디언과 약탈자 전초기지를 털어라.",
+			"모든 선장에게는 현상금이 필요하다. 바다 유적의 가디언과 약탈자 전초기지를 털어라.",
 			List.of(kill("Guardians", "가디언", Set.of(EntityTypes.GUARDIAN), 4), kill("Pillagers", "약탈자", Set.of(EntityTypes.PILLAGER), 3)),
 			BOUNTY_POSTER, 4, List.of(source(Set.of(EntityTypes.GUARDIAN), 0.6F, 1), source(Set.of(EntityTypes.PILLAGER), 0.6F, 1)),
 			List.of(mat(ModItems.ESSENCE, 8)));

@@ -43,7 +43,7 @@ public final class RangedEnchantments {
 	public static final EnchantInfo VENOM_ARROW = EnchantInfo.of("venom_arrow", "Venom Arrow", "독화살",
 		"Arrows poison the target for 3-7 seconds.", "화살에 맞은 대상을 3~7초 동안 중독시킵니다.");
 	public static final EnchantInfo FROST_ARROW = EnchantInfo.of("frost_arrow", "Frost Arrow", "빙결 화살",
-		"Arrows slow the target; longer and stronger with each level.", "화살에 맞은 대상에게 구속을 겁니다. 레벨이 오를수록 길고 강해집니다.");
+		"Arrows slow the target; longer and stronger with each level.", "화살에 맞은 대상에게 속도 감소를 겁니다. 레벨이 오를수록 길고 강해집니다.");
 	public static final EnchantInfo EXPLOSIVE_ARROW = EnchantInfo.of("explosive_arrow", "Explosive Arrow", "폭발 화살",
 		"Arrows explode on hit (radius 1.5-2.5). Never breaks blocks.", "화살이 명중하면 폭발합니다(반경 1.5~2.5). 블록은 부수지 않습니다.");
 	public static final EnchantInfo THUNDER_ARROW = EnchantInfo.of("thunder_arrow", "Thunder Arrow", "낙뢰 화살",

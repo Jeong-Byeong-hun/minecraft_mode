@@ -34,7 +34,7 @@ public final class ArcherContent extends ClassContent {
 			skill("hunters_mark", "Hunter's Mark", "사냥꾼의 표식", UTILITY, 14, 10, mark(16, 8, 25), empower(2, 25, 8)),
 			skill("nimble_step", "Nimble Step", "날렵한 발걸음", MOVEMENT, 10, 8, buff(SPEED, 6, 1), boost(CRIT_CHANCE, 4, 15)));
 
-		weapon("trapper_crossbow", 1, 15, CROSSBOW, "Trapper's Crossbow", "덫사냥꾼의 석궁",
+		weapon("trapper_crossbow", 1, 15, CROSSBOW, "Trapper's Crossbow", "덫사냥꾼의 쇠뇌",
 			art(0x7A7F86, 0x5C3A1E, 0xC0392B), fx(Fx.Kind.SPARK, 0xD9C27A),
 			skill("heavy_bolt", "Heavy Bolt", "헤비 볼트", ATTACK, 7, 10, shoot(ProjectileStyle.ARROW, 1.6).pierce(2).speed(3.6F), stun(0.5)),
 			skill("snare_trap", "Snare Trap", "올가미 덫", UTILITY, 14, 12, zone(3, 5, 0.4).at(12).effect(SLOWNESS, 2)),
@@ -106,10 +106,10 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("tauropolos", 3, 57, SHORTBOW, "Tauropolos", "타우로폴로스",
 			art(0x556B2F, 0x2F1E0E, 0xFFD54A), fx(Fx.Kind.FEATHER, 0xFFE27A),
-			skill("phoebus_catastrophe", "Phoebus Catastrophe", "청원의 화살 편지", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
+			skill("phoebus_catastrophe", "Phoebus Catastrophe", "청원의 화살편지", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
 			skill("calydonian_hunt", "Calydonian Hunt", "칼리돈 사냥", ATTACK, 10, 20,
 				shoot(ProjectileStyle.ARROW, 1.4).count(3).spread(12).homing(), inflict(VULNERABLE, 6, 0)),
-			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 너머", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
+			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 넘기", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
 
 		weapon("sherwood_yew", 3, 61, CROSSBOW, "Yew Bow of Sherwood", "셔우드의 주목궁",
 			art(0x3E5C2A, 0x2B1D10, 0x9CFF57), fx(Fx.Kind.SMOKE, 0x7BCB4A),

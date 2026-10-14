@@ -76,7 +76,7 @@ public final class RogueContent extends ClassContent {
 		weapon("chidori_blade", 2, 39, NINJATO, "Chidori Blade", "치도리 도",
 			art(0xD6E4F0, 0x1C1C3C, 0x6EC6FF), fx(Fx.Kind.BOLT, 0x8FD3FF),
 			skill("chidori", "Chidori", "치도리", ATTACK, 9, 18, dash(8, 2.0), stun(0.8)),
-			skill("chidori_current", "Chidori Current", "치도리 나가시", DEFENSE, 14, 16, nova(3.5, 1.2), stun(1.2)),
+			skill("chidori_current", "Chidori Current", "치도리류", DEFENSE, 14, 16, nova(3.5, 1.2), stun(1.2)),
 			skill("sharingan", "Sharingan", "사륜안", UTILITY, 18, 14, boost(CRIT_CHANCE, 6, 20), mark(16, 8, 25)));
 
 		weapon("rasenshuriken", 2, 43, SHURIKEN, "Rasenshuriken", "나선수리검",
@@ -121,7 +121,7 @@ public final class RogueContent extends ClassContent {
 			art(0xD8D8E0, 0x5B3A1E, 0x2E86DE), fx(Fx.Kind.SLASH, 0x2E86DE),
 			skill("mystic_eyes", "Mystic Eyes of Death Perception", "직사의 마안", UTILITY, 18, 20, mark(20, 10, 40), debuff(10, VULNERABLE, 6, 1)),
 			skill("seventeen_dismemberment", "Seventeen Dismemberment", "17분할", ATTACK, 16, 28, shadowstep(10, 1.4), repeat(17, 1, slash(3, 120, 0.2))),
-			skill("flash_run", "Nanaya Arts: Flash Run", "칠야 비전: 섬주", MOVEMENT, 9, 16, blink(12), slash(3.5, 360, 1.4)));
+			skill("flash_run", "Nanaya Arts: Flash Run", "나나야 체술: 섬주", MOVEMENT, 9, 16, blink(12), slash(3.5, 360, 1.4)));
 
 		// ---------------------------------------------------------------- tier 4: Shadow Monarch
 		weapon("kasaka_venom_fang", 4, 70, DAGGER, "Kasaka's Venom Fang", "카사카의 독니",

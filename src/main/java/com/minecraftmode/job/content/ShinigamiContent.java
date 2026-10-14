@@ -35,13 +35,13 @@ public final class ShinigamiContent extends ClassContent {
 			art(0xD8DEE6, 0x1A1A24, 0xE8E8F0), fx(Fx.Kind.SLASH, 0xE8F0FF),
 			skill("zanjutsu", "Zanjutsu", "참술", ATTACK, 6, 10, slash(4, 140, 1.6)),
 			skill("shunpo", "Flash Step", "순보", MOVEMENT, 9, 8, blink(8), empower(2, 30, 5)),
-			skill("hado_4_byakurai", "Hado #4: Byakurai", "파도 4번 백뢰", ATTACK, 10, 12, beam(10, 1.6), stun(0.4)));
+			skill("hado_4_byakurai", "Hado #4: Byakurai", "파도의 4 백뢰", ATTACK, 10, 12, beam(10, 1.6), stun(0.4)));
 
 		weapon("academy_bokken", 1, 15, LONGSWORD, "Academy Training Blade", "진앙영술원 수련검",
 			art(0xC8A878, 0x5A3A20, 0x3A6AD8), fx(Fx.Kind.SPARK, 0xBFD8FF),
 			skill("hakuda", "Hakuda", "백타", ATTACK, 5, 8, repeat(3, 4, slash(3, 90, 0.48)), push(3, 0.8)),
-			skill("bakudo_1_sai", "Bakudo #1: Sai", "박도 1번 새", UTILITY, 12, 10, debuff(6, SLOWNESS, 4, 2)),
-			skill("hado_31_shakkaho", "Hado #31: Shakkaho", "파도 31번 적화포", ATTACK, 9, 14, shoot(ProjectileStyle.FIREBALL, 1.7).explode(2.0F), burn(3)));
+			skill("bakudo_1_sai", "Bakudo #1: Sai", "박도의 1 새", UTILITY, 12, 10, debuff(6, SLOWNESS, 4, 2)),
+			skill("hado_31_shakkaho", "Hado #31: Shakkaho", "파도의 31 적화포", ATTACK, 9, 14, shoot(ProjectileStyle.FIREBALL, 1.7).explode(2.0F), burn(3)));
 
 		weapon("hollow_hunter_blade", 1, 20, NINJATO, "Hollow Hunter's Blade", "호로 사냥 참백도",
 			art(0xE0E4EA, 0x2A2A3A, 0x8A2AC8), fx(Fx.Kind.SLASH, 0xC8A0FF),
@@ -58,8 +58,8 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("sode_no_shirayuki", 2, 29, KATANA, "Sode no Shirayuki", "수백설",
 			art(0xF4F8FF, 0xF0F0F8, 0x9FD0FF), fx(Fx.Kind.SHARD, 0xCFEFFF),
-			skill("some_no_mai_tsukishiro", "First Dance: Tsukishiro", "첫 번째 춤 월백", ATTACK, 10, 16, zone(3.5, 2, 1.0).at(10).effect(SLOWNESS, 3), stun(0.8)),
-			skill("tsugi_no_mai_hakuren", "Second Dance: Hakuren", "두 번째 춤 백련", ATTACK, 12, 18, shoot(ProjectileStyle.ICICLE, 1.6).count(5).spread(40).pierce(3),
+			skill("some_no_mai_tsukishiro", "First Dance: Tsukishiro", "시작의 춤 월백", ATTACK, 10, 16, zone(3.5, 2, 1.0).at(10).effect(SLOWNESS, 3), stun(0.8)),
+			skill("tsugi_no_mai_hakuren", "Second Dance: Hakuren", "다음의 춤 백련", ATTACK, 12, 18, shoot(ProjectileStyle.ICICLE, 1.6).count(5).spread(40).pierce(3),
 				inflict(SLOWNESS, 4, 1)),
 			skill("san_no_mai_shirafune", "Third Dance: Shirafune", "세 번째 춤 백도", DEFENSE, 16, 14, shield(8, 6), nova(3, 1.0)));
 
@@ -78,14 +78,14 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("tobiume", 2, 40, KATANA, "Tobiume", "비매",
 			art(0xF0E8E8, 0x8A2A2A, 0xFF8A3A), fx(Fx.Kind.ORB, 0xFF8A3A),
 			skill("snap_tobiume", "Snap, Tobiume", "터져라, 비매", ATTACK, 7, 14, shoot(ProjectileStyle.FIREBALL, 1.02).count(3).spread(30).explode(1.5F), burn(3)),
-			skill("hado_63_raikoho", "Hado #63: Raikoho", "파도 63번 뇌후포", ATTACK, 12, 20, beam(14, 2.2), stun(0.6)),
-			skill("bakudo_8_seki", "Bakudo #8: Seki", "박도 8번 척", DEFENSE, 14, 12, boost(CRIT_DAMAGE, 4, 50), push(4, 1.2)));
+			skill("hado_63_raikoho", "Hado #63: Raikoho", "파도의 63 뇌후포", ATTACK, 12, 20, beam(14, 2.2), stun(0.6)),
+			skill("bakudo_8_seki", "Bakudo #8: Seki", "박도의 8 척", DEFENSE, 14, 12, boost(CRIT_DAMAGE, 4, 50), push(4, 1.2)));
 
 		weapon("benihime", 2, 43, KATANA, "Benihime", "홍희",
 			art(0xD8DCE4, 0x2A2A24, 0xC8202A), fx(Fx.Kind.SLASH, 0xFF4A5A),
-			skill("nake_benihime", "Cry, Benihime", "울어라, 홍희", ATTACK, 8, 16, shoot(ProjectileStyle.WAVE, 2.16).pierce(4)),
-			skill("chikasumi_no_tate", "Chikasumi no Tate", "혈하의 방패", DEFENSE, 16, 14, shield(10, 6), boost(DAMAGE, 3, 20)),
-			skill("shibari_benihime", "Shibari Benihime", "묶어라, 홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
+			skill("nake_benihime", "Cry, Benihime", "포효하라, 홍희", ATTACK, 8, 16, shoot(ProjectileStyle.WAVE, 2.16).pierce(4)),
+			skill("chikasumi_no_tate", "Chikasumi no Tate", "피 안개의 방패", DEFENSE, 16, 14, shield(10, 6), boost(DAMAGE, 3, 20)),
+			skill("shibari_benihime", "Shibari Benihime", "결박홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
 
 		// ---------------------------------------------------------------- tier 3: Captain
 		weapon("senbonzakura", 3, 45, KATANA, "Senbonzakura", "천본앵",
@@ -103,15 +103,15 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("suzumebachi", 3, 54, CLAW, "Suzumebachi", "작봉",
 			art(0xE8C040, 0x1A1A1A, 0xF0F0F0), fx(Fx.Kind.SPARK, 0xFFE070),
-			skill("sting_all_enemies", "Sting All Enemies to Death", "적을 쏘아 죽여라", ATTACK, 7, 18, shadowstep(8, 1.8), mark(16, 6, 30)),
+			skill("sting_all_enemies", "Sting All Enemies to Death", "진적석살", ATTACK, 7, 18, shadowstep(8, 1.8), mark(16, 6, 30)),
 			skill("nigeki_kessatsu", "Nigeki Kessatsu", "이격결살", ATTACK, 16, 26, execute(4, 2.6, 40, 3.0)),
 			skill("onmitsukido", "Onmitsukido", "은밀기동", UTILITY, 18, 16, stealth(4, 60), buff(SPEED, 5, 1)));
 
 		weapon("katen_kyokotsu", 3, 58, TWIN_BLADES, "Katen Kyokotsu", "화천광골",
 			art(0xD8DCE4, 0x6A2A8A, 0xFF8AC8), fx(Fx.Kind.PETAL, 0xFF8AC8),
-			skill("bushogoma", "Bushogoma", "부쇼고마", ATTACK, 8, 18, slash(5, 200, 1.84)),
-			skill("kageoni", "Kageoni", "그림자 술래", ATTACK, 12, 22, shadowstep(12, 2.21), stealth(2, 50)),
-			skill("takaoni", "Takaoni", "높은 술래", ATTACK, 14, 22, leap(5, 4, 2.21)));
+			skill("bushogoma", "Bushogoma", "부정독락", ATTACK, 8, 18, slash(5, 200, 1.84)),
+			skill("kageoni", "Kageoni", "영귀", ATTACK, 12, 22, shadowstep(12, 2.21), stealth(2, 50)),
+			skill("takaoni", "Takaoni", "참귀", ATTACK, 14, 22, leap(5, 4, 2.21)));
 
 		weapon("shinso", 3, 62, SPEAR, "Shinso", "신창",
 			art(0xE8E8E8, 0x8A8A9A, 0x9AA8C0), fx(Fx.Kind.SLASH, 0xE8F0FF),
@@ -164,7 +164,7 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("kyoka_suigetsu", 4, 88, KATANA, "Kyoka Suigetsu", "경화수월",
 			art(0xE8E4F0, 0x3A2A5A, 0x8A5AFF), fx(Fx.Kind.RUNE, 0xB08AFF),
 			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, stealth(5, 80), debuff(8, BLINDNESS, 5, 0)),
-			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도 90번 흑관", ATTACK, 18, 32, zone(4, 3, 1.6).at(16).pull(0.8), inflict(VULNERABLE, 6, 1)),
+			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도의 90 흑관", ATTACK, 18, 32, zone(4, 3, 1.6).at(16).pull(0.8), inflict(VULNERABLE, 6, 1)),
 			skill("illusion_step", "Illusion Step", "환영 보법", MOVEMENT, 10, 16, blink(12), boost(CRIT_CHANCE, 3, 30)),
 			skill("hogyoku", "Hogyoku", "붕옥", ULTIMATE, 60, 50, boost(DAMAGE, 15, 30), boost(CRIT_CHANCE, 15, 20), restoreMana(40), nova(6, 6.0)));
 

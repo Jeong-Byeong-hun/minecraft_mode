@@ -138,7 +138,7 @@ public final class HunterContent extends ClassContent {
 		weapon("adult_gon", 4, 78, KNUCKLE, "Adult Gon", "어른 곤",
 			art(0x2A6A2A, 0xE8E0D0, 0xF5D040), fx(Fx.Kind.ORB, 0xFFE070),
 			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, boost(DAMAGE, 10, 40), lifestealFor(10, 10)),
-			skill("first_comes_rock", "First Comes Rock", "처음은 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
+			skill("first_comes_rock", "First Comes Rock", "처음에는 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
 			skill("long_scissors", "Long Scissors", "긴 가위", ATTACK, 12, 26, beam(18, 2.6)),
 			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝이라도 좋아", ULTIMATE, 75, 60, delay(1.0, nova(7, 13.2)), stun(2.0)));
 

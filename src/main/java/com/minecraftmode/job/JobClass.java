@@ -46,7 +46,7 @@ public enum JobClass implements StringRepresentable {
 	PIRATE("pirate", 0xE8B730, "Pirate", "해적", new Tier[] {
 		new Tier("Pirate", "해적", "Plunderer", "약탈 본능", "Hostile kills have a 15% chance to drop coins.", "적대적 몹 처치 시 15% 확률로 동전을 떨어뜨립니다."),
 		new Tier("Captain", "선장", "Sea Legs", "바다 사나이", "Critical chance +10%. In water: Dolphin's Grace and Water Breathing.",
-			"치명타 확률 +10%. 물속에서 돌고래의 우아함과 수중 호흡."),
+			"치명타 확률 +10%. 물속에서 돌고래의 가호와 수중 호흡."),
 		new Tier("Emperor of the Sea", "사황", "Conqueror's Haki", "패왕색 패기", "Basic attack, shot and skill damage +15%, and a 10% chance on hit to stun the enemy for 1.5s.",
 			"기본 공격·사격·스킬 피해 +15%, 공격 시 10% 확률로 1.5초 기절."),
 		new Tier("Pirate King", "해적왕", "The One Piece", "원피스",

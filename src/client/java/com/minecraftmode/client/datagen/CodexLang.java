@@ -33,12 +33,12 @@ final class CodexLang {
 		String[][] places = {
 			{"night", "밤·어두운 곳 (오버월드)", "Overworld, at night or in the dark"},
 			{"variants", "사막·설원·늪·창백한 정원의 변종", "Desert, snow, swamp and pale garden variants"},
-			{"caves", "동굴·광산·시련의 회당·요새", "Caves, mineshafts, trial chambers, strongholds"},
-			{"water", "바다·해저 신전", "Oceans and ocean monuments"},
+			{"caves", "동굴·폐광·시련의 회당·요새", "Caves, mineshafts, trial chambers, strongholds"},
+			{"water", "바다·바다 유적", "Oceans and ocean monuments"},
 			{"nether", "네더", "The Nether"},
 			{"end", "엔드 도시", "End cities"},
 			{"raiders", "약탈자 전초기지·삼림 대저택·습격", "Pillager outposts, woodland mansions, raids"},
-			{"deep_dark", "딥 다크 (고대 도시)", "The Deep Dark (ancient cities)"},
+			{"deep_dark", "깊은 어둠 (고대 도시)", "The Deep Dark (ancient cities)"},
 			{"boss", "보스 (직접 소환·엔드)", "Bosses (summoned, the End)"}
 		};
 		for (String[] p : places) {
@@ -93,7 +93,7 @@ final class CodexLang {
 			{"frostroot", "풀·꽃 베기 (눈 내리는 추운 곳)", "Cutting grass and flowers where it snows"},
 			{"glowcap", "버섯·발광 이끼, 깊은 지하의 풀", "Mushrooms, glow lichen, grass deep underground"},
 			{"emberbloom", "네더의 뿌리·균·덩굴", "Nether roots, fungi and vines"},
-			{"voidcap", "후렴과 식물 (엔드)", "Chorus plants (the End)"}
+			{"voidcap", "후렴초 (엔드)", "Chorus plants (the End)"}
 		};
 		for (String[] k : known) {
 			b.add(s + k[0], ko ? k[1] : k[2]);

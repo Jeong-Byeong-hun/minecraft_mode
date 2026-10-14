@@ -152,7 +152,7 @@ public final class MageContent extends ClassContent {
 			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, mark(24, 10, 40), allyBoost(10, DAMAGE, 10, 20)),
 			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, allyBoost(10, DAMAGE, 10, 20), allyHeal(10, 15)));
 
-		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 히스토리아",
+		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 이스트왈",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
 			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
 			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28, shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing(), inflict(VULNERABLE, 6, 1)),
@@ -162,7 +162,7 @@ public final class MageContent extends ClassContent {
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
 			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBoost(10, DAMAGE, 10, 20)),
-			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
+			skill("hero_creation", "Hero Creation", "영웅작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing(), inflict(WEAKNESS, 4, 0)),
 			skill("illusion", "Illusion", "환술", UTILITY, 18, 18, boost(CRIT_CHANCE, 7, 25), blink(8)));
 

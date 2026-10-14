@@ -11,9 +11,10 @@ import net.minecraft.world.item.ItemStack;
 /**
  * Server -> client: the state of a raid loot session for one participant (sent on every change and
  * once a second). {@code open} asks the client to open the loot screen. A session with no lots
- * closes the screen.
+ * closes the screen (sent to a participant who left). {@code left} counts the participants who left.
  */
-public record LootStatePayload(int session, String bossKey, boolean leader, boolean open, int current, List<Lot> lots) implements CustomPacketPayload {
+public record LootStatePayload(int session, String bossKey, boolean leader, boolean open, int current, List<Lot> lots, int left)
+	implements CustomPacketPayload {
 	public static final Type<LootStatePayload> TYPE = new Type<>(MinecraftMode.id("loot_state"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, LootStatePayload> CODEC = StreamCodec.ofMember(LootStatePayload::write, LootStatePayload::read);
 
@@ -21,7 +22,7 @@ public record LootStatePayload(int session, String bossKey, boolean leader, bool
 	 * @param mode 0 auction, 1 dice
 	 * @param state 0 waiting, 1 running, 2 done
 	 * @param bid highest bid (copper), 0 = none yet
-	 * @param myRoll this player's roll (0 = not rolled, -1 = passed)
+	 * @param myRoll this player's roll (0 = not rolled, -1 = passed or gave the auction up)
 	 * @param eligible this player may act on the lot (dice re-rolls are only for the tied players)
 	 * @param rolls "name: roll" lines of the dice round
 	 */
@@ -35,6 +36,7 @@ public record LootStatePayload(int session, String bossKey, boolean leader, bool
 		buf.writeBoolean(this.leader);
 		buf.writeBoolean(this.open);
 		buf.writeVarInt(this.current);
+		buf.writeVarInt(this.left);
 		buf.writeVarInt(this.lots.size());
 		for (Lot lot : this.lots) {
 			ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, lot.stack());
@@ -62,6 +64,7 @@ public record LootStatePayload(int session, String bossKey, boolean leader, bool
 		boolean leader = buf.readBoolean();
 		boolean open = buf.readBoolean();
 		int current = buf.readVarInt();
+		int left = buf.readVarInt();
 		int n = Math.min(32, buf.readVarInt());
 		List<Lot> lots = new ArrayList<>(n);
 		for (int i = 0; i < n; i++) {
@@ -84,7 +87,7 @@ public record LootStatePayload(int session, String bossKey, boolean leader, bool
 			}
 			lots.add(new Lot(stack, mode, state, start, step, bid, bidder, ticksLeft, winner, price, myRoll, eligible, rolls));
 		}
-		return new LootStatePayload(session, bossKey, leader, open, current, lots);
+		return new LootStatePayload(session, bossKey, leader, open, current, lots, left);
 	}
 
 	@Override

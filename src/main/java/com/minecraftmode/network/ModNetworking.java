@@ -4,6 +4,7 @@ import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
+import com.minecraftmode.economy.LootBuyer;
 import com.minecraftmode.economy.SellAll;
 import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
@@ -75,6 +76,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenLandPayload.TYPE, OpenLandPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(LandBordersPayload.TYPE, LandBordersPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenTravelPayload.TYPE, OpenTravelPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenLootBuyerPayload.TYPE, OpenLootBuyerPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(LootSellPayload.TYPE, LootSellPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TravelPayload.TYPE, TravelPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
@@ -151,6 +154,11 @@ public final class ModNetworking {
 			Destination destination = Destination.byOrdinal(payload.destination());
 			if (destination != null && npc(context.player(), payload.entityId(), CityNpc.Role.WAYMASTER) != null) {
 				Travel.go(context.player(), destination);
+			}
+		}));
+		ServerPlayNetworking.registerGlobalReceiver(LootSellPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			if (npc(context.player(), payload.entityId(), CityNpc.Role.LOOT_BUYER) != null) {
+				LootBuyer.sell(context.player(), payload.entityId(), payload.picks());
 			}
 		}));
 	}

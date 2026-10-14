@@ -113,7 +113,7 @@ public final class CityZone {
 	 * Where the city service NPCs stand: the blacksmith and the enhancer at the forge, the raid marshal by the raid gate, the
 	 * guild clerk between the guild shops, the broker in the market stall with the lectern, the dungeon warden by the dungeon gate
 	 * and the royal herald, the guide, the quartermaster, the baker, the huntmaster and the town crier on the plaza by the spawn; the
-	 * stylist stands in the jeweler's stall, beside the line to its shop block.
+	 * stylist stands in the jeweler's stall, beside the line to its shop block; the loot buyer stands beside the raid marshal.
 	 */
 	public static BlockPos npcHome(final CityNpc.Role role, final int base) {
 		return switch (role) {
@@ -131,6 +131,7 @@ public final class CityZone {
 			case CRIER -> new BlockPos(-9, base, 13);
 			case STYLIST -> new BlockPos(-9, base, 53);
 			case WAYMASTER -> new BlockPos(-9, base, 0);
+			case LOOT_BUYER -> new BlockPos(8, base, -55);
 		};
 	}
 

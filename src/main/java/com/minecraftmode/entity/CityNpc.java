@@ -3,6 +3,7 @@ package com.minecraftmode.entity;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
+import com.minecraftmode.economy.LootBuyer;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.event.WorldEvents;
@@ -102,7 +103,10 @@ public class CityNpc extends PathfinderMob {
 			"능력치는 좋은데 모양이 마음에 안 드세요? 그 장비와 원하는 모양의 장비를 가져오시면 겉모습을 바꿔 드릴게요."),
 		WAYMASTER("waymaster", 0x3AA8C8, "Waymaster Orin", "이동술사 오린",
 			"Where to, traveller? Pick a place and I will open the way.",
-			"어디로 모실까요, 여행자님? 갈 곳을 고르시면 길을 열어 드리지요.");
+			"어디로 모실까요, 여행자님? 갈 곳을 고르시면 길을 열어 드리지요."),
+		LOOT_BUYER("loot_buyer", 0x3FA060, "Loot Buyer Tobin", "전리품 상인 토빈",
+			"Back from a raid with more gear than you can carry? Pick what you do not need and I will buy it all at once, at guild prices.",
+			"레이드에서 장비를 잔뜩 들고 왔나? 필요 없는 걸 골라 주면 길드 시세로 한꺼번에 사 주지.");
 
 		private final String id;
 		private final int color;
@@ -199,6 +203,7 @@ public class CityNpc extends PathfinderMob {
 			case CRIER -> Items.BELL;
 			case STYLIST -> Items.SHEARS;
 			case WAYMASTER -> Items.ENDER_PEARL;
+			case LOOT_BUYER -> Items.BUNDLE;
 		}));
 	}
 
@@ -280,6 +285,7 @@ public class CityNpc extends PathfinderMob {
 				case STYLIST -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new StylistMenu(id, inventory, this),
 					Component.translatable("container.minecraft_mode.stylist")));
 				case WAYMASTER -> Travel.open(serverPlayer, this.getId());
+				case LOOT_BUYER -> LootBuyer.open(serverPlayer, this.getId());
 			}
 		}
 		return InteractionResult.SUCCESS;

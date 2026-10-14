@@ -44,6 +44,7 @@ public final class LootSession {
 		long endsAt;
 		/** Dice: rolls of this round; eligible players (all, or the tied ones on a re-roll). */
 		final Map<UUID, Integer> rolls = new LinkedHashMap<>();
+		/** Players who gave this lot up: they pass the dice round, or no longer bid in the auction. */
 		final Set<UUID> passed = new HashSet<>();
 		final Set<UUID> eligible = new HashSet<>();
 		int round;
@@ -104,7 +105,9 @@ public final class LootSession {
 	final int id;
 	final BossDef boss;
 	final Map<UUID, String> participants;
-	final UUID leader;
+	/** Participants who left the session: they take no part in the lots left and get no share of the bids. */
+	final Set<UUID> forfeited = new HashSet<>();
+	UUID leader;
 	final List<Lot> lots = new ArrayList<>();
 	int current;
 	long ticks;
@@ -138,6 +141,21 @@ public final class LootSession {
 		return this.leader;
 	}
 
+	/** The participants who have not left, in joining order. */
+	public List<UUID> remaining() {
+		List<UUID> out = new ArrayList<>();
+		for (UUID id : this.participants.keySet()) {
+			if (!this.forfeited.contains(id)) {
+				out.add(id);
+			}
+		}
+		return out;
+	}
+
+	public boolean takesPart(final UUID player) {
+		return this.participants.containsKey(player) && !this.forfeited.contains(player);
+	}
+
 	public boolean finished() {
 		return this.finishedAt >= 0;
 	}
@@ -163,6 +181,6 @@ public final class LootSession {
 			out.add(new LootStatePayload.Lot(lot.stack, lot.mode.ordinal(), lot.state.ordinal(), lot.start, lot.step, lot.bid, this.name(lot.bidder), left,
 				this.name(lot.winner), lot.price, myRoll, lot.mode == Mode.DICE ? lot.eligible.contains(viewer) : true, rolls));
 		}
-		return new LootStatePayload(this.id, this.boss.nameKey(), this.leader.equals(viewer), open, this.current, out);
+		return new LootStatePayload(this.id, this.boss.nameKey(), this.leader.equals(viewer), open, this.current, out, this.forfeited.size());
 	}
 }

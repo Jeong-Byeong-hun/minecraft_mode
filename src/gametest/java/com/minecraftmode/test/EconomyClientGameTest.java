@@ -3,33 +3,47 @@ package com.minecraftmode.test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
+import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.bag.Bags;
+import com.minecraftmode.client.LootBuyerScreen;
 import com.minecraftmode.command.WalletCommand;
 import com.minecraftmode.consumable.BuffEffects;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.economy.Essence;
+import com.minecraftmode.economy.LootBuyer;
 import com.minecraftmode.economy.MarketData;
 import com.minecraftmode.economy.SellAll;
 import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
-import com.minecraftmode.loot.Coins;
+import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearStats;
+import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.network.LootSellPayload;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.RaidInstance;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModEffects;
+import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -37,14 +51,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
-import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
-import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.core.BlockPos;
@@ -56,6 +68,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -97,6 +111,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			checkShop(context, server, connection);
 			checkSellFromBags(context, server, connection);
 			checkSellAll(context, server, connection);
+			checkLootBuyer(context, server, connection);
 			checkBuilder(server, connection);
 			checkEssence(context, server, connection);
 			GearCareChecks.run(context, server, connection);
@@ -392,6 +407,82 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[economy] sell everything: {}", all);
 		server.runCommand("setblock 0 -60 -3 minecraft:air");
 		context.waitTicks(2);
+	}
+
+	/**
+	 * The loot buyer lists class gear and accessories from the inventory and the bags (never bound pieces), "select all" leaves the
+	 * hotbar and enhanced pieces out, and a sale pays the listed prices, takes exactly the picked pieces and can be bought back.
+	 */
+	private static void checkLootBuyer(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		int[] expected = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			player.removeAttached(ModAttachments.SOLD);
+			RandomSource random = RandomSource.create(5);
+			ItemStack loose = GearDrops.pick(null, 20, 30, random);
+			ItemStack held = GearDrops.pick(null, 20, 30, random);
+			ItemStack enhanced = GearDrops.pick(null, 20, 30, random);
+			enhanced.set(ModDataComponents.ENHANCEMENT, new Enhancement(3, 0, 0));
+			ItemStack bound = GearDrops.pick(null, 20, 30, random);
+			bound.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			ItemStack accessory = Accessories.create(Accessories.all().getFirst(), 1, random);
+			ItemStack inBag = GearDrops.pick(null, 40, 50, random);
+			player.getInventory().setItem(0, held);
+			player.getInventory().setItem(9, loose);
+			player.getInventory().setItem(10, enhanced);
+			player.getInventory().setItem(11, bound);
+			player.getInventory().setItem(12, accessory);
+			player.getInventory().setItem(13, new ItemStack(Items.IRON_SWORD));
+			ItemStack bag = new ItemStack(ModItems.GEAR_BAG);
+			Bags.insert(bag, inBag.copy());
+			player.getInventory().setItem(15, bag);
+			CityNpc npc = ModEntities.CITY_NPC.create(s.overworld(), EntitySpawnReason.COMMAND);
+			npc.setRole(CityNpc.Role.LOOT_BUYER);
+			npc.snapTo(2.5, -60, -1.5, 180.0F, 0.0F);
+			s.overworld().addFreshEntity(npc);
+			LootBuyer.open(player, npc.getId());
+			require(LootBuyer.price(bound) == 0 && LootBuyer.price(new ItemStack(Items.IRON_SWORD)) == 0, "bound pieces and vanilla gear are not bought");
+			require(LootBuyer.price(loose) == GearShop.buybackPrice(ClassGear.of(loose)), "class gear sells at the guild's buyback price");
+			return new int[] {LootBuyer.price(loose) + LootBuyer.price(accessory) + LootBuyer.price(inBag), Wallet.balance(player), npc.getId()};
+		});
+		context.waitForScreen(LootBuyerScreen.class);
+		context.waitTicks(5);
+		String picked = context.computeOnClient(minecraft -> {
+			LootBuyerScreen screen = (LootBuyerScreen)minecraft.gui.screen();
+			if (screen.entries().size() != 5) {
+				return "the buyer lists the hotbar, inventory, enhanced, accessory and bag pieces, got " + screen.entries().size();
+			}
+			screen.select(false);
+			return screen.picked().size() == 3 ? "" : "select all leaves the hotbar and enhanced pieces out, picked " + screen.picked();
+		});
+		require(picked.isEmpty(), picked);
+		context.waitTicks(2);
+		context.takeScreenshot("economy_loot_buyer");
+		context.runOnClient(minecraft -> ClientPlayNetworking.send(new LootSellPayload(expected[2], ((LootBuyerScreen)minecraft.gui.screen()).picked())));
+		context.waitTicks(10);
+		String sold = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int earned = Wallet.balance(player) - expected[1];
+			require(earned == expected[0], "the sale pays the listed prices: " + earned + " vs " + expected[0]);
+			require(player.getInventory().getItem(9).isEmpty() && player.getInventory().getItem(12).isEmpty(), "the picked pieces are gone");
+			require(!player.getInventory().getItem(0).isEmpty() && !player.getInventory().getItem(10).isEmpty() && !player.getInventory().getItem(11).isEmpty(),
+				"the hotbar, enhanced and bound pieces stay");
+			require(Bags.contents(player.getInventory().getItem(15)).stream().allMatch(ItemStack::isEmpty), "the bag's piece is sold too");
+			require(Buyback.list(player).size() == 3, "every sold piece can be bought back, got " + Buyback.list(player).size());
+			return "sold 3 pieces for " + Coins.format(earned);
+		});
+		MinecraftMode.LOGGER.info("[economy] loot buyer: {}", sold);
+		require(context.computeOnClient(minecraft -> minecraft.gui.screen() instanceof LootBuyerScreen screen && screen.entries().size() == 2 && screen.picked().isEmpty()),
+			"after a sale the buyer shows what is left");
+		context.waitTicks(2);
+		context.takeScreenshot("economy_loot_buyer_after");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().clearContent();
+			player.removeAttached(ModAttachments.SOLD);
+			s.overworld().getEntitiesOfClass(CityNpc.class, player.getBoundingBox().inflate(8)).forEach(CityNpc::discard);
+		});
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 	}
 
 	/** Clicks a sell-all button of the open shop screen with the real mouse; it must be shown and (when {@code active}) enabled. */

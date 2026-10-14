@@ -212,11 +212,19 @@ final class RaidLang {
 		b.add(s + "switch_auction", ko ? "경매로 변경" : "Switch to auction");
 		b.add(s + "won_for", ko ? "%s 낙찰 (%s)" : "Won by %s for %s");
 		b.add(s + "won_by", ko ? "%s 획득" : "Won by %s");
+		b.add(s + "give_up", ko ? "이 물건 포기" : "Give this up");
+		b.add(s + "gave_up", ko ? "이 물건을 포기했습니다. 나머지가 정해지면 바로 넘어갑니다." : "You gave this up; it ends as soon as the others decide.");
+		b.add(s + "leave", ko ? "경매 나가기" : "Leave loot");
+		b.add(s + "leave_confirm", ko ? "정말 나가기?" : "Really leave?");
+		b.add(s + "leave_tip", ko
+			? "남은 전리품을 모두 포기하고 분배에서 빠집니다. 맡긴 입찰금은 돌려받지만, 이후 낙찰금 분배도 받지 않습니다."
+			: "Give up every item still to come and leave the sharing. A bid you hold is refunded, but you get no share of later sales.");
+		b.add(s + "left_count", ko ? "%s명 나감" : "%s left");
 
 		String p = "message.minecraft_mode.loot.";
 		b.add(p + "none", ko ? "진행 중인 전리품 분배가 없습니다." : "There is no loot to share right now.");
 		b.add(p + "won_solo", ko ? "전리품: %s" : "Loot: %s");
-		b.add(p + "started", ko ? "전리품 %s개 분배를 시작합니다 (L 키로 창 열기)." : "Sharing %s items (press L for the loot screen).");
+		b.add(p + "started", ko ? "전리품 %s개 분배를 시작합니다 (Y 키로 창 열기)." : "Sharing %s items (press Y for the loot screen).");
 		b.add(p + "already_highest", ko ? "이미 최고 입찰자입니다." : "You already have the highest bid.");
 		b.add(p + "cannot_afford", ko ? "동전이 부족합니다 (%s 필요)." : "Not enough coins (%s needed).");
 		b.add(p + "outbid", ko ? "%s님이 %s로 더 높게 입찰했습니다. 동전을 돌려받았습니다." : "%s outbid you with %s. Your coins were returned.");
@@ -231,6 +239,10 @@ final class RaidLang {
 		b.add(p + "tie", ko ? "%s 동점! 동점자끼리 다시 굴립니다." : "Tie at %s! The tied players roll again.");
 		b.add(p + "won_auction", ko ? "%s님이 %s을(를) %s에 낙찰받았습니다." : "%s won %s for %s.");
 		b.add(p + "won_dice", ko ? "%s님이 %s을(를) 가져갑니다." : "%s takes %s.");
+		b.add(p + "gave_up", ko ? "%s님이 %s을(를) 포기했습니다." : "%s gave up %s.");
+		b.add(p + "left", ko ? "전리품 분배에서 나왔습니다." : "You left the loot sharing.");
+		b.add(p + "left_new", ko ? "새 전리품 분배가 시작되어 이전 분배에서 나왔습니다." : "A new loot sharing started, so you left the previous one.");
+		b.add(p + "participant_left", ko ? "%s님이 전리품 분배에서 나갔습니다." : "%s left the loot sharing.");
 		b.add(p + "delivered", ko ? "접속하지 않은 동안 받은 전리품: 아이템 %s개, %s" : "While you were away you received %s item(s) and %s.");
 	}
 

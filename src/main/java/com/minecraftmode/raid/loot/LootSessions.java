@@ -40,6 +40,13 @@ import org.jspecify.annotations.Nullable;
  * <li><b>Dice</b>: 20 seconds to roll (1-100) or pass; the highest roll wins, ties re-roll among the
  * tied players, and if everyone passes the leader gets it.</li>
  * </ul>
+ * Nobody waits for players who are offline or gave the lot up: an auction ends as soon as every other
+ * online participant passed it (no bids: straight to dice), a dice round as soon as every online
+ * eligible player rolled or passed. A participant can also leave the whole session: a bid they hold
+ * is refunded, they take no part in the lots left and get no share of later winning bids; a leaving
+ * leader hands over to the next participant. With one participant left the rest of the lots go to
+ * them free, with none left the session ends. A new loot session takes its participants out of any
+ * older one that is still running, so auctions never overlap.
  * The leader can switch the current lot between auction and dice until the first bid or roll. With
  * one participant everything goes to them directly. Items and coins for players who are offline are
  * handed over when they log back in (while the server keeps running).
@@ -73,6 +80,13 @@ public final class LootSessions {
 	/** Starts sharing {@code items} among {@code participants}; a single participant just gets everything. */
 	public static @Nullable LootSession start(final MinecraftServer server, final BossDef boss, final Map<UUID, String> participants, final UUID leader,
 		final List<ItemStack> items) {
+		for (UUID id : participants.isEmpty() ? List.of(leader) : participants.keySet()) {
+			for (LootSession old : List.copyOf(SESSIONS.values())) {
+				if (!old.finished() && old.takesPart(id)) {
+					leave(server, old, id, "left_new");
+				}
+			}
+		}
 		if (participants.size() <= 1) {
 			UUID only = participants.isEmpty() ? leader : participants.keySet().iterator().next();
 			for (ItemStack stack : items) {
@@ -96,11 +110,11 @@ public final class LootSessions {
 		return SESSIONS.get(id);
 	}
 
-	/** The newest unfinished session {@code player} takes part in. */
+	/** The newest session {@code player} takes part in (and has not left). */
 	public static @Nullable LootSession sessionOf(final UUID player) {
 		LootSession found = null;
 		for (LootSession session : SESSIONS.values()) {
-			if (session.participants.containsKey(player)) {
+			if (session.takesPart(player)) {
 				found = session;
 			}
 		}
@@ -126,6 +140,16 @@ public final class LootSessions {
 			return;
 		}
 		MinecraftServer server = player.level().getServer();
+		if (session.forfeited.contains(player.getUUID())) {
+			sendGone(player, session);
+			return;
+		}
+		if (action.action() == LootActionPayload.Action.FORFEIT) {
+			if (!session.finished()) {
+				leave(server, session, player.getUUID(), "left");
+			}
+			return;
+		}
 		Lot lot = session.currentLot();
 		if (action.action() == LootActionPayload.Action.REFRESH || lot == null || lot.state != State.RUNNING) {
 			send(player, session, false);
@@ -143,7 +167,7 @@ public final class LootSessions {
 	}
 
 	private static void bid(final MinecraftServer server, final LootSession session, final Lot lot, final ServerPlayer player, final int steps) {
-		if (lot.mode != Mode.AUCTION) {
+		if (lot.mode != Mode.AUCTION || lot.passed.contains(player.getUUID())) {
 			return;
 		}
 		if (player.getUUID().equals(lot.bidder)) {
@@ -178,20 +202,72 @@ public final class LootSessions {
 		int roll = 1 + player.getRandom().nextInt(100);
 		lot.rolls.put(id, roll);
 		tell(server, session, msg("rolled", player.getDisplayName(), roll).withStyle(ChatFormatting.AQUA));
-		if (allDecided(lot)) {
-			lot.endsAt = session.ticks;
-		}
 	}
 
+	/** Dice: pass this round. Auction: give the lot up (never the highest bidder); the tick ends it once nobody else is left to bid. */
 	private static void pass(final MinecraftServer server, final LootSession session, final Lot lot, final ServerPlayer player) {
 		UUID id = player.getUUID();
-		if (lot.mode != Mode.DICE || !lot.eligible.contains(id) || lot.rolls.containsKey(id)) {
+		if (lot.mode == Mode.DICE ? !lot.eligible.contains(id) || lot.rolls.containsKey(id) : id.equals(lot.bidder) || lot.passed.contains(id)) {
 			return;
 		}
 		lot.passed.add(id);
-		if (allDecided(lot)) {
-			lot.endsAt = session.ticks;
+		if (lot.mode == Mode.AUCTION) {
+			tell(server, session, msg("gave_up", player.getDisplayName(), lot.stack.getHoverName()).withStyle(ChatFormatting.GRAY));
 		}
+	}
+
+	/**
+	 * {@code id} leaves {@code session}: a bid they hold is refunded and the lot reopens, they no longer roll, lead or share.
+	 * One participant left gets every lot still open for free; nobody left ends the session.
+	 */
+	static void leave(final MinecraftServer server, final LootSession session, final UUID id, final String reason) {
+		if (!session.takesPart(id)) {
+			return;
+		}
+		session.forfeited.add(id);
+		String name = session.name(id);
+		Lot lot = session.currentLot();
+		if (lot != null) {
+			if (id.equals(lot.bidder)) {
+				giveCoins(server, id, lot.bid);
+				lot.bid = 0;
+				lot.bidder = null;
+			}
+			lot.rolls.remove(id);
+			lot.eligible.remove(id);
+			lot.passed.remove(id);
+		}
+		ServerPlayer gone = server.getPlayerList().getPlayer(id);
+		if (gone != null) {
+			gone.sendSystemMessage(msg(reason).withStyle(ChatFormatting.GRAY));
+			sendGone(gone, session);
+		}
+		List<UUID> remaining = session.remaining();
+		if (remaining.isEmpty()) {
+			SESSIONS.remove(session.id);
+			return;
+		}
+		if (session.leader.equals(id)) {
+			session.leader = remaining.getFirst();
+		}
+		tell(server, session, msg("participant_left", name).withStyle(ChatFormatting.GRAY));
+		if (remaining.size() == 1) {
+			UUID last = remaining.getFirst();
+			if (lot != null && lot.bidder != null) {
+				giveCoins(server, lot.bidder, lot.bid);
+				lot.bid = 0;
+				lot.bidder = null;
+			}
+			while (session.currentLot() != null) {
+				award(server, session, session.currentLot(), last, 0);
+			}
+			session.finishedAt = session.ticks;
+			tell(server, session, msg("finished").withStyle(ChatFormatting.GOLD));
+		} else if (lot != null && lot.mode == Mode.DICE && lot.state == State.RUNNING && lot.eligible.isEmpty()) {
+			// every tied roller left: the rest roll again
+			startDice(session, lot, remaining);
+		}
+		broadcast(server, session, false);
 	}
 
 	private static void switchMode(final MinecraftServer server, final LootSession session, final Lot lot, final ServerPlayer player) {
@@ -199,7 +275,7 @@ public final class LootSessions {
 			return;
 		}
 		if (lot.mode == Mode.AUCTION) {
-			startDice(session, lot, session.participants.keySet());
+			startDice(session, lot, session.remaining());
 		} else {
 			lot.mode = Mode.AUCTION;
 			lot.passed.clear();
@@ -208,13 +284,23 @@ public final class LootSessions {
 		tell(server, session, msg(lot.mode == Mode.AUCTION ? "mode_auction" : "mode_dice", lot.stack.getHoverName()).withStyle(ChatFormatting.GOLD));
 	}
 
-	private static boolean allDecided(final Lot lot) {
-		for (UUID id : lot.eligible) {
-			if (!lot.rolls.containsKey(id) && !lot.passed.contains(id)) {
+	/**
+	 * Whether the running lot can end before its timer: nobody online is left to act on it. Auction: every online participant but
+	 * the highest bidder passed (no bids: every online participant passed, and it goes to dice). Dice: every online eligible player
+	 * rolled or passed. Players offline or gone never hold a lot up; with nobody online the timer runs out as before.
+	 */
+	private static boolean decided(final MinecraftServer server, final LootSession session, final Lot lot) {
+		boolean anyOnline = false;
+		for (UUID id : lot.mode == Mode.DICE ? lot.eligible : session.remaining()) {
+			if (session.forfeited.contains(id) || server.getPlayerList().getPlayer(id) == null) {
+				continue;
+			}
+			anyOnline = true;
+			if (lot.mode == Mode.AUCTION ? !id.equals(lot.bidder) && !lot.passed.contains(id) : !lot.rolls.containsKey(id) && !lot.passed.contains(id)) {
 				return false;
 			}
 		}
-		return true;
+		return anyOnline;
 	}
 
 	private static void startDice(final LootSession session, final Lot lot, final java.util.Collection<UUID> eligible) {
@@ -257,7 +343,7 @@ public final class LootSessions {
 				tell(server, session, msg("lot", session.current + 1, session.lots.size(), lot.stack.getHoverName(), Coins.component(lot.start))
 					.withStyle(ChatFormatting.GOLD));
 				changed = true;
-			} else if (lot.state == State.RUNNING && session.ticks >= lot.endsAt) {
+			} else if (lot.state == State.RUNNING && (session.ticks >= lot.endsAt || decided(server, session, lot))) {
 				resolve(server, session, lot);
 				changed = true;
 			}
@@ -270,12 +356,12 @@ public final class LootSessions {
 	private static void resolve(final MinecraftServer server, final LootSession session, final Lot lot) {
 		if (lot.mode == Mode.AUCTION) {
 			if (lot.bidder == null) {
-				startDice(session, lot, session.participants.keySet());
+				startDice(session, lot, session.remaining());
 				tell(server, session, msg("no_bids", lot.stack.getHoverName()).withStyle(ChatFormatting.YELLOW));
 				return;
 			}
 			award(server, session, lot, lot.bidder, lot.bid);
-			List<UUID> others = new ArrayList<>(session.participants.keySet());
+			List<UUID> others = session.remaining();
 			others.remove(lot.bidder);
 			if (!others.isEmpty()) {
 				int share = lot.bid / others.size();
@@ -365,7 +451,7 @@ public final class LootSessions {
 	// ------------------------------------------------------------------ sync
 
 	private static void broadcast(final MinecraftServer server, final LootSession session, final boolean open) {
-		for (UUID id : session.participants.keySet()) {
+		for (UUID id : session.remaining()) {
 			ServerPlayer p = server.getPlayerList().getPlayer(id);
 			if (p != null) {
 				send(p, session, open);
@@ -379,8 +465,15 @@ public final class LootSessions {
 		}
 	}
 
+	/** Tells a player who left that the session is gone for them: the client drops it and closes the loot screen. */
+	private static void sendGone(final ServerPlayer player, final LootSession session) {
+		if (ServerPlayNetworking.canSend(player, LootStatePayload.TYPE)) {
+			ServerPlayNetworking.send(player, new LootStatePayload(session.id, session.boss.nameKey(), false, false, 0, List.of(), 0));
+		}
+	}
+
 	private static void tell(final MinecraftServer server, final LootSession session, final Component message) {
-		for (UUID id : session.participants.keySet()) {
+		for (UUID id : session.remaining()) {
 			ServerPlayer p = server.getPlayerList().getPlayer(id);
 			if (p != null) {
 				p.sendSystemMessage(message);

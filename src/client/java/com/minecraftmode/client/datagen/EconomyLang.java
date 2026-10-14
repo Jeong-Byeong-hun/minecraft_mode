@@ -54,6 +54,25 @@ final class EconomyLang {
 		b.add(m + "many", ko ? "%s종 %s개를 팔아 %s을(를) 받았습니다." : "Sold %2$s items of %1$s kinds for %3$s.");
 		b.add(m + "none", ko ? "팔 수 있는 물건이 없습니다. 단축바와 이름·인챈트가 붙은 물건은 이렇게 팔지 않습니다."
 			: "Nothing to sell. The hotbar and named or enchanted items are never sold this way.");
+		String lb = "screen.minecraft_mode.loot_buyer.";
+		b.add(lb + "title", ko ? "전리품 상인" : "Loot Buyer");
+		b.add(lb + "help", ko ? "팔 장비를 클릭해 고르세요" : "Click the pieces to sell");
+		b.add(lb + "all", ko ? "전체 선택" : "Select all");
+		b.add(lb + "others", ko ? "다른 직업 장비" : "Other classes");
+		b.add(lb + "clear", ko ? "선택 해제" : "Clear");
+		b.add(lb + "sell", ko ? "선택한 %s개 판매" : "Sell %s picked");
+		b.add(lb + "confirm", ko ? "%s에 판매 — 다시 눌러 확인" : "Sell for %s — click again");
+		b.add(lb + "total", ko ? "선택 %s / %s개 · 합계 %s" : "Picked %s of %s · %s in all");
+		b.add(lb + "warning", ko ? "강화·각인되었거나 단축바에 있는 장비 %s개가 포함되어 있습니다!" : "%s enhanced, engraved or hotbar piece(s) picked!");
+		b.add(lb + "legend", ko ? "파란 칸: 다른 직업 · 빨간 점: 전체 선택에서 빠짐" : "Blue: other class · red dot: left out of Select all");
+		b.add(lb + "empty", ko ? "팔 수 있는 직업 장비나 장신구가 없습니다." : "You carry no class gear or accessories to sell.");
+		b.add(lb + "price", ko ? "매입가 %s (길드 시세의 30%%)" : "Pays %s (30%% of the guild price)");
+		b.add(lb + "kept", ko ? "강화·각인 가치는 값에 들어가지 않습니다" : "Enhancement and engravings are not paid for");
+		b.add(lb + "picked", ko ? "선택됨 · 클릭해서 빼기" : "Picked · click to drop");
+		b.add(lb + "click", ko ? "클릭해서 고르기" : "Click to pick");
+		b.add("message.minecraft_mode.loot_buyer.sold", ko ? "장비 %s개를 팔아 %s을(를) 받았습니다. 실수했다면 상점의 재구매 칸(최근 10개)에서 1.5배에 되살 수 있습니다."
+			: "Sold %s pieces for %s. A shop's buyback panel (last 10 sales) returns a mistake at 1.5x.");
+		b.add("message.minecraft_mode.loot_buyer.moved", ko ? "%s개는 그새 옮겨져 팔지 않았습니다." : "%s piece(s) had moved and were not sold.");
 		b.add("tooltip.minecraft_mode.gear.pending",ko ? "새 옵션 (대장장이에게서 선택 대기)" : "New options (waiting for your choice at the blacksmith)");
 	}
 

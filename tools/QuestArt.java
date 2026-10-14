@@ -60,6 +60,7 @@ final class QuestArt {
 		TextureGen.write("entity/npc/crier", odo());
 		TextureGen.write("entity/npc/stylist", celeste());
 		TextureGen.write("entity/npc/waymaster", orin());
+		TextureGen.write("entity/npc/loot_buyer", tobin());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1401,6 +1402,43 @@ final class QuestArt {
 		fill(0, 26, 16, 6, boot);            // dusty travelling boots
 		fill(0, 26, 16, 1, dust);
 		fill(8, 16, 4, 4, boot);
+		return img;
+	}
+
+	/** Loot Buyer Tobin: a sharp-eyed dealer with slicked brown hair and a monocle, a green waistcoat over a white shirt and a coin pouch at the belt. */
+	static BufferedImage tobin() {
+		BufferedImage img = newSkin(121);
+		int skin = 0xE8C0A0, hair = 0x5A3A22, vest = 0x2E6A3A, vestDark = 0x1E4A28, shirt = 0xF0ECE0, gold = 0xF0C840, belt = 0x3A2A1A,
+			pouch = 0x8A5A2A, trousers = 0x3A3A44, shoe = 0x24201C;
+		head(skin, hair);
+		hair(hair, 1, 2, 2);
+		eyes(12, 0xFFFFFF, 0x4A7A3A);
+		fill(12, 11, 3, 1, gold);            // monocle round the left eye
+		fill(12, 13, 3, 1, gold);
+		px(15, 12, gold);
+		fill(10, 14, 4, 1, hair);            // thin moustache
+		px(11, 15, 0xB07A6A);
+
+		body(vest);
+		fill(22, 20, 4, 12, shirt);          // waistcoat open over the shirt, gold buttons and a watch chain
+		px(21, 23, gold);
+		px(21, 26, gold);
+		for (int i = 0; i < 4; i++) {
+			px(26 + i / 2, 24 + i, gold);
+		}
+		fill(20, 29, 8, 1, belt);            // belt with a fat coin pouch
+		fill(25, 29, 3, 3, pouch);
+		px(26, 30, gold);
+		fill(16, 30, 24, 2, vestDark);
+
+		arms(shirt);
+		fill(40, 29, 16, 1, vest);           // rolled sleeves and hands
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 28, 16, 4, shoe);
+		fill(8, 16, 4, 4, shoe);
 		return img;
 	}
 

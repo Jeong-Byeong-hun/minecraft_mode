@@ -45,6 +45,7 @@ import com.minecraftmode.job.skill.Fx;
 import com.minecraftmode.network.OpenGuidePayload;
 import com.minecraftmode.network.OpenLandPayload;
 import com.minecraftmode.network.OpenNoticePayload;
+import com.minecraftmode.network.OpenLootBuyerPayload;
 import com.minecraftmode.network.OpenTravelPayload;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.raid.BossDef;
@@ -97,6 +98,13 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenTravelPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TravelScreen(payload))
 		));
+		ClientPlayNetworking.registerGlobalReceiver(OpenLootBuyerPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			if (context.client().gui.screen() instanceof LootBuyerScreen screen && screen.entityId() == payload.entityId()) {
+				screen.update(payload);
+			} else {
+				context.client().gui.setScreen(new LootBuyerScreen(payload));
+			}
+		}));
 		ClientPlayNetworking.registerGlobalReceiver(OpenLandPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new LandScreen(payload))
 		));

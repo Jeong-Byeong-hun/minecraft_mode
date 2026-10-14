@@ -14,6 +14,7 @@ import com.minecraftmode.client.accessory.AccessoryScreen;
 import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.job.UpgradeScreen;
 import com.minecraftmode.client.raid.LootScreen;
+import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.client.raid.RaidScreen;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enhance.EnhanceMenu;
@@ -992,23 +993,125 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			return Coins.total(player) == session[1] - start ? "" : "the winner pays the bid";
 		});
 		require(auction.isEmpty(), auction);
-		// second lot: the leader switches to dice and is the only one to roll
+		// second lot: the leader switches to dice and is the only one to roll (the offline ghost is not waited for)
 		waitFor(context, server, s -> lot(session[0], 1).state() == LootSession.State.RUNNING, 200, "the second lot should open");
-		server.runOnServer(s -> {
-			ServerPlayer player = connection.getServerPlayer();
-			LootSessions.handle(player, new LootActionPayload(session[0], LootActionPayload.Action.SWITCH_MODE, 0));
-			LootSessions.handle(player, new LootActionPayload(session[0], LootActionPayload.Action.ROLL, 0));
-		});
+		server.runOnServer(s -> LootSessions.handle(connection.getServerPlayer(), new LootActionPayload(session[0], LootActionPayload.Action.SWITCH_MODE, 0)));
 		context.waitTicks(4);
 		context.takeScreenshot("raid_loot_dice");
-		waitFor(context, server, s -> lot(session[0], 1).state() == LootSession.State.DONE, 1200, "the dice round should end");
+		server.runOnServer(s -> LootSessions.handle(connection.getServerPlayer(), new LootActionPayload(session[0], LootActionPayload.Action.ROLL, 0)));
+		waitFor(context, server, s -> lot(session[0], 1).state() == LootSession.State.DONE, 60, "a dice round should end once everyone online rolled");
 		String dice = server.computeOnServer(s -> {
 			LootSession.Lot lot = lot(session[0], 1);
 			return lot.mode() == LootSession.Mode.DICE && connection.getServerPlayer().getUUID().equals(lot.winner()) ? "" : "the only roller should win the dice";
 		});
 		require(dice.isEmpty(), dice);
+		checkLootForfeits(context, server, connection, ghost);
 		server.runCommand("tick rate 20");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+	}
+
+	/**
+	 * Giving one lot up, a long lot list (scrolling), a new session taking its players out of an older one, and leaving a session
+	 * (bid refunded, the last player left takes the rest).
+	 */
+	private static void checkLootForfeits(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final UUID ghost) {
+		int many = 12;
+		int second = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Map<UUID, String> who = new LinkedHashMap<>();
+			who.put(player.getUUID(), player.getPlainTextName());
+			who.put(ghost, "Ghost");
+			RandomSource random = RandomSource.create(11);
+			List<ItemStack> items = new ArrayList<>();
+			for (int i = 0; i < many; i++) {
+				items.add(GearDrops.pick(null, 20, 30, random));
+			}
+			return LootSessions.start(s, RaidBosses.ARACHNE, who, player.getUUID(), items).id();
+		});
+		waitFor(context, server, s -> lot(second, 0).state() == LootSession.State.RUNNING, 200, "the long session's first lot should open");
+		context.waitForScreen(LootScreen.class);
+		context.waitTicks(4);
+		context.takeScreenshot("raid_loot_many");
+		requireFits(context, "long loot screen");
+		// giving an auction up with no bids: everyone online gave it up, so it goes straight to dice; passing that too gives it to the leader
+		String gaveUp = server.computeOnServer(s -> {
+			LootSessions.handle(connection.getServerPlayer(), new LootActionPayload(second, LootActionPayload.Action.PASS, 0));
+			return "";
+		});
+		require(gaveUp.isEmpty(), gaveUp);
+		waitFor(context, server, s -> lot(second, 0).mode() == LootSession.Mode.DICE, 20, "an auction everyone online gave up should go to dice at once");
+		server.runOnServer(s -> LootSessions.handle(connection.getServerPlayer(), new LootActionPayload(second, LootActionPayload.Action.PASS, 0)));
+		waitFor(context, server, s -> lot(second, 0).state() == LootSession.State.DONE, 20, "a dice round everyone online passed should end at once");
+		require(server.computeOnServer(s -> connection.getServerPlayer().getUUID().equals(lot(second, 0).winner())), "a lot everyone passed goes to the leader");
+		// the list follows the current lot: scroll the screen to the end and back by the wheel
+		String scrolled = context.computeOnClient(minecraft -> {
+			if (!(minecraft.gui.screen() instanceof LootScreen screen)) {
+				return "the loot screen should stay open";
+			}
+			for (int i = 0; i < many; i++) {
+				screen.mouseScrolled(screen.width / 2.0, screen.height / 2.0, 0, -1);
+			}
+			return "";
+		});
+		require(scrolled.isEmpty(), scrolled);
+		context.waitTicks(2);
+		context.takeScreenshot("raid_loot_scrolled");
+		// a new session takes the player out of the old one; the ghost, the only one left there, gets the rest for free
+		int third = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Map<UUID, String> who = new LinkedHashMap<>();
+			who.put(player.getUUID(), player.getPlainTextName());
+			who.put(ghost, "Ghost");
+			RandomSource random = RandomSource.create(13);
+			return LootSessions.start(s, RaidBosses.ARACHNE, who, player.getUUID(), List.of(GearDrops.pick(null, 20, 30, random), GearDrops.pick(null, 20, 30, random))).id();
+		});
+		String moved = server.computeOnServer(s -> {
+			LootSession old = LootSessions.get(second);
+			if (old == null || !old.finished()) {
+				return "the older session should end when its only other player is the one left";
+			}
+			for (LootSession.Lot lot : old.lots()) {
+				if (lot.state() != LootSession.State.DONE) {
+					return "every lot of the older session should be given out";
+				}
+			}
+			if (!ghost.equals(old.lots().get(many - 1).winner()) || old.lots().get(many - 1).price() != 0) {
+				return "the one left in the older session should get its lots free";
+			}
+			LootSession now = LootSessions.sessionOf(connection.getServerPlayer().getUUID());
+			return now != null && now.id() == third ? "" : "the player should only be in the new session";
+		});
+		require(moved.isEmpty(), moved);
+		// leaving with the highest bid: the bid comes back, the ghost leads and takes the rest
+		waitFor(context, server, s -> lot(third, 0).state() == LootSession.State.RUNNING, 200, "the new session's first lot should open");
+		context.waitForScreen(LootScreen.class);
+		String left = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int before = Coins.total(player);
+			LootSessions.handle(player, new LootActionPayload(third, LootActionPayload.Action.BID, 1));
+			if (Coins.total(player) >= before) {
+				return "the bid should be held";
+			}
+			LootSessions.handle(player, new LootActionPayload(third, LootActionPayload.Action.FORFEIT, 0));
+			if (Coins.total(player) != before) {
+				return "leaving should refund the bid: " + before + " -> " + Coins.total(player);
+			}
+			LootSession session = LootSessions.get(third);
+			if (session == null || !session.finished() || !ghost.equals(session.leader())) {
+				return "the ghost should lead and the session end with one player left";
+			}
+			for (LootSession.Lot lot : session.lots()) {
+				if (!ghost.equals(lot.winner())) {
+					return "the one left should take every lot";
+				}
+			}
+			LootSession still = LootSessions.sessionOf(player.getUUID());
+			return still == null || still.id() != third ? "" : "a player who left is no longer in that session";
+		});
+		require(left.isEmpty(), left);
+		context.waitTicks(4);
+		require(context.computeOnClient(minecraft -> !(minecraft.gui.screen() instanceof LootScreen) && RaidClient.loot() == null),
+			"leaving should close the loot screen and forget the session");
 	}
 
 	private static LootSession.Lot lot(final int session, final int index) {

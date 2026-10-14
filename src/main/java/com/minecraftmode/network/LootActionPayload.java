@@ -9,7 +9,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
 /**
  * Client -> server: an action in loot session {@code session} on the current lot. {@code value} is
- * the number of bid steps for {@link Action#BID}.
+ * the number of bid steps for {@link Action#BID}. {@link Action#PASS} gives the current lot up in
+ * either mode.
  */
 public record LootActionPayload(int session, Action action, int value) implements CustomPacketPayload {
 	public static final Type<LootActionPayload> TYPE = new Type<>(MinecraftMode.id("loot_action"));
@@ -27,7 +28,9 @@ public record LootActionPayload(int session, Action action, int value) implement
 		/** Leader: switch the current lot between auction and dice (before any bid). */
 		SWITCH_MODE,
 		/** Ask for the current state (opening the screen). */
-		REFRESH;
+		REFRESH,
+		/** Leave the whole session: no part in the lots left, no share of later bids. */
+		FORFEIT;
 
 		public static final StreamCodec<ByteBuf, Action> STREAM_CODEC = ByteBufCodecs.idMapper(i -> values()[Math.floorMod(i, values().length)], Action::ordinal);
 	}

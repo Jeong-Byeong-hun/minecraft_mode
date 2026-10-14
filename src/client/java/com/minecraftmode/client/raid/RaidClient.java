@@ -47,8 +47,18 @@ public final class RaidClient {
 			invitedBy = payload.invitedBy();
 		}));
 		ClientPlayNetworking.registerGlobalReceiver(LootStatePayload.TYPE, (payload, context) -> context.client().execute(() -> {
-			loot = payload;
 			Minecraft minecraft = context.client();
+			if (payload.lots().isEmpty()) {
+				// left that session (or it is gone): forget it unless a newer one is already shown
+				if (loot != null && loot.session() == payload.session()) {
+					loot = null;
+					if (minecraft.gui.screen() instanceof LootScreen) {
+						minecraft.gui.setScreen(null);
+					}
+				}
+				return;
+			}
+			loot = payload;
 			if (payload.open() && !(minecraft.gui.screen() instanceof LootScreen)) {
 				minecraft.gui.setScreen(new LootScreen());
 			}

@@ -422,7 +422,11 @@ public class GearDocProvider implements DataProvider {
 			.append(")는 **경매**(기본) 또는 **주사위**로 나눕니다.\n");
 		md.append("  경매: 시작가 = 구간 상점가 × 1.5, 입찰 단위 ≈ 시작가의 5%, ").append(LootSessions.AUCTION_TICKS / 20).append("초(마지막 ")
 			.append(LootSessions.SNIPE_TICKS / 20).append("초 입찰 시 연장), 낙찰금은 나머지 참가자에게 분배, 입찰이 없으면 주사위. 주사위: ")
-			.append(LootSessions.DICE_TICKS / 20).append("초, 1–100, 동점은 재굴림, 전원 포기 시 파티장.\n\n");
+			.append(LootSessions.DICE_TICKS / 20).append("초, 1–100, 동점은 재굴림, 전원 포기 시 파티장.\n");
+		md.append("  접속하지 않았거나 나간 사람은 기다리지 않습니다: 최고 입찰자 말고 접속한 참가자가 모두 '이 물건 포기'를 누르면 바로 낙찰(입찰이 없으면 바로 주사위), ")
+			.append("주사위는 접속한 대상자가 모두 굴리거나 포기하면 바로 끝납니다. '경매 나가기'(두 번 눌러 확인)는 남은 물건을 모두 포기하고 분배에서 빠집니다: ")
+			.append("맡긴 입찰금은 돌려받고 이후 낙찰금 분배는 받지 않으며, 파티장이 나가면 다음 사람이 파티장이 됩니다. 한 명만 남으면 남은 물건은 그 사람이 무료로 받고, ")
+			.append("아무도 남지 않으면 분배가 끝납니다. 새 분배가 시작되면 그 참가자들은 아직 진행 중인 이전 분배에서 자동으로 나갑니다. 물건이 많으면 왼쪽 목록을 휠·스크롤바로 넘깁니다.\n\n");
 		md.append("| 보스 | 칭호 | 레벨 | 1인 체력 | 공격력 | 입장료 | 무대 | 페이즈 |\n|---|---|---|---|---|---|---|---|\n");
 		for (BossDef def : RaidBosses.all()) {
 			StringBuilder phases = new StringBuilder("1");
@@ -699,6 +703,12 @@ public class GearDocProvider implements DataProvider {
 			.append(")과 거주구역 광장 분수 북쪽. 돌·벽돌·판자·유리·콘크리트·통나무·석영·조명 ").append(ShopOffers.trades(ShopType.BUILDER).size())
 			.append("종을 64개(조명은 4개)씩 팔고, 아무리 많이 사도 값이 오르지 않습니다(시장 압력 없음). 부서지지 않는 공용 상점이라 조합법이 없습니다.\n");
 		md.append("- **일괄 판매**: 상점 창의 재구매 칸 아래 버튼. '이 품목 다 팔기'는 고른 줄의 물건을, '전부 팔기'(두 번 눌러 확인, 정수 제외)는 그 상점이 사는 물건을 가방·인벤토리에서 한 번에 팝니다. 단축바와 이름·인챈트·손상이 있는 물건은 팔지 않고, 시세는 하나씩 팔 때처럼 거래마다 내려갑니다.\n");
+		BlockPos lootBuyer = CityZone.npcHome(CityNpc.Role.LOOT_BUYER, 0);
+		md.append("- **전리품 상인 토빈**: 성 안뜰, 토벌 사령관 알드릭 옆(x ").append(lootBuyer.getX()).append(", z ").append(lootBuyer.getZ())
+			.append("). 우클릭하면 인벤토리(단축바 포함)와 가방의 직업 장비·레이드 장신구가 격자로 뜨고, 골라서 한 번에 팝니다(두 번 눌러 확인). 값은 길드 매입가(직업 장비는 길드 가격의 ")
+			.append(Math.round(GearShop.BUYBACK_SHARE * 100)).append("%, 장신구는 그 레벨대 무기 가격의 ").append(Math.round(GearShop.BUYBACK_SHARE * 100))
+			.append("%)이고 강화·각인·옵션은 값에 들어가지 않습니다. '전체 선택'은 단축바·강화·각인 장비를 빼고, '다른 직업 장비'는 다른 직업 장비만 고릅니다. ")
+			.append("귀속 장비는 사지 않고, 판 물건은 상점 재구매 칸(최근 ").append(Buyback.LIMIT).append("개, 1.5배)에서 되살 수 있습니다.\n");
 		BlockPos waymaster = CityZone.npcHome(CityNpc.Role.WAYMASTER, 0);
 		md.append("- **이동술사 오린**: 광장 분수 서쪽(x ").append(waymaster.getX()).append(", z ").append(waymaster.getZ())
 			.append("). 우클릭하면 갈 수 있는 곳 목록이 뜨고, 고르면 바로 이동합니다. 지금은 거주구역(거주구역 광장의 오린에게서는 수도 광장).\n");

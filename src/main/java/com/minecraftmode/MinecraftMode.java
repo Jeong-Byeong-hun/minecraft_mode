@@ -18,6 +18,7 @@ import com.minecraftmode.craft.Crops;
 import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.craft.Herbs;
 import com.minecraftmode.dungeon.Dungeons;
+import com.minecraftmode.economy.LootBuyer;
 import com.minecraftmode.economy.ModEconomy;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enchantment.ArmorAuras;
@@ -115,6 +116,7 @@ public class MinecraftMode implements ModInitializer {
 		Story.init();
 		HeldLight.init();
 		LootSessions.init();
+		LootBuyer.init();
 		ModNetworking.init();
 		JobCommand.init();
 		RaidCommands.init();

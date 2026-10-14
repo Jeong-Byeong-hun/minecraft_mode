@@ -54,7 +54,8 @@ public final class LootSession {
 			this.stack = stack;
 			ClassGear gear = ClassGear.of(stack);
 			AccessoryDef accessory = Accessories.def(stack);
-			this.start = gear != null ? GearShop.auctionStart(gear) : accessory != null ? Accessories.auctionStart(accessory) : Coins.SILVER;
+			int ticket = Accessories.ticketStart(stack);
+			this.start = gear != null ? GearShop.auctionStart(gear) : accessory != null ? Accessories.auctionStart(accessory) : ticket > 0 ? ticket : Coins.SILVER;
 			this.step = Coins.increment(this.start);
 		}
 

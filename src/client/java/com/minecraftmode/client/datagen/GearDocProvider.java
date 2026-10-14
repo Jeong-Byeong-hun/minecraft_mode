@@ -329,12 +329,12 @@ public class GearDocProvider implements DataProvider {
 			.append("%가 붙습니다. 실패해도 단계는 내려가지 않고 장인의 기운(+").append(Enhancement.PITY_STEP).append("%p)이 쌓입니다. 세트 효과는 강화로 오르지 않습니다.\n");
 		md.append("- 장신구 강화 구슬은 **영웅·악몽 클리어 보상**입니다(보상을 받는 파티원마다 영웅 ").append(Accessories.orbs(RaidDifficulty.HEROIC)).append("개 · 악몽 ")
 			.append(Accessories.orbs(RaidDifficulty.NIGHTMARE)).append("개). 재료 가방에 들어갑니다.\n");
-		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**을 보상을 받는 파티원마다 확률로 줍니다(");
+		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**을 보상을 받는 파티원마다 한 번씩 굴려 분배 품목(경매·주사위)에 넣습니다(");
 		for (RaidDifficulty difficulty : RaidDifficulty.values()) {
 			md.append(difficulty.ordinal() > 0 ? " · " : "").append(this.ko(difficulty.nameKey())).append(' ')
 				.append(ClassDocProvider.num(Math.round(Accessories.ticketChance(difficulty) * 100))).append('%');
 		}
-		md.append("). 대장장이 진화대에 1·2티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
+		md.append("; 경매 시작가는 다음 티어 첫 레벨대의 무기 가격). 대장장이 진화대에 1·2티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
 			.append("강화 단계·장인의 기운과 추가 옵션(같은 능력치, 새 레벨 최대치에 대한 비율 그대로)이 이어집니다. 재료 가방에 들어갑니다.\n");
 		md.append("- 직업 비교 표(CLASSES.md)에는 넣지 않습니다(추가 옵션·각인처럼 뽑기 장비).\n\n");
 		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
@@ -536,7 +536,7 @@ public class GearDocProvider implements DataProvider {
 				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" | ").append(Accessories.orbs(d) == 0 ? "-" : String.valueOf(Accessories.orbs(d))).append(" |\n");
 		}
 		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
-		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스에서 확률로 줍니다.\n");
+		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스의 분배 품목으로 확률로 나옵니다.\n");
 		md.append("- **보상 귀속**: 보스·난이도마다 레이드 주기(현실 3일)에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
 		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
 		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");

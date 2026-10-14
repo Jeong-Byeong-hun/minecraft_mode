@@ -43,9 +43,9 @@ import org.jspecify.annotations.Nullable;
  * Heroic on every boss drops tier 3 pieces only, more often the harder the boss and the difficulty, so the ladder runs Normal
  * Verdessa ... Normal Aethryx, Heroic Verdessa ... Nightmare Aethryx. A piece needs the boss's level, has its slot's fixed line and 1-3
  * random options (Normal, Heroic, Nightmare; the blacksmith rolls them again), can be enhanced to +{@value AccessoryEnhance#MAX} with
- * accessory orbs (Heroic and Nightmare clears), and the set pays 2-, 3- and 5-piece bonuses. Tier 2 bosses drop tier 1 inheritance
- * tickets and tier 3 bosses tier 2 ones: at the blacksmith a ticket turns a piece into the same slot of a next-tier set of the
- * player's choice, keeping its enhancement and options ({@link #inherit}). Everything adds up in {@code GearStats} under its own
+ * accessory orbs (Heroic and Nightmare clears), and the set pays 2-, 3- and 5-piece bonuses. Tier 2 bosses put tier 1 inheritance
+ * tickets among the loot and tier 3 bosses tier 2 ones ({@link #ticketLots}): at the blacksmith a ticket turns a piece into the same
+ * slot of a next-tier set of the player's choice, keeping its enhancement and options ({@link #inherit}). Everything adds up in {@code GearStats} under its own
  * source.
  */
 public final class Accessories {
@@ -244,8 +244,8 @@ public final class Accessories {
 
 	// ------------------------------------------------------------------ inheritance
 
-	/** Chance per rewarded member that a tier 2 or 3 boss also gives an inheritance ticket, by difficulty (Normal, Heroic, Nightmare). */
-	private static final float[] TICKET_CHANCE = {0.25F, 0.35F, 0.50F};
+	/** Chance per rewarded member that a tier 2 or 3 boss adds an inheritance ticket to the loot, by difficulty (Normal, Heroic, Nightmare). */
+	private static final float[] TICKET_CHANCE = {0.05F, 0.07F, 0.10F};
 
 	/** The ticket that inherits a piece of tier {@code tier} into the next tier, or null at the top tier. */
 	public static @Nullable Item inheritTicket(final int tier) {
@@ -260,6 +260,35 @@ public final class Accessories {
 
 	public static float ticketChance(final RaidDifficulty difficulty) {
 		return TICKET_CHANCE[difficulty.ordinal()];
+	}
+
+	/** The inheritance ticket lots of a raid win, shared out like the gear: each rewarded member rolls {@link #ticketChance} once. */
+	public static List<ItemStack> ticketLots(final BossDef boss, final RaidDifficulty difficulty, final int members, final RandomSource random) {
+		List<ItemStack> out = new ArrayList<>();
+		Item ticket = ticketDrop(boss);
+		if (ticket == null) {
+			return out;
+		}
+		float chance = ticketChance(difficulty);
+		for (int i = 0; i < members; i++) {
+			if (random.nextFloat() < chance) {
+				out.add(new ItemStack(ticket));
+			}
+		}
+		return out;
+	}
+
+	/** Opening bid of an inheritance ticket at a raid loot auction: the guild weapon price of the lowest bracket it leads into; 0 for anything else. */
+	public static int ticketStart(final ItemStack stack) {
+		for (int tier = 1; tier < TOP_TIER; tier++) {
+			Item ticket = inheritTicket(tier);
+			if (ticket != null && stack.is(ticket)) {
+				final int next = tier + 1;
+				int level = SETS.stream().filter(set -> set.tier() == next).mapToInt(AccessorySet::level).min().orElse(0);
+				return GearShop.bracketPrice(ItemLevels.bracket(level));
+			}
+		}
+		return 0;
 	}
 
 	/** What a piece of {@code def} can be inherited into: the same slot of every set one tier up (none at the top tier). */

@@ -646,7 +646,8 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		require(Accessories.ticketDrop(RaidBosses.VERDESSA) == null && Accessories.ticketDrop(RaidBosses.NEFREKHET) == ModItems.ACCESSORY_INHERIT_1
 			&& Accessories.ticketDrop(RaidBosses.AETHRYX) == ModItems.ACCESSORY_INHERIT_2, "inheritance tickets by boss tier");
 		require(Accessories.ticketChance(RaidDifficulty.NORMAL) > 0 && Accessories.ticketChance(RaidDifficulty.HEROIC) > Accessories.ticketChance(RaidDifficulty.NORMAL)
-			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) > Accessories.ticketChance(RaidDifficulty.HEROIC), "ticket chances rise with difficulty");
+			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) > Accessories.ticketChance(RaidDifficulty.HEROIC)
+			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) <= 0.10F, "ticket chances rise with difficulty and stay at 10% or less");
 		for (AccessorySet set : sets) {
 			for (AccessorySlot slot : AccessorySlot.values()) {
 				List<AccessoryDef> next = Accessories.inheritTargets(Accessories.def(set, slot));
@@ -679,7 +680,18 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 				return "a Heroic accessory rolls " + Accessories.optionCount(RaidDifficulty.HEROIC) + " options, got " + drop.get(ModDataComponents.GEAR_ROLLS);
 			}
 		}
-		return drops.stream().map(stack -> Accessories.def(stack).set()).distinct().count() > 1 ? "" : "Heroic Verdessa should drop from more than one tier 3 set";
+		if (drops.stream().map(stack -> Accessories.def(stack).set()).distinct().count() <= 1) {
+			return "Heroic Verdessa should drop from more than one tier 3 set";
+		}
+		// inheritance tickets are loot lots too: a thousand Nightmare Nefrekhet winners, about 10% of them roll a tier 1 ticket
+		List<ItemStack> tickets = Accessories.ticketLots(RaidBosses.NEFREKHET, RaidDifficulty.NIGHTMARE, 1000, RandomSource.create(12L));
+		if (tickets.size() < 50 || tickets.size() > 160 || tickets.stream().anyMatch(ticket -> !ticket.is(ModItems.ACCESSORY_INHERIT_1))) {
+			return "1000 Nightmare Nefrekhet rolls should give about 100 tier 1 tickets, got " + tickets.size();
+		}
+		if (!Accessories.ticketLots(RaidBosses.VERDESSA, RaidDifficulty.NIGHTMARE, 100, RandomSource.create(13L)).isEmpty()) {
+			return "tier 1 bosses add no tickets";
+		}
+		return Accessories.ticketStart(tickets.getFirst()) > Coins.SILVER ? "" : "a ticket auction should open above the default silver";
 	}
 
 	/** Worn accessories add their lines and set bonuses under their own source; the window only takes a fitting piece. */

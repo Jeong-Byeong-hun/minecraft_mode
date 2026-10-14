@@ -2,8 +2,10 @@ package com.minecraftmode.residence;
 
 import com.minecraftmode.MinecraftMode;
 import com.mojang.serialization.Codec;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
@@ -90,22 +92,44 @@ public final class IdleGrowth extends SavedData {
 			return;
 		}
 		ServerLevel level = server.getLevel(ResidenceDimension.LEVEL);
-		if (level != null) {
-			IdleGrowth data = get(level);
-			for (long key : WAKING) {
-				Long since = data.paused.remove(Long.toString(key));
-				if (since == null) {
-					continue;
-				}
+		if (level == null) {
+			WAKING.clear();
+			return;
+		}
+		// a copy: catching up reads blocks, and a neighbour chunk finishing its load there fires the status event (WAKING.add) again;
+		// until 0.5.24 that changed the set under the loop and crashed the server
+		List<Long> keys = new ArrayList<>(WAKING);
+		WAKING.clear();
+		IdleGrowth data = get(level);
+		for (long key : keys) {
+			ChunkPos pos = ChunkPos.unpack(key);
+			LevelChunk chunk = level.getChunkSource().getChunkNow(pos.x(), pos.z());
+			if (chunk == null) {
+				// unloaded again before it caught up: the paused time stays for the next wake
+				continue;
+			}
+			if (!neighboursLoaded(level, pos)) {
+				// crops read their neighbours' farmland, which would load (block on) a chunk still in progress: try next tick
+				WAKING.add(key);
+				continue;
+			}
+			Long since = data.paused.remove(Long.toString(key));
+			if (since != null) {
 				data.setDirty();
-				ChunkPos pos = ChunkPos.unpack(key);
-				LevelChunk chunk = level.getChunkSource().getChunkNow(pos.x(), pos.z());
-				if (chunk != null) {
-					catchUp(level, chunk, level.getGameTime() - since);
+				catchUp(level, chunk, level.getGameTime() - since);
+			}
+		}
+	}
+
+	private static boolean neighboursLoaded(final ServerLevel level, final ChunkPos pos) {
+		for (int dx = -1; dx <= 1; dx++) {
+			for (int dz = -1; dz <= 1; dz++) {
+				if (level.getChunkSource().getChunkNow(pos.x() + dx, pos.z() + dz) == null) {
+					return false;
 				}
 			}
 		}
-		WAKING.clear();
+		return true;
 	}
 
 	private static boolean isCrop(final BlockState state) {

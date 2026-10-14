@@ -86,6 +86,13 @@ public final class RogueContent extends ClassContent {
 				shoot(ProjectileStyle.SHURIKEN, 2.0).speed(1.4F).explode(3.5F), inflict(BLEEDING, 5, 1)),
 			skill("sage_mode", "Sage Mode", "선인모드", UTILITY, 26, 12, boost(DAMAGE, 10, 20), boost(CRIT_CHANCE, 10, 10), restoreMana(15)));
 
+		// 0.5.24: the war fan
+		weapon("suna_war_fan", 2, 44, WAR_FAN, "Sand Village War Fan", "모래 마을의 부채",
+			art(0xD8C8A0, 0x5A4632, 0x7A3EB0), fx(Fx.Kind.SLASH, 0xE8E0C8),
+			skill("cutting_whirlwind", "Cutting Whirlwind", "베는 회오리", ATTACK, 8, 14, shoot(ProjectileStyle.WAVE, 1.6).count(3).spread(40).pierce(4)),
+			skill("kamaitachi", "Kamaitachi", "족제비 바람", ATTACK, 10, 16, slash(6, 200, 1.7)),
+			skill("gale_wall", "Gale Wall", "돌풍 장벽", UTILITY, 14, 12, push(6, 1.6), debuff(6, SLOWNESS, 4, 1)));
+
 		// ---------------------------------------------------------------- tier 3: Assassin
 		weapon("hidden_blade", 3, 45, CLAW, "Hidden Blade", "암살검",
 			art(0xC8CCD2, 0xEDE6D6, 0xA31515), fx(Fx.Kind.SLASH, 0xF2F2F2),
@@ -122,6 +129,12 @@ public final class RogueContent extends ClassContent {
 			skill("mystic_eyes", "Mystic Eyes of Death Perception", "직사의 마안", UTILITY, 18, 20, mark(20, 10, 40), debuff(10, VULNERABLE, 6, 1)),
 			skill("seventeen_dismemberment", "Seventeen Dismemberment", "17분할", ATTACK, 16, 28, shadowstep(10, 1.4), repeat(17, 1, slash(3, 120, 0.2))),
 			skill("flash_run", "Nanaya Arts: Flash Run", "나나야 체술: 섬주", MOVEMENT, 9, 16, blink(12), slash(3.5, 360, 1.4)));
+
+		weapon("bashosen", 3, 64, WAR_FAN, "Bashosen", "파초선",
+			art(0xE6D2A0, 0x8B2E1A, 0xFF7A1A), fx(Fx.Kind.ORB, 0xFF8C3A),
+			skill("scorching_gale", "Scorching Gale", "작열 돌풍", ATTACK, 10, 20, burn(4), shoot(ProjectileStyle.WAVE, 2.2).count(5).spread(60).pierce(5)),
+			skill("great_whirlwind", "Great Whirlwind", "대회오리", ATTACK, 14, 24, slash(7, 150, 2.4), push(7, 2.0)),
+			skill("fan_dance", "Fan Dance", "부채춤", MOVEMENT, 12, 14, leap(4, 4, 1.6)));
 
 		// ---------------------------------------------------------------- tier 4: Shadow Monarch
 		weapon("kasaka_venom_fang", 4, 70, DAGGER, "Kasaka's Venom Fang", "카사카의 독니",
@@ -181,5 +194,12 @@ public final class RogueContent extends ClassContent {
 			skill("dragon_fang_volley", "Dragon Fang Volley", "용아 투척", ATTACK, 9, 28,
 				shoot(ProjectileStyle.BLADE, 1.5).count(8).spread(60).pierce(3), inflict(VULNERABLE, 6, 1)),
 			skill("shadow_exchange", "Shadow Exchange", "그림자 교환", MOVEMENT, 12, 20, cleanse(), blink(14), stealth(2, 40)));
+
+		weapon("madara_gunbai", 4, 88, WAR_FAN, "Madara's Gunbai", "마다라의 군배",
+			art(0xB33A2E, 0x2A1A14, 0xF2F2F2), fx(Fx.Kind.ORB, 0xFF4A2A),
+			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, shield(12, 4), delay(1.0, nova(7, 6.0))),
+			skill("great_fire_annihilation", "Great Fire Annihilation", "호화멸각", ATTACK, 12, 24, burn(6), strike(12, 5, 1, 2.8)),
+			skill("gunbai_sweep", "Gunbai Sweep", "군배 휩쓸기", ATTACK, 7, 18, slash(6, 180, 1.7), push(5, 1.2)),
+			skill("gunbai_leap", "Gunbai Leap", "군배 도약", MOVEMENT, 10, 14, leap(5, 4, 1.4)));
 	}
 }

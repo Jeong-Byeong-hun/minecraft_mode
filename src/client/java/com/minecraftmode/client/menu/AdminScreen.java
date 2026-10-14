@@ -119,8 +119,13 @@ public class AdminScreen extends MenuScreenBase {
 	}
 
 	private void send(final int action, final String text, final int a, final int b, final int c) {
+		this.sendFor(this.selected, action, text, a, b, c);
+	}
+
+	/** {@code target} "" = the operator. */
+	private void sendFor(final String target, final int action, final String text, final int a, final int b, final int c) {
 		if (ClientPlayNetworking.canSend(AdminActionPayload.TYPE)) {
-			ClientPlayNetworking.send(new AdminActionPayload(action, this.selected, text, a, b, c));
+			ClientPlayNetworking.send(new AdminActionPayload(action, target, text, a, b, c));
 		}
 	}
 
@@ -150,6 +155,8 @@ public class AdminScreen extends MenuScreenBase {
 			boolean me = name.equals(this.minecraft.player.getGameProfile().name());
 			this.button(x, y + 12 + i * ROW, 110, Component.literal(me ? name + " ★" : name), () -> {
 				this.selected = me ? "" : name;
+				// a "Sure?" armed for the last player must not fire on this one
+				this.disarm();
 				this.rebuildWidgets();
 			}).active = !(me ? this.selected.isEmpty() : name.equals(this.selected));
 		}
@@ -434,7 +441,8 @@ public class AdminScreen extends MenuScreenBase {
 			this.label(x, ry + 3, Component.literal(p.ownerName()).withStyle(ChatFormatting.WHITE)
 				.append(Component.translatable(K + "plot", bx, bz, p.minY(), p.trusted()).withStyle(ChatFormatting.GRAY)));
 			this.button(x + 270, ry, 58, Component.translatable(K + "go"),
-				() -> this.send(AdminActionPayload.TP_COORDS, RESIDENCE, bx + 8, p.minY() + 1, bz + 8));
+				// the operator goes there (to free the plot), not the player picked on the players tab
+				() -> this.sendFor("", AdminActionPayload.TP_COORDS, RESIDENCE, bx + 8, p.minY() + 1, bz + 8));
 			this.confirm(x + 330, ry, 60, "plot" + p.chunkX() + "," + p.chunkZ() + "," + p.minY(), Component.translatable(K + "release").withStyle(ChatFormatting.RED),
 				() -> this.send(AdminActionPayload.LAND_RELEASE, p.owner().toString(), p.chunkX(), p.chunkZ(), p.minY()));
 		}

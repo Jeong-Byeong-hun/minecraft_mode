@@ -87,6 +87,13 @@ public final class ShinigamiContent extends ClassContent {
 			skill("chikasumi_no_tate", "Chikasumi no Tate", "피 안개의 방패", DEFENSE, 16, 14, shield(10, 6), boost(DAMAGE, 3, 20)),
 			skill("shibari_benihime", "Shibari Benihime", "결박홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
 
+		// 0.5.24: the whip sword
+		weapon("kazeshini", 2, 38, WHIP_SWORD, "Kazeshini", "풍사",
+			art(0xA8B0B8, 0x1E1E2A, 0x5A6B7A), fx(Fx.Kind.SLASH, 0xC0C8D0),
+			skill("kazeshini_toss", "Kazeshini Toss", "풍사 투척", ATTACK, 8, 14, shoot(ProjectileStyle.BLADE, 1.5).pierce(3)),
+			skill("chain_scythe_whirl", "Chain Scythe Whirl", "쇄겸 선회", ATTACK, 10, 16, repeat(3, 6, nova(4, 0.75))),
+			skill("shunpo_cut", "Shunpo Cut", "순보 베기", MOVEMENT, 12, 12, dash(7, 1.3)));
+
 		// ---------------------------------------------------------------- tier 3: Captain
 		weapon("senbonzakura", 3, 45, KATANA, "Senbonzakura", "천본앵",
 			art(0xF0E8F0, 0x2A2A3A, 0xFFB7C5), fx(Fx.Kind.PETAL, 0xFFB7C5),
@@ -124,6 +131,12 @@ public final class ShinigamiContent extends ClassContent {
 			skill("drink_nozarashi", "Drink, Nozarashi", "삼켜라, 야쇄", ATTACK, 10, 22, slash(6, 180, 2.8), push(5, 1.5)),
 			skill("kendo", "Kendo", "검도", ATTACK, 14, 24, leap(7, 5, 2.6), stun(1.0)),
 			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, boost(DAMAGE, 10, 30), empower(6, 50, 10), taunt(10)));
+
+		weapon("hihio_zabimaru", 3, 57, WHIP_SWORD, "Hihio Zabimaru", "비비왕 사미환",
+			art(0xD8D0C0, 0x7A1E1E, 0xFF3A2A), fx(Fx.Kind.SHARD, 0xFF5A3A),
+			skill("hikotsu_taiho", "Hikotsu Taiho", "비골 대포", ATTACK, 12, 22, beam(14, 3.0)),
+			skill("serpent_lash", "Serpent Lash", "뱀의 채찍", ATTACK, 8, 18, slash(7, 200, 2.0)),
+			skill("baboon_bone_guard", "Baboon Bone Guard", "비골 수호", DEFENSE, 20, 16, shield(10, 8), taunt(6)));
 
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
 		weapon("tensa_zangetsu", 4, 70, KATANA, "Tensa Zangetsu", "천쇄참월",
@@ -182,5 +195,12 @@ public final class ShinigamiContent extends ClassContent {
 				slash(5, 180, 0.83)),
 			skill("final_flash_step", "Final Flash Step", "최후의 순보", MOVEMENT, 10, 18, blink(14), empower(3, 80, 6)),
 			skill("mugetsu", "Mugetsu", "무월", ULTIMATE, 90, 60, zone(8, 4, 1.84).at(12), beam(30, 5.52)));
+
+		weapon("soo_zabimaru", 4, 95, WHIP_SWORD, "Soo Zabimaru", "쌍왕 사미환",
+			art(0xF0E8D8, 0x5A1414, 0xFF2A2A), fx(Fx.Kind.SHARD, 0xFF4040),
+			skill("higa_zekko", "Higa Zekko", "비아절교", ULTIMATE, 50, 40, pull(6, 1.0), repeat(3, 8, nova(6, 2.2))),
+			skill("zaga_tesso", "Zaga Tesso", "사아철포", ATTACK, 9, 20, beam(16, 2.3)),
+			skill("twin_king_lash", "Twin King Lash", "쌍왕 채찍", ATTACK, 7, 18, slash(7, 220, 1.7)),
+			skill("bone_armor", "Baboon Bone Armor", "비골 갑주", DEFENSE, 24, 20, shield(14, 8), taunt(8)));
 	}
 }

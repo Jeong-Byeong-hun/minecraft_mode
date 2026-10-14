@@ -226,11 +226,16 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			GearStats.invalidate(player);
 			float stronger = GearStats.of(player).get(EngraveStat.BASIC_DAMAGE);
 			require(Math.abs(stronger - plain - 2.0F) < 0.01F, "✦1 adds 2% basic damage, got " + (stronger - plain));
-			// four +15 ✦5 armor pieces leave room under the 50% damage reduction cap (they filled it alone): 4 x (7.5 + 1) = 34%
+			// four +15 ✦5 armor pieces leave room under the 50% damage reduction cap (they filled it alone): +1..+10 0.5% a step,
+			// +11..+15 0.3% and 0.5% final damage, ✦ 0.2% each: 4 x (5 + 1.5 + 1) = 30% and 4 x 2.5 = 10% final damage
 			ClassGear chest = ClassGear.of(ClassArmor.pieces(JobClass.WARRIOR).getFirst());
 			float reduction = 4.0F * (float)Enhancement.lines(chest, Enhancement.MAX, 5).stream()
 				.filter(l -> l.stat() == EngraveStat.DAMAGE_REDUCTION).mapToDouble(StatLine::value).sum();
-			require(Math.abs(reduction - 34.0F) < 0.01F, "four +15 ✦5 armor pieces should give 34% damage reduction, give " + reduction);
+			require(Math.abs(reduction - 30.0F) < 0.01F, "four +15 ✦5 armor pieces should give 30% damage reduction, give " + reduction);
+			float armorFinal = 4.0F * (float)Enhancement.lines(chest, Enhancement.MAX, 5).stream()
+				.filter(l -> l.stat() == EngraveStat.FINAL_DAMAGE).mapToDouble(StatLine::value).sum();
+			require(Math.abs(armorFinal - 10.0F) < 0.01F && Enhancement.lines(chest, 10).stream().noneMatch(l -> l.stat() == EngraveStat.FINAL_DAMAGE),
+				"four +15 armor pieces should give 10% final damage and +10 none, give " + armorFinal);
 			player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 			String name = awakened.getHoverName().getString();
 			// kept in the backpack (the hand is used for charms and whistles later) for the awakening screenshot

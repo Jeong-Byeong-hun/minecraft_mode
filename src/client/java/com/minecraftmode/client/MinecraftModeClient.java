@@ -1,6 +1,9 @@
 package com.minecraftmode.client;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.accessory.AccessoryButton;
+import com.minecraftmode.client.accessory.AccessoryScreen;
+import com.minecraftmode.client.accessory.AccessoryTooltips;
 import com.minecraftmode.client.companion.CompanionClient;
 import com.minecraftmode.client.craft.CraftScreen;
 import com.minecraftmode.client.creature.CreaturePlans;
@@ -108,6 +111,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		}
 
 		MenuScreens.register(ModMenus.ENGRAVING, EngravingScreen::new);
+		MenuScreens.register(ModMenus.ACCESSORIES, AccessoryScreen::new);
 		MenuScreens.register(ModMenus.UPGRADE, UpgradeScreen::new);
 		MenuScreens.register(ModMenus.ENHANCE, EnhanceScreen::new);
 		MenuScreens.register(ModMenus.STYLIST, StylistScreen::new);
@@ -119,6 +123,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		VitalsHud.init();
 		BossBarLayout.init();
 		JobTooltips.init();
+		AccessoryTooltips.init();
 		RaidClient.init();
 		EndgameClient.init();
 		DungeonClient.init();
@@ -127,6 +132,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		EnhanceVisuals.init();
 		TargetHealthHud.init();
 		TrashButton.init();
+		AccessoryButton.init();
 		ClientSettings.init();
 		MenuClient.init();
 		DamageNumbers.init();

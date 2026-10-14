@@ -1,5 +1,7 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
@@ -99,7 +101,7 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAND_DEED, ModelTemplates.FLAT_ITEM);
 		for (Item item : new Item[] {
-			ModItems.AWAKENING_CRYSTAL, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
+			ModItems.AWAKENING_CRYSTAL, ModItems.ACCESSORY_ORB, ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
 			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
@@ -125,6 +127,11 @@ public class ModModelProvider extends FabricModelProvider {
 			generators.generateFlatItem(tool, ModelTemplates.FLAT_HANDHELD_ITEM);
 		}
 
+		// Raid accessories: icons come from AccessoryAssetProvider.
+		for (AccessoryDef def : Accessories.all()) {
+			generators.generateFlatItem(Accessories.item(def), ModelTemplates.FLAT_ITEM);
+		}
+
 		// Class weapons: textures come from WeaponTextureProvider; bows get vanilla-style pulling models.
 		for (WeaponDef def : JobWeapons.all()) {
 			Item item = JobWeapons.item(def);
@@ -133,7 +140,7 @@ public class ModModelProvider extends FabricModelProvider {
 					generators.createFlatItemModel(item, ModelTemplates.BOW);
 					generators.generateBow(item);
 				}
-				case SHURIKEN, ORB, GRIMOIRE, KNUCKLE -> generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+				case SHURIKEN, ORB, GRIMOIRE, KNUCKLE, GREATSHIELD, WAR_FAN, CHAKRAM -> generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
 				default -> generators.generateFlatItem(item, ModelTemplates.FLAT_HANDHELD_ITEM);
 			}
 		}

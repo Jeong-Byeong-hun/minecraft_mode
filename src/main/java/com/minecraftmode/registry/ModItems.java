@@ -90,6 +90,12 @@ public final class ModItems {
 	public static final Item VOIDCAP = register("voidcap", new Item.Properties().rarity(Rarity.UNCOMMON));
 	/** Pays for awakening past +15 (smithing, world bosses, high dungeon keys). */
 	public static final Item AWAKENING_CRYSTAL = register("awakening_crystal", new Item.Properties().rarity(Rarity.EPIC).stacksTo(16));
+	/** Enhances raid accessories (0.5.24, {@code accessory/AccessoryEnhance}); from Heroic and Nightmare raid clears only. */
+	public static final Item ACCESSORY_ORB = register("accessory_orb", new Item.Properties().rarity(Rarity.EPIC));
+	/** Inherits a tier 1 raid accessory into a tier 2 one at the blacksmith (0.5.24, {@code Accessories.inherit}); tier 2 raid bosses drop it. */
+	public static final Item ACCESSORY_INHERIT_1 = register("accessory_inherit_1", new Item.Properties().rarity(Rarity.RARE));
+	/** Inherits a tier 2 raid accessory into a tier 3 one; tier 3 raid bosses drop it. */
+	public static final Item ACCESSORY_INHERIT_2 = register("accessory_inherit_2", new Item.Properties().rarity(Rarity.EPIC));
 	/** Dropped by world bosses; the smith turns it into awakening crystals. */
 	public static final Item TITAN_SHARD = register("titan_shard", new Item.Properties().rarity(Rarity.EPIC));
 	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));

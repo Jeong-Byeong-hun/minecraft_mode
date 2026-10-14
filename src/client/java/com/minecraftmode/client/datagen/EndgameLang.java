@@ -163,8 +163,8 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.enhance.saved", ko ? "강화 실패 — 보호 주문서가 +%s를 지켰습니다 (장인의 기운 %s%%)"
 			: "Enhancement failed - the protection scroll kept +%s (artisan's spirit %s%%)");
 		b.add("message.minecraft_mode.enhance.broadcast", ko ? "%s님이 %s +%s 강화에 성공했습니다!" : "%s enhanced %s to +%s!");
-		b.add("screen.minecraft_mode.enhance.insert", ko ? "직업 무기나 방어구를 왼쪽 칸에 넣으세요. 강화할 때마다 무기는 피해, 방어구는 방어가 오릅니다 (최대 +15)."
-			: "Put a class weapon or armor piece in the slot. Every level adds damage (weapons) or defense (armor), up to +15.");
+		b.add("screen.minecraft_mode.enhance.insert", ko ? "직업 무기나 방어구를 왼쪽 칸에 넣으세요. 강화할 때마다 무기는 피해, 방어구는 방어가 오릅니다 (최대 +15). 레이드 장신구는 장신구 강화 구슬로 +10까지 강화합니다."
+			: "Put a class weapon or armor piece in the slot. Every level adds damage (weapons) or defense (armor), up to +15. Raid accessories go to +10 with accessory orbs.");
 		b.add("screen.minecraft_mode.enhance.max", ko ? "최대 강화에 도달했습니다." : "Fully enhanced.");
 		b.add("screen.minecraft_mode.enhance.chance", ko ? "성공 %s%%" : "Success %s%%");
 		b.add("screen.minecraft_mode.enhance.pity", ko ? "기본 %s%% + 장인의 기운 %s%%" : "Base %s%% + spirit %s%%");

@@ -1,5 +1,6 @@
 package com.minecraftmode.network;
 
+import com.minecraftmode.accessory.AccessoryMenu;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.admin.Admin;
 import com.minecraftmode.economy.Buyback;
@@ -7,6 +8,7 @@ import com.minecraftmode.bag.Trash;
 import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.CityZone;
+import com.minecraftmode.command.DiceCommand;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDef;
 import com.minecraftmode.dungeon.DungeonDimension;
@@ -63,6 +65,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TrashPayload.TYPE, TrashPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(OpenAccessoriesPayload.TYPE, OpenAccessoriesPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(BuybackPayload.TYPE, BuybackPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
@@ -92,6 +95,12 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(TrashPayload.TYPE, (payload, context) -> context.server().execute(
 			() -> Trash.click(context.player())
 		));
+		ServerPlayNetworking.registerGlobalReceiver(OpenAccessoriesPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			// a player choosing a character in the lobby only gets the character menu
+			if (!Characters.choosing(context.player()) && context.player().isAlive()) {
+				AccessoryMenu.open(context.player());
+			}
+		}));
 		ServerPlayNetworking.registerGlobalReceiver(DungeonEnterPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			DungeonDef def = Dungeons.def(payload.dungeon());
 			if (def != null) {
@@ -196,9 +205,9 @@ public final class ModNetworking {
 		AuctionService.send(player, payload.entityId(), payload.query(), suggestSlot, suggestEach);
 	}
 
-	/** The adventurer's menu: the same calls as {@code /party}, {@code /wallet pay}, {@code /raid leave} and {@code /dungeon leave}, and character select. */
+	/** The adventurer's menu: the same calls as {@code /party}, {@code /wallet pay}, {@code /raid leave}, {@code /dungeon leave} and {@code /dice}, and character select. */
 	private static void handleMenu(final ServerPlayer player, final MenuActionPayload payload) {
-		if (Characters.choosing(player) && payload.action() < MenuActionPayload.CHARACTERS) {
+		if (Characters.choosing(player) && (payload.action() < MenuActionPayload.CHARACTERS || payload.action() > MenuActionPayload.CHARACTER_ENTER)) {
 			return;
 		}
 		switch (payload.action()) {
@@ -228,6 +237,7 @@ public final class ModNetworking {
 			case MenuActionPayload.CHARACTER_SWITCH -> Characters.switchTo(player, payload.amount());
 			case MenuActionPayload.CHARACTER_BUY -> Characters.buySlot(player);
 			case MenuActionPayload.CHARACTER_ENTER -> Characters.enter(player, payload.amount());
+			case MenuActionPayload.DICE -> DiceCommand.roll(player);
 			default -> {
 			}
 		}

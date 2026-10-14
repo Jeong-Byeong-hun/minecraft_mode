@@ -1,5 +1,7 @@
 package com.minecraftmode.raid.loot;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearShop;
@@ -51,7 +53,9 @@ public final class LootSession {
 		Lot(final ItemStack stack) {
 			this.stack = stack;
 			ClassGear gear = ClassGear.of(stack);
-			this.start = gear == null ? Coins.SILVER : GearShop.auctionStart(gear);
+			AccessoryDef accessory = Accessories.def(stack);
+			int ticket = Accessories.ticketStart(stack);
+			this.start = gear != null ? GearShop.auctionStart(gear) : accessory != null ? Accessories.auctionStart(accessory) : ticket > 0 ? ticket : Coins.SILVER;
 			this.step = Coins.increment(this.start);
 		}
 

@@ -1,6 +1,7 @@
 package com.minecraftmode.progress;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.AccessoryItem;
 import com.minecraftmode.bag.BagItem;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.Consumables;
@@ -78,7 +79,7 @@ public final class Codex {
 
 	/** Item codex sections. */
 	public enum Category {
-		WEAPON, ARMOR, CONSUMABLE, MATERIAL;
+		WEAPON, ARMOR, CONSUMABLE, MATERIAL, ACCESSORY;
 
 		public String key() {
 			return "screen.minecraft_mode.codex.items." + this.name().toLowerCase(Locale.ROOT);
@@ -184,6 +185,9 @@ public final class Codex {
 		}
 		if (item instanceof GearArmorItem) {
 			return Category.ARMOR;
+		}
+		if (item instanceof AccessoryItem) {
+			return Category.ACCESSORY;
 		}
 		if (Consumables.def(id.getPath()) != null && Consumables.item(id.getPath()) == item) {
 			return Category.CONSUMABLE;

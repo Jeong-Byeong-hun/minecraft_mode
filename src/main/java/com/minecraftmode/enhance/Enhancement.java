@@ -31,6 +31,13 @@ public record Enhancement(int level, int pity, int awaken) {
 	public static final int PITY_STEP = 5;
 	/** From this target level on a failure drops one level unless a protection scroll is used. */
 	public static final int RISKY_FROM = 11;
+	/** Weapon steps +{@value #FINAL_FROM}..+{@value #FINAL_TO} each add {@value #FINAL_PER_STEP}% final damage. */
+	public static final int FINAL_FROM = 11;
+	public static final int FINAL_TO = 14;
+	public static final float FINAL_PER_STEP = 2.0F;
+	/** Armor steps from +{@value #FINAL_FROM} on add {@value #ARMOR_LATE_REDUCTION}% damage reduction (instead of 0.5%) and {@value #ARMOR_FINAL_PER_STEP}% final damage. */
+	public static final float ARMOR_LATE_REDUCTION = 0.3F;
+	public static final float ARMOR_FINAL_PER_STEP = 0.5F;
 
 	public static final Codec<Enhancement> CODEC = RecordCodecBuilder.create(i -> i.group(
 		Codec.INT.optionalFieldOf("level", 0).forGetter(Enhancement::level),
@@ -126,7 +133,7 @@ public record Enhancement(int level, int pity, int awaken) {
 				out.add(StatLine.of(EngraveStat.BOSS_DAMAGE, 2.0F * awaken));
 			} else {
 				// mostly health: four +15 ✦5 pieces alone filled the 50% damage reduction cap, which left Ironskin and every other
-				// reduction line worthless; now they reach 34% and the rest comes from the set, engravings, options and food
+				// reduction line worthless; now they reach 30% and the rest comes from the set, engravings, options and food
 				out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.2F * awaken));
 				out.add(StatLine.of(EngraveStat.MAX_HEALTH, 1.0F * awaken));
 			}
@@ -146,14 +153,25 @@ public record Enhancement(int level, int pity, int awaken) {
 			if (level >= 10) {
 				out.add(StatLine.of(EngraveStat.CRIT_CHANCE, 3));
 			}
+			// the risky steps: +3% basic and skill damage each landed in pools already at +150-200% and gave about 1% (0.5.24); final
+			// damage multiplies the whole hit, so each of them is worth about 3%
+			if (level >= FINAL_FROM) {
+				out.add(StatLine.of(EngraveStat.FINAL_DAMAGE, FINAL_PER_STEP * (Math.min(level, FINAL_TO) - FINAL_FROM + 1)));
+			}
 			if (level >= 15) {
 				out.add(StatLine.of(EngraveStat.BOSS_DAMAGE, 10));
 			}
 		} else {
-			out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.5F * level));
+			// past +10 (0.5.24) 0.3% reduction a step instead of 0.5%, and final damage: every class hits harder alike, and +15 ✦5 armor
+			// still leaves room under the reduction cap
+			int late = Math.max(0, level - FINAL_FROM + 1);
+			out.add(StatLine.of(EngraveStat.DAMAGE_REDUCTION, 0.5F * (level - late) + ARMOR_LATE_REDUCTION * late));
 			out.add(StatLine.of(EngraveStat.MAX_HEALTH, Math.round(4.0F * level) / 10.0F));
 			if (level >= 10) {
 				out.add(StatLine.of(EngraveStat.MOVE_SPEED, 2));
+			}
+			if (late > 0) {
+				out.add(StatLine.of(EngraveStat.FINAL_DAMAGE, ARMOR_FINAL_PER_STEP * late));
 			}
 			if (level >= 15) {
 				out.add(StatLine.of(EngraveStat.MAX_HEALTH, 2));

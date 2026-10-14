@@ -64,6 +64,8 @@ public final class Consumables {
 	/** Phoenix Feather: one revival per five minutes. */
 	public static final int REVIVE_COOLDOWN = 20 * 60 * 5;
 	private static final Map<String, ConsumableDef> DEFS = new LinkedHashMap<>();
+	/** Ids of the cooking-only dishes ({@link #dishes}): never in drop pools, raid rewards or merit offers. */
+	private static final java.util.Set<String> DISHES = new java.util.HashSet<>();
 	private static final Map<String, Item> ITEMS = new LinkedHashMap<>();
 
 	public static void init() {
@@ -122,8 +124,17 @@ public final class Consumables {
 		return ITEMS.get(id);
 	}
 
+	/**
+	 * The consumables of a tier that drops, raid rewards and merit offers hand out: the cooking-only dishes stay out (until 0.5.24 they
+	 * dropped from named monsters, lairs and raids and diluted those pools).
+	 */
 	public static List<ConsumableDef> tier(final int tier) {
-		return DEFS.values().stream().filter(d -> d.tier() == tier).toList();
+		return DEFS.values().stream().filter(d -> d.tier() == tier && !isDish(d)).toList();
+	}
+
+	/** One of the dishes of the mod's crops and fish, made only by cooking. */
+	public static boolean isDish(final ConsumableDef def) {
+		return DISHES.contains(def.id());
 	}
 
 	// ------------------------------------------------------------------ using
@@ -396,7 +407,9 @@ public final class Consumables {
 			.flavor("Cut from the heart of the void dragon. It still beats.", "공허룡의 심장에서 잘라낸 고기. 아직도 뛰고 있다.")
 			.buff(ModEffects.FURY, 2).buff(ModEffects.IRONSKIN, 2).buff(MobEffects.HEALTH_BOOST, 2).buff(ModEffects.REJUVENATION, 1);
 
+		java.util.Set<String> before = new java.util.HashSet<>(DEFS.keySet());
 		dishes();
+		DEFS.keySet().stream().filter(id -> !before.contains(id)).forEach(DISHES::add);
 	}
 
 	/** Dishes of the mod's crops and fish: cooking only (no shop sells them), tier by recipe level. */

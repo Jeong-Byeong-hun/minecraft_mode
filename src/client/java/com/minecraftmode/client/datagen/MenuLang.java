@@ -8,6 +8,8 @@ final class MenuLang {
 		menu(b, ko);
 		admin(b, ko);
 		b.add("message.minecraft_mode.wallet.not_online", ko ? "%s님은 접속해 있지 않습니다." : "%s is not online.");
+		b.add("message.minecraft_mode.dice.rolled", ko ? "[주사위] %s님이 주사위를 굴렸습니다: %s (1~%s)" : "[Dice] %s rolled %s (1-%s)");
+		b.add("message.minecraft_mode.dice.wait", ko ? "주사위는 %s초 뒤에 다시 굴릴 수 있습니다." : "You can roll again in %s s.");
 		b.add("message.minecraft_mode.land.released", ko ? "관리자가 내 땅 하나를 해제했습니다. 증서와 보관함 물건 %s묶음을 돌려받았습니다."
 			: "An operator freed one of your plots. The deed and %s stacks from it came back to you.");
 		b.add("message.minecraft_mode.admin.kicked", ko ? "관리자가 서버에서 내보냈습니다." : "An operator removed you from the server.");
@@ -24,6 +26,7 @@ final class MenuLang {
 		b.add(s + "pay", ko ? "송금" : "Pay");
 		b.add(s + "settings", ko ? "설정" : "Settings");
 		b.add(s + "admin", ko ? "관리자" : "Admin");
+		b.add(s + "dice", ko ? "주사위" : "Dice");
 		b.add(s + "sure", ko ? "확인?" : "Sure?");
 		b.add(s + "return_home", ko ? "귀환" : "Return home");
 		// party
@@ -74,6 +77,7 @@ final class MenuLang {
 		b.add(m + "started", ko ? "슬롯 %s에서 새 캐릭터를 시작합니다." : "A new character starts in slot %s.");
 		b.add(m + "bought", ko ? "캐릭터 슬롯이 %s개가 되었습니다." : "You now have %s character slots.");
 		b.add(m + "not_here", ko ? "캐릭터는 수도 성벽 안에서만 바꿀 수 있습니다." : "You can only switch characters inside the capital's walls.");
+		b.add(m + "busy", ko ? "레이드·분배·침공·거신 전투가 끝나야 캐릭터를 바꿀 수 있습니다." : "Finish your raid, its loot, the invasion or the titan fight before switching characters.");
 		b.add(m + "failed", ko ? "캐릭터를 바꾸지 못했습니다. 지금 캐릭터 그대로입니다." : "The switch failed; you are still playing the same character.");
 		b.add(m + "max", ko ? "더 이상 슬롯을 살 수 없습니다." : "You cannot buy more slots.");
 		b.add(m + "no_merit", ko ? "기여도가 부족합니다." : "Not enough merit.");

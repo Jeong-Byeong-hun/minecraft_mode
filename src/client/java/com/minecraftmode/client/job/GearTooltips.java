@@ -130,12 +130,12 @@ public final class GearTooltips {
 		}
 	}
 
-	static Component statLine(final StatLine line, final ChatFormatting color) {
+	public static Component statLine(final StatLine line, final ChatFormatting color) {
 		return statLine(line, color, null);
 	}
 
 	/** One stat row, worded for {@code job} where the stat reads differently per class ({@link EngraveStat#key(JobClass)}). */
-	static Component statLine(final StatLine line, final ChatFormatting color, final @Nullable JobClass job) {
+	public static Component statLine(final StatLine line, final ChatFormatting color, final @Nullable JobClass job) {
 		EngraveStat stat = line.stat();
 		return Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY).append(Component.translatable(stat.key(job), JobTooltips.num(line.value())).withStyle(color));
 	}

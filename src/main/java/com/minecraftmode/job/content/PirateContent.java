@@ -82,6 +82,13 @@ public final class PirateContent extends ClassContent {
 			skill("chain_shot", "Chain Shot", "사슬탄", UTILITY, 12, 14, shoot(ProjectileStyle.CANNONBALL, 1.6).pierce(3), inflict(SLOWNESS, 4, 2)),
 			skill("brace_for_impact", "Brace for Impact", "충격 대비", DEFENSE, 20, 14, boost(DAMAGE, 5, 20), shield(8, 6)));
 
+		// 0.5.24: the blunderbuss
+		weapon("boarding_blunderbuss", 2, 36, BLUNDERBUSS, "Boarding Blunderbuss", "접현 나팔총",
+			art(0x8C7A5A, 0x5A3A1E, 0xC9A227), fx(Fx.Kind.SMOKE, 0xBFB59A),
+			skill("point_blank", "Point-Blank Blast", "근접 산탄", ATTACK, 8, 14, slash(5, 90, 1.9), push(3, 0.8)),
+			skill("grapeshot", "Grapeshot", "포도탄", ATTACK, 11, 16, shoot(ProjectileStyle.BULLET, 1.2).count(5).spread(40).pierce(1)),
+			skill("powder_smoke", "Powder Smoke", "화약 연기", UTILITY, 16, 12, debuff(6, BLINDNESS, 3, 0), buff(SPEED, 5, 1)));
+
 		// ---------------------------------------------------------------- tier 3: Emperor of the Sea
 		weapon("buggy_cannon", 3, 45, HAND_CANNON, "Buggy's Hand Cannon", "버기의 핸드 캐논",
 			art(0x4A4E57, 0x1F3A93, 0xE03C31), fx(Fx.Kind.SMOKE, 0xD95040),
@@ -118,6 +125,12 @@ public final class PirateContent extends ClassContent {
 			skill("haki_burst", "Conqueror's Haki Burst", "패왕색 패기 방출", UTILITY, 22, 24, debuff(10, STUN, 1.5, 0), debuff(10, WEAKNESS, 6, 1)),
 			skill("armament_slash", "Armament Slash", "무장색 참격", ATTACK, 9, 22, slash(5, 160, 3.12), inflict(VULNERABLE, 5, 1)),
 			skill("end_this_war", "I Came to End This War", "이 전쟁을 끝내러 왔다", UTILITY, 26, 22, boost(CRIT_DAMAGE, 6, 50), allyBoost(10, DAMAGE, 8, 20)));
+
+		weapon("dragons_breath", 3, 64, BLUNDERBUSS, "Dragon's Breath", "용의 숨결",
+			art(0x6E6E72, 0x3A2416, 0xFF5A1F), fx(Fx.Kind.ORB, 0xFF6A2A),
+			skill("dragons_breath", "Dragon's Breath", "용의 숨결", ATTACK, 10, 20, burn(5), slash(6, 70, 2.6)),
+			skill("chain_shot", "Chain Shot", "사슬탄", ATTACK, 12, 22, shoot(ProjectileStyle.CANNONBALL, 2.4).pierce(4)),
+			skill("reload_drill", "Reload Drill", "장전 훈련", UTILITY, 20, 14, boost(DAMAGE, 8, 15), buff(SPEED, 8, 1)));
 
 		// ---------------------------------------------------------------- tier 4: Pirate King
 		weapon("battleship_cannon", 4, 70, HAND_CANNON, "Battleship Cannon", "배틀쉽 캐논",
@@ -179,5 +192,12 @@ public final class PirateContent extends ClassContent {
 			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, nova(6, 3.4), push(8, 3.0)),
 			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), heal(20), boost(DAMAGE, 6, 25)),
 			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, allyBoost(12, DAMAGE, 12, 30), allyBoost(12, CRIT_CHANCE, 15, 10)));
+
+		weapon("thunderclap_blunderbuss", 4, 96, BLUNDERBUSS, "Thunderclap Blunderbuss", "벽력 나팔총",
+			art(0x4A4E58, 0x2A1810, 0xFFD700), fx(Fx.Kind.BOLT, 0xFFE066),
+			skill("thunderclap_broadside", "Thunderclap Broadside", "벽력 일제사격", ULTIMATE, 50, 40, rain(ProjectileStyle.CANNONBALL, 18, 6, 8, 0.75)),
+			skill("buckshot_storm", "Buckshot Storm", "산탄 폭풍", ATTACK, 9, 20, slash(6, 100, 1.9)),
+			skill("armament_round", "Armament Round", "무장색 탄환", ATTACK, 8, 18, inflict(VULNERABLE, 4, 0), shoot(ProjectileStyle.BULLET, 1.6).pierce(3)),
+			skill("recoil_leap", "Recoil Leap", "반동 도약", MOVEMENT, 12, 14, push(4, 1.5), dash(8, 1.4)));
 	}
 }

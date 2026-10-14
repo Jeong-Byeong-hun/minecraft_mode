@@ -56,11 +56,14 @@ public final class JobTooltips {
 		});
 	}
 
+	/** The default skill keys, for tooltips built off the render thread (R, X, V, Z). */
+	private static final String[] DEFAULT_KEYS = {"R", "X", "V", "Z"};
+
 	/**
 	 * The local player the requirement colours and stat totals are read for; null off the render thread, where the recipe book and
 	 * creative search build every tooltip and the client stat caches ({@code GearStats}) are not safe to read.
 	 */
-	static @Nullable Player viewer() {
+	public static @Nullable Player viewer() {
 		Minecraft minecraft = Minecraft.getInstance();
 		return minecraft.isSameThread() ? minecraft.player : null;
 	}
@@ -112,12 +115,13 @@ public final class JobTooltips {
 		lines.add(basic);
 
 		Engravings engravings = JobWeapons.engravings(stack);
-		boolean detail = Minecraft.getInstance().hasShiftDown();
+		// no viewer = a background thread building search tooltips: no keyboard or key-name calls into SDL there
+		boolean detail = player != null && Minecraft.getInstance().hasShiftDown();
 		lines.add(Component.translatable(detail ? "tooltip.minecraft_mode.weapon.skills" : "tooltip.minecraft_mode.weapon.skills_hint").withStyle(ChatFormatting.YELLOW));
 		var mods = player == null ? engravings.totals() : JobWeapons.activeTotals(player);
 		for (int i = 0; i < def.skills().size(); i++) {
 			Skill skill = def.skills().get(i);
-			String key = JobKeys.SKILLS[i].getTranslatedKeyMessage().getString();
+			String key = player == null ? DEFAULT_KEYS[i] : JobKeys.SKILLS[i].getTranslatedKeyMessage().getString();
 			int cooldown = SkillCaster.cooldown(data, skill, mods);
 			MutableComponent line = Component.literal(" [" + key + "] ").withStyle(ChatFormatting.WHITE)
 				.append(Component.translatable(skill.nameKey()).withColor(skill.kind().color()))

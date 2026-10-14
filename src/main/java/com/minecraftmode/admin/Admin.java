@@ -109,9 +109,12 @@ public final class Admin {
 			case AdminActionPayload.BRING -> target != op && teleport(target, op.level(), op.getX(), op.getY(), op.getZ());
 			case AdminActionPayload.GAMEMODE -> action.a() >= 0 && action.a() <= GameType.SPECTATOR.getId()
 				&& run(() -> target.setGameMode(GameType.byId(action.a())));
-			case AdminActionPayload.KICK -> target != op && run(() -> target.connection.disconnect(action.text().isBlank()
+			// as vanilla /kick: admins (level 3) only, and never the host of a singleplayer/LAN world (that stops the server)
+			case AdminActionPayload.KICK -> target != op && op.permissions().hasPermission(Permissions.COMMANDS_ADMIN)
+				&& !server.isSingleplayerOwner(target.nameAndId()) && run(() -> target.connection.disconnect(action.text().isBlank()
 				? Component.translatable("message.minecraft_mode.admin.kicked") : Component.literal(action.text().strip())));
-			case AdminActionPayload.HEAL -> run(() -> {
+			// a dead player stays dead: health above 0 would make the server refuse their respawn button
+			case AdminActionPayload.HEAL -> !target.isDeadOrDying() && run(() -> {
 				target.setHealth(target.getMaxHealth());
 				target.getFoodData().setFoodLevel(20);
 				target.getFoodData().setSaturation(20.0F);

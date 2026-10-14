@@ -83,6 +83,13 @@ public final class HunterContent extends ClassContent {
 			skill("troupe_slash", "Troupe Slash", "여단의 참격", ATTACK, 7, 14, dash(6, 1.6)),
 			skill("spider_tattoo", "Spider Tattoo", "거미 문신", UTILITY, 20, 14, boost(DAMAGE, 8, 10), empower(3, 40, 8)));
 
+		// 0.5.24: throwing needles
+		weapon("zoldyck_needles", 2, 39, NEEDLE, "Zoldyck Training Needles", "조르딕가 수련침",
+			art(0xD0D4DA, 0x2A2A2A, 0x6A4AB0), fx(Fx.Kind.SPARK, 0xC8C0FF),
+			skill("pressure_point", "Pressure Point", "혈자리 찌르기", ATTACK, 8, 14, inflict(SLOWNESS, 3, 1), shoot(ProjectileStyle.KNIFE, 1.6)),
+			skill("needle_fan", "Needle Fan", "침 부채", ATTACK, 10, 16, shoot(ProjectileStyle.KNIFE, 1.2).count(5).spread(50).pierce(2)),
+			skill("silent_step", "Silent Step", "무음 보법", MOVEMENT, 12, 10, blink(7)));
+
 		// ---------------------------------------------------------------- tier 3: Pro Hunter
 		weapon("feitan_umbrella", 3, 45, RAPIER, "Feitan's Umbrella", "페이탄의 우산",
 			art(0x2A2A30, 0x1A1A1A, 0xC82020), fx(Fx.Kind.SPARK, 0xFF4A2A),
@@ -119,6 +126,12 @@ public final class HunterContent extends ClassContent {
 			skill("deep_purple", "Deep Purple", "딥 퍼플", ATTACK, 16, 24, summon(Summon.SNOW_GOLEM, 3, 20), debuff(6, BLINDNESS, 3, 0)),
 			skill("smoke_prison", "Smoke Prison", "연기 감옥", ATTACK, 14, 22, zone(4, 4, 0.8).at(10).effect(BLINDNESS, 0), stun(1.0)),
 			skill("smoke_screen", "Smoke Screen", "연막", UTILITY, 18, 16, stealth(4, 50), debuff(6, BLINDNESS, 4, 0)));
+
+		weapon("shalnark_antenna", 3, 56, NEEDLE, "Shalnark's Antenna", "샤르나크의 안테나",
+			art(0x3A3A44, 0x1A1A22, 0x38E07A), fx(Fx.Kind.BOLT, 0x6AFFA0),
+			skill("black_voice", "Black Voice", "블랙 보이스", UTILITY, 18, 16, debuff(8, WEAKNESS, 6, 1), mark(12, 8, 30)),
+			skill("antenna_barrage", "Antenna Barrage", "안테나 연사", ATTACK, 9, 20, barrage(ProjectileStyle.KNIFE, 3, 0.7)),
+			skill("auto_pilot", "Auto-Pilot", "오토 파일럿", ATTACK, 12, 20, boost(DAMAGE, 6, 20), dash(8, 1.8)));
 
 		// ---------------------------------------------------------------- tier 4: Triple-Star Hunter
 		weapon("godspeed", 4, 70, CLAW, "Godspeed", "신속",
@@ -176,5 +189,12 @@ public final class HunterContent extends ClassContent {
 			skill("third_hand", "Third Hand", "삼내장", ATTACK, 10, 26, slash(8, 200, 3.0), launch(6, 1.0)),
 			skill("ninety_ninth_hand", "Ninety-Ninth Hand", "구십구장", ATTACK, 18, 34, repeat(6, 4, nova(7, 0.9)), stun(1.5)),
 			skill("zero_hand", "Zero Hand", "제로", ULTIMATE, 90, 60, zone(9, 3, 3.0).at(6), beam(30, 6.0)));
+
+		weapon("illumi_needles", 4, 84, NEEDLE, "Illumi's Needles", "이르미의 침",
+			art(0xE6E6F0, 0x1A1426, 0x9A4AFF), fx(Fx.Kind.SPARK, 0xB98CFF),
+			skill("thousand_needles", "Thousand Needles", "천침", ULTIMATE, 50, 40, rain(ProjectileStyle.KNIFE, 16, 6, 10, 0.55)),
+			skill("needle_throw", "Needle Throw", "침 투척", ATTACK, 6, 16, shoot(ProjectileStyle.KNIFE, 1.4).count(3).spread(20).pierce(2)),
+			skill("needle_disguise", "Needle Disguise", "침 변장", UTILITY, 24, 16, stealth(4, 60)),
+			skill("zoldyck_assassination", "Zoldyck Assassination", "조르딕가의 암살술", ATTACK, 10, 20, execute(5, 2.0, 30, 2.0)));
 	}
 }

@@ -3,8 +3,21 @@ package com.minecraftmode.test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessoryDef;
+import com.minecraftmode.accessory.AccessoryEnhance;
+import com.minecraftmode.accessory.AccessoryMenu;
+import com.minecraftmode.accessory.AccessorySet;
+import com.minecraftmode.accessory.AccessorySlot;
+import com.minecraftmode.bag.Bags;
+import com.minecraftmode.client.accessory.AccessoryScreen;
+import com.minecraftmode.client.endgame.EnhanceScreen;
+import com.minecraftmode.client.job.UpgradeScreen;
 import com.minecraftmode.client.raid.LootScreen;
 import com.minecraftmode.client.raid.RaidScreen;
+import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.enhance.EnhanceMenu;
+import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.combat.Telegraph;
@@ -23,6 +36,7 @@ import com.minecraftmode.job.gear.ArmorPieceDef;
 import com.minecraftmode.job.gear.ArmorSetDef;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.gear.ClassGear;
+import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.GearRules;
 import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.gear.GearStats;
@@ -36,16 +50,19 @@ import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearUpgrades;
+import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.network.LootActionPayload;
 import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.RaidInstance;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSession;
 import com.minecraftmode.raid.loot.LootSessions;
+import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -64,15 +81,18 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -107,6 +127,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			checkNamed(context, server, connection);
 			checkBossPatterns(context, server, connection);
 			checkRaidFlow(context, server, connection);
+			checkAccessories(context, server, connection);
 			checkDeathInRaid(context, server, connection);
 			checkLoot(context, server, connection);
 			raidBoard(context, server, connection);
@@ -139,6 +160,19 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		require(RaidBosses.supplyTier(RaidBosses.ARACHNE) == 0 && RaidBosses.supplyTier(RaidBosses.MALACHAR) == 4 && RaidBosses.supplyTier(RaidBosses.AETHRYX) == 5,
 			"raid supply tiers by level");
 		require(RaidBosses.AETHRYX.phaseCount() == 4, "Aethryx has 4 phases");
+		// every raid boss drops its own accessory set: five slots, 2/3/5-piece bonuses, ten options per slot
+		require(Accessories.sets().size() == RaidBosses.all().size() && Accessories.all().size() == RaidBosses.all().size() * Accessories.SLOTS,
+			"expected one accessory set of " + Accessories.SLOTS + " per raid boss, got " + Accessories.all().size());
+		for (BossDef def : RaidBosses.all()) {
+			AccessorySet set = Accessories.setOf(def);
+			require(set != null && set.level() == def.lo(), def.id() + " needs an accessory set of its level");
+			List<Integer> pieces = set.bonuses().stream().map(ArmorSetDef.SetBonus::pieces).toList();
+			require(pieces.equals(List.of(2, 3, 5)), set.id() + " accessories should have 2/3/5 piece bonuses, got " + pieces);
+		}
+		for (AccessorySlot slot : AccessorySlot.values()) {
+			require(slot.pool().size() >= 10, slot + " accessories roll from only " + slot.pool().size() + " options");
+		}
+		checkAccessoryDrops();
 		// every bracket offers one weapon (some classes have none at Lv 100) and one armor piece per class
 		for (JobClass job : JobClass.PLAYABLE) {
 			for (int bracket = 10; bracket <= 100; bracket += 10) {
@@ -181,6 +215,34 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 					missing.add("texture " + def.id());
 				}
 			}
+			// raid accessories (0.5.24): every piece has an icon, a model and a name, every slot and set a name
+			for (AccessoryDef def : Accessories.all()) {
+				keys.add(def.nameKey());
+				if (resources.getResource(MinecraftMode.id("items/" + def.id() + ".json")).isEmpty()
+					|| resources.getResource(MinecraftMode.id("textures/item/" + def.id() + ".png")).isEmpty()) {
+					missing.add("model/texture " + def.id());
+				}
+			}
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				keys.add(slot.nameKey());
+			}
+			for (AccessorySet set : Accessories.sets()) {
+				keys.add(set.nameKey());
+			}
+			keys.addAll(List.of("container.minecraft_mode.accessories", "tooltip.minecraft_mode.accessory.source", "screen.minecraft_mode.character.source.accessory",
+				"tooltip.minecraft_mode.accessory.tier", "tooltip.minecraft_mode.accessory.enhanced", ModItems.ACCESSORY_ORB.getDescriptionId(),
+				ModItems.ACCESSORY_ORB.getDescriptionId() + ".tooltip", "screen.minecraft_mode.upgrade.accessory", "screen.minecraft_mode.codex.source.raid_top"));
+			for (String id : List.of("accessory_orb", "accessory_inherit_1", "accessory_inherit_2")) {
+				if (resources.getResource(MinecraftMode.id("items/" + id + ".json")).isEmpty() || resources.getResource(MinecraftMode.id("textures/item/" + id + ".png")).isEmpty()) {
+					missing.add("model/texture " + id);
+				}
+			}
+			for (Item ticket : List.of(ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2)) {
+				keys.add(ticket.getDescriptionId());
+				keys.add(ticket.getDescriptionId() + ".tooltip");
+			}
+			keys.addAll(List.of("tooltip.minecraft_mode.accessory.inherit", "screen.minecraft_mode.upgrade.inherit_cost", "screen.minecraft_mode.upgrade.inherit_keeps",
+				"screen.minecraft_mode.codex.source.accessory_inherit_1", "screen.minecraft_mode.codex.source.accessory_inherit_2"));
 			keys.addAll(List.of("raid.minecraft_mode.phase", "raid.minecraft_mode.victory", "screen.minecraft_mode.raid.title", "screen.minecraft_mode.loot.title",
 				"message.minecraft_mode.party.created", "message.minecraft_mode.raid.entered", "message.minecraft_mode.loot.won_auction", "key.minecraft_mode.loot_screen"));
 			for (String key : keys) {
@@ -517,6 +579,26 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			if (ether < 5 || condensed < 2 || gear < 3) {
 				return "solo victory should give 5+ ether, 2+ condensed essence and 3 gear, got " + ether + "/" + condensed + "/" + gear;
 			}
+			// the raid-only accessories: on a solo Normal clear at most one (a 10% roll), of Arachne's own set, with one option
+			List<AccessoryDef> accessories = new ArrayList<>();
+			for (ItemStack stack : player.getInventory()) {
+				AccessoryDef a = Accessories.def(stack);
+				if (a != null) {
+					accessories.add(a);
+					if (stack.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines().size() != Accessories.optionCount(RaidDifficulty.NORMAL)) {
+						return "a Normal accessory should roll " + Accessories.optionCount(RaidDifficulty.NORMAL) + " option, got " + stack.get(ModDataComponents.GEAR_ROLLS);
+					}
+				}
+			}
+			if (accessories.size() > 1 || accessories.stream().anyMatch(a -> a.set().boss() != RaidBosses.ARACHNE)) {
+				return "solo Normal Arachne gives at most one of her own accessories, got " + accessories.stream().map(AccessoryDef::id).toList();
+			}
+			if (Bags.count(player, ModItems.ACCESSORY_ORB) != 0) {
+				return "a Normal clear gives no accessory orbs";
+			}
+			if (Bags.count(player, ModItems.ACCESSORY_INHERIT_1) + Bags.count(player, ModItems.ACCESSORY_INHERIT_2) != 0) {
+				return "a tier 1 boss gives no inheritance tickets";
+			}
 			Raids.leave(player);
 			return "";
 		});
@@ -528,6 +610,314 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		});
 		require(home.isEmpty(), home);
 		connection.waitForChunksRender();
+	}
+
+	/**
+	 * Accessory tiers and drop chances (0.5.24): Normal drops the boss's own set at its tier's chance, Heroic and Nightmare only
+	 * tier 3 pieces, more often for harder bosses and difficulties (Heroic Verdessa beats Normal Aethryx), and orbs from Heroic on.
+	 * Numbers only: item stacks need a world ({@link #sampleHeroicDrops} runs in it).
+	 */
+	private static void checkAccessoryDrops() {
+		List<AccessorySet> sets = Accessories.sets();
+		for (int i = 0; i < sets.size(); i++) {
+			require(sets.get(i).tier() == 1 + i / 3, sets.get(i).id() + " should be tier " + (1 + i / 3) + ", is " + sets.get(i).tier());
+			BossDef boss = sets.get(i).boss();
+			float normal = Accessories.dropChance(boss, RaidDifficulty.NORMAL);
+			require(Math.abs(normal - new float[] {0.15F, 0.08F, 0.015F}[sets.get(i).tier() - 1]) < 1.0E-4F, boss.id() + " Normal drop chance " + normal);
+			require(Accessories.dropSets(boss, RaidDifficulty.NORMAL).equals(List.of(sets.get(i))), boss.id() + " drops its own set on Normal");
+			for (RaidDifficulty difficulty : List.of(RaidDifficulty.HEROIC, RaidDifficulty.NIGHTMARE)) {
+				List<AccessorySet> from = Accessories.dropSets(boss, difficulty);
+				require(!from.isEmpty() && from.stream().allMatch(set -> set.tier() == Accessories.TOP_TIER), boss.id() + " drops only tier 3 on " + difficulty + ": " + from);
+				require(sets.get(i).tier() != Accessories.TOP_TIER || from.equals(List.of(sets.get(i))), boss.id() + " keeps its own tier 3 set on " + difficulty);
+			}
+		}
+		// the tier 3 ladder: Normal Raijin..Aethryx < Heroic Verdessa < ... < Heroic Aethryx < Nightmare Verdessa < ... < Nightmare Aethryx
+		float last = Accessories.dropChance(RaidBosses.AETHRYX, RaidDifficulty.NORMAL);
+		for (RaidDifficulty difficulty : List.of(RaidDifficulty.HEROIC, RaidDifficulty.NIGHTMARE)) {
+			for (AccessorySet set : sets) {
+				float chance = Accessories.dropChance(set.boss(), difficulty);
+				require(chance > last, difficulty + " " + set.boss().id() + " (" + chance + ") should drop more often than the step before (" + last + ")");
+				last = chance;
+			}
+		}
+		require(Accessories.orbs(RaidDifficulty.NORMAL) == 0 && Accessories.orbs(RaidDifficulty.HEROIC) == 1 && Accessories.orbs(RaidDifficulty.NIGHTMARE) == 2,
+			"accessory orbs: none on Normal, 1 on Heroic, 2 on Nightmare");
+		// inheritance tickets: tier 2 bosses give the tier 1 ticket, tier 3 bosses the tier 2 one, more often on harder difficulties
+		require(Accessories.ticketDrop(RaidBosses.VERDESSA) == null && Accessories.ticketDrop(RaidBosses.NEFREKHET) == ModItems.ACCESSORY_INHERIT_1
+			&& Accessories.ticketDrop(RaidBosses.AETHRYX) == ModItems.ACCESSORY_INHERIT_2, "inheritance tickets by boss tier");
+		require(Accessories.ticketChance(RaidDifficulty.NORMAL) > 0 && Accessories.ticketChance(RaidDifficulty.HEROIC) > Accessories.ticketChance(RaidDifficulty.NORMAL)
+			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) > Accessories.ticketChance(RaidDifficulty.HEROIC)
+			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) <= 0.10F, "ticket chances rise with difficulty and stay at 10% or less");
+		for (AccessorySet set : sets) {
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				List<AccessoryDef> next = Accessories.inheritTargets(Accessories.def(set, slot));
+				require(set.tier() == Accessories.TOP_TIER ? next.isEmpty() : next.size() == 3 && next.stream().allMatch(t -> t.set().tier() == set.tier() + 1 && t.slot() == slot),
+					set.id() + " " + slot + " inherits into " + next.stream().map(AccessoryDef::id).toList());
+			}
+		}
+		// enhancement: +10 tops out, raises the piece's own lines by half and adds damage; never below 30% per attempt
+		require(AccessoryEnhance.chance(1, 0) == 100 && AccessoryEnhance.baseRate(AccessoryEnhance.MAX) >= 30 && AccessoryEnhance.chance(AccessoryEnhance.MAX, 100) == 100,
+			"accessory enhancement chances");
+		require(AccessoryEnhance.scaled(StatLine.of(EngraveStat.DAMAGE, 4.0F), AccessoryEnhance.MAX).value() == 6.0F, "+10 raises a line by half");
+		require(AccessoryEnhance.bonus(AccessoryEnhance.MAX).equals(List.of(StatLine.of(EngraveStat.DAMAGE, AccessoryEnhance.MAX_DAMAGE)))
+			&& AccessoryEnhance.bonus(AccessoryEnhance.MAX - 1).isEmpty(), "+10 adds damage dealt");
+		Enhancement failed = AccessoryEnhance.failed(new Enhancement(8, 0));
+		require(failed.level() == 8 && failed.pity() == Enhancement.PITY_STEP, "a failed accessory attempt keeps the level and builds spirit");
+	}
+
+	/** A thousand Heroic Verdessa winners: about 3% of them roll a tier 3 piece with two options. */
+	private static String sampleHeroicDrops() {
+		List<ItemStack> drops = Accessories.raidDrops(RaidBosses.VERDESSA, RaidDifficulty.HEROIC, 1000, RandomSource.create(11L));
+		if (drops.size() < 10 || drops.size() > 60) {
+			return "1000 Heroic Verdessa rolls should give about 25 accessories, got " + drops.size();
+		}
+		for (ItemStack drop : drops) {
+			AccessoryDef def = Accessories.def(drop);
+			if (def == null || def.set().tier() != Accessories.TOP_TIER) {
+				return "Heroic Verdessa dropped " + drop;
+			}
+			if (drop.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines().size() != Accessories.optionCount(RaidDifficulty.HEROIC)) {
+				return "a Heroic accessory rolls " + Accessories.optionCount(RaidDifficulty.HEROIC) + " options, got " + drop.get(ModDataComponents.GEAR_ROLLS);
+			}
+		}
+		if (drops.stream().map(stack -> Accessories.def(stack).set()).distinct().count() <= 1) {
+			return "Heroic Verdessa should drop from more than one tier 3 set";
+		}
+		// inheritance tickets are loot lots too: a thousand Nightmare Nefrekhet winners, about 10% of them roll a tier 1 ticket
+		List<ItemStack> tickets = Accessories.ticketLots(RaidBosses.NEFREKHET, RaidDifficulty.NIGHTMARE, 1000, RandomSource.create(12L));
+		if (tickets.size() < 50 || tickets.size() > 160 || tickets.stream().anyMatch(ticket -> !ticket.is(ModItems.ACCESSORY_INHERIT_1))) {
+			return "1000 Nightmare Nefrekhet rolls should give about 100 tier 1 tickets, got " + tickets.size();
+		}
+		if (!Accessories.ticketLots(RaidBosses.VERDESSA, RaidDifficulty.NIGHTMARE, 100, RandomSource.create(13L)).isEmpty()) {
+			return "tier 1 bosses add no tickets";
+		}
+		return Accessories.ticketStart(tickets.getFirst()) > Coins.SILVER ? "" : "a ticket auction should open above the default silver";
+	}
+
+	/** Worn accessories add their lines and set bonuses under their own source; the window only takes a fitting piece. */
+	private static void checkAccessories(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		String worn = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.MAGE, 4).withProgress(95, 0));
+			AccessorySet set = Accessories.setOf(RaidBosses.AETHRYX);
+			RandomSource random = RandomSource.create(7L);
+			List<ItemStack> stacks = new ArrayList<>();
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				stacks.add(Accessories.create(Accessories.def(set, slot), Accessories.optionCount(RaidDifficulty.NIGHTMARE), random));
+			}
+			Accessories.setWorn(player, stacks);
+			GearStats.invalidate(player);
+			var breakdown = GearStats.breakdown(player);
+			float damage = breakdown.getOrDefault(EngraveStat.DAMAGE, java.util.Map.of()).getOrDefault(GearStats.Source.ACCESSORY, 0.0F);
+			// the ring's fixed line (1 + 90 / 25) and the 5-piece bonus (8)
+			if (damage < 4 + 8) {
+				return "five Voidscale pieces should add at least 12% damage dealt, got " + damage;
+			}
+			if (Accessories.setCounts(player).getOrDefault(set.id(), 0) != Accessories.SLOTS) {
+				return "all five Voidscale pieces should count, got " + Accessories.setCounts(player);
+			}
+			// +10 on every piece: half again on their own lines and 2% damage each
+			List<ItemStack> enhanced = new ArrayList<>();
+			for (ItemStack stack : stacks) {
+				ItemStack copy = stack.copy();
+				copy.set(ModDataComponents.ENHANCEMENT, new Enhancement(AccessoryEnhance.MAX, 0, 0));
+				enhanced.add(copy);
+			}
+			Accessories.setWorn(player, enhanced);
+			GearStats.invalidate(player);
+			float boosted = GearStats.breakdown(player).getOrDefault(EngraveStat.DAMAGE, java.util.Map.of()).getOrDefault(GearStats.Source.ACCESSORY, 0.0F);
+			if (boosted < damage + Accessories.SLOTS * AccessoryEnhance.MAX_DAMAGE) {
+				return "five +10 pieces should add at least " + Accessories.SLOTS * AccessoryEnhance.MAX_DAMAGE + "% damage over " + damage + ", got " + boosted;
+			}
+			if (!enhanced.get(0).getHoverName().getString().startsWith("+10 ")) {
+				return "a +10 accessory's name should show it, got " + enhanced.get(0).getHoverName().getString();
+			}
+			Accessories.setWorn(player, stacks);
+			String sample = sampleHeroicDrops();
+			if (!sample.isEmpty()) {
+				return sample;
+			}
+			String bench = accessoryBenches(player, stacks.get(AccessorySlot.EARRING.ordinal()).copy());
+			if (!bench.isEmpty()) {
+				return bench;
+			}
+			ItemStack ring = stacks.get(AccessorySlot.RING.ordinal());
+			if (AccessoryMenu.fits(player, AccessorySlot.NECKLACE, ring) || !AccessoryMenu.fits(player, AccessorySlot.RING, ring)) {
+				return "a ring fits the ring slot only";
+			}
+			JobProgression.set(player, JobProgression.get(player).withProgress(50, 0));
+			if (AccessoryMenu.fits(player, AccessorySlot.RING, ring) || !Accessories.lines(player).isEmpty()) {
+				return "a Lv 90 piece neither fits nor counts at Lv 50";
+			}
+			JobProgression.set(player, JobProgression.get(player).withProgress(95, 0));
+			AccessoryMenu.open(player);
+			return "";
+		});
+		require(worn.isEmpty(), worn);
+		context.waitTicks(10);
+		String client = context.computeOnClient(minecraft -> {
+			if (!(minecraft.gui.screen() instanceof AccessoryScreen)) {
+				return "the accessory window should be open, got " + minecraft.gui.screen();
+			}
+			long synced = Accessories.worn(minecraft.player).stream().filter(stack -> !stack.isEmpty()).count();
+			return synced == Accessories.SLOTS ? "" : "the client should see five worn accessories, sees " + synced;
+		});
+		require(client.isEmpty(), client);
+		context.takeScreenshot("accessories");
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+		context.waitTicks(5);
+		// Brokk's bench and the blacksmith's options tab with an accessory in the slot
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ItemStack piece = Accessories.worn(player).get(AccessorySlot.NECKLACE.ordinal()).copy();
+			piece.set(ModDataComponents.ENHANCEMENT, new Enhancement(6, 10, 0));
+			player.getInventory().add(new ItemStack(ModItems.ACCESSORY_ORB, 3));
+			player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new EnhanceMenu(id, inventory, null), Component.translatable("container.minecraft_mode.enhance")));
+			if (player.containerMenu instanceof EnhanceMenu menu) {
+				menu.slots.get(0).set(piece);
+				menu.broadcastChanges();
+			}
+		});
+		context.waitForScreen(EnhanceScreen.class);
+		context.waitTicks(10);
+		context.takeScreenshot("accessory_enhance");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.closeContainer();
+			ItemStack piece = Accessories.worn(player).get(AccessorySlot.TALISMAN.ordinal()).copy();
+			player.getInventory().add(new ItemStack(ModItems.CONDENSED_ESSENCE, GearUpgrades.REROLL_CONDENSED));
+			player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new UpgradeMenu(id, inventory, null), Component.translatable("container.minecraft_mode.upgrade")));
+			if (player.containerMenu instanceof UpgradeMenu menu) {
+				menu.slots.get(0).set(piece);
+				menu.clickMenuButton(player, UpgradeMenu.BUTTON_REROLL);
+				menu.broadcastChanges();
+			}
+		});
+		context.waitForScreen(UpgradeScreen.class);
+		context.runOnClient(minecraft -> {
+			if (minecraft.gui.screen() instanceof UpgradeScreen screen) {
+				screen.showOptions();
+			}
+		});
+		context.waitTicks(10);
+		context.takeScreenshot("accessory_options");
+		// a tier 1 piece on the evolution tab lists the three tier 2 pieces it can be inherited into
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.closeContainer();
+			ItemStack low = Accessories.create(Accessories.def(Accessories.setOf(RaidBosses.VERDESSA), AccessorySlot.NECKLACE), 1, RandomSource.create(9L));
+			low.set(ModDataComponents.ENHANCEMENT, new Enhancement(4, 0, 0));
+			player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_1));
+			player.openMenu(new SimpleMenuProvider((id, inventory, p) -> new UpgradeMenu(id, inventory, null), Component.translatable("container.minecraft_mode.upgrade")));
+			if (player.containerMenu instanceof UpgradeMenu menu) {
+				menu.slots.get(0).set(low);
+				menu.broadcastChanges();
+			}
+		});
+		context.waitForScreen(UpgradeScreen.class);
+		context.waitTicks(10);
+		context.takeScreenshot("accessory_inherit");
+		server.runOnServer(s -> connection.getServerPlayer().closeContainer());
+		context.waitTicks(5);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Accessories.setWorn(player, List.of());
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 2).withProgress(30, 0));
+		});
+		MinecraftMode.LOGGER.info("[gearraid] accessories: 5-piece set counted, +10 scaling, slot and level checks, reroll and enhancement benches, window synced");
+	}
+
+	/** The blacksmith rolls an accessory's options again (same line count, no evolution) and Brokk enhances it with orbs and coins. */
+	private static String accessoryBenches(final ServerPlayer player, final ItemStack piece) {
+		AccessoryDef def = Accessories.def(piece);
+		Wallet.add(player, 1_000_000);
+		UpgradeMenu upgrade = new UpgradeMenu(0, player.getInventory(), null);
+		upgrade.slots.get(0).set(piece);
+		if (!upgrade.canReroll() || !upgrade.targets().isEmpty() || upgrade.clickMenuButton(player, 0)) {
+			return "the blacksmith should take an accessory for options only";
+		}
+		GearRolls before = piece.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY);
+		player.getInventory().add(new ItemStack(ModItems.CONDENSED_ESSENCE, GearUpgrades.REROLL_CONDENSED));
+		int wallet = Wallet.balance(player);
+		if (!upgrade.clickMenuButton(player, UpgradeMenu.BUTTON_REROLL)) {
+			return "rolling an accessory's options should work";
+		}
+		GearRolls pending = upgrade.input().get(ModDataComponents.GEAR_ROLLS_PENDING);
+		if (pending == null || pending.lines().size() != before.lines().size() || !before.equals(upgrade.input().get(ModDataComponents.GEAR_ROLLS))) {
+			return "an accessory roll waits beside the old options with as many lines, got " + pending;
+		}
+		if (wallet - Wallet.balance(player) != UpgradeMenu.rerollCoins(piece) || UpgradeMenu.rerollCoins(piece) <= 0) {
+			return "an accessory roll costs " + UpgradeMenu.rerollCoins(piece) + " coins, paid " + (wallet - Wallet.balance(player));
+		}
+		if (!upgrade.clickMenuButton(player, UpgradeMenu.BUTTON_APPLY) || !pending.equals(upgrade.input().get(ModDataComponents.GEAR_ROLLS))) {
+			return "applying should take the accessory's new options";
+		}
+		EnhanceMenu enhance = new EnhanceMenu(0, player.getInventory(), null);
+		enhance.slots.get(0).set(upgrade.input().copy());
+		if (enhance.clickMenuButton(player, EnhanceMenu.BUTTON_ENHANCE)) {
+			return "enhancing an accessory needs orbs";
+		}
+		player.getInventory().add(new ItemStack(ModItems.ACCESSORY_ORB, 2));
+		wallet = Wallet.balance(player);
+		for (int target = 1; target <= 2; target++) {
+			if (!enhance.clickMenuButton(player, EnhanceMenu.BUTTON_ENHANCE) || enhance.result() != EnhanceMenu.RESULT_SUCCESS) {
+				return "+" + target + " on an accessory always succeeds";
+			}
+		}
+		if (Enhancement.level(enhance.input()) != 2 || JobProgression.count(player.getInventory(), ModItems.ACCESSORY_ORB) != 0
+			|| wallet - Wallet.balance(player) != AccessoryEnhance.coins(def, 1) + AccessoryEnhance.coins(def, 2)) {
+			return "+2 should cost two orbs and " + (AccessoryEnhance.coins(def, 1) + AccessoryEnhance.coins(def, 2)) + " coins";
+		}
+		if (enhance.clickMenuButton(player, EnhanceMenu.BUTTON_PROTECTED) || enhance.clickMenuButton(player, EnhanceMenu.BUTTON_AWAKEN)) {
+			return "accessories have no protected enhancement or awakening";
+		}
+		return accessoryInheritance(player);
+	}
+
+	/** A +5 tier 1 ring with artisan's spirit and two options becomes the tier 2 ring the player picks, keeping all of it, for a tier 1 ticket. */
+	private static String accessoryInheritance(final ServerPlayer player) {
+		AccessoryDef low = Accessories.def(Accessories.setOf(RaidBosses.VERDESSA), AccessorySlot.RING);
+		ItemStack ring = Accessories.create(low, 2, RandomSource.create(3L));
+		ring.set(ModDataComponents.ENHANCEMENT, new Enhancement(5, 10, 0));
+		UpgradeMenu bench = new UpgradeMenu(0, player.getInventory(), null);
+		bench.slots.get(0).set(ring.copy());
+		AccessoryDef target = Accessories.inheritTargets(low).get(1);
+		if (bench.clickMenuButton(player, 1)) {
+			return "inheriting a tier 1 ring needs a tier 1 ticket";
+		}
+		player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_2));
+		if (bench.clickMenuButton(player, 1)) {
+			return "a tier 2 ticket does not inherit a tier 1 piece";
+		}
+		player.getInventory().add(new ItemStack(ModItems.ACCESSORY_INHERIT_1));
+		int wallet = Wallet.balance(player);
+		if (!bench.clickMenuButton(player, 1)) {
+			return "a tier 1 ticket should inherit the ring";
+		}
+		ItemStack result = bench.input();
+		if (Accessories.def(result) != target) {
+			return "the ring should become " + target.id() + ", is " + result;
+		}
+		Enhancement kept = Enhancement.of(result);
+		if (kept.level() != 5 || kept.pity() != 10) {
+			return "inheritance keeps +5 and the artisan's spirit, got " + kept;
+		}
+		List<StatLine> before = ring.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines();
+		List<StatLine> after = result.getOrDefault(ModDataComponents.GEAR_ROLLS, GearRolls.EMPTY).lines();
+		if (after.size() != before.size()) {
+			return "inheritance keeps the options, got " + after + " from " + before;
+		}
+		for (int i = 0; i < before.size(); i++) {
+			if (after.get(i).stat() != before.get(i).stat() || after.get(i).value() < before.get(i).value()) {
+				return "an inherited option keeps its stat and grows with the level, got " + after + " from " + before;
+			}
+		}
+		if (Bags.count(player, ModItems.ACCESSORY_INHERIT_1) != 0 || Bags.count(player, ModItems.ACCESSORY_INHERIT_2) != 1
+			|| wallet - Wallet.balance(player) != Accessories.inheritCoins(target)) {
+			return "inheriting costs one tier 1 ticket and " + Accessories.inheritCoins(target) + " coins";
+		}
+		Bags.take(player, ModItems.ACCESSORY_INHERIT_2, 1);
+		return "";
 	}
 
 	private static void checkDeathInRaid(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {

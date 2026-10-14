@@ -83,6 +83,13 @@ public final class ArcherContent extends ClassContent {
 			skill("net_arrow", "Net Arrow", "그물 화살", UTILITY, 12, 14, shoot(ProjectileStyle.ARROW, 1.0).homing(), inflict(SLOWNESS, 5, 2), stun(0.8)),
 			skill("grapple_arrow", "Grapple Arrow", "갈고리 화살", MOVEMENT, 10, 12, grapple(22), boost(CRIT_CHANCE, 4, 20)));
 
+		// 0.5.24: the chakram
+		weapon("windwheel_chakram", 2, 44, CHAKRAM, "Windwheel Chakram", "풍륜 차크람",
+			art(0xC0C8D0, 0x3E6B4A, 0x7FFFB0), fx(Fx.Kind.SLASH, 0xBFFFE0),
+			skill("returning_disc", "Returning Disc", "돌아오는 원반", ATTACK, 8, 14, shoot(ProjectileStyle.BLADE, 1.5).pierce(5)),
+			skill("twin_discs", "Twin Discs", "쌍원반", ATTACK, 10, 16, repeat(2, 6, shoot(ProjectileStyle.BLADE, 0.95))),
+			skill("disc_vault", "Disc Vault", "원반 도약", MOVEMENT, 12, 10, leap(4, 3, 1.0)));
+
 		// ---------------------------------------------------------------- tier 3: Heroic Archer
 		weapon("kanshou_bakuya", 3, 45, TWIN_BLADES, "Kanshou & Bakuya", "간장·막야",
 			art(0x2A2A2A, 0x8B1A1A, 0xF2F2F2), fx(Fx.Kind.SLASH, 0xF0F0F0),
@@ -123,6 +130,12 @@ public final class ArcherContent extends ClassContent {
 			skill("lamenting_phantom_song", "Lamenting Phantom Song", "통곡의 환주", ATTACK, 16, 26, chain(18, 6, 1.6), inflict(SLOWNESS, 3, 1)),
 			skill("sonic_string", "Sonic String", "음속의 현", ATTACK, 7, 18, repeat(3, 4, beam(20, 0.8))),
 			skill("harp_of_healing", "Harp of Healing", "치유의 하프", UTILITY, 24, 22, allyHeal(8, 20), allyBuff(8, REGENERATION, 6, 0), cleanse()));
+
+		weapon("sudarshana", 3, 59, CHAKRAM, "Sudarshana", "수다르샤나",
+			art(0xFFD24A, 0x8B5A2B, 0xFF6A00), fx(Fx.Kind.ORB, 0xFFB347),
+			skill("sudarshana_spin", "Sudarshana Spin", "수다르샤나 회전", ATTACK, 9, 20, shoot(ProjectileStyle.BLADE, 2.0).pierce(8)),
+			skill("blazing_orbit", "Blazing Orbit", "불타는 궤도", ATTACK, 12, 22, burn(4), repeat(3, 8, nova(4, 0.9))),
+			skill("hunting_focus", "Hunting Focus", "사냥 집중", UTILITY, 20, 14, boost(CRIT_DAMAGE, 8, 40)));
 
 		// ---------------------------------------------------------------- tier 4: King of Heroes
 		weapon("chiron_greatbow", 4, 70, GREATBOW, "Chiron's Greatbow", "케이론의 대궁",
@@ -183,5 +196,12 @@ public final class ArcherContent extends ClassContent {
 			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, slash(5, 200, 1.4), shoot(ProjectileStyle.WAVE, 1.3).pierce(6)),
 			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, debuff(16, GLOWING, 12, 0), mark(24, 12, 45), restoreMana(25)),
 			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", DEFENSE, 28, 26, boost(DAMAGE, 8, 20), buff(REGENERATION, 8, 1), heal(20)));
+
+		weapon("pashupata", 4, 97, CHAKRAM, "Pashupata", "파슈파타",
+			art(0xE8F0FF, 0x1F2A5C, 0x4AD7FF), fx(Fx.Kind.BOLT, 0x9FE8FF),
+			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 50, 40, mark(20, 8, 30), strike(20, 5, 1, 6.5)),
+			skill("divine_discus", "Divine Discus", "신성한 원반", ATTACK, 7, 18, shoot(ProjectileStyle.BLADE, 1.7).count(3).spread(30).pierce(3)),
+			skill("mana_burst_flame", "Mana Burst (Flame)", "마력방출(불꽃)", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, heal(15), boost(DAMAGE, 8, 15)));
 	}
 }

@@ -26,6 +26,7 @@
 		"MobMixin",
 		"NaturalSpawnerMixin",
 		"PistonStructureResolverMixin",
+		"PlayerListInvoker",
 		"PlayerMixin",
 		"PlayerNameMixin",
 		"ProjectileDeflectionMixin",

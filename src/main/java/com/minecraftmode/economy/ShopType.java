@@ -13,19 +13,33 @@ public enum ShopType {
 	GUILD("guild"),
 	/** Potions and the better consumables (see {@code Consumables}). */
 	ALCHEMIST("alchemist"),
-	/** Crops and seeds, on the residence square. */
-	FARMER("farmer"),
-	/** Fish, on the residence square. */
-	FISHMONGER("fishmonger");
+	/** Crops and seeds, on the residence square: the grocer's lines, under the grocer's market pressure. */
+	FARMER("farmer", "grocer"),
+	/** Fish, on the residence square: the grocer's lines, under the grocer's market pressure. */
+	FISHMONGER("fishmonger", "grocer");
 
 	private final String id;
+	private final String market;
 
 	ShopType(final String id) {
+		this(id, id);
+	}
+
+	ShopType(final String id, final String market) {
 		this.id = id;
+		this.market = market;
 	}
 
 	public String id() {
 		return this.id;
+	}
+
+	/**
+	 * The market whose pressure this shop's trades share. The residence stalls repeat the grocer's crop and fish lines, so they count
+	 * as the grocer's: with a market of their own a full haul sold at full price twice before prices fell.
+	 */
+	public String marketId() {
+		return this.market;
 	}
 
 	public String titleKey() {

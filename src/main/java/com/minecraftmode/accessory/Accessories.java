@@ -9,6 +9,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ArmorOptions;
 import com.minecraftmode.job.gear.ArmorSetDef;
+import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.GearRolls;
 import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.job.gear.StatLine;
@@ -142,6 +143,11 @@ public final class Accessories {
 
 	public static List<Item> items() {
 		return List.copyOf(ITEMS.values());
+	}
+
+	/** What the blacksmith's and the artisan's benches take ({@code UpgradeMenu}, {@code EnhanceMenu}): class gear or a raid accessory. */
+	public static boolean benchItem(final ItemStack stack) {
+		return ClassGear.of(stack) != null || def(stack) != null;
 	}
 
 	/** Anyone of the piece's level may wear it, whatever their class. */

@@ -79,7 +79,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		this.addSlot(new Slot(this.container, 0, SLOT_X, SLOT_Y) {
 			@Override
 			public boolean mayPlace(final ItemStack itemStack) {
-				return fits(itemStack);
+				return Accessories.benchItem(itemStack);
 			}
 
 			@Override
@@ -93,11 +93,6 @@ public class EnhanceMenu extends AbstractContainerMenu {
 
 	public ItemStack input() {
 		return this.container.getItem(0);
-	}
-
-	/** Class gear or a raid accessory. */
-	public static boolean fits(final ItemStack stack) {
-		return ClassGear.of(stack) != null || Accessories.def(stack) != null;
 	}
 
 	/** Whether {@code player} can pay an accessory attempt at {@code target}: coins and accessory orbs. */
@@ -352,7 +347,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 				if (!this.moveItemStackTo(stack, 1, 37, true)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (fits(stack) && !this.slots.get(0).hasItem()) {
+			} else if (Accessories.benchItem(stack) && !this.slots.get(0).hasItem()) {
 				if (!this.moveItemStackTo(stack, 0, 1, false)) {
 					return ItemStack.EMPTY;
 				}

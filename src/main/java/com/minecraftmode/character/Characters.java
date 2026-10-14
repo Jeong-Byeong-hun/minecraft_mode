@@ -13,6 +13,7 @@ import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.mixin.PlayerListInvoker;
 import com.minecraftmode.network.CharacterListPayload;
 import com.minecraftmode.progress.Titles;
 import com.minecraftmode.raid.RaidDimension;
@@ -213,8 +214,9 @@ public final class Characters {
 		// a switch inside one level fires none of the events that bring the active pet back (join, respawn, level change)
 		Companions.restore(player);
 		// write the player file and the roster now, together: the player file is written on logout but the roster only at the next
-		// autosave, so a hard stop in between left one character twice and the other gone
-		server(player).getPlayerList().saveAll();
+		// autosave, so a hard stop in between left one character twice and the other gone (only this player: saving everyone on
+		// every switch stalled busy servers)
+		((PlayerListInvoker)server(player).getPlayerList()).minecraftMode$save(player);
 		server(player).getDataStorage().scheduleSave();
 		player.sendSystemMessage(Component.translatable(target == null ? "message.minecraft_mode.character.started" : "message.minecraft_mode.character.switched",
 			slot + 1).withStyle(ChatFormatting.GREEN));

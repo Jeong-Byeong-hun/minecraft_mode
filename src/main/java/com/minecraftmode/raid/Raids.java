@@ -123,11 +123,13 @@ public final class Raids {
 
 	/**
 	 * Whether {@code player} still counts for a raid that has not closed: fighting, fallen and waiting for the party, or won and not
-	 * left. Rewards go to whoever plays that account at the victory, so the character must not change until then.
+	 * left. Rewards go to whoever plays that account at the victory, so the character must not change until then. Members who left
+	 * and practice members get nothing at the victory, so they are free to switch.
 	 */
 	public static boolean committed(final UUID player) {
 		RaidInstance instance = BY_PLAYER.get(player);
-		return instance != null && instance.state != RaidInstance.State.CLOSED && instance.member(player) != null;
+		RaidInstance.Member member = instance == null || instance.state == RaidInstance.State.CLOSED ? null : instance.member(player);
+		return member != null && (member.active || member.fallen) && !instance.practice(player);
 	}
 
 	/** True while {@code boss} belongs to a running instance. */

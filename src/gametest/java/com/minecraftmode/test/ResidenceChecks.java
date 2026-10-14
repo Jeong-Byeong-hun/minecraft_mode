@@ -7,6 +7,8 @@ import com.minecraftmode.client.residence.LandScreen;
 import com.minecraftmode.client.travel.TravelScreen;
 import com.minecraftmode.craft.Crops;
 import com.minecraftmode.craft.Fishing;
+import com.minecraftmode.economy.MarketData;
+import com.minecraftmode.economy.ShopMerchant;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.entity.CityNpc;
@@ -113,6 +115,15 @@ final class ResidenceChecks {
 			require(crop.isMaxAge(level.getBlockState(FIELD)), "ten missed days ripen a watered crop");
 			level.setBlockAndUpdate(FIELD, Blocks.AIR.defaultBlockState());
 			level.setBlockAndUpdate(FIELD.below(), Blocks.GRASS_BLOCK.defaultBlockState());
+			// a crop buried in the dirt has no light: it never grows, so catching up skips it
+			BlockPos dark = FIELD.below(5);
+			level.setBlockAndUpdate(dark.below(), Blocks.FARMLAND.defaultBlockState().setValue(FarmlandBlock.MOISTURE, FarmlandBlock.MAX_MOISTURE));
+			level.setBlockAndUpdate(dark, crop.getStateForAge(0));
+			require(level.getRawBrightness(dark, 0) < 9, "the buried crop is dark");
+			IdleGrowth.catchUp(level, field, 24000 * 10);
+			require(crop.getAge(level.getBlockState(dark)) == 0, "a dark crop does not grow");
+			level.setBlockAndUpdate(dark, ResidenceDimension.natural(dark.getY()));
+			level.setBlockAndUpdate(dark.below(), ResidenceDimension.natural(dark.below().getY()));
 		});
 	}
 
@@ -259,6 +270,15 @@ final class ResidenceChecks {
 			java.util.List<ShopOffers.Trade> fish = ShopOffers.trades(ShopType.FISHMONGER);
 			require(crops.containsAll(Crops.trades()), "the farmer buys every crop and sells the seeds");
 			require(fish.containsAll(Fishing.trades()), "the fishmonger buys every fish");
+			// the stalls share the grocer's market: a fish sold at the fishmonger counts as sold at the grocer too
+			ShopOffers.Trade carp = Fishing.trades().getFirst();
+			require(ShopOffers.trades(ShopType.GROCER, player).contains(carp), "the grocer buys " + carp.key());
+			String grocerKey = ShopType.GROCER.marketId() + ":" + carp.key();
+			int before = MarketData.get(s).pressure(grocerKey, residence.getGameTime());
+			ShopMerchant stall = new ShopMerchant(player, residence, ResidenceDimension.shops().get(ModBlocks.FISHMONGER_SHOP), ShopType.FISHMONGER);
+			stall.notifyTrade(stall.getOffers().get(ShopOffers.trades(ShopType.FISHMONGER, player).indexOf(carp)));
+			int after = MarketData.get(s).pressure(grocerKey, residence.getGameTime());
+			require(after == before + 1, "a sale at the fishmonger adds to the grocer's market pressure, got " + before + " -> " + after);
 			player.teleportTo(residence, ResidenceDimension.waymaster().getX() + 0.5, ResidenceDimension.SURFACE_Y + 1, ResidenceDimension.waymaster().getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
 			return keepers.getFirst().getId();
 		});

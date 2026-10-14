@@ -53,7 +53,7 @@ public class ShopMerchant implements Merchant {
 	}
 
 	private String marketKey(final ShopOffers.Trade trade) {
-		return this.type.id() + ":" + trade.key();
+		return this.type.marketId() + ":" + trade.key();
 	}
 
 	@Override

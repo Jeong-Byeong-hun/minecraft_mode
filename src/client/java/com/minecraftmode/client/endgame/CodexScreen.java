@@ -370,9 +370,13 @@ public class CodexScreen extends Screen {
 		List<Story.Chapter> chapters = Story.chapters();
 		int current = Story.data(player).chapter();
 		List<Component> tip = null;
+		g.enableScissor(x + 1, y + SCROLL_TOP, x + W - 1, y + H - 26);
 		for (int i = 0; i < chapters.size(); i++) {
 			Story.Chapter chapter = chapters.get(i);
-			int ry = y + 26 + i * STORY_ROW;
+			int ry = y + SCROLL_TOP + i * STORY_ROW - scroll;
+			if (ry + STORY_ROW < y + SCROLL_TOP || ry > y + H - 26) {
+				continue;
+			}
 			boolean done = i < current;
 			boolean now = i == current;
 			g.fill(x + 8, ry, x + W - 8, ry + STORY_ROW - 2, now ? 0x40E8C24A : done ? 0x2040FF40 : 0x40000000);
@@ -383,13 +387,17 @@ public class CodexScreen extends Screen {
 				String goal = chapter.progress(player) + "/" + chapter.goal();
 				g.text(this.font, goal, x + W - 12 - this.font.width(goal), ry + 3, chapter.done(player) ? 0xFF7CFC7C : 0xFFBBBBBB, false);
 			}
-			if ((done || now) && mouseX >= x + 8 && mouseX < x + W - 8 && mouseY >= ry && mouseY < ry + STORY_ROW - 2) {
+			if ((done || now) && mouseX >= x + 8 && mouseX < x + W - 8 && mouseY >= ry && mouseY < ry + STORY_ROW - 2
+				&& mouseY >= y + SCROLL_TOP && mouseY < y + H - 26) {
 				tip = List.of(Component.translatable(chapter.key()).withStyle(ChatFormatting.GOLD),
 					Component.translatable(chapter.key() + ".text").withStyle(ChatFormatting.GRAY),
 					Component.translatable("screen.minecraft_mode.codex.chapter_goal", Component.translatable(chapter.key() + ".goal")).withStyle(ChatFormatting.AQUA),
 					Component.translatable("screen.minecraft_mode.codex.chapter_reward", Component.translatable(chapter.key() + ".reward")).withStyle(ChatFormatting.YELLOW));
 			}
 		}
+		g.disableScissor();
+		this.contentHeight = chapters.size() * STORY_ROW;
+		this.scrollBar(g, H - 26 - SCROLL_TOP, SCROLL_TOP);
 		Component footer = current >= chapters.size() ? Component.translatable("screen.minecraft_mode.codex.story_done")
 			: Component.translatable("screen.minecraft_mode.codex.story_hint");
 		g.text(this.font, this.font.plainSubstrByWidth(footer.getString(), W - 90), x + 10, y + H - 17, 0xFF8A8A8A, false);
@@ -556,8 +564,8 @@ public class CodexScreen extends Screen {
 
 	@Override
 	public boolean mouseScrolled(final double mouseX, final double mouseY, final double scrollX, final double scrollY) {
-		if (tab == Tab.MONSTERS || tab == Tab.ITEMS) {
-			scroll = Math.max(0, scroll - (int) Math.signum(scrollY) * CELL);
+		if (tab == Tab.MONSTERS || tab == Tab.ITEMS || tab == Tab.STORY) {
+			scroll = Math.max(0, scroll - (int) Math.signum(scrollY) * (tab == Tab.STORY ? STORY_ROW * 2 : CELL));
 			return true;
 		}
 		return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

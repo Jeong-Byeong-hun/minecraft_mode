@@ -557,6 +557,10 @@ public class TownClientGameTest implements FabricClientGameTest {
 		});
 		context.waitTicks(5);
 		context.takeScreenshot("town_bag");
+		// the client tells a bag screen by its title mark (the cursor goes back where the last screen left it, not the centre)
+		require(context.computeOnClient(minecraft -> minecraft.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.ContainerScreen screen
+			&& BagMenu.isBagTitle(screen.getTitle())), "the bag screen carries the bag mark");
+		require(!BagMenu.isBagTitle(new ItemStack(ModItems.ORE_BAG).getHoverName()), "a plain name is not a bag mark");
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			BagMenu menu = (BagMenu)player.containerMenu;

@@ -1129,6 +1129,10 @@ public class ContentClientGameTest implements FabricClientGameTest {
 		context.waitTicks(5);
 		shot(context, "content_story");
 		requireFits(context, "story", 320);
+		// the chapter list scrolls instead of running past the footer
+		CodexScreen.scrollToEnd();
+		context.waitTicks(2);
+		shot(context, "content_story_end");
 		CodexScreen.showTab("codex");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 	}

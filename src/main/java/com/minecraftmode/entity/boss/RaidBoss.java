@@ -82,6 +82,12 @@ public abstract class RaidBoss extends CreatureMob {
 	/** Extra health per party member beyond the first. */
 	public static final float PARTY_SCALE = 0.6F;
 	private static final int RETARGET_TICKS = 160;
+	/**
+	 * Where a flying boss keeps its feet above the arena floor: low enough that a melee player under it reaches the body
+	 * (eye 1.62 + reach 3). It used to be 6..10 blocks (bobbing up to 16), so melee only landed hits after a dive.
+	 */
+	public static final double HOVER_LOW = 2.5;
+	public static final double HOVER_SPAN = 1.0;
 
 	private final ServerBossEvent bossEvent;
 	private float divisor = 1.0F;
@@ -108,7 +114,7 @@ public abstract class RaidBoss extends CreatureMob {
 		this.xpReward = 100 + def.lo() * 3;
 		this.setPersistenceRequired();
 		if (this.flies()) {
-			this.moveControl = new FlyingMoveControl<>(this, 20, true);
+			this.moveControl = new HoverControl(this);
 			this.setNoGravity(true);
 		}
 	}
@@ -393,11 +399,11 @@ public abstract class RaidBoss extends CreatureMob {
 			return;
 		}
 		if (!Arenas.inside(this.home, this.position(), 1.0) || this.getY() < this.home.getY() - 4) {
-			this.teleportTo(spawn.x, spawn.y + (this.flies() ? 6 : 0), spawn.z);
+			this.teleportTo(spawn.x, spawn.y + (this.flies() ? HOVER_LOW : 0), spawn.z);
 		}
 	}
 
-	/** Flying bosses circle the arena between waypoints a few blocks above the floor. */
+	/** Flying bosses circle the arena between waypoints {@link #HOVER_LOW} blocks or so above the floor. */
 	private void hover() {
 		Vec3 center = this.home != null ? Vec3.atBottomCenterOf(this.home) : this.position();
 		if (this.hoverTarget == null || --this.hoverTicks <= 0 || this.position().distanceToSqr(this.hoverTarget) < 4.0) {
@@ -410,13 +416,42 @@ public abstract class RaidBoss extends CreatureMob {
 				p = center.add(p.subtract(center).multiply(1, 0, 1).normalize().scale(Arenas.RADIUS - 4));
 			}
 			double baseY = this.home != null ? this.home.getY() : Math.max(this.getY(), around.y);
-			this.hoverTarget = new Vec3(p.x, baseY + 6 + this.random.nextDouble() * 4, p.z);
+			this.hoverTarget = new Vec3(p.x, baseY + HOVER_LOW + this.random.nextDouble() * HOVER_SPAN, p.z);
 			this.hoverTicks = 60 + this.random.nextInt(40);
 		}
 		this.moveControl.setWantedPosition(this.hoverTarget.x, this.hoverTarget.y, this.hoverTarget.z, 1.0);
 		LivingEntity target = this.getTarget();
 		if (target != null) {
 			this.getLookControl().setLookAt(target, 30.0F, 30.0F);
+		}
+	}
+
+	/**
+	 * Vanilla's flying control pushes up or down at full strength until it passes the wanted height, and with the little
+	 * vertical drag bodies have that bobs several blocks past it. This one eases in: it asks for a climb or sink speed that
+	 * shrinks over the last blocks and pushes only as hard as it takes to reach it. While the boss stands still for a
+	 * pattern it brakes instead, so a climb that a pattern interrupts does not coast up out of reach.
+	 */
+	private static final class HoverControl extends FlyingMoveControl<RaidBoss> {
+		private static final double MAX_CLIMB = 0.25;
+		private static final double EASE = 0.15;
+
+		HoverControl(final RaidBoss boss) {
+			super(boss, 20, true);
+		}
+
+		@Override
+		public void tick() {
+			boolean moving = this.operation == Operation.MOVE_TO;
+			double want = moving ? Mth.clamp((this.wantedY - this.mob.getY()) * EASE, -MAX_CLIMB, MAX_CLIMB) : 0.0;
+			super.tick();
+			if (this.mob.onGround() && !moving) {
+				return;
+			}
+			// travel adds 0.02 x yya to the vertical speed each tick
+			double push = (want - this.mob.getDeltaMovement().y) / 0.02;
+			float limit = (float)this.mob.getAttributeValue(Attributes.FLYING_SPEED);
+			this.mob.setYya((float)Mth.clamp(push, -limit, limit));
 		}
 	}
 

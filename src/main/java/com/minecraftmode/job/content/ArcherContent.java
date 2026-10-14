@@ -106,10 +106,10 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("tauropolos", 3, 57, SHORTBOW, "Tauropolos", "타우로폴로스",
 			art(0x556B2F, 0x2F1E0E, 0xFFD54A), fx(Fx.Kind.FEATHER, 0xFFE27A),
-			skill("phoebus_catastrophe", "Phoebus Catastrophe", "청원의 화살편지", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
+			skill("phoebus_catastrophe", "Phoebus Catastrophe", "청원의 화살 편지", ATTACK, 24, 26, rain(ProjectileStyle.ARROW, 22, 6, 20, 0.3)),
 			skill("calydonian_hunt", "Calydonian Hunt", "칼리돈 사냥", ATTACK, 10, 20,
 				shoot(ProjectileStyle.ARROW, 1.4).count(3).spread(12).homing(), inflict(VULNERABLE, 6, 0)),
-			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 넘기", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
+			skill("arcadia_overrun", "Arcadia Overrun", "아르카디아 너머", MOVEMENT, 10, 16, dash(10, 1.4), buff(SPEED, 6, 2)));
 
 		weapon("sherwood_yew", 3, 61, CROSSBOW, "Yew Bow of Sherwood", "셔우드의 주목궁",
 			art(0x3E5C2A, 0x2B1D10, 0x9CFF57), fx(Fx.Kind.SMOKE, 0x7BCB4A),

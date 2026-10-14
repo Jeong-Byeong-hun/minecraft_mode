@@ -124,7 +124,7 @@ public final class Quests {
 			List.of(mat(ModItems.ESSENCE, 8)));
 		add("rogue_3", JobClass.ROGUE, 3, "Creed of Assassins", "어쌔신의 신조",
 			"Nothing is true, everything is permitted. Bring down a golem and the endermen who watch from the dark.",
-			"진실은 없고, 모든 것이 허용된다. 골렘을 쓰러뜨리고 어둠 속에서 지켜보는 엔더맨을 처단하라.",
+			"아무것도 진실이 아니며, 모든 것이 허용된다. 골렘을 쓰러뜨리고 어둠 속에서 지켜보는 엔더맨을 처단하라.",
 			List.of(kill("Mythril Golem", "미스릴 골렘", Set.of(ModEntities.MYTHRIL_GOLEM), 1), kill("Endermen", "엔더맨", Set.of(EntityTypes.ENDERMAN), 8)),
 			ASSASSIN_SEAL, 3, List.of(source(Set.of(EntityTypes.ENDERMAN), 0.5F, 1)),
 			List.of(mat(ModItems.CONDENSED_ESSENCE, 2)));
@@ -236,7 +236,7 @@ public final class Quests {
 		// ---------------------------------------------------------------- Hunter
 		choice("hunter_1", JobClass.HUNTER, "The Hunter Exam", "헌터 시험",
 			"You passed the Hunter Exam. Here is your license - what you hunt is up to you.",
-			"헌터 시험 합격이다. 라이선스를 받아라. 무엇을 사냥할지는 네가 정해.",
+			"헌터 시험 합격이다. 자격증을 받아라. 무엇을 사냥할지는 네가 정해.",
 			EXAM_BADGE);
 		add("hunter_2", JobClass.HUNTER, 2, "Water Divination", "수견식",
 			"A glass of water and a leaf will tell what kind of Nen you have. Train hard enough to make it move.",

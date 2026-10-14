@@ -61,7 +61,7 @@ public final class ShinigamiContent extends ClassContent {
 			skill("some_no_mai_tsukishiro", "First Dance: Tsukishiro", "시작의 춤 월백", ATTACK, 10, 16, zone(3.5, 2, 1.0).at(10).effect(SLOWNESS, 3), stun(0.8)),
 			skill("tsugi_no_mai_hakuren", "Second Dance: Hakuren", "다음의 춤 백련", ATTACK, 12, 18, shoot(ProjectileStyle.ICICLE, 1.6).count(5).spread(40).pierce(3),
 				inflict(SLOWNESS, 4, 1)),
-			skill("san_no_mai_shirafune", "Third Dance: Shirafune", "세 번째 춤 백도", DEFENSE, 16, 14, shield(8, 6), nova(3, 1.0)));
+			skill("san_no_mai_shirafune", "Third Dance: Shirafune", "세 번째의 춤 백도", DEFENSE, 16, 14, shield(8, 6), nova(3, 1.0)));
 
 		weapon("hozukimaru", 2, 32, SPEAR, "Hozukimaru", "귀등환",
 			art(0xC8A060, 0x6A3A1A, 0xF0F0F0), fx(Fx.Kind.SPARK, 0xFFD27F),
@@ -96,7 +96,7 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("hyorinmaru", 3, 50, KATANA, "Hyorinmaru", "빙륜환",
 			art(0xE0F4FF, 0x1A3A6A, 0x5AC8FF), fx(Fx.Kind.SHARD, 0x9FE2FF),
-			skill("sit_upon_frozen_heavens", "Sit Upon the Frozen Heavens", "서리 하늘에 앉아라", ATTACK, 9, 20, shoot(ProjectileStyle.ICICLE, 2.2).pierce(6).explode(2.0F),
+			skill("sit_upon_frozen_heavens", "Sit Upon the Frozen Heavens", "상천에 내려 앉아라", ATTACK, 9, 20, shoot(ProjectileStyle.ICICLE, 2.2).pierce(6).explode(2.0F),
 				inflict(SLOWNESS, 4, 2)),
 			skill("ice_dragon", "Ice Dragon", "빙룡", ATTACK, 14, 24, beam(16, 2.6), stun(1.0)),
 			skill("ice_wall", "Six-Flower Ice Wall", "육화 빙벽", DEFENSE, 18, 18, shield(12, 8), debuff(6, SLOWNESS, 4, 1)));
@@ -149,7 +149,7 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("ryujin_jakka", 4, 82, KATANA, "Ryujin Jakka", "류인약화",
 			art(0x6A5A4A, 0x2A1A0A, 0xFF5A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
-			skill("all_things_to_ash", "Reduce All Creation to Ash", "삼라만상 모두 재로 만들어라", ATTACK, 10, 24, nova(6, 1.84), burn(6)),
+			skill("all_things_to_ash", "Reduce All Creation to Ash", "만상일체 잿더미가 되어라", ATTACK, 10, 24, nova(6, 1.84), burn(6)),
 			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", DEFENSE, 22, 26, zone(6, 6, 0.74), shield(14, 6)),
 			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F), burn(6)),
 			skill("zanka_no_tachi", "Zanka no Tachi", "잔화태도", ULTIMATE, 60, 50, slash(8, 360, 7.59), burn(8)));
@@ -170,10 +170,10 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("karamatsu_shinju", 4, 92, TWIN_BLADES, "Katen Kyokotsu: Karamatsu Shinju", "화천광골 고송심중",
 			art(0xC8C0D8, 0x4A2A6A, 0xFF5AA0), fx(Fx.Kind.PETAL, 0xFF5AA0),
-			skill("first_act", "First Act: Tragedy of Wounds Shared", "1단: 상처를 나누는 비극", ATTACK, 12, 24, lifesteal(25), repeat(3, 6, slash(5, 200, 0.92))),
-			skill("second_act", "Second Act: Shame of Wounds Undone", "2단: 낫지 않는 상처", ATTACK, 14, 26, inflict(BLEEDING, 8, 2), inflict(WEAKNESS, 8, 1), slash(4, 160, 1.47)),
-			skill("third_act", "Third Act: Drowning Abyss", "3단: 빠져드는 심연", UTILITY, 18, 24, zone(6, 5, 0.74).at(10).pull(1.0), stun(1.5)),
-			skill("final_act", "Final Act: Itosabaki", "종단: 실 끊기", ULTIMATE, 60, 50, execute(6, 5.89, 50, 3.0), inflict(STUN, 2, 0)));
+			skill("first_act", "First Act: Tragedy of Wounds Shared", "첫째 단 주저자분합", ATTACK, 12, 24, lifesteal(25), repeat(3, 6, slash(5, 200, 0.92))),
+			skill("second_act", "Second Act: Shame of Wounds Undone", "둘째 단 참괴의 깔개", ATTACK, 14, 26, inflict(BLEEDING, 8, 2), inflict(WEAKNESS, 8, 1), slash(4, 160, 1.47)),
+			skill("third_act", "Third Act: Drowning Abyss", "셋째 단 단어연", UTILITY, 18, 24, zone(6, 5, 0.74).at(10).pull(1.0), stun(1.5)),
+			skill("final_act", "Final Act: Itosabaki", "마지막 단 사절협혈염후", ULTIMATE, 60, 50, execute(6, 5.89, 50, 3.0), inflict(STUN, 2, 0)));
 
 		weapon("true_zangetsu", 4, 100, GREATSWORD, "True Zangetsu", "진짜 참월",
 			art(0xE8E8F0, 0x1A1A1A, 0x3AA0FF), fx(Fx.Kind.SLASH, 0x6AC8FF),

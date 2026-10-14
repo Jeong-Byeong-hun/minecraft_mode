@@ -45,7 +45,7 @@ public final class ShinigamiArmor extends ArmorContent {
 			two(line(LIFESTEAL, 3)),
 			three(line(CRIT_DAMAGE, 25)),
 			four(line(BASIC_DAMAGE, 15), line(ATTACK_SPEED, 10)));
-		set("royal_guard", 80, "Royal Guard", "영왕 호위대", 0xE8E0C0, 0xF4F4F0, 0xE8C45A,
+		set("royal_guard", 80, "Royal Guard", "0번대", 0xE8E0C0, 0xF4F4F0, 0xE8C45A,
 			two(line(MAX_HEALTH, 6)),
 			three(line(SKILL_AREA, 15)),
 			four(line(BOSS_DAMAGE, 20), line(DAMAGE_REDUCTION, 6)));

@@ -87,11 +87,11 @@ public final class RogueContent extends ClassContent {
 			skill("sage_mode", "Sage Mode", "선인모드", UTILITY, 26, 12, boost(DAMAGE, 10, 20), boost(CRIT_CHANCE, 10, 10), restoreMana(15)));
 
 		// ---------------------------------------------------------------- tier 3: Assassin
-		weapon("hidden_blade", 3, 45, CLAW, "Hidden Blade", "히든 블레이드",
+		weapon("hidden_blade", 3, 45, CLAW, "Hidden Blade", "암살검",
 			art(0xC8CCD2, 0xEDE6D6, 0xA31515), fx(Fx.Kind.SLASH, 0xF2F2F2),
 			skill("silent_assassination", "Silent Assassination", "소리 없는 암살", ATTACK, 10, 20, execute(6, 2.0, 40, 2.2), stealth(2, 40)),
 			skill("eagle_vision", "Eagle Vision", "독수리의 눈", UTILITY, 18, 16, debuff(20, GLOWING, 10, 0), mark(20, 10, 30)),
-			skill("leap_of_faith", "Leap of Faith", "신념의 도약", MOVEMENT, 12, 16, leap(7, 3, 1.6), stealth(3, 30)));
+			skill("leap_of_faith", "Leap of Faith", "신뢰의 도약", MOVEMENT, 12, 16, leap(7, 3, 1.6), stealth(3, 30)));
 
 		weapon("hassan_dirks", 3, 49, KUNAI, "Hassan's Dirks", "하산의 단검",
 			art(0x3A3A40, 0x1A1A1A, 0xEDEDED), fx(Fx.Kind.SMOKE, 0x3B2A4D),

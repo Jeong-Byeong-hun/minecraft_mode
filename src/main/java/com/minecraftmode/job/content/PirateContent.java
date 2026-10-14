@@ -142,7 +142,7 @@ public final class PirateContent extends ClassContent {
 				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4)), inflict(VULNERABLE, 5, 1)),
 			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, slash(4.5, 160, 2.2), inflict(BLEEDING, 5, 1)),
 			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22, shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F), inflict(SLOWNESS, 3, 1)),
-			skill("pirates_glory", "Pirate's Glory", "해적의 영광", DEFENSE, 22, 18, boost(CRIT_CHANCE, 6, 25), heal(15)));
+			skill("pirates_glory", "Pirate's Glory", "해적의 명예", DEFENSE, 22, 18, boost(CRIT_CHANCE, 6, 25), heal(15)));
 
 		weapon("dutchman_harpoon", 4, 81, HARPOON, "Flying Dutchman's Harpoon", "플라잉 더치맨의 작살",
 			art(0x5F7F74, 0x2E3B30, 0x3FFFD2), fx(Fx.Kind.BUBBLE, 0x3FC5A8),
@@ -162,7 +162,7 @@ public final class PirateContent extends ClassContent {
 		weapon("moby_dick_anchor", 4, 89, ANCHOR, "Moby Dick's Anchor", "모비딕호의 닻",
 			art(0x7E8790, 0x4A3424, 0xF0F0F0), fx(Fx.Kind.RING, 0xE0F0FF),
 			skill("island_shaker", "Island Shaker", "섬 흔들기", ULTIMATE, 55, 40, nova(8, 7.0), stun(1.5), delay(0.5, launch(8, 5))),
-			skill("seaquake", "Seaquake", "카이신", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10)),
+			skill("seaquake", "Seaquake", "해진", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10)),
 			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, leap(7, 5, 2.6), inflict(SLOWNESS, 3, 2)),
 			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, allyBoost(12, DAMAGE, 12, 20), allyBoost(12, CRIT_CHANCE, 12, 10), allyHeal(12, 15)));
 

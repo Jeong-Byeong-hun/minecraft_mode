@@ -126,7 +126,7 @@ public final class MageContent extends ClassContent {
 			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 0.56, 2.0F), inflict(SLOWNESS, 3, 1)),
 			skill("rule_breaker", "Rule Breaker", "파계해야 할 모든 부적", ATTACK, 14, 24, shadowstep(10, 2.87), inflict(VULNERABLE, 8, 2)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, refresh(50), buff(MANA_FLOW, 10, 0)),
-			skill("argon_coin", "Argon Coin", "아르곤 코인", DEFENSE, 26, 22, heal(25), shield(8, 10)));
+			skill("argon_coin", "Argon Coin", "황금양모", DEFENSE, 26, 22, heal(25), shield(8, 10)));
 
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
@@ -162,7 +162,7 @@ public final class MageContent extends ClassContent {
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
 			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBoost(10, DAMAGE, 10, 20)),
-			skill("hero_creation", "Hero Creation", "영웅작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
+			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing(), inflict(WEAKNESS, 4, 0)),
 			skill("illusion", "Illusion", "환술", UTILITY, 18, 18, boost(CRIT_CHANCE, 7, 25), blink(8)));
 

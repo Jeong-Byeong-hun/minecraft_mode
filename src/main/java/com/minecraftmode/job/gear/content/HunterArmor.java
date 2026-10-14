@@ -21,7 +21,7 @@ public final class HunterArmor extends ArmorContent {
 			two(line(MAX_HEALTH, 2)),
 			three(line(ITEM_FIND, 8)),
 			four(line(CRIT_CHANCE, 6)));
-		set("heavens_arena", 20, "Heavens Arena Gi", "천공투기장 도복", 0xF0F0F0, 0x2A2A30, 0xC0262D,
+		set("heavens_arena", 20, "Heavens Arena Gi", "천공격투장 도복", 0xF0F0F0, 0x2A2A30, 0xC0262D,
 			two(line(BASIC_DAMAGE, 6)),
 			three(line(DAMAGE_REDUCTION, 4)),
 			four(line(DOUBLE_STRIKE, 6)));

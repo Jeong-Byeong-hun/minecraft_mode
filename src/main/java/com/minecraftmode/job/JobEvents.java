@@ -165,7 +165,7 @@ public final class JobEvents {
 		if (boss && !event) {
 			int condensed = entity.getType() == EntityTypes.WARDEN ? WARDEN_CONDENSED : 1 + (int)(health / 150.0F);
 			drop(level, entity, new ItemStack(ModItems.CONDENSED_ESSENCE, condensed));
-		} else if (!event && mvp.getRandom().nextFloat() < Math.min(0.6F, 0.06F + health * 0.0025F)) {
+		} else if (!event && mvp.getRandom().nextFloat() < Math.min(0.8F, 0.12F + health * 0.005F)) {
 			drop(level, entity, new ItemStack(ModItems.ESSENCE));
 		}
 
@@ -308,19 +308,19 @@ public final class JobEvents {
 		}
 	}
 
-	public static final OreReward COAL = new OreReward(2, 0.003F, 0.02F);
-	public static final OreReward COPPER = new OreReward(3, 0.0035F, 0.03F);
+	public static final OreReward COAL = new OreReward(2, 0.003F, 0.04F);
+	public static final OreReward COPPER = new OreReward(3, 0.0035F, 0.06F);
 	/** Nether gold is common and only drops nuggets, so it sits below the other gold ores. */
-	public static final OreReward NETHER_GOLD = new OreReward(3, 0.003F, 0.03F);
-	public static final OreReward QUARTZ = new OreReward(4, 0.0035F, 0.04F);
-	public static final OreReward ALUMINUM = new OreReward(5, 0.006F, 0.06F);
-	public static final OreReward IRON = new OreReward(5, 0.006F, 0.06F);
-	public static final OreReward GOLD = new OreReward(8, 0.009F, 0.08F);
-	public static final OreReward REDSTONE = new OreReward(5, 0.005F, 0.06F);
-	public static final OreReward LAPIS = new OreReward(8, 0.009F, 0.08F);
-	public static final OreReward MYTHRIL = new OreReward(15, 0.018F, 0.15F);
-	public static final OreReward DIAMOND = new OreReward(20, 0.022F, 0.30F);
-	public static final OreReward ANCIENT_DEBRIS = new OreReward(40, 0.045F, 0.50F);
+	public static final OreReward NETHER_GOLD = new OreReward(3, 0.003F, 0.06F);
+	public static final OreReward QUARTZ = new OreReward(4, 0.0035F, 0.08F);
+	public static final OreReward ALUMINUM = new OreReward(5, 0.006F, 0.12F);
+	public static final OreReward IRON = new OreReward(5, 0.006F, 0.12F);
+	public static final OreReward GOLD = new OreReward(8, 0.009F, 0.16F);
+	public static final OreReward REDSTONE = new OreReward(5, 0.005F, 0.12F);
+	public static final OreReward LAPIS = new OreReward(8, 0.009F, 0.16F);
+	public static final OreReward MYTHRIL = new OreReward(15, 0.018F, 0.30F);
+	public static final OreReward DIAMOND = new OreReward(20, 0.022F, 0.60F);
+	public static final OreReward ANCIENT_DEBRIS = new OreReward(40, 0.045F, 1.0F);
 
 	/** Every ore gives job experience and sometimes essence; the rarer the ore, the more. */
 	private static @Nullable OreReward oreReward(final BlockState state) {

@@ -37,8 +37,8 @@ public final class LairLoot {
 		}
 		out.add(GearDrops.ether(def.lo(), def.hi(), random));
 		out.add(def.lo() >= 40
-			? new ItemStack(ModItems.CONDENSED_ESSENCE, 1 + random.nextInt(2))
-			: new ItemStack(ModItems.ESSENCE, 3 + random.nextInt(5)));
+			? new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3))
+			: new ItemStack(ModItems.ESSENCE, 6 + random.nextInt(9)));
 		out.add(new ItemStack(ModItems.ENHANCEMENT_STONE, 1 + random.nextInt(2)));
 		out.removeIf(ItemStack::isEmpty);
 		return out;
@@ -64,7 +64,7 @@ public final class LairLoot {
 			out.add(Consumables.forLevel(def.lo(), random));
 		}
 		if (random.nextFloat() < 0.5F) {
-			out.add(new ItemStack(ModItems.ESSENCE, 1 + random.nextInt(3)));
+			out.add(new ItemStack(ModItems.ESSENCE, 2 + random.nextInt(5)));
 		}
 		if (random.nextFloat() < 0.25F) {
 			out.add(new ItemStack(ModItems.ENHANCEMENT_STONE));

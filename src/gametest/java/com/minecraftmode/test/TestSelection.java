@@ -17,7 +17,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
  * tests (title screen, no server) still hold.
  */
 final class TestSelection {
-	private static final Set<String> MANUAL = Set.of("multiplayer");
+	private static final Set<String> MANUAL = Set.of("multiplayer", "damage");
 	private static final Set<String> PICKED = Arrays.stream(System.getProperty("minecraft_mode.tests", "").split(","))
 		.map(s -> s.trim().toLowerCase(Locale.ROOT))
 		.filter(s -> !s.isEmpty())

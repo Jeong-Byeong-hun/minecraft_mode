@@ -16,9 +16,16 @@
 			"com.minecraftmode.test.EndgameClientGameTest",
 			"com.minecraftmode.test.ContentClientGameTest",
 			"com.minecraftmode.test.TownClientGameTest",
-			"com.minecraftmode.test.MultiplayerClientGameTest"
+			"com.minecraftmode.test.MultiplayerClientGameTest",
+			"com.minecraftmode.test.DamageClientGameTest"
 		]
 	},
+	"mixins": [
+		{
+			"config": "minecraft_mode_test.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"minecraft_mode": "*"
 	}

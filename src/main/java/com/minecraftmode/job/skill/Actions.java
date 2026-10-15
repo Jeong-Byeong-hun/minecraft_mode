@@ -2,6 +2,7 @@ package com.minecraftmode.job.skill;
 
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
+import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 import com.minecraftmode.progress.Contribution;
@@ -304,7 +305,60 @@ public final class Actions {
 			public double estimate(final int targets) {
 				return estimate.applyAsDouble(targets);
 			}
+
+			@Override
+			public List<SkillSupport> supports() {
+				return action.supports();
+			}
 		};
+	}
+
+	/** {@code action} that also reports {@code supports} (for the class docs' estimate, {@link SkillAction#supports}). */
+	private static SkillAction supporting(final SkillAction action, final List<SkillSupport> supports) {
+		if (supports.isEmpty()) {
+			return action;
+		}
+		return new SkillAction() {
+			@Override
+			public void run(final SkillContext ctx) {
+				action.run(ctx);
+			}
+
+			@Override
+			public Component describe() {
+				return action.describe();
+			}
+
+			@Override
+			public boolean isModifier() {
+				return action.isModifier();
+			}
+
+			@Override
+			public boolean moves() {
+				return action.moves();
+			}
+
+			@Override
+			public boolean damages() {
+				return action.damages();
+			}
+
+			@Override
+			public double estimate(final int targets) {
+				return action.estimate(targets);
+			}
+
+			@Override
+			public List<SkillSupport> supports() {
+				return supports;
+			}
+		};
+	}
+
+	/** Vulnerability from {@code effect} at {@code amplifier} (15% a level, {@code CombatHooks}), or none for any other effect. */
+	private static List<SkillSupport> vulnerable(final Holder<MobEffect> effect, final double seconds, final int amplifier) {
+		return effect.equals(ModEffects.VULNERABLE) ? List.of(new SkillSupport(SkillSupport.Kind.VULNERABLE, 15.0 * (amplifier + 1), seconds, 0)) : List.of();
 	}
 
 	/** {@code mult} on each of {@code targets} for one area hit (see {@link SkillContext#areaShare}). */
@@ -624,22 +678,32 @@ public final class Actions {
 			int shots = this.shots();
 			// homing shots of one fan split the enemies between them, as estimate() counts them
 			SkillProjectile.Volley volley = this.homing && shots > 1 ? new SkillProjectile.Volley() : null;
+			// and every shot of a fan hits each enemy once (BasicAttacks.Fan, as for basic shots): point blank or on a wide boss the
+			// side shots of a fan landed on the lone target too, two to five times what estimate() counts (found by DamageClientGameTest)
+			BasicAttacks.Fan fan = this.fans() ? new BasicAttacks.Fan() : null;
 			for (int i = 0; i < shots; i++) {
 				double yaw = shots == 1 || this.parallel > 0.0 ? 0.0 : -this.spread / 2 + this.spread * i / (shots - 1);
 				double side = shots == 1 || this.parallel <= 0.0 ? 0.0 : -this.parallel / 2 + this.parallel * i / (shots - 1);
 				if (this.interval > 0 && i > 0) {
 					SkillScheduler.schedule(i * this.interval, () -> {
 						if (ctx.valid()) {
-							this.fire(ctx, yaw, side, volley);
+							this.fire(ctx, yaw, side, volley, fan);
 						}
 					});
 				} else {
-					this.fire(ctx, yaw, side, volley);
+					this.fire(ctx, yaw, side, volley, fan);
 				}
 			}
 		}
 
-		private void fire(final SkillContext ctx, final double yawOffset, final double side, final SkillProjectile.@Nullable Volley volley) {
+		/** A fan: several shots spread over an angle (shots side by side or straight ahead are meant to all reach the same target). */
+		private boolean fans() {
+			return this.shots() > 1 && this.parallel <= 0.0 && this.spread > 0.0;
+		}
+
+		private void fire(
+			final SkillContext ctx, final double yawOffset, final double side, final SkillProjectile.@Nullable Volley volley, final BasicAttacks.@Nullable Fan fan
+		) {
 			ServerPlayer p = ctx.caster;
 			Vec3 eye = p.getEyePosition().add(0, -0.15, 0);
 			float pitch = p.getXRot();
@@ -654,7 +718,7 @@ public final class Actions {
 			}
 			Vec3 dir = Vec3.directionFromRotation(pitch, (float)(yaw + yawOffset));
 			Vec3 from = side == 0.0 ? eye : SkillContext.openPoint(p, eye.add(Vec3.directionFromRotation(0.0F, yaw + 90.0F).scale(side)));
-			SkillProjectile shot = spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false);
+			SkillProjectile shot = spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false, fan);
 			if (shot != null && volley != null) {
 				// the middle shot flies at the enemy in the crosshair and keeps it
 				shot.volley(volley, yawOffset == 0.0 && side == 0.0 ? aimed : null);
@@ -664,8 +728,8 @@ public final class Actions {
 
 		/**
 		 * Side by side or straight ahead every shot reaches a lone target; a fan sends only its middle one at it, and the rest at others
-		 * nearby (homing shots too: they split the enemies between them, {@link SkillProjectile.Volley}). Piercing ones go through the
-		 * pack, exploding ones hit everyone around where they land.
+		 * nearby (each enemy takes one shot of a fan, {@link BasicAttacks.Fan}, however close or wide it is; homing shots split the enemies
+		 * between them, {@link SkillProjectile.Volley}). Piercing ones go through the pack, exploding ones hit everyone around where they land.
 		 */
 		@Override
 		public double estimate(final int targets) {
@@ -708,13 +772,31 @@ public final class Actions {
 		final @Nullable BiConsumer<SkillContext, Vec3> impact,
 		final boolean randomWeapon
 	) {
+		return spawn(ctx, style, from, dir, speed, mult, pierce, explode, homing, impact, randomWeapon, null);
+	}
+
+	/** {@link #spawn} as one shot of {@code fan}: each enemy takes one of its shots. */
+	static @Nullable SkillProjectile spawn(
+		final SkillContext ctx,
+		final ProjectileStyle style,
+		final Vec3 from,
+		final Vec3 dir,
+		final float speed,
+		final double mult,
+		final int pierce,
+		final float explode,
+		final boolean homing,
+		final @Nullable BiConsumer<SkillContext, Vec3> impact,
+		final boolean randomWeapon,
+		final BasicAttacks.@Nullable Fan fan
+	) {
 		if (style == ProjectileStyle.ARROW && pierce == 0 && explode == 0 && !homing && impact == null) {
 			Arrow arrow = new Arrow(ctx.level, ctx.caster, new ItemStack(Items.ARROW), ctx.stack);
 			arrow.setPos(from.x, from.y, from.z);
 			arrow.shoot(dir.x, dir.y, dir.z, speed, 0.0F);
 			arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
 			arrow.setCritArrow(true);
-			CombatHooks.trackSkillArrow(arrow, ctx, mult);
+			CombatHooks.trackSkillArrow(arrow, ctx, mult, fan);
 			ctx.level.addFreshEntity(arrow);
 			SkillScheduler.schedule(100, arrow::discard);
 			return null;
@@ -730,6 +812,7 @@ public final class Actions {
 			.explode(explode)
 			.homing(homing)
 			.onImpact(impact)
+			.fan(fan)
 			.launch(from, dir, speed);
 		ctx.level.addFreshEntity(projectile);
 		return projectile;
@@ -1050,7 +1133,7 @@ public final class Actions {
 
 	/** Effect on every enemy around the caster (no damage). */
 	public static SkillAction debuff(final double radius, final Holder<MobEffect> effect, final double seconds, final int amplifier) {
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			double r = ctx.area(radius);
 			for (LivingEntity e : ctx.enemiesNear(ctx.caster.position(), r)) {
 				e.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), ctx.caster);
@@ -1059,7 +1142,7 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), r);
 			sound(ctx, SoundEvents.EVOKER_CAST_SPELL, 0.7F, 0.7F);
-		}, Component.translatable(DEBUFF, num(radius), effectName(effect), level(amplifier), num(seconds)));
+		}, Component.translatable(DEBUFF, num(radius), effectName(effect), level(amplifier), num(seconds))), vulnerable(effect, seconds, amplifier));
 	}
 
 	public static SkillAction taunt(final double radius) {
@@ -1077,8 +1160,8 @@ public final class Actions {
 
 	/** Modifier: enemies hit by this skill get the effect. */
 	public static SkillAction inflict(final Holder<MobEffect> effect, final double seconds, final int amplifier) {
-		return modifier(ctx -> ctx.addOnHit((c, e) -> e.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), c.caster)),
-			Component.translatable(INFLICT, effectName(effect), level(amplifier), num(seconds)));
+		return supporting(modifier(ctx -> ctx.addOnHit((c, e) -> e.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), c.caster)),
+			Component.translatable(INFLICT, effectName(effect), level(amplifier), num(seconds))), vulnerable(effect, seconds, amplifier));
 	}
 
 	public static SkillAction stun(final double seconds) {
@@ -1183,17 +1266,17 @@ public final class Actions {
 	/** {@code pct}% more of {@code boost} for {@code seconds} (see {@link Boost}; {@code pct} in its steps). */
 	public static SkillAction boost(final Boost boost, final double seconds, final int pct) {
 		int amplifier = boost.amplifier(pct);
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			ctx.caster.addEffect(new MobEffectInstance(boost.effect(), (int)(seconds * 20), amplifier), ctx.caster);
 			ctx.fx.burst(ctx.level, Fx.Kind.SPARK, ctx.caster.position().add(0, 1.2, 0), 18, 0.5, 0.08);
 			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.6F, 1.7F);
-		}, boostText(boost, seconds, pct));
+		}, boostText(boost, seconds, pct)), List.of(SkillSupport.of(boost, pct, seconds)));
 	}
 
 	/** {@link #boost} for the caster and every ally within {@code radius}. */
 	public static SkillAction allyBoost(final double radius, final Boost boost, final double seconds, final int pct) {
 		int amplifier = boost.amplifier(pct);
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
 				ally.addEffect(new MobEffectInstance(boost.effect(), (int)(seconds * 20), amplifier), ctx.caster);
 				Contribution.buffed(ctx.caster, ally, (int)(seconds * 20));
@@ -1201,7 +1284,7 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
 			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.7F, 1.4F);
-		}, Component.translatable(ALLY_BOOST, num(radius), boostText(boost, seconds, pct)));
+		}, Component.translatable(ALLY_BOOST, num(radius), boostText(boost, seconds, pct))), List.of(SkillSupport.of(boost, pct, seconds)));
 	}
 
 	private static Component boostText(final Boost boost, final double seconds, final int pct) {
@@ -1214,18 +1297,18 @@ public final class Actions {
 	}
 
 	public static SkillAction empower(final int hits, final double bonusPct, final double seconds) {
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			CombatState state = CombatState.of(ctx.caster);
 			state.empowerHits = hits;
 			state.empowerBonus = (float)(bonusPct / 100.0);
 			state.empowerUntil = ctx.level.getGameTime() + (long)(seconds * 20);
 			ctx.fx.burst(ctx.level, Fx.Kind.SPARK, ctx.caster.position().add(0, 1.2, 0), 20, 0.5, 0.1);
 			sound(ctx, SoundEvents.BLAZE_SHOOT, 0.4F, 1.6F);
-		}, Component.translatable(EMPOWER, hits, num(bonusPct), num(seconds)));
+		}, Component.translatable(EMPOWER, hits, num(bonusPct), num(seconds))), List.of(new SkillSupport(SkillSupport.Kind.EMPOWER, bonusPct, seconds, hits)));
 	}
 
 	public static SkillAction stealth(final double seconds, final double bonusPct) {
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			ctx.caster.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, (int)(seconds * 20), 0, false, false, true), ctx.caster);
 			CombatState state = CombatState.of(ctx.caster);
 			state.stealthBonus = (float)(bonusPct / 100.0);
@@ -1235,11 +1318,11 @@ public final class Actions {
 			}
 			ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, ctx.caster.position().add(0, 1, 0), 30, 0.6, 0.02);
 			sound(ctx, SoundEvents.ILLUSIONER_MIRROR_MOVE, 0.8F, 1.0F);
-		}, Component.translatable(STEALTH, num(seconds), num(bonusPct)));
+		}, Component.translatable(STEALTH, num(seconds), num(bonusPct))), List.of(new SkillSupport(SkillSupport.Kind.EMPOWER, bonusPct, seconds, 1)));
 	}
 
 	public static SkillAction mark(final double range, final double seconds, final double bonusPct) {
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -1249,7 +1332,7 @@ public final class Actions {
 			target.addEffect(new MobEffectInstance(MobEffects.GLOWING, (int)(seconds * 20), 0), ctx.caster);
 			ctx.fx.still(ctx.level, Fx.Kind.RUNE, target.position().add(0, target.getBbHeight() + 0.5, 0));
 			sound(ctx, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6F, 0.6F);
-		}, Component.translatable(MARK, num(range), num(seconds), num(bonusPct)));
+		}, Component.translatable(MARK, num(range), num(seconds), num(bonusPct))), List.of(new SkillSupport(SkillSupport.Kind.MARK, bonusPct, seconds, 0)));
 	}
 
 	public static SkillAction cleanse() {
@@ -1291,7 +1374,7 @@ public final class Actions {
 	}
 
 	public static SkillAction refresh(final double pct) {
-		return action(ctx -> {
+		return supporting(action(ctx -> {
 			long now = ctx.level.getGameTime();
 			var data = JobProgression.get(ctx.caster);
 			Map<String, Long> cooldowns = new HashMap<>(data.cooldowns());
@@ -1309,7 +1392,7 @@ public final class Actions {
 			}
 			JobProgression.set(ctx.caster, data.withCooldowns(cooldowns));
 			ctx.fx.burst(ctx.level, Fx.Kind.SPARK, ctx.caster.position().add(0, 1.5, 0), 15, 0.3, 0.1);
-		}, Component.translatable(REFRESH, num(pct)));
+		}, Component.translatable(REFRESH, num(pct))), List.of(new SkillSupport(SkillSupport.Kind.REFRESH, pct, 0.0, 0)));
 	}
 
 	public enum Summon {
@@ -1404,7 +1487,7 @@ public final class Actions {
 
 	/** Runs {@code action} {@code times} times, {@code intervalTicks} apart (the first right away). */
 	public static SkillAction repeat(final int times, final int intervalTicks, final SkillAction action) {
-		return estimated(wrap(action, ctx -> {
+		return keepSupports(estimated(wrap(action, ctx -> {
 			action.run(ctx);
 			for (int i = 1; i < times; i++) {
 				SkillScheduler.schedule(i * intervalTicks, () -> {
@@ -1413,15 +1496,20 @@ public final class Actions {
 					}
 				});
 			}
-		}, Component.translatable(REPEAT, action.describe(), times)), t -> times * action.estimate(t));
+		}, Component.translatable(REPEAT, action.describe(), times)), t -> times * action.estimate(t)), action);
+	}
+
+	/** A {@link #repeat} or {@link #delay} of {@code inner} with its supports (a repeated buff still lasts as long, a delayed one too). */
+	private static SkillAction keepSupports(final SkillAction wrapped, final SkillAction inner) {
+		return supporting(wrapped, inner.supports());
 	}
 
 	public static SkillAction delay(final double seconds, final SkillAction action) {
-		return estimated(wrap(action, ctx -> SkillScheduler.schedule((int)(seconds * 20), () -> {
+		return keepSupports(estimated(wrap(action, ctx -> SkillScheduler.schedule((int)(seconds * 20), () -> {
 			if (ctx.valid()) {
 				action.run(ctx);
 			}
-		}), Component.translatable(DELAY, action.describe(), num(seconds))), action::estimate);
+		}), Component.translatable(DELAY, action.describe(), num(seconds))), action::estimate), action);
 	}
 
 	private Actions() {

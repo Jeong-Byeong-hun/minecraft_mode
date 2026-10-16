@@ -50,6 +50,10 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 	private @Nullable Vec3 ownerLast;
 	private boolean ownerCrouched;
 	private int reactCooldown;
+	/** Where the pet keeps looking after a kill, and for how many more ticks. */
+	private @Nullable Vec3 watching;
+	private int watchTicks;
+	private static final int WATCH_TICKS = 20;
 	private int animCounter;
 	/** Client: tickCount when the current animation arrived. Server: when it started. */
 	private int animStart;
@@ -76,7 +80,8 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 	public void onSyncedDataUpdated(final EntityDataAccessor<?> key) {
 		super.onSyncedDataUpdated(key);
 		if (DATA_ANIM.equals(key)) {
-			this.animStart = this.tickCount;
+			// the first value arrives with the spawn (tick 0): an old reaction, already over, not one to play now
+			this.animStart = this.tickCount == 0 ? -CreatureAnim.values().length * 1000 : this.tickCount;
 		}
 	}
 
@@ -170,6 +175,9 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 			return;
 		}
 		this.watch(owner);
+		if (this.watchTicks > 0) {
+			this.watchTicks--;
+		}
 		double dist = this.distanceToSqr(owner);
 		if (dist > 20 * 20) {
 			Vec3 at = owner.position().add(owner.getLookAngle().scale(-1.5)).add(0, this.isFlyingCreature() ? 1.6 : 0.2, 0);
@@ -231,9 +239,19 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 		}
 		this.reactCooldown = REACT_COOLDOWN;
 		this.ownerStill = 0;
-		this.getLookControl().setLookAt(victim, 90.0F, 90.0F);
+		this.watching = victim.getEyePosition();
+		this.watchTicks = WATCH_TICKS;
 		this.hop(Flair.of(def.id()).react());
 		Flair.react(level, this, victim, def.id());
+	}
+
+	/** Turns to the owner, or to a fresh kill while it still watches one. */
+	private void lookAt(final ServerPlayer owner) {
+		if (this.watchTicks > 0 && this.watching != null) {
+			this.getLookControl().setLookAt(this.watching.x, this.watching.y, this.watching.z, 90.0F, 90.0F);
+		} else {
+			this.getLookControl().setLookAt(owner, 30.0F, 30.0F);
+		}
 	}
 
 	/** Plays {@code anim}; a leap also lifts a walker off the ground. */
@@ -261,7 +279,7 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 			this.yHeadRot = owner.getYHeadRot();
 		} else {
 			this.setDeltaMovement(to.scale(to.length() > 6 ? 0.25 : settled ? 0.3 : 0.12));
-			this.getLookControl().setLookAt(owner, 30.0F, 30.0F);
+			this.lookAt(owner);
 		}
 		this.setResting(perched);
 	}
@@ -280,7 +298,7 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 					this.getNavigation().stop();
 				}
 			}
-			this.getLookControl().setLookAt(owner, 30.0F, 30.0F);
+			this.lookAt(owner);
 		}
 		this.setResting(rest);
 	}

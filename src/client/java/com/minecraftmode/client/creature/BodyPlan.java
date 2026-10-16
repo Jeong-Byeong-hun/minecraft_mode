@@ -50,7 +50,20 @@ public final class BodyPlan {
 		/** Spins slowly around its pivot (rings, orbiting skulls). */
 		ORBIT,
 		CAPE,
+		/** Lower leg under a {@link #LEG_QUAD} (same index) or a biped leg (10 right, 11 left): bends at the knee in stride. */
+		SHIN,
+		/** Twitches now and then; index 0 right, 1 left. */
+		EAR,
 		EXTRA
+	}
+
+	/** How a companion rests while its owner stands still. */
+	public enum Rest {
+		NONE,
+		/** Haunches down, front legs straight (cats, foxes). */
+		SIT,
+		/** Belly on the ground, legs splayed (turtles, beetles). */
+		LIE
 	}
 
 	public record Box(float x, float y, float z, int w, int h, int d, float inflate) {
@@ -102,12 +115,21 @@ public final class BodyPlan {
 	public final float scale;
 	public final List<Part> parts;
 	public final Map<String, Skin> skins;
+	public final Rest rest;
+	/** Wings fold along the body when not flying, and legs tuck in flight. */
+	public final boolean folds;
+	/** Painted with soft light from above: side faces fade from bright at the top to dark at the bottom. */
+	public final boolean shaded;
 	private @Nullable List<PlacedBox> placed;
 	private int texWidth;
 	private int texHeight;
 
-	private BodyPlan(final String id, final Rig rig, final float scale, final List<Part> parts, final Map<String, Skin> skins) {
+	private BodyPlan(final String id, final Rig rig, final float scale, final List<Part> parts, final Map<String, Skin> skins, final Rest rest,
+		final boolean folds, final boolean shaded) {
+		this.shaded = shaded;
 		this.id = id;
+		this.rest = rest;
+		this.folds = folds;
 		this.rig = rig;
 		this.scale = scale;
 		this.parts = List.copyOf(parts);
@@ -208,6 +230,9 @@ public final class BodyPlan {
 		private final List<Part> parts = new ArrayList<>();
 		private final Map<String, Part> byName = new LinkedHashMap<>();
 		private final Map<String, Skin> skins = new LinkedHashMap<>();
+		private Rest rest = Rest.NONE;
+		private boolean folds;
+		private boolean shaded;
 
 		Builder(final String id, final Rig rig) {
 			this.id = id;
@@ -216,6 +241,21 @@ public final class BodyPlan {
 
 		public Builder scale(final float scale) {
 			this.scale = scale;
+			return this;
+		}
+
+		public Builder rest(final Rest rest) {
+			this.rest = rest;
+			return this;
+		}
+
+		public Builder shaded() {
+			this.shaded = true;
+			return this;
+		}
+
+		public Builder folds() {
+			this.folds = true;
 			return this;
 		}
 
@@ -255,7 +295,7 @@ public final class BodyPlan {
 					throw new IllegalArgumentException(this.id + ": part " + part.name + " uses unknown skin " + part.skin);
 				}
 			}
-			return new BodyPlan(this.id, this.rig, this.scale, this.parts, this.skins);
+			return new BodyPlan(this.id, this.rig, this.scale, this.parts, this.skins, this.rest, this.folds, this.shaded);
 		}
 	}
 }

@@ -297,6 +297,10 @@ public final class Companions {
 		}
 		for (Contribution.Share share : shares) {
 			growPet(share.player(), entity);
+			PetEntity pet = summonedPet(share.player());
+			if (pet != null) {
+				pet.react(entity);
+			}
 		}
 	}
 
@@ -417,12 +421,16 @@ public final class Companions {
 		pet.setOwner(owner.getUUID());
 		pet.snapTo(owner.getX() + 1, owner.getY(), owner.getZ() + 1, owner.getYRot(), 0.0F);
 		level.addFreshEntity(pet);
+		Flair.arrive(level, pet, def.id());
 		SUMMONED.put(owner.getUUID(), pet.getUUID());
 	}
 
 	public static void dismissPet(final ServerPlayer owner) {
 		PetEntity pet = summonedPet(owner);
 		if (pet != null) {
+			if (pet.level() instanceof ServerLevel level) {
+				Flair.leave(level, pet);
+			}
 			pet.discard();
 		}
 		SUMMONED.remove(owner.getUUID());
@@ -445,6 +453,7 @@ public final class Companions {
 	public static void toggleMount(final ServerPlayer owner, final String id) {
 		if (owner.getVehicle() instanceof MountEntity mount) {
 			owner.stopRiding();
+			Flair.leave(owner.level(), mount);
 			mount.discard();
 			return;
 		}
@@ -482,6 +491,7 @@ public final class Companions {
 		level.addFreshEntity(mount);
 		owner.startRiding(mount);
 		set(owner, data.withLastMount(id));
+		Flair.arrive(level, mount, id);
 		level.playSound(null, owner.getX(), owner.getY(), owner.getZ(), SoundEvents.HORSE_SADDLE.value(), SoundSource.PLAYERS, 0.8F, 1.0F);
 		return true;
 	}

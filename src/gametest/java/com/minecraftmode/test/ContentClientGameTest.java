@@ -22,6 +22,7 @@ import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.consumable.Consumables;
+import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.craft.CraftMenu;
 import com.minecraftmode.craft.CraftPrices;
 import com.minecraftmode.craft.CraftRecipes;
@@ -446,6 +447,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			level.addFreshEntity(zombie);
 			zombie.hurtServer(level, player.damageSources().playerAttack(player), 10000.0F);
 			require(Companions.data(player).pets().get("ember_fox") == 1, "a kill gives the summoned pet experience");
+			require(Companions.summonedPet(player).anim() == CreatureAnim.LEAP, "the fox should leap for its owner's kill");
 			// a mount whistle: ride it, the flyer keeps the rider, the key gets off and sends it away
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Companions.mountItem("storm_griffin")));
 			player.getMainHandItem().use(level, player, InteractionHand.MAIN_HAND);
@@ -522,6 +524,44 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			if (pet != null) {
 				pet.setNoAi(false);
 			}
+			// a sprinting rider speeds any mount up; flyers take off with jump held, so they show no jump bar
+			MountEntity griffin = Companions.mountType(Companions.mount("storm_griffin")).create(player.level(), EntitySpawnReason.COMMAND);
+			MountEntity stallion = Companions.mountType(Companions.mount("swift_stallion")).create(player.level(), EntitySpawnReason.COMMAND);
+			require(griffin.canSprint() && stallion.canSprint() && !griffin.canJump() && stallion.canJump(), "mounts let riders sprint; only ground mounts charge a jump");
+		});
+
+		// a walking pet sits by an owner who stands still and gets up when they move; a flying one lands on their shoulder
+		server.runCommand("tp @p 20.5 -60 0.5 0 0");
+		context.waitTicks(PetEntity.SETTLE_TICKS + 40);
+		server.runOnServer(s -> {
+			PetEntity pet = Companions.summonedPet(connection.getServerPlayer());
+			require(pet != null && pet.isResting(), "the fox should sit down by its still owner");
+		});
+		// crouching by a resting pet makes it hop
+		server.runOnServer(s -> connection.getServerPlayer().setShiftKeyDown(true));
+		context.waitTicks(2);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.setShiftKeyDown(false);
+			PetEntity pet = Companions.summonedPet(player);
+			require(pet != null && pet.anim() == CreatureAnim.LEAP, "the fox should hop when its owner crouches by it");
+		});
+		server.runCommand("tp @p 23.5 -60 0.5 0 0");
+		context.waitTicks(3);
+		server.runOnServer(s -> {
+			PetEntity pet = Companions.summonedPet(connection.getServerPlayer());
+			require(pet != null && !pet.isResting(), "the fox should get up when its owner moves");
+			Companions.summonPet(connection.getServerPlayer(), "frost_owl");
+		});
+		context.waitTicks(PetEntity.SETTLE_TICKS + 60);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			PetEntity owl = Companions.summonedPet(player);
+			require(owl != null && owl.isResting(), "the owl should land on its still owner's shoulder");
+			double above = owl.getY() - player.getY();
+			double aside = Math.hypot(owl.getX() - player.getX(), owl.getZ() - player.getZ());
+			require(aside < 0.6 && above > 1.2 && above < 1.6, "the perched owl should sit on the shoulder: " + aside + " aside, " + above + " up");
+			Companions.summonPet(player, "ember_fox");
 		});
 
 		// every pet and mount in a lineup
@@ -537,22 +577,43 @@ public class ContentClientGameTest implements FabricClientGameTest {
 				pet.setOwner(player.getUUID());
 				pet.setNoAi(true);
 				pet.snapTo(20.5 - 6.0 + i * 1.7, -60 + (def.flying() ? 1.0 : 0.0), 5.5, 180.0F, 0.0F);
+				pet.setYBodyRot(180.0F);
+				pet.setYHeadRot(180.0F);
 				level.addFreshEntity(pet);
 				i++;
 			}
-			i = 0;
-			for (Companions.MountDef def : Companions.mounts()) {
-				MountEntity mount = Companions.mountType(def).create(level, EntitySpawnReason.COMMAND);
-				mount.setup(player);
-				mount.setNoAi(true);
-				mount.snapTo(20.5 - 9.0 + i * 3.6, -60, 11.0, 180.0F, 0.0F);
-				level.addFreshEntity(mount);
-				i++;
-			}
+			mountLineup(player);
 		});
 		context.getInput().lookAt(new BlockPos(20, -59, 8));
 		context.waitTicks(25);
 		shot(context, "content_companions");
+		// and resting: walkers sit or lie down, flyers fold their wings
+		server.runOnServer(s -> {
+			for (PetEntity pet : connection.getServerPlayer().level().getEntitiesOfClass(PetEntity.class, connection.getServerPlayer().getBoundingBox().inflate(30))) {
+				pet.setResting(true);
+			}
+		});
+		context.waitTicks(5);
+		shot(context, "content_companions_resting");
+		// close-ups: resting pets (three or so per shot), then the mounts two by two
+		for (int k = 0; k < 3; k++) {
+			double x = 15.3 + k * 4.6;
+			server.runCommand(String.format(java.util.Locale.ROOT, "tp @p %.1f -60 2.3 0 10", x));
+			context.waitTicks(10);
+			shot(context, "content_pets_close" + k);
+		}
+		for (int k = 0; k < 3; k++) {
+			double x = 13.3 + k * 7.2;
+			server.runCommand(String.format(java.util.Locale.ROOT, "tp @p %.1f -60 5.5 0 12", x));
+			// a mount nobody rides leaves after a few seconds: line them up again for every shot
+			server.runOnServer(s -> {
+				ServerPlayer player = connection.getServerPlayer();
+				player.level().getEntitiesOfClass(MountEntity.class, player.getBoundingBox().inflate(30)).forEach(Entity::discard);
+				mountLineup(player);
+			});
+			context.waitTicks(10);
+			shot(context, "content_mounts_close" + k);
+		}
 		server.runOnServer(s -> {
 			for (Entity e : connection.getServerPlayer().level().getEntitiesOfClass(Entity.class, connection.getServerPlayer().getBoundingBox().inflate(30),
 				e -> e instanceof PetEntity || e instanceof MountEntity)) {
@@ -560,6 +621,21 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			}
 			Companions.summonPet(connection.getServerPlayer(), "ember_fox");
 		});
+	}
+
+	/** Every mount in a row at z 11, facing north. */
+	private static void mountLineup(final ServerPlayer player) {
+		int i = 0;
+		for (Companions.MountDef def : Companions.mounts()) {
+			MountEntity mount = Companions.mountType(def).create(player.level(), EntitySpawnReason.COMMAND);
+			mount.setup(player);
+			mount.setNoAi(true);
+			mount.snapTo(20.5 - 9.0 + i * 3.6, -60, 11.0, 180.0F, 0.0F);
+			mount.setYBodyRot(180.0F);
+			mount.setYHeadRot(180.0F);
+			player.level().addFreshEntity(mount);
+			i++;
+		}
 	}
 
 	// ------------------------------------------------------------------ dungeons

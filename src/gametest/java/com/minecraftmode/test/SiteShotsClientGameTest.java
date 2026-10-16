@@ -79,6 +79,9 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 	private static final String CONTENT_PAGE = "/wiki/content/";
 	/** Time for new terrain around a far teleport to generate and draw. */
 	private static final int TERRAIN_TICKS = 160;
+	/** A boss whose model is this many times longer than it is tall is shot from three-quarters, this far round from the front. */
+	private static final double LONG_BODY = 3.0;
+	private static final float THREE_QUARTERS = (float)Math.toRadians(55.0);
 	/** Clear ground a camera spot must have in front of the subject. */
 	private static final double OPEN_DISTANCE = 3.0;
 	private static final Map<String, String> CITY_CAPTIONS = Map.ofEntries(
@@ -386,13 +389,20 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 			GearRaidClientGameTest.stageBoss(server, connection, def, slot);
 			context.waitTicks(20);
 			final int arena = slot;
-			// from where the party arrives the boss is small; step in front of it, as far back as its size needs
+			// from where the party arrives the boss is small; step in front of it, as far back as its model needs (winged bosses
+			// spread far past their hitbox), aiming at the middle of the model rather than of the hitbox
+			ModelSize model = ModelSize.of(def.id());
 			View view = server.computeOnServer(s -> {
 				RaidBoss boss = RaidDimension.level(s).getEntitiesOfClass(RaidBoss.class, new AABB(arena * 1024 - 60, 0, -60, arena * 1024 + 60, 200, 60)).getFirst();
-				Vec3 middle = boss.position().add(0.0, boss.getBbHeight() * 0.5, 0.0);
-				double distance = Math.max(5.0, boss.getBbWidth() * 1.4 + boss.getBbHeight() * 0.9);
+				double tall = Math.max(boss.getBbHeight(), model.above());
+				Vec3 middle = boss.position().add(0.0, tall * 0.5, 0.0);
+				double distance = Math.max(Math.max(5.0, boss.getBbWidth() * 1.4 + boss.getBbHeight() * 0.9), Math.max(tall * 1.1, model.span() * 0.6) + 2.0);
 				Vec3 ahead = boss.getForward().multiply(1.0, 0.0, 1.0).normalize().scale(distance);
-				return new View(middle.add(ahead).add(0.0, boss.getBbHeight() * 0.2 + 0.5, 0.0), middle);
+				if (model.span() > tall * LONG_BODY) {
+					// a long body (a dragon) seen head on is all neck and head: show it from three-quarters instead
+					ahead = ahead.yRot(THREE_QUARTERS);
+				}
+				return new View(middle.add(ahead).add(0.0, tall * 0.2 + 0.5, 0.0), middle);
 			});
 			moveCamera(context, server, RaidDimension.LEVEL, view, TERRAIN_TICKS / 2);
 			String heading = def.ko() + " — " + def.epithetKo();

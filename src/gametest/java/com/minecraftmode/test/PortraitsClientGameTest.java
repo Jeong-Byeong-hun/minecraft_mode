@@ -9,11 +9,7 @@ import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
-import com.minecraftmode.client.creature.BodyPlan;
-import com.minecraftmode.client.creature.CreaturePlans;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -98,31 +94,6 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 		}
 	}
 
-	/** The largest side of the model's rest pose in blocks (pivots added up, rotations left out, like the datagen preview). */
-	private static double span(final String id) {
-		BodyPlan plan = CreaturePlans.get(id);
-		if (plan == null) {
-			return 0.0;
-		}
-		Map<String, float[]> origin = new HashMap<>();
-		float[] min = {Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE};
-		float[] max = {-Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE};
-		for (BodyPlan.Part part : plan.parts) {
-			float[] parent = part.parent == null ? new float[3] : origin.get(part.parent);
-			float[] o = {parent[0] + part.px, parent[1] + part.py, parent[2] + part.pz};
-			origin.put(part.name, o);
-			for (BodyPlan.Box box : part.boxes) {
-				float[] lo = {o[0] + box.x(), o[1] + box.y(), o[2] + box.z()};
-				float[] size = {box.w(), box.h(), box.d()};
-				for (int k = 0; k < 3; k++) {
-					min[k] = Math.min(min[k], lo[k]);
-					max[k] = Math.max(max[k], lo[k] + size[k]);
-				}
-			}
-		}
-		return Math.max(max[0] - min[0], Math.max(max[1] - min[1], max[2] - min[2])) * plan.scale / 16.0;
-	}
-
 	/** Spawns {@code id} alone (no AI) in {@code pose}, steps back as far as its size needs and takes the picture. */
 	private static void portrait(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final String id,
 		final double lift, final Pose pose) {
@@ -148,7 +119,7 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 			return new double[] {e.getBbWidth(), e.getBbHeight()};
 		});
 		// frame the whole model, which reaches well past its hitbox (tails, wings, weapons)
-		double distance = Math.max(1.3, Math.max(span(id), Math.max(size[0], size[1])) * 0.95 + 0.8);
+		double distance = Math.max(1.3, Math.max(ModelSize.of(id).span(), Math.max(size[0], size[1])) * 0.95 + 0.8);
 		double centre = -60 + lift + size[1] * 0.5;
 		double eyeHeight = centre + distance * 0.15;
 		float pitch = (float)Math.toDegrees(Math.atan2(eyeHeight - centre, distance));

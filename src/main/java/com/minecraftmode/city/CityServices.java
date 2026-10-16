@@ -75,6 +75,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class CityServices {
 	public static void init() {
+		HomesteadLand.init();
 		ServerLifecycleEvents.SERVER_STARTED.register(CityServices::setSpawn);
 		// Items that change blocks without placing one (fire, stripping, paths, tilling, bone meal, wax, dye...) bypass
 		// Player.mayUseItemAt, so the protected zones refuse them here; doors, chests, tables and NPCs still work.

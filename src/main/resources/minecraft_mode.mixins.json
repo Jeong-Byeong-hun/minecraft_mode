@@ -12,6 +12,7 @@
 		"DispenserBlockMixin",
 		"DragonSittingPhaseMixin",
 		"EndermanMixin",
+		"EnvironmentValueSamplerMixin",
 		"FireBlockMixin",
 		"FlowingFluidMixin",
 		"HopperBlockEntityMixin",

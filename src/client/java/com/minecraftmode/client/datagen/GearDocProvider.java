@@ -111,6 +111,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.Item;
 import org.jspecify.annotations.Nullable;
 import net.minecraft.world.item.ItemStack;
@@ -726,6 +727,12 @@ public class GearDocProvider implements DataProvider {
 		md.append("- **대상 체력 바**: 마지막으로 때린 몬스터의 이름과 체력이 화면 위(보스 바 아래)에 ").append(TargetHealthHud.SHOW_TICKS / 20).append("초 동안 보입니다.\n");
 		md.append("- **시련 사냥터**: 광장의 **사냥터지기 개릭**에게 말을 걸면, 진행 중인 시련에 아직 필요한 몬스터만 나오는 개인 사냥터(던전 차원)로 갑니다. 동시에 최대 ")
 			.append(TrialHunts.CAP).append("마리(보스는 한 마리씩, 엔더 드래곤은 엔드에서), 필요한 처치·증표를 다 채우면 ").append("몬스터가 더 나오지 않고 잠시 뒤 돌아옵니다. 입구의 자석석을 우클릭하면 언제든 나갑니다. 쓰러지면 광장으로 돌아옵니다.\n");
+		List<ShopOffers.Trade> crystals = ShopOffers.summonSupplies(EntityTypes.ENDER_DRAGON, 4);
+		List<ShopOffers.Trade> wither = ShopOffers.summonSupplies(EntityTypes.WITHER, 4);
+		md.append("- **보스 소환 재료**: 진행 중인 시련에 엔더 드래곤·위더 처치가 남아 있는 동안만 모험가 길드 상점이 그 보스를 부를 재료를 팝니다(처치하면 목록에서 빠짐, 4차 시련 기준 가격). ")
+			.append("엔드 수정 개당 ").append(Coins.format(asked(crystals.getFirst()))).append(" — 쓰러진 드래곤은 엔드 출구 차원문 네 면에 수정을 하나씩 놓으면 다시 나옵니다. ")
+			.append("위더 스켈레톤 해골 개당 ").append(Coins.format(asked(wither.get(0)))).append(", 영혼 모래 ").append(wither.get(1).resultCount()).append("개 ")
+			.append(Coins.format(asked(wither.get(1)))).append(" — 위더 하나에 해골 3개와 영혼 모래 4개. 워든·엘더 가디언·미스릴 골렘은 소환 아이템이 없고 개릭의 사냥터에서 나옵니다(위더도 나옴).\n");
 		md.append("- **전직 장비**: 전직할 때마다(1차 포함) 지금 레벨 구간에 맞는 직업 무기 1개와 방어구 한 벌(투구·흉갑·레깅스·부츠)을 받습니다. 직업·차수마다 한 번뿐입니다(직업 초기화 후 다시 받지 않음).\n\n");
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
@@ -968,6 +975,12 @@ public class GearDocProvider implements DataProvider {
 			case VERY_RARE -> "아주 희귀";
 			case LEGENDARY -> "전설";
 		};
+	}
+
+	/** Copper a shop line asks (both cost slots). */
+	private static int asked(final ShopOffers.Trade trade) {
+		int copper = Coins.value(trade.cost().asItem()) * trade.costCount();
+		return trade.extra() == null ? copper : copper + Coins.value(trade.extra().asItem()) * trade.extraCount();
 	}
 
 	private static String buyPrice(final Item item, final float copper) {

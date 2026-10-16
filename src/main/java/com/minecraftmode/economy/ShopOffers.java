@@ -11,6 +11,8 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.ItemLevels;
+import com.minecraftmode.job.quest.QuestDef;
+import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
@@ -24,6 +26,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -42,6 +46,8 @@ public final class ShopOffers {
 	private static final int UNLIMITED = Integer.MAX_VALUE;
 	/** A bag at the general store (copper): 4 silver. */
 	public static final int BAG_PRICE = 4 * Coins.SILVER;
+	/** Trial bosses {@link #summonSupplies} has supplies for. */
+	public static final List<EntityType<?>> SUMMONED = List.of(EntityTypes.ENDER_DRAGON, EntityTypes.WITHER);
 
 	/**
 	 * One line of a price list: pay {@code costCount} x {@code cost} (plus {@code extraCount} x
@@ -363,9 +369,44 @@ public final class ShopOffers {
 		list.add(sell(ModItems.CONDENSED_ESSENCE, 1, ModItems.COPPER_COIN, 3));
 		list.add(buy(ModItems.GOLD_COIN, 4, ModItems.CLASS_RESET_SCROLL, 1));
 		if (player != null) {
+			list.addAll(trialSupplies(player));
 			list.addAll(buybacks(player));
 		}
 		return list;
+	}
+
+	/** Summoning supplies for every boss the visitor's active trial still has to kill (see {@link #summonSupplies}). */
+	public static List<Trade> trialSupplies(final Player player) {
+		QuestDef quest = QuestService.active(player);
+		List<Trade> list = new ArrayList<>();
+		if (quest == null) {
+			return list;
+		}
+		for (EntityType<?> boss : SUMMONED) {
+			if (QuestService.stillHunts(player, boss)) {
+				list.addAll(summonSupplies(boss, quest.tier()));
+			}
+		}
+		return list;
+	}
+
+	/**
+	 * What the guild sells to raise {@code boss} for a trial of {@code tier}, offered only while the trial still needs the
+	 * kill: end crystals for the dragon (Garrick cannot pen it, and a slain dragon only comes back for four of them on the
+	 * exit portal) and wither skeleton skulls with soul sand for the Wither (Garrick brings one too, but the skulls are the
+	 * rare part of building one). The other trial bosses have no summoning item; Garrick's arena brings them. A whole summon
+	 * costs about one weapon of the trial tier's bracket, so it stays a trial errand rather than a way to buy the half level
+	 * a trial boss pays ({@link com.minecraftmode.job.JobEvents#TRIAL_BOSSES}).
+	 */
+	public static List<Trade> summonSupplies(final EntityType<?> boss, final int tier) {
+		int summon = GearShop.bracketPrice(JobProgression.levelForTier(tier));
+		if (boss == EntityTypes.ENDER_DRAGON) {
+			return List.of(priced(Math.max(1, summon / 4), Items.END_CRYSTAL));
+		}
+		if (boss == EntityTypes.WITHER) {
+			return List.of(priced(Math.max(1, summon / 3), Items.WITHER_SKELETON_SKULL), buy(ModItems.COPPER_COIN, 1, Items.SOUL_SAND, 4));
+		}
+		return List.of();
 	}
 
 	/** Class gear the visitor carries (worn armor excluded), one line per item kind. */

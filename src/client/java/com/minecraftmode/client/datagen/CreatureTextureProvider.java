@@ -5,7 +5,9 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.client.creature.BodyPlan;
 import com.minecraftmode.client.creature.CreaturePlans;
 import com.minecraftmode.client.creature.Skin;
+import com.minecraftmode.client.datagen.art.BlockbenchExport;
 import com.minecraftmode.client.datagen.art.CreaturePainter;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.imageio.ImageIO;
+import org.jspecify.annotations.Nullable;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
@@ -24,6 +27,11 @@ import net.minecraft.data.PackOutput;
  * Paints every creature plan ({@link CreaturePainter}) into {@code textures/entity/creature/<id>.png}
  * and its emissive {@code <id>_glow.png}, draws the spawn egg icons, and writes front/side views of all
  * plans to build/creature-preview.png for review.
+ *
+ * <p>Hand-painted textures win: {@code art/creature/<id>.png} (and optionally {@code <id>_glow.png}) in the project root
+ * replaces the painted texture when its size matches the plan's texture (otherwise a warning, and the painted one is used —
+ * the plan's boxes changed, so the layout moved). To start one, open {@code build/bbmodel/<id>.bbmodel} (written for every
+ * plan, with the current texture) in Blockbench, paint, and save the texture there.
  */
 public class CreatureTextureProvider implements DataProvider {
 	private final PackOutput output;
@@ -37,15 +45,82 @@ public class CreatureTextureProvider implements DataProvider {
 		Path assets = this.output.getOutputFolder(PackOutput.Target.RESOURCE_PACK).resolve(MinecraftMode.MOD_ID);
 		List<CompletableFuture<?>> writes = new ArrayList<>();
 		List<BufferedImage> previews = new ArrayList<>();
+		@Nullable Path root = this.projectRoot();
 		for (BodyPlan plan : CreaturePlans.all()) {
 			CreaturePainter.Painted painted = CreaturePainter.paint(plan);
-			writes.add(write(cache, assets.resolve("textures/entity/creature/" + plan.id + ".png"), painted.texture()));
-			writes.add(write(cache, assets.resolve("textures/entity/creature/" + plan.id + "_glow.png"), painted.glow()));
+			BufferedImage texture = painted.texture();
+			BufferedImage glow = painted.glow();
+			BufferedImage hand = handPainted(root, plan, plan.id);
+			if (hand != null) {
+				texture = hand;
+				// without its own glow file a hand-painted texture keeps the painted glow (same layout, so the eyes stay put)
+				BufferedImage handGlow = handPainted(root, plan, plan.id + "_glow");
+				if (handGlow != null) {
+					glow = handGlow;
+				}
+			}
+			writes.add(write(cache, assets.resolve("textures/entity/creature/" + plan.id + ".png"), texture));
+			writes.add(write(cache, assets.resolve("textures/entity/creature/" + plan.id + "_glow.png"), glow));
 			writes.add(write(cache, assets.resolve("textures/item/" + plan.id + "_spawn_egg.png"), egg(plan)));
-			previews.add(CreaturePainter.preview(plan, painted.texture(), 220));
+			previews.add(CreaturePainter.preview(plan, texture, 220));
+			writeBbmodel(root, plan, texture);
 		}
 		writePreview(previews);
 		return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
+	}
+
+	/** The project root (src/main/generated is three levels down), or null when the output is somewhere else. */
+	private @Nullable Path projectRoot() {
+		@Nullable Path p = this.output.getOutputFolder();
+		for (int i = 0; i < 3 && p != null; i++) {
+			p = p.getParent();
+		}
+		return p;
+	}
+
+	/** {@code art/creature/<name>.png} if it exists and fits the plan's texture layout. */
+	private static @Nullable BufferedImage handPainted(final @Nullable Path root, final BodyPlan plan, final String name) {
+		if (root == null) {
+			return null;
+		}
+		Path file = root.resolve("art/creature/" + name + ".png");
+		if (!Files.isRegularFile(file)) {
+			return null;
+		}
+		try {
+			BufferedImage image = ImageIO.read(file.toFile());
+			if (image == null) {
+				MinecraftMode.LOGGER.warn("{} is not a PNG; using the painted texture", file);
+				return null;
+			}
+			if (image.getWidth() != plan.textureWidth() || image.getHeight() != plan.textureHeight()) {
+				MinecraftMode.LOGGER.warn("{} is {}x{} but the {} layout is {}x{} (its boxes changed?); using the painted texture. Re-export build/bbmodel/{}.bbmodel and repaint",
+					file, image.getWidth(), image.getHeight(), plan.id, plan.textureWidth(), plan.textureHeight(), plan.id);
+				return null;
+			}
+			BufferedImage argb = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+			Graphics g = argb.getGraphics();
+			g.drawImage(image, 0, 0, null);
+			g.dispose();
+			return argb;
+		} catch (IOException e) {
+			MinecraftMode.LOGGER.warn("Could not read {}; using the painted texture", file, e);
+			return null;
+		}
+	}
+
+	/** build/bbmodel/<id>.bbmodel: the plan as a Blockbench project with its current texture, to paint over. */
+	private static void writeBbmodel(final @Nullable Path root, final BodyPlan plan, final BufferedImage texture) {
+		if (root == null) {
+			return;
+		}
+		try {
+			Path file = root.resolve("build/bbmodel/" + plan.id + ".bbmodel");
+			Files.createDirectories(file.getParent());
+			Files.writeString(file, BlockbenchExport.bbmodel(plan, texture));
+		} catch (IOException e) {
+			MinecraftMode.LOGGER.warn("Could not write the Blockbench model of {}", plan.id, e);
+		}
 	}
 
 	private static CompletableFuture<?> write(final CachedOutput cache, final Path path, final BufferedImage image) {
@@ -108,12 +183,15 @@ public class CreatureTextureProvider implements DataProvider {
 		for (int i = 0; i < previews.size(); i++) {
 			sheet.getGraphics().drawImage(previews.get(i), (i % cols) * w, (i / cols) * h, null);
 		}
+		Path root = this.projectRoot();
+		if (root == null) {
+			return;
+		}
 		try {
-			Path root = this.output.getOutputFolder().getParent().getParent().getParent();
 			Path file = root.resolve("build/creature-preview.png");
 			Files.createDirectories(file.getParent());
 			ImageIO.write(sheet, "png", file.toFile());
-		} catch (IOException | NullPointerException e) {
+		} catch (IOException e) {
 			MinecraftMode.LOGGER.warn("Could not write the creature preview", e);
 		}
 	}

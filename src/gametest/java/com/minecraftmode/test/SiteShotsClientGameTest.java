@@ -294,8 +294,9 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 		if (spot == null) {
 			MinecraftMode.LOGGER.warn("[site] {}: no open spot to see it from near {}, skipped", subject.name(), sample);
 		} else {
-			// caves are dark; the Nether and the End have their own light (night vision would wash them out)
-			server.runCommand(setting == LairDef.Setting.UNDERGROUND ? "effect give @p night_vision infinite 0 true" : "effect clear @p");
+			// caves and the Nether are too dark for the dark monsters that live there; the End keeps its own light
+			boolean dark = setting == LairDef.Setting.UNDERGROUND || setting == LairDef.Setting.NETHER;
+			server.runCommand(dark ? "effect give @p night_vision infinite 0 true" : "effect clear @p");
 			moveCamera(context, server, dimension, new View(spot.eye(), spot.middle()), TERRAIN_TICKS);
 			// the subject comes last: a pet leaves without its owner nearby, a mount without a rider after a few seconds
 			int entityId = server.computeOnServer(s -> spawnFacing(s.getLevel(dimension), s.getPlayerList().getPlayers().getFirst(), subject, spot));
@@ -328,6 +329,8 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 		}
 		if (entity instanceof Mob mob) {
 			mob.setNoAi(true);
+			// nothing may hurt it while it poses (a hurt creature is drawn tinted red)
+			mob.setPermanentlyInvulnerable(true);
 			mob.setPersistenceRequired();
 		}
 		float yaw = SiteShotCamera.facingYaw(spot.middle(), spot.eye());

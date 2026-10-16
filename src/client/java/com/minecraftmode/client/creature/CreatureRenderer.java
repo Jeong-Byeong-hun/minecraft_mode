@@ -3,6 +3,7 @@ package com.minecraftmode.client.creature;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.entity.AnimatedCreature;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -40,8 +41,28 @@ public class CreatureRenderer<T extends Mob & AnimatedCreature> extends MobRende
 		super.extractRenderState(entity, state, partialTicks);
 		state.anim = entity.anim();
 		state.animTime = entity.animTime(partialTicks);
-		state.flying = entity.isFlyingCreature();
+		state.rest = entity.rest(partialTicks);
+		state.resting = state.rest > 0.5F;
+		state.fold = entity.wingsFolded(partialTicks);
+		state.stand = entity.stand(partialTicks);
+		state.flying = entity.isFlyingCreature() && !state.resting;
 		state.phase = entity.phase();
+		state.gait = (float)Math.hypot(entity.getX() - entity.xo, entity.getZ() - entity.zo);
+		state.roll = entity.roll(partialTicks);
+		state.tilt = entity.tilt(partialTicks);
+	}
+
+	/** Flyers bank and pitch around the middle of their body. */
+	@Override
+	protected void setupRotations(final CreatureRenderState state, final PoseStack poseStack, final float bodyRot, final float entityScale) {
+		super.setupRotations(state, poseStack, bodyRot, entityScale);
+		if (state.roll != 0.0F || state.tilt != 0.0F) {
+			float mid = state.boundingBoxHeight / 2.0F / entityScale;
+			poseStack.translate(0.0F, mid, 0.0F);
+			poseStack.rotateDegrees(Axis.ZP, state.roll);
+			poseStack.rotateDegrees(Axis.XP, state.tilt);
+			poseStack.translate(0.0F, -mid, 0.0F);
+		}
 	}
 
 	/** Wings, tails and tentacles reach well past the hitbox; do not cull them early. */

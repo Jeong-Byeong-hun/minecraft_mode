@@ -60,6 +60,10 @@ public final class CreaturePainter {
 							case LEFT, RIGHT -> 0.94F;
 							default -> 1.0F;
 						};
+						if (plan.shaded && f != TOP && f != BOTTOM && fh > 1) {
+							// light from above: bright along the top edge, darker toward the bottom
+							shade *= 1.08F - 0.24F * y / (fh - 1);
+						}
 						boolean rim = fw > 2 && fh > 2 && (x == 0 || y == 0 || x == fw - 1 || y == fh - 1);
 						if (rim && !pixel.glow) {
 							shade *= 0.82F;
@@ -214,6 +218,15 @@ public final class CreaturePainter {
 			case FEATHER -> {
 				boolean edge = Math.floorMod(y - Math.abs(x - w / 2), 3) == 0;
 				yield new Pixel(edge ? scale(accent, 0.95F) : scale(base, 0.95F + n * 0.08F), false);
+			}
+			case COAT -> {
+				float streak = noise(x, 0, seed + 5) * 0.14F + n * 0.06F;
+				float belly = switch (face) {
+					case TOP -> 0.0F;
+					case BOTTOM -> 1.0F;
+					default -> h <= 1 ? 0.5F : Math.min(1.0F, y / (float)(h - 1) * 1.3F);
+				};
+				yield new Pixel(scale(mix(accent, base, belly), 0.9F + streak), false);
 			}
 			case SPOTS -> {
 				boolean spot = face != BOTTOM && Math.floorMod(x * 3 + y * 5 + hash(x / 3, y / 3, seed) % 4, 11) == 0;

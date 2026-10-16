@@ -23,7 +23,8 @@ import org.jspecify.annotations.Nullable;
  * A model built from a {@link BodyPlan}. Every part is animated by its role: biped arms and legs swing,
  * quadruped and spider legs walk in their gaits, wings flap, tails, necks and tentacles sway, and the
  * one-shot {@link CreatureAnim animations} (slam, cast, roar, breath, charge...) pose arms, head, jaw
- * and body on top.
+ * and body on top. Strikes are eased (a wind-up that slows into the hold, a blow that accelerates into the hit, a
+ * follow-through that settles), a hit makes the creature flinch, and an idle creature looks around.
  */
 public class CreatureModel extends EntityModel<CreatureRenderState> {
 	/** Ground speed (blocks per tick) where a trot starts turning into a gallop, and where it is a full gallop. */
@@ -39,6 +40,10 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 	/** Shares of an attack: wind-up until here, the hit lands here, then the follow-through. */
 	private static final float STRIKE_WINDUP = 0.35F;
 	private static final float STRIKE_HIT = 0.6F;
+	/** Share of a slam's second half spent bringing the arms down; the rest settles them back to rest. */
+	private static final float SLAM_DOWN = 0.35F;
+	/** How far a hit knocks the body and head back (radians) at the start of the flinch; halved during a one-shot animation. */
+	private static final float FLINCH = 0.22F;
 
 	private final BodyPlan plan;
 	private final Map<Part, ModelPart> parts = new LinkedHashMap<>();
@@ -102,6 +107,10 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 		// now and then a resting pet yawns: head up, jaw open
 		float cycle = age % YAWN_EVERY;
 		float yawn = resting && cycle < YAWN_TICKS ? env(cycle / YAWN_TICKS) * s.rest : 0.0F;
+		// a hit: knocked back at once, recovering with an ease; smaller while a one-shot animation drives the pose
+		float flinch = s.hurt * s.hurt * FLINCH * (anim == CreatureAnim.NONE ? 1.0F : 0.5F);
+		// standing still and doing nothing: now and then the head turns to look around
+		float idle = anim == CreatureAnim.NONE && !resting ? 1.0F - speed : 0.0F;
 		int necks = (int)this.parts.keySet().stream().filter(part -> part.role == BodyPlan.Role.NECK).count();
 		float headShare = necks > 0 ? 0.5F : 1.0F;
 
@@ -123,6 +132,7 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 							m.yRot += Mth.sin(stride) * 0.08F * speed;
 						}
 					}
+					m.xRot -= flinch * 0.6F;
 					if (anim == CreatureAnim.ATTACK) {
 						m.yRot += strikeTwist(p);
 						m.xRot += 0.18F * strike(p);
@@ -142,6 +152,8 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 				case HEAD -> {
 					m.yRot += yaw * headShare;
 					m.xRot += pitch * headShare + Mth.sin(stride + 1.0F) * 0.12F * gallop;
+					m.xRot -= flinch;
+					m.yRot += lookAround(age) * idle;
 					if (resting) {
 						m.yRot += Mth.sin(age * 0.035F) * 0.4F;
 						m.xRot += Mth.sin(age * 0.023F) * 0.1F - 0.35F * yawn;
@@ -168,7 +180,7 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 				}
 				case ARM_RIGHT, ARM_LEFT -> {
 					m.xRot += Mth.cos(walk * 0.6662F + (right ? Mth.PI : 0.0F)) * 1.1F * speed;
-					m.zRot += (right ? 1 : -1) * (Mth.cos(age * 0.09F) * 0.05F + 0.05F);
+					m.zRot += (right ? 1 : -1) * (Mth.cos(age * 0.09F) * 0.05F + 0.05F + flinch * 0.8F);
 					switch (anim) {
 						case ATTACK -> {
 							if (right) {
@@ -182,7 +194,7 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 							m.zRot += (right ? 1 : -1) * 1.1F * e;
 							m.xRot -= 0.5F * e;
 						}
-						case SLAM -> m.xRot += p < 0.5F ? -2.8F * (p / 0.5F) : -2.8F + 3.6F * ((p - 0.5F) / 0.5F);
+						case SLAM -> m.xRot += slamArms(p);
 						case CAST -> {
 							m.xRot -= 1.6F * e;
 							m.zRot += (right ? 1 : -1) * 0.4F * e;
@@ -314,37 +326,77 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 		}
 	}
 
-	/** A weapon arm's swing over an attack: raised high behind the head, brought down hard, then back to rest. */
-	private static float swing(final float p) {
-		if (p < STRIKE_WINDUP) {
-			return -2.6F * (p / STRIKE_WINDUP);
-		}
-		if (p < STRIKE_HIT) {
-			return -2.6F + 3.2F * ((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
-		}
-		return 0.6F * (1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT));
+	/** Fast start, slow arrival: wind-ups that come to a hold, recoveries that settle. */
+	private static float easeOut(final float t) {
+		float u = 1.0F - Mth.clamp(t, 0.0F, 1.0F);
+		return 1.0F - u * u * u;
 	}
 
-	/** 0 during the wind-up, rising to 1 at the hit and easing off after it. */
+	/** Slow start, fast arrival: blows that accelerate into the hit. */
+	private static float easeIn(final float t) {
+		float u = Mth.clamp(t, 0.0F, 1.0F);
+		return u * u * u;
+	}
+
+	/**
+	 * A weapon arm's swing over an attack: raised high behind the head (easing into the top), brought down hard (accelerating into
+	 * the hit), then settling back to rest.
+	 */
+	private static float swing(final float p) {
+		if (p < STRIKE_WINDUP) {
+			return -2.6F * easeOut(p / STRIKE_WINDUP);
+		}
+		if (p < STRIKE_HIT) {
+			return -2.6F + 3.2F * easeIn((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
+		}
+		return 0.6F * (1.0F - easeOut((p - STRIKE_HIT) / (1.0F - STRIKE_HIT)));
+	}
+
+	/** 0 during the wind-up, rising (accelerating) to 1 at the hit and settling off after it. */
 	private static float strike(final float p) {
 		if (p < STRIKE_WINDUP) {
 			return 0.0F;
 		}
 		if (p < STRIKE_HIT) {
-			return (p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP);
+			return easeIn((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
 		}
-		return 1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT);
+		return 1.0F - easeOut((p - STRIKE_HIT) / (1.0F - STRIKE_HIT));
 	}
 
-	/** Shoulders turn away during the wind-up and through the swing. */
+	/** Shoulders turn away during the wind-up and whip through the swing. */
 	private static float strikeTwist(final float p) {
 		if (p < STRIKE_WINDUP) {
-			return 0.3F * (p / STRIKE_WINDUP);
+			return 0.3F * easeOut(p / STRIKE_WINDUP);
 		}
 		if (p < STRIKE_HIT) {
-			return 0.3F - 0.65F * ((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
+			return 0.3F - 0.65F * easeIn((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
 		}
-		return -0.35F * (1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT));
+		return -0.35F * (1.0F - easeOut((p - STRIKE_HIT) / (1.0F - STRIKE_HIT)));
+	}
+
+	/**
+	 * A slam's arms: raised overhead over the first half (easing into the top), brought down hard, then settled back to rest by the
+	 * end, so nothing pops when the animation stops.
+	 */
+	private static float slamArms(final float p) {
+		if (p < 0.5F) {
+			return -2.8F * easeOut(p / 0.5F);
+		}
+		float t = (p - 0.5F) / 0.5F;
+		if (t < SLAM_DOWN) {
+			return -2.8F + 3.6F * easeIn(t / SLAM_DOWN);
+		}
+		return 0.8F * (1.0F - easeOut((t - SLAM_DOWN) / (1.0F - SLAM_DOWN)));
+	}
+
+	/** Head yaw of an idle look-around: mostly still, a slow turn to one side every few seconds, then back. */
+	private static float lookAround(final float age) {
+		float cycle = age % 140.0F;
+		if (cycle > 50.0F) {
+			return 0.0F;
+		}
+		float side = ((int)(age / 140.0F) & 1) == 0 ? 1.0F : -0.8F;
+		return Mth.sin(cycle / 50.0F * Mth.PI) * 0.3F * side;
 	}
 
 	/** How low a slam brings the body: nothing while the arms go up, the full crouch at the impact (half way), then up again. */

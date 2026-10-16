@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.world.entity.Entity;
@@ -57,6 +58,9 @@ public class CreatureRenderer<T extends Mob & AnimatedCreature> extends MobRende
 		state.gait = this.gait(entity);
 		state.roll = entity.roll(partialTicks);
 		state.tilt = entity.tilt(partialTicks);
+		state.hurt = entity.hurtTime > 0 && entity.hurtDuration > 0 && entity.deathTime == 0
+			? Mth.clamp((entity.hurtTime - partialTicks) / entity.hurtDuration, 0.0F, 1.0F)
+			: 0.0F;
 	}
 
 	/**

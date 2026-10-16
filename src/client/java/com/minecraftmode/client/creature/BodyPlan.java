@@ -211,6 +211,10 @@ public final class BodyPlan {
 
 	// ------------------------------------------------------------------ builder
 
+	/** Boxes at least this wide and tall (and {@link #CHAMFER_MIN_DEPTH} deep) get bevelled edges ({@link Builder#chamfer}). */
+	static final int CHAMFER_MIN = 6;
+	static final int CHAMFER_MIN_DEPTH = 4;
+
 	public static Builder builder(final String id, final Rig rig) {
 		return new Builder(id, rig);
 	}
@@ -274,7 +278,9 @@ public final class BodyPlan {
 				throw new IllegalArgumentException(this.id + ": part " + name + " has unknown parent " + parent + " (declare parents first)");
 			}
 			Part part = new Part(name, parent, role, index, px, py, pz, skin);
-			part.boxes.addAll(List.of(boxes));
+			for (Box box : boxes) {
+				part.boxes.addAll(chamfer(box));
+			}
 			this.parts.add(part);
 			this.byName.put(name, part);
 			return part;
@@ -296,6 +302,21 @@ public final class BodyPlan {
 				}
 			}
 			return new BodyPlan(this.id, this.rig, this.scale, this.parts, this.skins, this.rest, this.folds, this.shaded);
+		}
+
+		/**
+		 * Bevels the top and bottom edges of a big box: a core one unit shorter at each end, plus a cap one unit in from every side on
+		 * top and below. The outline loses its hard corners (the way hand-made models round heads and torsos with stepped cubes),
+		 * while the extents, and so hitboxes and attachment points, stay the same. The core stays first, so eyes still go on it.
+		 */
+		static List<Box> chamfer(final Box b) {
+			if (b.w() < CHAMFER_MIN || b.h() < CHAMFER_MIN || b.d() < CHAMFER_MIN_DEPTH) {
+				return List.of(b);
+			}
+			return List.of(
+				new Box(b.x(), b.y() + 1, b.z(), b.w(), b.h() - 2, b.d(), b.inflate()),
+				new Box(b.x() + 1, b.y(), b.z() + 1, b.w() - 2, 1, b.d() - 2, b.inflate()),
+				new Box(b.x() + 1, b.y() + b.h() - 1, b.z() + 1, b.w() - 2, 1, b.d() - 2, b.inflate()));
 		}
 	}
 }

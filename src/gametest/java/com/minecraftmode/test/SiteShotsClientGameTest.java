@@ -79,6 +79,8 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 	private static final String CONTENT_PAGE = "/wiki/content/";
 	/** Time for new terrain around a far teleport to generate and draw. */
 	private static final int TERRAIN_TICKS = 160;
+	/** Clear ground a camera spot must have in front of the subject. */
+	private static final double OPEN_DISTANCE = 3.0;
 	private static final Map<String, String> CITY_CAPTIONS = Map.ofEntries(
 		Map.entry("city_plaza", "수도 스톰홀드 광장"), Map.entry("city_keep", "수도의 성"), Map.entry("city_mage_quarter", "마법사 구역"),
 		Map.entry("city_enchanter_hall", "마법 부여소"), Map.entry("city_enchanter_grindstone", "마법 부여대와 숫돌"),
@@ -282,9 +284,12 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 	private static void portrait(final ClientGameTestContext context, final TestServerContext server, final Run run, final ResourceKey<Level> dimension,
 		final BlockPos sample, final LairDef.Setting setting, final Subject subject) {
 		load(context, server, dimension, sample, 2);
-		double distance = Math.max(3.0, subject.width() * 1.6 + subject.height());
+		// the spot needs at least OPEN_DISTANCE of clear ground (or it ends up in a pit); small pets are then shot from closer
+		double distance = Math.max(1.6, subject.width() * 1.6 + subject.height());
 		boolean surface = setting == LairDef.Setting.SURFACE;
-		Spot spot = server.computeOnServer(s -> SiteShotCamera.spot(s.getLevel(dimension), sample, surface, subject.height(), distance));
+		Spot found = server.computeOnServer(s -> SiteShotCamera.spot(s.getLevel(dimension), sample, surface, subject.height(), Math.max(OPEN_DISTANCE, distance)));
+		Spot spot = found == null || distance >= OPEN_DISTANCE ? found
+			: new Spot(found.feet(), found.middle(), found.middle().add(found.eye().subtract(found.middle()).scale(distance / OPEN_DISTANCE)));
 		String in = "execute in " + dimension.identifier() + " run ";
 		if (spot == null) {
 			MinecraftMode.LOGGER.warn("[site] {}: no open spot to see it from near {}, skipped", subject.name(), sample);

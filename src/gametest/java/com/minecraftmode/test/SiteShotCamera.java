@@ -79,8 +79,11 @@ final class SiteShotCamera {
 		for (boolean closer : new boolean[] {false, true}) {
 			for (int[] offset : SAMPLE_OFFSETS) {
 				BlockPos feet = floor(level, sample.offset(offset[0], 0, offset[1]), surface);
+				if (!roomFor(level, feet, height)) {
+					continue;
+				}
 				Vec3 middle = Vec3.atBottomCenterOf(feet).add(0.0, height * 0.5, 0.0);
-				Vec3 eye = camera(level, middle, distance, height * 0.15 + 0.4, closer);
+				Vec3 eye = camera(level, middle, distance, height * 0.15 + 0.4, closer, height);
 				if (eye != null) {
 					return new Spot(feet, middle, eye);
 				}
@@ -113,7 +116,7 @@ final class SiteShotCamera {
 	 * the target, on any side; with {@code closer} also nearer ones. Null when there is none. Keeps a cave or Nether shot from
 	 * starting inside the rock, which draws the terrain inside out.
 	 */
-	private static Vec3 camera(final ServerLevel level, final Vec3 target, final double distance, final double rise, final boolean closer) {
+	private static Vec3 camera(final ServerLevel level, final Vec3 target, final double distance, final double rise, final boolean closer, final double height) {
 		double nearest = closer ? 2.5 : distance;
 		for (double d = distance; d >= nearest; d *= 0.8) {
 			for (double[] dir : CAMERA_DIRECTIONS) {
@@ -122,13 +125,45 @@ final class SiteShotCamera {
 				if (!open(level, BlockPos.containing(eye)) || !level.getBlockState(BlockPos.containing(eye).below()).isAir()) {
 					continue;
 				}
-				ClipContext line = new ClipContext(eye, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty());
-				if (level.clip(line).getType() == HitResult.Type.MISS) {
+				if (seen(level, eye, target, height)) {
 					return eye;
 				}
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * A creature {@code height} tall fits at {@code feet}: firm, dry ground under it and air all the way up (no leaves over a big
+	 * one, no cave roof through a tall one's head, which would also hurt it and tint it red).
+	 */
+	private static boolean roomFor(final ServerLevel level, final BlockPos feet, final double height) {
+		BlockPos ground = feet.below();
+		if (!level.getBlockState(ground).isSolid() || !level.getFluidState(ground).isEmpty() || !level.getFluidState(feet).isEmpty()) {
+			return false;
+		}
+		int cells = Math.max(2, (int)Math.ceil(height) + 1);
+		for (int dy = 0; dy < cells; dy++) {
+			if (!level.getBlockState(feet.above(dy)).isAir()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Nothing stands between {@code eye} and the creature centred on {@code target}: lines to its head, middle and feet all pass,
+	 * and plants and leaves count as in the way (a bush in front hides a monster as well as a wall does).
+	 */
+	private static boolean seen(final ServerLevel level, final Vec3 eye, final Vec3 target, final double height) {
+		for (double share : new double[] {0.4, 0.0, -0.4}) {
+			Vec3 point = target.add(0.0, height * share, 0.0);
+			ClipContext line = new ClipContext(eye, point, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty());
+			if (level.clip(line).getType() != HitResult.Type.MISS) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** The cell and the one above it are air. */

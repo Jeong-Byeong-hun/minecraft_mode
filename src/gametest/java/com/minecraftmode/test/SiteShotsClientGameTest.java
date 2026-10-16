@@ -79,6 +79,11 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 	private static final String CONTENT_PAGE = "/wiki/content/";
 	/** Time for new terrain around a far teleport to generate and draw. */
 	private static final int TERRAIN_TICKS = 160;
+	/** A boss whose model is this many times longer than it is tall is shot from three-quarters, this far round from the front. */
+	private static final double LONG_BODY = 3.0;
+	private static final float THREE_QUARTERS = (float)Math.toRadians(55.0);
+	/** Clear ground a camera spot must have in front of the subject. */
+	private static final double OPEN_DISTANCE = 3.0;
 	private static final Map<String, String> CITY_CAPTIONS = Map.ofEntries(
 		Map.entry("city_plaza", "수도 스톰홀드 광장"), Map.entry("city_keep", "수도의 성"), Map.entry("city_mage_quarter", "마법사 구역"),
 		Map.entry("city_enchanter_hall", "마법 부여소"), Map.entry("city_enchanter_grindstone", "마법 부여대와 숫돌"),
@@ -282,15 +287,19 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 	private static void portrait(final ClientGameTestContext context, final TestServerContext server, final Run run, final ResourceKey<Level> dimension,
 		final BlockPos sample, final LairDef.Setting setting, final Subject subject) {
 		load(context, server, dimension, sample, 2);
-		double distance = Math.max(3.0, subject.width() * 1.6 + subject.height());
+		// the spot needs at least OPEN_DISTANCE of clear ground (or it ends up in a pit); small pets are then shot from closer
+		double distance = Math.max(1.6, subject.width() * 1.6 + subject.height());
 		boolean surface = setting == LairDef.Setting.SURFACE;
-		Spot spot = server.computeOnServer(s -> SiteShotCamera.spot(s.getLevel(dimension), sample, surface, subject.height(), distance));
+		Spot found = server.computeOnServer(s -> SiteShotCamera.spot(s.getLevel(dimension), sample, surface, subject.height(), Math.max(OPEN_DISTANCE, distance)));
+		Spot spot = found == null || distance >= OPEN_DISTANCE ? found
+			: new Spot(found.feet(), found.middle(), found.middle().add(found.eye().subtract(found.middle()).scale(distance / OPEN_DISTANCE)));
 		String in = "execute in " + dimension.identifier() + " run ";
 		if (spot == null) {
 			MinecraftMode.LOGGER.warn("[site] {}: no open spot to see it from near {}, skipped", subject.name(), sample);
 		} else {
-			// caves are dark; the Nether and the End have their own light (night vision would wash them out)
-			server.runCommand(setting == LairDef.Setting.UNDERGROUND ? "effect give @p night_vision infinite 0 true" : "effect clear @p");
+			// caves and the Nether are too dark for the dark monsters that live there; the End keeps its own light
+			boolean dark = setting == LairDef.Setting.UNDERGROUND || setting == LairDef.Setting.NETHER;
+			server.runCommand(dark ? "effect give @p night_vision infinite 0 true" : "effect clear @p");
 			moveCamera(context, server, dimension, new View(spot.eye(), spot.middle()), TERRAIN_TICKS);
 			// the subject comes last: a pet leaves without its owner nearby, a mount without a rider after a few seconds
 			int entityId = server.computeOnServer(s -> spawnFacing(s.getLevel(dimension), s.getPlayerList().getPlayers().getFirst(), subject, spot));
@@ -323,6 +332,8 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 		}
 		if (entity instanceof Mob mob) {
 			mob.setNoAi(true);
+			// nothing may hurt it while it poses (a hurt creature is drawn tinted red)
+			mob.setPermanentlyInvulnerable(true);
 			mob.setPersistenceRequired();
 		}
 		float yaw = SiteShotCamera.facingYaw(spot.middle(), spot.eye());
@@ -378,13 +389,20 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 			GearRaidClientGameTest.stageBoss(server, connection, def, slot);
 			context.waitTicks(20);
 			final int arena = slot;
-			// from where the party arrives the boss is small; step in front of it, as far back as its size needs
+			// from where the party arrives the boss is small; step in front of it, as far back as its model needs (winged bosses
+			// spread far past their hitbox), aiming at the middle of the model rather than of the hitbox
+			ModelSize model = ModelSize.of(def.id());
 			View view = server.computeOnServer(s -> {
 				RaidBoss boss = RaidDimension.level(s).getEntitiesOfClass(RaidBoss.class, new AABB(arena * 1024 - 60, 0, -60, arena * 1024 + 60, 200, 60)).getFirst();
-				Vec3 middle = boss.position().add(0.0, boss.getBbHeight() * 0.5, 0.0);
-				double distance = Math.max(5.0, boss.getBbWidth() * 1.4 + boss.getBbHeight() * 0.9);
+				double tall = Math.max(boss.getBbHeight(), model.above());
+				Vec3 middle = boss.position().add(0.0, tall * 0.5, 0.0);
+				double distance = Math.max(Math.max(5.0, boss.getBbWidth() * 1.4 + boss.getBbHeight() * 0.9), Math.max(tall * 1.1, model.span() * 0.6) + 2.0);
 				Vec3 ahead = boss.getForward().multiply(1.0, 0.0, 1.0).normalize().scale(distance);
-				return new View(middle.add(ahead).add(0.0, boss.getBbHeight() * 0.2 + 0.5, 0.0), middle);
+				if (model.span() > tall * LONG_BODY) {
+					// a long body (a dragon) seen head on is all neck and head: show it from three-quarters instead
+					ahead = ahead.yRot(THREE_QUARTERS);
+				}
+				return new View(middle.add(ahead).add(0.0, tall * 0.2 + 0.5, 0.0), middle);
 			});
 			moveCamera(context, server, RaidDimension.LEVEL, view, TERRAIN_TICKS / 2);
 			String heading = def.ko() + " — " + def.epithetKo();

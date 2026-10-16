@@ -35,7 +35,9 @@ public record Skin(int base, int accent, Pattern pattern, boolean glow) {
 		/** Feather chevrons. */
 		FEATHER,
 		/** Mushroom cap: base with round accent spots. */
-		SPOTS
+		SPOTS,
+		/** Fur in two tones: the accent on the back fading into the base toward the belly. */
+		COAT
 	}
 
 	public static Skin of(final int base, final Pattern pattern) {

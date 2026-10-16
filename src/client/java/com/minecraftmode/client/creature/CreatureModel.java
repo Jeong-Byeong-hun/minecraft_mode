@@ -17,6 +17,7 @@ import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.Mth;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A model built from a {@link BodyPlan}. Every part is animated by its role: biped arms and legs swing,
@@ -25,8 +26,25 @@ import net.minecraft.util.Mth;
  * and body on top.
  */
 public class CreatureModel extends EntityModel<CreatureRenderState> {
+	/** Ground speed (blocks per tick) where a trot starts turning into a gallop, and where it is a full gallop. */
+	private static final float GALLOP_FROM = 0.3F;
+	private static final float GALLOP_FULL = 0.5F;
+	/** How far the body tips back when sitting (radians). */
+	private static final float SIT_TILT = -0.55F;
+	/** How far a mount rears up (radians). */
+	private static final float REAR_TILT = -0.75F;
+	/** A resting pet yawns once per this many ticks, for {@link #YAWN_TICKS}. */
+	private static final float YAWN_EVERY = 240.0F;
+	private static final float YAWN_TICKS = 26.0F;
+	/** Shares of an attack: wind-up until here, the hit lands here, then the follow-through. */
+	private static final float STRIKE_WINDUP = 0.35F;
+	private static final float STRIKE_HIT = 0.6F;
+
 	private final BodyPlan plan;
 	private final Map<Part, ModelPart> parts = new LinkedHashMap<>();
+	private final @Nullable Part body;
+	/** Length of a root-level leg (0 when the legs hang from the body): how far a resting body sinks. */
+	private final float legLength;
 
 	public CreatureModel(final ModelPart root, final BodyPlan plan) {
 		super(root, RenderTypes::entityCutout);
@@ -38,6 +56,9 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 			byName.put(part.name, model);
 			this.parts.put(part, model);
 		}
+		this.body = plan.parts.stream().filter(p -> p.role == BodyPlan.Role.BODY).findFirst().orElse(null);
+		this.legLength = plan.parts.stream().filter(p -> p.parent == null && (p.role == BodyPlan.Role.LEG_QUAD || p.role == BodyPlan.Role.LEG_RIGHT))
+			.findFirst().map(p -> 24.0F - p.py).orElse(0.0F);
 	}
 
 	public static LayerDefinition createLayer(final BodyPlan plan) {
@@ -74,7 +95,13 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 		CreatureAnim anim = s.anim;
 		float p = anim == CreatureAnim.NONE ? 0.0F : Mth.clamp(s.animTime / anim.ticks(), 0.0F, 1.0F);
 		float e = env(p);
-		boolean flying = s.flying || this.plan.rig == BodyPlan.Rig.FLOATER;
+		boolean resting = s.resting;
+		boolean flying = !resting && (s.flying || this.plan.rig == BodyPlan.Rig.FLOATER);
+		float gallop = Mth.clamp((s.gait - GALLOP_FROM) / (GALLOP_FULL - GALLOP_FROM), 0.0F, 1.0F);
+		float stride = walk * 0.6662F;
+		// now and then a resting pet yawns: head up, jaw open
+		float cycle = age % YAWN_EVERY;
+		float yawn = resting && cycle < YAWN_TICKS ? env(cycle / YAWN_TICKS) * s.rest : 0.0F;
 		int necks = (int)this.parts.keySet().stream().filter(part -> part.role == BodyPlan.Role.NECK).count();
 		float headShare = necks > 0 ? 0.5F : 1.0F;
 
@@ -86,6 +113,21 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 				case BODY -> {
 					if (flying) {
 						m.y += Mth.sin(age * 0.1F) * 1.2F;
+					} else {
+						// breathing, and the rocking bound of a gallop
+						m.y += Mth.sin(age * 0.08F) * 0.25F - Math.abs(Mth.sin(stride)) * 1.5F * gallop;
+						m.xRot += Mth.sin(stride) * 0.08F * gallop;
+						if (this.plan.rig == BodyPlan.Rig.BIPED) {
+							// each step lifts the body a little and turns the shoulders against the hips
+							m.y -= Math.abs(Mth.cos(stride)) * 0.6F * speed;
+							m.yRot += Mth.sin(stride) * 0.08F * speed;
+						}
+					}
+					if (anim == CreatureAnim.ATTACK) {
+						m.yRot += strikeTwist(p);
+						m.xRot += 0.18F * strike(p);
+					} else if (anim == CreatureAnim.SLAM) {
+						m.y += 2.0F * slamCrouch(p);
 					}
 					switch (anim) {
 						case CHARGE -> m.xRot += 0.35F * e;
@@ -99,22 +141,30 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 				}
 				case HEAD -> {
 					m.yRot += yaw * headShare;
-					m.xRot += pitch * headShare;
+					m.xRot += pitch * headShare + Mth.sin(stride + 1.0F) * 0.12F * gallop;
+					if (resting) {
+						m.yRot += Mth.sin(age * 0.035F) * 0.4F;
+						m.xRot += Mth.sin(age * 0.023F) * 0.1F - 0.35F * yawn;
+					}
 					if (anim == CreatureAnim.ROAR) {
 						m.xRot -= 0.5F * e;
+						m.yRot += Mth.sin(age * 1.6F) * 0.12F * e;
 					} else if (anim == CreatureAnim.BREATH) {
 						m.xRot += 0.25F * e;
+					} else if (anim == CreatureAnim.ATTACK) {
+						// a beast lunges with its head; a fighter watches its swing
+						m.xRot += 0.3F * strike(p);
 					}
 				}
 				case JAW -> {
 					float open = switch (anim) {
-						case ATTACK -> 0.5F * e;
-						case ROAR -> 0.7F * e;
+						case ATTACK -> 0.6F * Math.max(e, strike(p));
+						case ROAR -> 0.8F * e;
 						case BREATH -> 0.6F * Math.min(1.0F, p * 6.0F) * (p > 0.9F ? (1.0F - p) * 10.0F : 1.0F);
 						case CAST, SUMMON -> 0.25F * e;
 						default -> 0.0F;
 					};
-					m.xRot += open;
+					m.xRot += open + 0.6F * yawn;
 				}
 				case ARM_RIGHT, ARM_LEFT -> {
 					m.xRot += Mth.cos(walk * 0.6662F + (right ? Mth.PI : 0.0F)) * 1.1F * speed;
@@ -122,8 +172,15 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 					switch (anim) {
 						case ATTACK -> {
 							if (right) {
-								m.xRot -= 1.7F * e;
+								m.xRot += swing(p);
+							} else {
+								// the off arm braces back while the other swings
+								m.xRot += 0.5F * strike(p);
 							}
+						}
+						case ROAR -> {
+							m.zRot += (right ? 1 : -1) * 1.1F * e;
+							m.xRot -= 0.5F * e;
 						}
 						case SLAM -> m.xRot += p < 0.5F ? -2.8F * (p / 0.5F) : -2.8F + 3.6F * ((p - 0.5F) / 0.5F);
 						case CAST -> {
@@ -145,13 +202,24 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 					}
 					if (anim == CreatureAnim.LEAP) {
 						m.xRot += (right ? 1 : -1) * 0.6F * e;
+					} else if (anim == CreatureAnim.SLAM || anim == CreatureAnim.ATTACK) {
+						// step into the blow: hips bend, the knee below takes it
+						m.xRot -= 0.5F * (anim == CreatureAnim.SLAM ? slamCrouch(p) : strike(p)) * (right ? 1.0F : 0.4F);
 					}
 				}
 				case LEG_QUAD -> {
-					float phase = part.index == 0 || part.index == 3 ? 0.0F : Mth.PI;
-					m.xRot += Mth.cos(walk * 0.6662F + phase) * 1.4F * speed;
+					m.xRot += Mth.cos(stride + legPhase(part.index, gallop)) * Mth.lerp(gallop, 1.4F, 1.1F) * speed;
+					if (this.plan.folds) {
+						// tucked in flight
+						m.xRot += 0.9F * (1.0F - s.fold);
+					}
 					if (anim == CreatureAnim.LEAP || anim == CreatureAnim.CHARGE) {
 						m.xRot += (part.index < 2 ? -0.7F : 0.7F) * e;
+					} else if (anim == CreatureAnim.ATTACK && part.index < 2) {
+						// forepaws rake forward
+						m.xRot -= 0.8F * strike(p);
+					} else if (anim == CreatureAnim.ROAR) {
+						m.xRot += (part.index < 2 ? -0.35F : 0.2F) * e;
 					}
 				}
 				case LEG_SPIDER -> {
@@ -166,15 +234,22 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 					}
 				}
 				case WING_RIGHT, WING_LEFT -> {
-					float flap = flying ? Mth.sin(age * 0.35F) * 0.65F : Mth.sin(age * 0.08F) * 0.08F;
+					float flap = flying || this.plan.folds ? Mth.sin(age * 0.35F) * 0.65F : Mth.sin(age * 0.08F) * 0.08F;
 					if (anim == CreatureAnim.DIVE) {
 						flap = -0.9F * e;
 					} else if (anim == CreatureAnim.ROAR || anim == CreatureAnim.CAST) {
 						flap += 0.6F * e;
 					}
+					if (this.plan.folds) {
+						flap *= 1.0F - s.fold;
+						fold(m, part, right, s.fold);
+					}
 					m.zRot += right ? flap : -flap;
 				}
 				case TAIL -> {
+					if (part.index == 0) {
+						m.xRot += 0.35F * gallop + (anim == CreatureAnim.ROAR ? 0.4F * e : 0.0F);
+					}
 					m.yRot += Mth.sin(age * 0.12F - part.index * 0.7F) * 0.15F * (1.0F + part.index * 0.15F) + Mth.cos(walk * 0.3F) * 0.1F * speed;
 					if (anim == CreatureAnim.SPIN || anim == CreatureAnim.SLAM) {
 						m.yRot += 0.4F * e;
@@ -200,8 +275,196 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 				}
 				case ORBIT -> m.yRot += age * 0.05F;
 				case CAPE -> m.xRot += 0.08F + speed * 0.7F + Mth.sin(age * 0.1F) * 0.03F;
+				case SHIN -> {
+					if (part.index >= 10) {
+						// biped knee: bends while the leg swings forward, and under a slam or a blow
+						float phase = part.index == 10 ? 0.0F : Mth.PI;
+						m.xRot += Math.max(0.0F, -Mth.sin(stride + phase)) * 0.9F * speed;
+						if (anim == CreatureAnim.SLAM) {
+							m.xRot += 1.0F * slamCrouch(p);
+						} else if (anim == CreatureAnim.ATTACK) {
+							m.xRot += 0.6F * strike(p) * (part.index == 10 ? 1.0F : 0.4F);
+						}
+					} else {
+						if (!flying) {
+							// front knees fold back, hind hocks forward, while the foot is off the ground
+							float flex = Math.max(0.0F, -Mth.sin(stride + legPhase(part.index, gallop))) * Mth.lerp(gallop, 0.8F, 1.2F) * speed;
+							m.xRot += part.index < 2 ? flex : -flex;
+						}
+						if (this.plan.folds) {
+							m.xRot -= 1.2F * (1.0F - s.fold);
+						}
+					}
+				}
+				case EAR -> {
+					float t = (age + part.index * 37.0F) % 90.0F;
+					if (t < 6.0F) {
+						m.zRot += Mth.sin(t / 6.0F * Mth.PI) * 0.35F * (part.index == 0 ? -1 : 1);
+					}
+				}
 				default -> {
 				}
+			}
+		}
+		if (s.rest > 0.001F) {
+			this.rest(s.rest);
+		}
+		if (s.stand > 0.001F) {
+			this.rear(s.stand);
+		}
+	}
+
+	/** A weapon arm's swing over an attack: raised high behind the head, brought down hard, then back to rest. */
+	private static float swing(final float p) {
+		if (p < STRIKE_WINDUP) {
+			return -2.6F * (p / STRIKE_WINDUP);
+		}
+		if (p < STRIKE_HIT) {
+			return -2.6F + 3.2F * ((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
+		}
+		return 0.6F * (1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT));
+	}
+
+	/** 0 during the wind-up, rising to 1 at the hit and easing off after it. */
+	private static float strike(final float p) {
+		if (p < STRIKE_WINDUP) {
+			return 0.0F;
+		}
+		if (p < STRIKE_HIT) {
+			return (p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP);
+		}
+		return 1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT);
+	}
+
+	/** Shoulders turn away during the wind-up and through the swing. */
+	private static float strikeTwist(final float p) {
+		if (p < STRIKE_WINDUP) {
+			return 0.3F * (p / STRIKE_WINDUP);
+		}
+		if (p < STRIKE_HIT) {
+			return 0.3F - 0.65F * ((p - STRIKE_WINDUP) / (STRIKE_HIT - STRIKE_WINDUP));
+		}
+		return -0.35F * (1.0F - (p - STRIKE_HIT) / (1.0F - STRIKE_HIT));
+	}
+
+	/** How low a slam brings the body: nothing while the arms go up, the full crouch at the impact (half way), then up again. */
+	private static float slamCrouch(final float p) {
+		return p < 0.45F ? 0.0F : Mth.sin((p - 0.45F) / 0.55F * Mth.PI);
+	}
+
+	/** Leg phase offsets: a diagonal trot (0 with 3, 1 with 2) that turns into a bounding gallop (fronts, then hinds). */
+	private static float legPhase(final int index, final float gallop) {
+		float trot = index == 0 || index == 3 ? 0.0F : Mth.PI;
+		float bound = switch (index) {
+			case 0 -> 0.0F;
+			case 1 -> 0.4F;
+			case 2 -> Mth.PI;
+			default -> Mth.PI + 0.4F;
+		};
+		return Mth.lerp(gallop, trot, bound);
+	}
+
+	/**
+	 * A folded wing: the main panel (index 0) turns on edge, trailing edge down, and sweeps back along the body; the tip (index 1)
+	 * turns over around its chord and lies back along the panel.
+	 */
+	private static void fold(final ModelPart m, final Part part, final boolean right, final float amount) {
+		if (part.index == 0) {
+			m.xRot -= Mth.HALF_PI * amount;
+			m.yRot += (right ? 1.5F : -1.5F) * amount;
+		} else {
+			m.zRot += (Mth.PI - 0.12F) * amount;
+		}
+	}
+
+	/**
+	 * Tips the body by {@code angle} around its pivot and lowers it by {@code sink}; every other root-level part moves with it (legs
+	 * keep their own angle, the rest turn by {@code follow} x the angle).
+	 */
+	private void tiltRoot(final float angle, final float sink, final float follow) {
+		ModelPart bodyModel = this.parts.get(this.body);
+		float sin = Mth.sin(angle);
+		float cos = Mth.cos(angle);
+		bodyModel.xRot += angle;
+		bodyModel.y += sink;
+		for (Map.Entry<Part, ModelPart> entry : this.parts.entrySet()) {
+			Part part = entry.getKey();
+			if (part.parent != null || part == this.body) {
+				continue;
+			}
+			ModelPart m = entry.getValue();
+			float dy = part.py - this.body.py;
+			float dz = part.pz - this.body.pz;
+			m.y += dy * cos - dz * sin - dy + sink;
+			m.z += dy * sin + dz * cos - dz;
+			if (part.role != BodyPlan.Role.LEG_QUAD) {
+				m.xRot += angle * follow;
+			}
+		}
+	}
+
+	/** The plan's rest pose blended in by {@code t}: the body sits back or lies down and the root-level parts move with it. */
+	private void rest(final float t) {
+		if (this.body == null || this.plan.rest == BodyPlan.Rest.NONE) {
+			return;
+		}
+		if (this.plan.rest == BodyPlan.Rest.LIE) {
+			float sink = (this.legLength > 0.0F ? this.legLength * 0.6F : 1.5F) * t;
+			for (Map.Entry<Part, ModelPart> entry : this.parts.entrySet()) {
+				Part part = entry.getKey();
+				ModelPart m = entry.getValue();
+				if (part.parent == null) {
+					m.y += sink;
+				}
+				if (part.role == BodyPlan.Role.LEG_QUAD) {
+					m.zRot += (part.px > 0 ? -0.6F : 0.6F) * t;
+					m.xRot = Mth.lerp(t, m.xRot, part.index < 2 ? -0.3F : 0.3F);
+				} else if (part.role == BodyPlan.Role.LEG_SPIDER) {
+					m.zRot += (part.index < 4 ? -0.35F : 0.35F) * t;
+				} else if (part.role == BodyPlan.Role.HEAD) {
+					m.xRot += 0.15F * t;
+					m.z += 1.0F * t;
+				}
+			}
+			return;
+		}
+		// SIT: haunches down, front legs straight, hind legs folded flat under the body, tail along the ground
+		this.tiltRoot(SIT_TILT * t, this.legLength * 0.45F * t, 0.0F);
+		for (Map.Entry<Part, ModelPart> entry : this.parts.entrySet()) {
+			Part part = entry.getKey();
+			ModelPart m = entry.getValue();
+			if (part.role == BodyPlan.Role.LEG_QUAD && part.parent == null) {
+				m.xRot = Mth.lerp(t, m.xRot, part.index < 2 ? -0.15F : -1.45F);
+			} else if (part.role == BodyPlan.Role.SHIN) {
+				m.xRot = Mth.lerp(t, m.xRot, part.index < 2 ? 0.0F : 2.6F);
+			} else if (part.role == BodyPlan.Role.TAIL && part.index == 0) {
+				m.xRot -= SIT_TILT * t;
+			}
+		}
+	}
+
+	/** Rearing (a mount about to jump): up on the hind legs, forelegs pawing with folded knees, the head thrown back. */
+	private void rear(final float t) {
+		if (this.body == null || this.plan.rig != BodyPlan.Rig.QUADRUPED || this.legLength <= 0.0F) {
+			return;
+		}
+		Part hind = this.parts.keySet().stream().filter(p -> p.role == BodyPlan.Role.LEG_QUAD && p.index == 2 && p.parent == null).findFirst().orElse(null);
+		if (hind == null) {
+			return;
+		}
+		float angle = REAR_TILT * t;
+		// lift so the hips stay where they are: the body turns around its hind legs
+		float dy = hind.py - this.body.py;
+		float dz = hind.pz - this.body.pz;
+		float hipDrop = dy * Mth.cos(angle) - dz * Mth.sin(angle) - dy;
+		this.tiltRoot(angle, -hipDrop, 0.6F);
+		for (Map.Entry<Part, ModelPart> entry : this.parts.entrySet()) {
+			Part part = entry.getKey();
+			ModelPart m = entry.getValue();
+			if (part.role == BodyPlan.Role.LEG_QUAD && part.parent == null) {
+				m.xRot = Mth.lerp(t, m.xRot, part.index < 2 ? -0.9F + Mth.sin(part.index * 1.5F) * 0.3F : 0.25F);
+			} else if (part.role == BodyPlan.Role.SHIN && part.index < 2) {
+				m.xRot = Mth.lerp(t, m.xRot, 1.3F);
 			}
 		}
 	}

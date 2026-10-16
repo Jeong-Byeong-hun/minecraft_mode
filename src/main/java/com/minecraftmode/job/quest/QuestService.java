@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -103,6 +104,22 @@ public final class QuestService {
 			}
 		}
 		return true;
+	}
+
+	/** Whether the player's active trial still has to kill a {@code type} (an unfinished kill goal names it). */
+	public static boolean stillHunts(final Player player, final EntityType<?> type) {
+		QuestDef quest = active(player);
+		if (quest == null) {
+			return false;
+		}
+		QuestData data = get(player);
+		for (int i = 0; i < quest.kills().size(); i++) {
+			KillGoal goal = quest.kills().get(i);
+			if (data.progress(i) < goal.count() && goal.types().contains(type)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static boolean isReady(final Player player, final QuestDef quest) {

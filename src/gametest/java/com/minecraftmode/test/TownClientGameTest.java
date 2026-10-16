@@ -51,6 +51,7 @@ import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModEffects;
@@ -921,6 +922,7 @@ public class TownClientGameTest implements FabricClientGameTest {
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			require(!DungeonDimension.is(player.level()) && !TrialHunts.hunting(player), "a finished hunt sends the player back");
+			checkSummonSupplies(player);
 			QuestService.abandon(player);
 			player.getInventory().clearContent();
 			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.NONE, 0).withProgress(1, 0));
@@ -928,6 +930,33 @@ public class TownClientGameTest implements FabricClientGameTest {
 			player.snapTo(0.5, -60, 0.5, 0.0F, 0.0F);
 		});
 		MinecraftMode.LOGGER.info("[town] trial hunt: {}", report);
+	}
+
+	/** The guild sells end crystals and wither skulls only while the visitor's trial still has the dragon or the Wither to kill. */
+	private static void checkSummonSupplies(final ServerPlayer player) {
+		require(ShopOffers.trialSupplies(player).isEmpty(), "a rogue trial gets no summoning supplies");
+		QuestService.set(player, QuestService.get(player).start(Quests.get("mage_4")));
+		require(asked(player, Items.END_CRYSTAL) > 0 && asked(player, Items.WITHER_SKELETON_SKULL) == 0, "the dragon trial finds end crystals at the guild");
+		int summon = GearShop.bracketPrice(JobProgression.levelForTier(4));
+		int crystals = 4 * asked(player, Items.END_CRYSTAL);
+		require(crystals >= summon * 0.8F && crystals <= summon * 1.25F, "four crystals cost about one bracket weapon, got " + crystals + " for " + summon);
+		QuestService.set(player, QuestService.get(player).withProgress(0, 1));
+		require(asked(player, Items.END_CRYSTAL) == 0, "a slain dragon takes the crystals off the list");
+		QuestService.set(player, QuestService.get(player).start(Quests.get("warrior_4")));
+		require(asked(player, Items.WITHER_SKELETON_SKULL) > 0 && asked(player, Items.SOUL_SAND) > 0 && asked(player, Items.END_CRYSTAL) == 0,
+			"the Wither trial finds skulls and soul sand at the guild");
+		int wither = 3 * asked(player, Items.WITHER_SKELETON_SKULL);
+		require(wither >= summon * 0.8F && wither <= summon * 1.25F, "three skulls cost about one bracket weapon, got " + wither + " for " + summon);
+	}
+
+	/** Copper the guild asks the visitor for one line selling {@code item}, 0 when it does not sell it. */
+	private static int asked(final ServerPlayer player, final Item item) {
+		for (ShopOffers.Trade trade : ShopOffers.trades(ShopType.GUILD, player)) {
+			if (trade.result().asItem() == item) {
+				return Coins.value(trade.cost().asItem()) * trade.costCount() + (trade.extra() == null ? 0 : Coins.value(trade.extra().asItem()) * trade.extraCount());
+			}
+		}
+		return 0;
 	}
 
 	// ------------------------------------------------------------------ respawning at a bed

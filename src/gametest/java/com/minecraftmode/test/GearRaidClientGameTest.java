@@ -1158,6 +1158,40 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		require(report.isEmpty(), report);
 	}
 
+	/**
+	 * Builds {@code def}'s arena in raid-dimension slot {@code slot}, stands the boss (no AI) where it spawns, and puts the player,
+	 * flying, a little above where the party arrives, looking at it. Shared with {@link SiteShotsClientGameTest}.
+	 */
+	static void stageBoss(final TestServerContext server, final TestServerConnection connection, final BossDef def, final int slot) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = RaidDimension.level(s);
+			BlockPos center = new BlockPos(slot * 1024, RaidDimension.FLOOR_Y, 0);
+			Arenas.build(level, center, def.arena(), RandomSource.create(slot));
+			RaidBoss boss = RaidBosses.type(def).create(level, EntitySpawnReason.COMMAND);
+			Vec3 at = Arenas.bossSpawn(center, def.arena());
+			// turned a little so the side shows too
+			boss.snapTo(at.x, at.y + (def == RaidBosses.IGNIS || def == RaidBosses.AETHRYX ? 4 : 0), at.z, 35.0F, 0.0F);
+			boss.setYHeadRot(35.0F);
+			boss.setYBodyRot(35.0F);
+			boss.configure(1, center);
+			boss.setNoAi(true);
+			level.addFreshEntity(boss);
+			Vec3 eye = Arenas.playerSpawn(center, 1);
+			player.teleportTo(level, eye.x, eye.y + 3, eye.z, Set.of(), 180.0F, 12.0F, true);
+			player.getAbilities().flying = true;
+			player.onUpdateAbilities();
+		});
+	}
+
+	/** Removes the boss {@link #stageBoss} put in {@code slot}. */
+	static void clearBoss(final TestServerContext server, final int slot) {
+		server.runOnServer(s -> {
+			ServerLevel level = RaidDimension.level(s);
+			level.getEntitiesOfClass(RaidBoss.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).forEach(b -> b.discard());
+		});
+	}
+
 	/** Every boss in its arena, seen from where the party arrives. */
 	private static void arenaShots(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		server.runCommand("gamemode creative @p");
@@ -1165,33 +1199,12 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		int i = 0;
 		for (BossDef def : RaidBosses.all()) {
 			final int slot = 40 + i++;
-			server.runOnServer(s -> {
-				ServerPlayer player = connection.getServerPlayer();
-				ServerLevel level = RaidDimension.level(s);
-				BlockPos center = new BlockPos(slot * 1024, RaidDimension.FLOOR_Y, 0);
-				Arenas.build(level, center, def.arena(), RandomSource.create(slot));
-				RaidBoss boss = RaidBosses.type(def).create(level, EntitySpawnReason.COMMAND);
-				Vec3 at = Arenas.bossSpawn(center, def.arena());
-				// turned a little so the side shows too
-				boss.snapTo(at.x, at.y + (def == RaidBosses.IGNIS || def == RaidBosses.AETHRYX ? 4 : 0), at.z, 35.0F, 0.0F);
-				boss.setYHeadRot(35.0F);
-				boss.setYBodyRot(35.0F);
-				boss.configure(1, center);
-				boss.setNoAi(true);
-				level.addFreshEntity(boss);
-				Vec3 eye = Arenas.playerSpawn(center, 1);
-				player.teleportTo(level, eye.x, eye.y + 3, eye.z, Set.of(), 180.0F, 12.0F, true);
-				player.getAbilities().flying = true;
-				player.onUpdateAbilities();
-			});
+			stageBoss(server, connection, def, slot);
 			context.waitTicks(20);
 			connection.waitForChunksRender();
 			context.waitTicks(10);
 			context.takeScreenshot("raid_" + def.id());
-			server.runOnServer(s -> {
-				ServerLevel level = RaidDimension.level(s);
-				level.getEntitiesOfClass(RaidBoss.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).forEach(b -> b.discard());
-			});
+			clearBoss(server, slot);
 		}
 		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5");
 		context.waitTicks(10);

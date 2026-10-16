@@ -659,65 +659,19 @@ final class CityChecks {
 		context.waitTicks(10);
 		context.takeScreenshot("city_map_plaza");
 		context.setScreen(() -> null);
-		view(context, server, "city_plaza", new BlockPos(0, base + 4, 30), new BlockPos(0, base + 4, -20));
-		view(context, server, "city_keep", new BlockPos(0, base + 8, -22), new BlockPos(0, base + 12, -75));
-		view(context, server, "city_mage_quarter", new BlockPos(-35, base + 14, -30), new BlockPos(-66, base + 18, -62));
-		view(context, server, "city_enchanter_hall", new BlockPos(-44, base + 2, -63), new BlockPos(-48, base, -72));
-		BlockPos station = CityZone.enchantingTables(base).get(2);
-		view(context, server, "city_enchanter_grindstone", station.offset(-2, 0, 4), station);
-		view(context, server, "city_warrior_quarter", new BlockPos(40, base + 16, -40), new BlockPos(72, base + 2, -78));
-		view(context, server, "city_old_town", new BlockPos(-36, base + 9, 22), new BlockPos(-68, base + 4, 24));
-		view(context, server, "city_market_guild", new BlockPos(17, base + 7, 28), new BlockPos(17, base + 3, 60));
-		view(context, server, "city_harbor", new BlockPos(38, base + 16, 38), new BlockPos(80, base + 2, 76));
-		view(context, server, "city_archer_park", new BlockPos(-38, base + 12, 58), new BlockPos(-64, base + 2, 86));
-		view(context, server, "city_urahara_shop", new BlockPos(-80, base + 6, 36), new BlockPos(-83, base + 2, 55));
-		view(context, server, "city_hunter_association", new BlockPos(82, base + 7, -34), new BlockPos(85, base + 4, -53));
-		view(context, server, "city_courtyard_portals", new BlockPos(0, base + 4, -50), new BlockPos(0, base + 1, -60));
-		view(context, server, "city_plaza_waystone", new BlockPos(0, base + 3, 24), new BlockPos(0, base, 17));
-		view(context, server, "homestead_plains", new BlockPos(Homestead.CENTER_X - 30, base + 14, 0), new BlockPos(Homestead.CENTER_X, base, 0));
-		BlockPos stairs = TrainingGrounds.entrance(base);
-		view(context, server, "city_training_entrance", stairs.offset(-6, 4, -7), stairs.offset(0, 1, 2));
+		for (Scene scene : scenes(base)) {
+			view(context, server, scene.name(), scene.camera(), scene.target());
+		}
 
 		for (JobClass job : JobClass.PLAYABLE) {
 			BlockPos home = CityZone.trainerHome(job, base);
-			BlockPos camera = server.computeOnServer(s -> {
-				ServerLevel level = s.overworld();
-				for (int distance = 3; distance >= 2; distance--) {
-					for (Direction direction : Direction.Plane.HORIZONTAL) {
-						BlockPos candidate = home.relative(direction, distance).above();
-						boolean clear = true;
-						for (int step = 1; step <= distance; step++) {
-							clear &= level.getBlockState(home.relative(direction, step).above()).isAir();
-						}
-						if (clear) {
-							return candidate;
-						}
-					}
-				}
-				return home.offset(2, 1, 2);
-			});
-			view(context, server, "trainer_" + job.id(), camera, home.above());
+			view(context, server, "trainer_" + job.id(), besideHome(server, home, false), home.above());
 		}
 
 		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
 			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER, CityNpc.Role.HUNT_MASTER}) {
 			BlockPos home = CityZone.npcHome(role, base);
-			BlockPos camera = server.computeOnServer(s -> {
-				ServerLevel level = s.overworld();
-				for (int distance = 3; distance >= 2; distance--) {
-					for (Direction direction : Direction.Plane.HORIZONTAL) {
-						boolean clear = true;
-						for (int step = 1; step <= distance; step++) {
-							clear &= level.getBlockState(home.relative(direction, step).above()).isAir() && level.getBlockState(home.relative(direction, step)).isAir();
-						}
-						if (clear) {
-							return home.relative(direction, distance).above();
-						}
-					}
-				}
-				return home.offset(2, 1, 2);
-			});
-			view(context, server, "npc_" + role.id(), camera, home.above());
+			view(context, server, "npc_" + role.id(), besideHome(server, home, true), home.above());
 		}
 
 		// the dialog over the city, as a right-click opens it
@@ -871,6 +825,55 @@ final class CityChecks {
 		context.getInput().lookAt(target);
 		context.waitTicks(60);
 		context.takeScreenshot(name);
+	}
+
+	/** A view of the capital: where the camera stands and what it looks at. Shared with {@link SiteShotsClientGameTest}. */
+	record Scene(String name, BlockPos camera, BlockPos target) {
+	}
+
+	static List<Scene> scenes(final int base) {
+		BlockPos station = CityZone.enchantingTables(base).get(2);
+		BlockPos stairs = TrainingGrounds.entrance(base);
+		return List.of(
+			new Scene("city_plaza", new BlockPos(0, base + 4, 30), new BlockPos(0, base + 4, -20)),
+			new Scene("city_keep", new BlockPos(0, base + 8, -22), new BlockPos(0, base + 12, -75)),
+			new Scene("city_mage_quarter", new BlockPos(-35, base + 14, -30), new BlockPos(-66, base + 18, -62)),
+			new Scene("city_enchanter_hall", new BlockPos(-44, base + 2, -63), new BlockPos(-48, base, -72)),
+			new Scene("city_enchanter_grindstone", station.offset(-2, 0, 4), station),
+			new Scene("city_warrior_quarter", new BlockPos(40, base + 16, -40), new BlockPos(72, base + 2, -78)),
+			new Scene("city_old_town", new BlockPos(-36, base + 9, 22), new BlockPos(-68, base + 4, 24)),
+			new Scene("city_market_guild", new BlockPos(17, base + 7, 28), new BlockPos(17, base + 3, 60)),
+			new Scene("city_harbor", new BlockPos(38, base + 16, 38), new BlockPos(80, base + 2, 76)),
+			new Scene("city_archer_park", new BlockPos(-38, base + 12, 58), new BlockPos(-64, base + 2, 86)),
+			new Scene("city_urahara_shop", new BlockPos(-80, base + 6, 36), new BlockPos(-83, base + 2, 55)),
+			new Scene("city_hunter_association", new BlockPos(82, base + 7, -34), new BlockPos(85, base + 4, -53)),
+			new Scene("city_courtyard_portals", new BlockPos(0, base + 4, -50), new BlockPos(0, base + 1, -60)),
+			new Scene("city_plaza_waystone", new BlockPos(0, base + 3, 24), new BlockPos(0, base, 17)),
+			new Scene("homestead_plains", new BlockPos(Homestead.CENTER_X - 30, base + 14, 0), new BlockPos(Homestead.CENTER_X, base, 0)),
+			new Scene("city_training_entrance", stairs.offset(-6, 4, -7), stairs.offset(0, 1, 2)));
+	}
+
+	/**
+	 * A free spot 3 (else 2) blocks beside someone standing at {@code home}, at head height, to look at them from. {@code clearFeet}
+	 * also wants the blocks at foot level open. Falls back to a diagonal spot.
+	 */
+	static BlockPos besideHome(final TestServerContext server, final BlockPos home, final boolean clearFeet) {
+		return server.computeOnServer(s -> {
+			ServerLevel level = s.overworld();
+			for (int distance = 3; distance >= 2; distance--) {
+				for (Direction direction : Direction.Plane.HORIZONTAL) {
+					boolean clear = true;
+					for (int step = 1; step <= distance; step++) {
+						BlockPos at = home.relative(direction, step);
+						clear &= level.getBlockState(at.above()).isAir() && (!clearFeet || level.getBlockState(at).isAir());
+					}
+					if (clear) {
+						return home.relative(direction, distance).above();
+					}
+				}
+			}
+			return home.offset(2, 1, 2);
+		});
 	}
 
 	/**

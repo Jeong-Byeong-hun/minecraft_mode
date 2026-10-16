@@ -883,9 +883,41 @@ public class JobClientGameTest implements FabricClientGameTest {
 		float stormed = server.computeOnServer(s -> 400.0F - lone[0].getHealth());
 		require(stormed > 0.0F && stormed < 3.0F * orb[0], "Flower Storm should hit a lone husk with about one orb of " + orb[0] + ", took " + stormed);
 		server.runCommand("kill @e[tag=" + TARGET + "]");
+
+		// every shot of a fan hits each enemy once: point blank, all three of Lake Slash's waves used to land on the husk in front
+		LivingEntity[] close = new LivingEntity[1];
+		float[] wave = new float[1];
+		int lake = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 4).withProgress(100, 0));
+			WeaponDef arondight = JobWeapons.def("arondight");
+			ItemStack sword = new ItemStack(JobWeapons.item(arondight));
+			player.setItemInHand(InteractionHand.MAIN_HAND, sword);
+			JobStats.refresh(player);
+			player.snapTo(0.5, -60, 0.5, 180.0F, 0.0F);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			close[0] = spawnTarget(player.level(), 0.5, -60, -1.5);
+			int slot = 0;
+			while (!arondight.skills().get(slot).id().equals("arondight.lake_slash")) {
+				slot++;
+			}
+			wave[0] = new SkillContext(player, arondight, arondight.skills().get(slot), sword, JobWeapons.activeTotals(player), 0.0).damageFor(1.65);
+			return slot;
+		});
+		context.waitTicks(2);
+		SkillCaster.Result waves = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), lake);
+		});
+		require(waves == SkillCaster.Result.OK, "Lake Slash could not be cast: " + waves);
+		context.waitTicks(20);
+		float slashed = server.computeOnServer(s -> 400.0F - close[0].getHealth());
+		require(slashed > 0.0F && slashed < 1.75F * wave[0], "Lake Slash should hit a husk two blocks ahead with one wave of " + wave[0] + ", took " + slashed);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] volleys: {} health from blades under a roof, arrows through the damage cooldown {}, bow shot from inside a husk hit,"
-			+ " a fan of four took {} off the husk in front (one arrow {}) and {} off the one beside it, Flower Storm took {} off a lone husk (one orb {})",
-			blades[0], java.util.Arrays.toString(drops), fanLost[0], arrowHit[1], fanLost[1], stormed, orb[0]);
+			+ " a fan of four took {} off the husk in front (one arrow {}) and {} off the one beside it, Flower Storm took {} off a lone husk (one orb {}),"
+			+ " Lake Slash took {} off a husk two blocks ahead (one wave {})",
+			blades[0], java.util.Arrays.toString(drops), fanLost[0], arrowHit[1], fanLost[1], stormed, orb[0], slashed, wave[0]);
 	}
 
 	/**

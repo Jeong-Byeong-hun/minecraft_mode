@@ -1,5 +1,6 @@
 package com.minecraftmode.job.skill;
 
+import java.util.List;
 import net.minecraft.network.chat.Component;
 
 /**
@@ -32,5 +33,10 @@ public interface SkillAction {
 	 */
 	default double estimate(final int targets) {
 		return 0.0;
+	}
+
+	/** What this step does for the caster's damage while it lasts (boosts, marks, empowered hits, vulnerability); only the class docs read it. */
+	default List<SkillSupport> supports() {
+		return List.of();
 	}
 }

@@ -27,7 +27,7 @@ public abstract class AbstractArrowMixin {
 	@Shadow
 	protected abstract boolean canHitEntity(Entity entity);
 
-	/** The arrows of one basic shot hit each enemy once; the others fly on past it to the monsters around ({@code BasicAttacks.Fan}). */
+	/** The arrows of one basic shot or skill fan hit each enemy once; the others fly on past it to the monsters around ({@code BasicAttacks.Fan}). */
 	@Inject(method = "canHitEntity", at = @At("HEAD"), cancellable = true)
 	private void minecraftMode$oneArrowPerEnemy(final Entity entity, final CallbackInfoReturnable<Boolean> cir) {
 		if (CombatHooks.fanTaken((AbstractArrow)(Object)this, entity)) {

@@ -18,9 +18,16 @@
 			"com.minecraftmode.test.TownClientGameTest",
 			"com.minecraftmode.test.MultiplayerClientGameTest",
 			"com.minecraftmode.test.SiteShotsClientGameTest",
-			"com.minecraftmode.test.PortraitsClientGameTest"
+			"com.minecraftmode.test.PortraitsClientGameTest",
+			"com.minecraftmode.test.DamageClientGameTest"
 		]
 	},
+	"mixins": [
+		{
+			"config": "minecraft_mode_test.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"minecraft_mode": "*"
 	}

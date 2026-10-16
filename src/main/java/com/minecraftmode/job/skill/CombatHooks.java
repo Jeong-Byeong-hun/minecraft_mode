@@ -88,11 +88,21 @@ public final class CombatHooks {
 	public static boolean lastHitWasCrit() {
 		return critHit;
 	}
+
+	/** The kind of hit {@link #deal} is dealing right now, or null for vanilla hits (swings, arrows, summons); for damage meters. */
+	public static @Nullable DamageKind dealing() {
+		return current;
+	}
+
+	/** Whether {@code arrow} was loosed by a skill rather than a class bow's basic shot; for damage meters. */
+	public static boolean skillArrow(final Entity arrow) {
+		return SKILL_ARROWS.containsKey(arrow);
+	}
 	/** Vanilla arrows loosed by class bows -> their damage. */
 	private static final Map<Entity, Float> ARROWS = new WeakHashMap<>();
 	/** Vanilla arrows fired by skills -> the skill that fired them. */
 	private static final Map<Entity, SkillArrow> SKILL_ARROWS = new WeakHashMap<>();
-	/** Class bow arrows of a basic shot with more than one arrow -> that shot (each enemy takes one of them). */
+	/** Class bow arrows of a basic shot with more than one arrow, and skill arrows of a fan -> that shot (each enemy takes one of them). */
 	private static final Map<Entity, BasicAttacks.Fan> FANS = new WeakHashMap<>();
 
 	private record SkillArrow(SkillContext ctx, double multiplier) {
@@ -129,7 +139,15 @@ public final class CombatHooks {
 	}
 
 	public static void trackSkillArrow(final Entity arrow, final SkillContext ctx, final double multiplier) {
+		trackSkillArrow(arrow, ctx, multiplier, null);
+	}
+
+	/** A vanilla arrow a skill fired; {@code fan} = the other shots of the same fan (each enemy takes one), or null. */
+	public static void trackSkillArrow(final Entity arrow, final SkillContext ctx, final double multiplier, final BasicAttacks.@Nullable Fan fan) {
 		SKILL_ARROWS.put(arrow, new SkillArrow(ctx, multiplier));
+		if (fan != null) {
+			FANS.put(arrow, fan);
+		}
 	}
 
 	/** A vanilla arrow loosed by a class bow or a skill (see {@code AbstractArrowMixin}). */
@@ -222,7 +240,7 @@ public final class CombatHooks {
 		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
 			victim.damageCooldownTime = 0;
 		}
-		if (arrowDamage != null) {
+		if (arrowDamage != null || skillArrow != null) {
 			BasicAttacks.Fan fan = FANS.get(direct);
 			if (fan != null) {
 				fan.take(victim);

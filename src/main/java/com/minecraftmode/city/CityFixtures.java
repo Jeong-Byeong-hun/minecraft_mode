@@ -26,7 +26,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * Things the capital offers everyone: a lit Nether portal and an active End portal in the keep courtyard (beside the raid and
- * dungeon gates), ender chests across the city ({@link #enderChests}) and the travel circle on the plaza that takes players to the
+ * dungeon gates), ender chests across the city ({@link #enderChests}) with a crafting table beside each ({@link #craftingTables},
+ * one more in the forge) and the travel circle on the plaza that takes players to the
  * homestead plains and back ({@link #useWaystone}). The generator builds them with the city ({@link #build}); worlds made before
  * they existed get them at runtime ({@link #ensure}, every 100 ticks), and missing pieces are put back the same way.
  */
@@ -61,9 +62,29 @@ public final class CityFixtures {
 		Map.entry(new BlockPos(6, 0, 84), Direction.SOUTH)
 	);
 
+	/**
+	 * Crafting tables (dy 0): one beside every ender chest (plaza, keep courtyard, Adventurers' Guild, market, south square) and
+	 * one in the forge between the water cauldron and the smithing table. Nobody can place a block inside the walls, so these
+	 * are the town's 3x3 crafting grids besides the old-town homes and the guild's corner.
+	 */
+	public static final List<BlockPos> CRAFTING_TABLES = List.of(
+		new BlockPos(-4, 0, 17), new BlockPos(4, 0, 17),
+		new BlockPos(-4, 0, -17), new BlockPos(4, 0, -17),
+		new BlockPos(-12, 0, -52), new BlockPos(12, 0, -52),
+		new BlockPos(24, 0, 54), new BlockPos(24, 0, 64),
+		new BlockPos(-9, 0, 77), new BlockPos(-19, 0, 77),
+		new BlockPos(-7, 0, 84), new BlockPos(7, 0, 84),
+		new BlockPos(-25, 0, 89)
+	);
+
 	/** Absolute positions of the ender chests in a world whose city floor is {@code base}. */
 	public static List<BlockPos> enderChests(final int base) {
 		return ENDER_CHESTS.keySet().stream().map(p -> p.above(base)).toList();
+	}
+
+	/** Absolute positions of the crafting tables in a world whose city floor is {@code base}. */
+	public static List<BlockPos> craftingTables(final int base) {
+		return CRAFTING_TABLES.stream().map(p -> p.above(base)).toList();
 	}
 
 	public static BlockPos netherPortal(final int base) {
@@ -87,6 +108,9 @@ public final class CityFixtures {
 		for (Map.Entry<BlockPos, Direction> chest : ENDER_CHESTS.entrySet()) {
 			BlockPos p = chest.getKey();
 			b.set(p.getX(), p.getY(), p.getZ(), Blocks.ENDER_CHEST.defaultBlockState().setValue(EnderChestBlock.FACING, chest.getValue()));
+		}
+		for (BlockPos p : CRAFTING_TABLES) {
+			b.set(p.getX(), p.getY(), p.getZ(), Blocks.CRAFTING_TABLE);
 		}
 		waystone(b, WAYSTONE.getX(), WAYSTONE.getZ());
 	}
@@ -142,6 +166,9 @@ public final class CityFixtures {
 		repair(level, base, waystone(base), Blocks.LODESTONE.defaultBlockState());
 		for (BlockPos p : enderChests(base)) {
 			repair(level, base, p, Blocks.ENDER_CHEST.defaultBlockState());
+		}
+		for (BlockPos p : craftingTables(base)) {
+			repair(level, base, p, Blocks.CRAFTING_TABLE.defaultBlockState());
 		}
 		Homestead.ensure(level);
 	}

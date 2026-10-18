@@ -765,6 +765,16 @@ final class CityChecks {
 				require(level.getBlockState(chest).is(Blocks.ENDER_CHEST), "an ender chest stands at " + chest);
 				require(level.getBlockState(chest.above()).isAir(), "nothing sits on the ender chest at " + chest);
 			}
+			for (BlockPos table : CityFixtures.craftingTables(base)) {
+				require(level.getBlockState(table).is(Blocks.CRAFTING_TABLE), "a crafting table stands at " + table);
+				require(level.getBlockState(table.above()).isAir(), "nothing sits on the crafting table at " + table);
+				boolean open = false;
+				for (Direction side : Direction.Plane.HORIZONTAL) {
+					BlockPos front = table.relative(side);
+					open |= level.getBlockState(front).isAir() && level.getBlockState(front.above()).isAir() && level.getBlockState(front.below()).isFaceSturdy(level, front.below(), Direction.UP);
+				}
+				require(open, "a player can step up to the crafting table at " + table);
+			}
 			require(level.getBlockState(CityFixtures.waystone(base)).is(Blocks.LODESTONE), "the plaza travel circle is there");
 			require(!level.getEntitiesOfClass(CityNpc.class, new AABB(CityZone.npcHome(CityNpc.Role.HUNT_MASTER, base)).inflate(4),
 				n -> n.role() == CityNpc.Role.HUNT_MASTER).isEmpty(), "Huntmaster Garrick stands on the plaza");
@@ -773,6 +783,10 @@ final class CityChecks {
 			level.removeBlock(first, false);
 			CityFixtures.ensure(level);
 			require(level.getBlockState(first).is(Blocks.ENDER_CHEST), "a missing ender chest is put back");
+			BlockPos forgeTable = CityFixtures.craftingTables(base).getLast();
+			level.removeBlock(forgeTable, false);
+			CityFixtures.ensure(level);
+			require(level.getBlockState(forgeTable).is(Blocks.CRAFTING_TABLE), "a missing crafting table is put back");
 			// the homestead plains: flat at the city floor, no trees
 			int bumps = 0;
 			List<String> where = new ArrayList<>();

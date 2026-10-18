@@ -696,6 +696,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("- **차원문**: 성 안뜰의 레이드·던전 문 사이에 켜진 네더 차원문(x ").append(nether.getX()).append(", z ").append(nether.getZ())
 			.append(")과 엔드 차원문(x ").append(end.getX()).append(", z ").append(end.getZ()).append(").\n");
 		md.append("- **엔더 상자** ").append(CityFixtures.ENDER_CHESTS.size()).append("개: 광장(스폰 뒤·분수 북쪽), 성 안뜰, 모험가 길드 안, 시장, 남쪽 광장.\n");
+		md.append("- **제작대** ").append(CityFixtures.CRAFTING_TABLES.size()).append("개: 엔더 상자마다 바로 옆에 하나, 대장간(물 가마솥과 대장장이 작업대 사이)에 하나. ")
+			.append("성벽 안에서는 블록을 놓을 수 없어서 마을에서 3x3 제작을 하는 자리입니다. 부서지거나 없어지면 다시 놓입니다(이전에 만든 월드에도 생김).\n");
 		md.append("- **건축 평야**: 동문 밖 x ").append(Homestead.X0).append("–").append(Homestead.X1).append(", z ").append(-Homestead.HALF_Z).append("–").append(Homestead.HALF_Z)
 			.append("의 평지(도시 바닥 높이, 나무·구조물 없음, 지상에 적대 몹이 나오지 않음). 누구나 건축할 수 있습니다. 이 평야가 생기기 전에 만든 월드는 서버가 처음 켜질 때 한 번 평야 구역을 평지로 깎습니다(그 자리의 지형·나무·건물은 사라지고, 이후 지은 건물은 그대로).\n");
 		md.append("- **이동 마법진**(자석석): 광장 스폰 바로 뒤(x 0, z ").append(CityFixtures.WAYSTONE.getZ()).append(")와 건축 평야 한가운데(x ").append(Homestead.CENTER_X)

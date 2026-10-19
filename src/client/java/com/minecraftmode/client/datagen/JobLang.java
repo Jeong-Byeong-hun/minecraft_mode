@@ -230,6 +230,7 @@ final class JobLang {
 		ResidenceLang.add(b, ko);
 		MenuLang.add(b, ko);
 		AccessoryLang.add(b, ko);
+		JumpLang.add(b, ko);
 	}
 
 	private JobLang() {

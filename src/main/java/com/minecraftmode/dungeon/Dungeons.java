@@ -7,6 +7,7 @@ import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.job.quest.TrialHunts;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.MobPower;
@@ -518,6 +519,10 @@ public final class Dungeons {
 	private static boolean fall(final ServerPlayer player) {
 		if (!DungeonDimension.is(player.level())) {
 			return false;
+		}
+		// a jump course sends its climber home itself
+		if (JumpForest.fall(player)) {
+			return true;
 		}
 		player.setHealth(1.0F);
 		DungeonInstance instance = instanceOf(player);

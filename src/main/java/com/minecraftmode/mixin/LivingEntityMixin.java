@@ -25,6 +25,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityMixin {
+	/** A spear's Lunge (its post-piercing impulse) is a free dash: refused in a jump course ({@code JumpForest}). */
+	@Inject(method = "postPiercingAttack", at = @At("HEAD"), cancellable = true)
+	private void minecraftMode$noLungeInCourse(final CallbackInfo ci) {
+		if ((Object)this instanceof net.minecraft.server.level.ServerPlayer player && com.minecraftmode.jump.JumpForest.bound(player)) {
+			ci.cancel();
+		}
+	}
+
 	@ModifyVariable(method = "hurtServer", at = @At("HEAD"), argsOnly = true)
 	private float minecraftMode$classDamage(final float damage, @Local(argsOnly = true) final DamageSource source) {
 		return CombatHooks.modifyIncoming((LivingEntity)(Object)this, source, damage);

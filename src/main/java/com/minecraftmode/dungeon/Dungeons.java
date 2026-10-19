@@ -498,6 +498,10 @@ public final class Dungeons {
 
 	/** {@code /dungeon leave}: go home now (during a run this gives the run up for this player). */
 	public static boolean leave(final ServerPlayer player) {
+		// a jump course climber goes back to where they entered, not to the plaza
+		if (JumpForest.busy(player)) {
+			return JumpForest.leave(player);
+		}
 		DungeonInstance instance = instanceOf(player);
 		if (instance == null) {
 			if (DungeonDimension.is(player.level())) {

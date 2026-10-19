@@ -31,6 +31,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
@@ -51,7 +52,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -98,19 +104,52 @@ public final class JumpForest {
 
 	public static final List<Finish> FINISHED = new CopyOnWriteArrayList<>();
 
-	/** Where a player in a course goes back to. Saved with the player while they climb. */
-	public record Return(String dimension, double x, double y, double z, float yRot) {
+	/**
+	 * Where a player in a course goes back to. Saved with the player while they climb. {@code air}: no ground was found under the
+	 * point (entered over the void or very high up), so the way home comes with slow falling.
+	 */
+	public record Return(String dimension, double x, double y, double z, float yRot, boolean air) {
 		public static final Codec<Return> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Codec.STRING.fieldOf("dimension").forGetter(Return::dimension),
 			Codec.DOUBLE.fieldOf("x").forGetter(Return::x),
 			Codec.DOUBLE.fieldOf("y").forGetter(Return::y),
 			Codec.DOUBLE.fieldOf("z").forGetter(Return::z),
-			Codec.FLOAT.optionalFieldOf("y_rot", 0.0F).forGetter(Return::yRot)
+			Codec.FLOAT.optionalFieldOf("y_rot", 0.0F).forGetter(Return::yRot),
+			Codec.BOOL.optionalFieldOf("air", false).forGetter(Return::air)
 		).apply(i, Return::new));
 
+		/** Where {@code player} stands, or the ground under them when they are in the air (on a flying mount, mid-jump). */
 		static Return of(final ServerPlayer player) {
-			return new Return(player.level().dimension().identifier().toString(), player.getX(), player.getY(), player.getZ(), player.getYRot());
+			double ground = groundY(player);
+			boolean air = Double.isNaN(ground);
+			return new Return(player.level().dimension().identifier().toString(), player.getX(), air ? player.getY() : ground, player.getZ(), player.getYRot(), air);
 		}
+	}
+
+	/** How far down {@link Return#of} looks for ground under a player in the air. */
+	private static final int GROUND_SEARCH = 96;
+
+	/**
+	 * The height of the ground (or water) under {@code player}: their own y when they stand or swim, NaN when nothing is found
+	 * within {@link #GROUND_SEARCH} blocks. Only loaded blocks are read (the player stands among them).
+	 */
+	static double groundY(final ServerPlayer player) {
+		if (player.onGround() && !player.isPassenger() || player.isInWater()) {
+			return player.getY();
+		}
+		Level level = player.level();
+		BlockPos.MutableBlockPos pos = BlockPos.containing(player.position()).mutable();
+		for (int i = 0; i < GROUND_SEARCH && pos.getY() > level.getMinY(); i++) {
+			pos.move(net.minecraft.core.Direction.DOWN);
+			if (!level.getFluidState(pos).isEmpty()) {
+				return pos.getY() + 1.0;
+			}
+			net.minecraft.world.phys.shapes.VoxelShape shape = level.getBlockState(pos).getCollisionShape(level, pos);
+			if (!shape.isEmpty()) {
+				return pos.getY() + shape.max(net.minecraft.core.Direction.Axis.Y);
+			}
+		}
+		return Double.NaN;
 	}
 
 	/** Courses sit far west of everything else in the dungeon dimension, one slot every {@link #SPACING} blocks north to south. */
@@ -127,6 +166,11 @@ public final class JumpForest {
 	public static final String TAG = "minecraft_mode.jump";
 	private static final TicketType TICKET = Registry.register(BuiltInRegistries.TICKET_TYPE, MinecraftMode.id("jump_course"),
 		new TicketType(TicketType.NO_TIMEOUT, TicketType.FLAG_LOADING));
+
+	/** The transient modifier that holds jump strength, step height and gravity at their base values in a course. */
+	public static final Identifier LEVELER = MinecraftMode.id("jump/course_level");
+	/** Slow falling given on the way home when the return point has no ground right under it. */
+	private static final int RETURN_SLOW_FALL_TICKS = 200;
 
 	private static final Map<UUID, Run> RUNS = new HashMap<>();
 
@@ -220,7 +264,7 @@ public final class JumpForest {
 	}
 
 	/** Course rules apply to {@code player}: in a course and not in creative or spectator mode. */
-	private static boolean bound(final Player player) {
+	public static boolean bound(final Player player) {
 		return inCourse(player) && !player.isCreative() && !player.isSpectator();
 	}
 
@@ -282,12 +326,14 @@ public final class JumpForest {
 		}
 		Run run = new Run(player, course, slot, JumpCourse.tenacity());
 		RUNS.put(player.getUUID(), run);
-		// the course's chunks plus a ring around them (building touches the edges), loaded but never ticking
+		// the course's own chunks (3x3, loaded but never ticking). The builder writes nothing outside them and never updates
+		// neighbours, so no ring is needed, and slots (four chunks apart) never share a ticket: vanilla keeps one ticket per type,
+		// level and chunk, so one climb's release would otherwise drop its neighbour's
 		ServerChunkCache cache = level.getChunkSource();
-		int c0 = (run.origin.getX() >> 4) - 1;
-		int c1 = (run.origin.getX() + JumpCourse.SIZE - 1 >> 4) + 1;
-		int d0 = (run.origin.getZ() >> 4) - 1;
-		int d1 = (run.origin.getZ() + JumpCourse.SIZE - 1 >> 4) + 1;
+		int c0 = run.origin.getX() >> 4;
+		int c1 = run.origin.getX() + JumpCourse.SIZE - 1 >> 4;
+		int d0 = run.origin.getZ() >> 4;
+		int d1 = run.origin.getZ() + JumpCourse.SIZE - 1 >> 4;
 		for (int cx = c0; cx <= c1; cx++) {
 			for (int cz = d0; cz <= d1; cz++) {
 				ChunkPos pos = new ChunkPos(cx, cz);
@@ -383,6 +429,18 @@ public final class JumpForest {
 		return true;
 	}
 
+	/**
+	 * Stops a course that is still being prepared for {@code player} (a character switch: the character who asked goes to the roster,
+	 * and the next one must not be sent in). A climb already under way is left alone (nobody switches inside a course).
+	 */
+	public static void cancel(final ServerPlayer player) {
+		Run run = RUNS.get(player.getUUID());
+		if (run != null && run.state == State.LOADING) {
+			tell(player, "message.minecraft_mode.jump.cancelled");
+			end(player.level().getServer(), player, run);
+		}
+	}
+
 	/** Dying in a course (only /kill gets through): back home on the next tick instead. Called by {@code Dungeons} first. */
 	public static boolean fall(final ServerPlayer player) {
 		Run run = RUNS.get(player.getUUID());
@@ -431,6 +489,10 @@ public final class JumpForest {
 		player.resetFallDistance();
 		player.setDeltaMovement(Vec3.ZERO);
 		player.clearFire();
+		// entered over the void or very high up (Return.air): float down instead of falling
+		if (back != null && back.air() && to.dimension().identifier().toString().equals(back.dimension())) {
+			player.addEffect(new MobEffectInstance(MobEffects.SLOW_FALLING, RETURN_SLOW_FALL_TICKS, 0, false, false, true));
+		}
 	}
 
 	private static @Nullable ServerLevel level(final MinecraftServer server, final String dimension) {
@@ -494,6 +556,42 @@ public final class JumpForest {
 	private static void restoreAbilities(final ServerPlayer player) {
 		player.gameMode.getGameModeForPlayer().updatePlayerAbilities(player.getAbilities());
 		player.onUpdateAbilities();
+		for (Holder<Attribute> attribute : List.of(Attributes.JUMP_STRENGTH, Attributes.STEP_HEIGHT, Attributes.GRAVITY)) {
+			AttributeInstance instance = player.getAttribute(attribute);
+			if (instance != null) {
+				instance.removeModifier(LEVELER);
+			}
+		}
+	}
+
+	/**
+	 * Holds {@code attribute} at its base value with one transient modifier ({@link #LEVELER}, multiplied last): above it when
+	 * {@code capAbove} (jump strength, step height), below it otherwise (gravity). Penalties (a stun's zero jump) are kept. The
+	 * modifier is only replaced when the bonuses under it change, so the attribute is not resent every tick.
+	 */
+	private static void level(final ServerPlayer player, final Holder<Attribute> attribute, final boolean capAbove) {
+		AttributeInstance instance = player.getAttribute(attribute);
+		if (instance == null) {
+			return;
+		}
+		AttributeModifier old = instance.getModifier(LEVELER);
+		double base = instance.getBaseValue();
+		// the value without the leveler (it multiplies the total last)
+		double free = old == null ? instance.getValue() : old.amount() <= -1.0 ? Double.NaN : instance.getValue() / (1.0 + old.amount());
+		if (Double.isNaN(free)) {
+			instance.removeModifier(LEVELER);
+			free = instance.getValue();
+			old = null;
+		}
+		boolean bonus = free > 0.0 && (capAbove ? free > base + 1.0E-6 : free < base - 1.0E-6);
+		double amount = bonus ? base / free - 1.0 : 0.0;
+		if (old != null && Math.abs(old.amount() - amount) < 1.0E-6) {
+			return;
+		}
+		instance.removeModifier(LEVELER);
+		if (bonus) {
+			instance.addTransientModifier(new AttributeModifier(LEVELER, amount, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+		}
 	}
 
 	// ------------------------------------------------------------------ ticking
@@ -503,6 +601,8 @@ public final class JumpForest {
 			return;
 		}
 		ServerLevel level = DungeonDimension.level(server);
+		// building a course reads and writes about 220k blocks: at most one opens per tick, the others wait their turn
+		boolean opened = false;
 		for (Run run : List.copyOf(RUNS.values())) {
 			ServerPlayer player = server.getPlayerList().getPlayer(run.player);
 			if (player == null || level == null) {
@@ -515,8 +615,9 @@ public final class JumpForest {
 					if (Characters.choosing(player) || RaidDimension.is(player.level()) || DungeonDimension.is(player.level()) || Lobby.is(player.level())) {
 						tell(player, "message.minecraft_mode.jump.cancelled");
 						end(server, player, run);
-					} else if (loaded(level, run)) {
+					} else if (!opened && loaded(level, run)) {
 						open(level, player, run);
+						opened = true;
 					} else if (run.timer > LOAD_TICKS) {
 						tell(player, "message.minecraft_mode.jump.failed");
 						end(server, player, run);
@@ -542,6 +643,8 @@ public final class JumpForest {
 			clearEntities(level, run);
 			player.removeAttached(ModAttachments.JUMP_RETURN);
 			restoreAbilities(player);
+			// the level change came while the climb still counted, so the pet stayed home: it comes back now
+			Companions.restore(player);
 			return;
 		}
 		keepSafe(player);
@@ -601,6 +704,10 @@ public final class JumpForest {
 		player.removeEffect(MobEffects.LEVITATION);
 		player.removeEffect(MobEffects.JUMP_BOOST);
 		player.removeEffect(MobEffects.SLOW_FALLING);
+		// attribute bonuses too (Leap boots and the Leap aura raise jump strength): no higher jumps, lower gravity or taller steps
+		level(player, Attributes.JUMP_STRENGTH, true);
+		level(player, Attributes.STEP_HEIGHT, true);
+		level(player, Attributes.GRAVITY, false);
 		if (player.tickCount % 20 == 0 && player.getFoodData().needsFood()) {
 			player.getFoodData().setFoodLevel(20);
 		}

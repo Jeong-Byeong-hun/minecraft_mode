@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -135,8 +136,20 @@ public final class LairTravel {
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(LairTravel::tick);
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-			OFFERS.remove(handler.player.getUUID());
-			EXITS.remove(handler.player.getUUID());
+			UUID id = handler.player.getUUID();
+			OFFERS.remove(id);
+			EXITS.remove(id);
+			Trip trip = TRIPS.remove(id);
+			ServerLevel level = trip == null ? null : server.getLevel(trip.target.dimension());
+			if (level != null) {
+				release(level.getChunkSource(), trip);
+			}
+		});
+		// tickets die with the server; the maps must not carry trips into the next world of a singleplayer session
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			OFFERS.clear();
+			EXITS.clear();
+			TRIPS.clear();
 		});
 	}
 
@@ -227,7 +240,7 @@ public final class LairTravel {
 					}
 					ChunkPos chunk = placement.getPotentialStructureChunk(state.getLevelSeed(), ox + spacing * x, oz + spacing * z);
 					Target target = lairAt(level, chunk, placement, lairs);
-					if (target != null && !skip.contains(target.key())) {
+					if (target != null && !skip.contains(target.key()) && level.getWorldBorder().isWithinBounds(target.entrance())) {
 						found.add(target);
 					}
 				}
@@ -382,7 +395,7 @@ public final class LairTravel {
 			} else if (++trip.waited > WAIT_TICKS) {
 				release(cache, trip);
 				it.remove();
-				fail(player, trip.target);
+				fail(player, trip.target, trip.map);
 			}
 		}
 	}
@@ -405,8 +418,9 @@ public final class LairTravel {
 		return true;
 	}
 
-	private static void fail(final ServerPlayer player, final Target target) {
-		player.sendSystemMessage(Component.translatable("message.minecraft_mode.lair.travel_failed", Component.translatable(target.lair().nameKey()))
+	/** A trip that could not end: a map trip keeps its map, the way back just did not open. */
+	private static void fail(final ServerPlayer player, final Target target, final boolean map) {
+		player.sendSystemMessage(Component.translatable(map ? "message.minecraft_mode.lair.travel_failed" : "message.minecraft_mode.lair.exit_failed", Component.translatable(target.lair().nameKey()))
 			.withStyle(ChatFormatting.RED));
 	}
 
@@ -414,7 +428,7 @@ public final class LairTravel {
 	private static void arrive(final ServerPlayer player, final ServerLevel level, final Trip trip) {
 		Target target = trip.target;
 		if (player.level() != level || !allowed(player) || !player.isAlive()) {
-			fail(player, target);
+			fail(player, target, trip.map);
 			return;
 		}
 		if (trip.map && clearedThisCycle(player, target)) {
@@ -424,7 +438,7 @@ public final class LairTravel {
 		BlockPos spot = safeSpot(level, target.entrance());
 		if (spot == null) {
 			MinecraftMode.LOGGER.warn("No safe spot by the gate of {} at {}", target.lair().id(), target.entrance());
-			fail(player, target);
+			fail(player, target, trip.map);
 			return;
 		}
 		if (trip.map && !player.isCreative()) {
@@ -477,7 +491,7 @@ public final class LairTravel {
 	}
 
 	public static boolean safe(final ServerLevel level, final BlockPos feet) {
-		if (!level.isLoaded(feet) || !level.isInWorldBounds(feet)) {
+		if (!level.isLoaded(feet) || !level.isInWorldBounds(feet) || !level.getWorldBorder().isWithinBounds(feet)) {
 			return false;
 		}
 		BlockPos below = feet.below();

@@ -333,10 +333,31 @@ public class LairClientGameTest implements FabricClientGameTest {
 			lord.raiseTo(high);
 			require(MobPower.toughness(lord) == tough, "raising twice to the same level changes nothing");
 			require(LairExp.lordExp(player, lord) == JobProgression.levelExp(player, high, LairExp.LORD)
-				&& LairExp.lordExp(player, lord) > JobProgression.levelExp(player, named.hi(), LairExp.LORD), "a lord pays a share of the player's own level");
+				&& LairExp.lordExp(player, lord) > JobProgression.levelExp(player, named.hi(), LairExp.LORD), "a raised lord pays a share of the player's own level");
 			lord.setNoAi(true);
+			// the strong player leaves: out of combat the lord falls back to its own level; back again, it rises again
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 60.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			goal.refit(level, lord);
+			require(lord.powerLevel() == 0 && goal.lordPower() == 0 && MobPower.factor(lord) == 1.0F && Math.abs(MobPower.toughness(lord)
+				- tough / wantedTough) < 0.01F, "with nobody strong near, the lord should fall back to its own level, got " + lord.powerLevel() + ", toughness "
+				+ MobPower.toughness(lord) + ", damage x" + MobPower.factor(lord));
+			require(LairExp.lordExp(player, lord) == JobProgression.levelExp(player, named.hi(), LairExp.LORD), "an unraised lord pays at the lair's level");
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			goal.refit(level, lord);
+			require(lord.powerLevel() == high && MobPower.toughness(lord) == tough, "the lord rises again for the strong player, got " + lord.powerLevel());
+			// in combat it keeps its power, even when the strong player steps away
+			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0F);
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 60.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			goal.refit(level, lord);
+			require(lord.powerLevel() == high, "a lord in combat is not refitted");
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
 			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0E9F);
 			require(!lord.isAlive() && goal.victor(player, cycle), "the player should beat the raised lord");
+			require(goal.beatenLevel(player, cycle) == high && goal.gradeLevel(player, cycle) == high, "the lord was beaten at Lv " + high + ", got "
+				+ goal.beatenLevel(player, cycle));
+			LairChestBlockEntity cache = cacheOf(level, chest, def);
+			require(cache != null && cache.gradeLevel(player, cycle) == high, "a cache pays at the level its opener beat the lord at, got "
+				+ (cache == null ? "no cache" : cache.gradeLevel(player, cycle)));
 			// the first open of the cycle: graded by the player's level, remembered, the next map and the way back
 			goal.forgetPersonal();
 			player.getInventory().clearContent();
@@ -391,11 +412,94 @@ public class LairClientGameTest implements FabricClientGameTest {
 			require(at.distManhattan(exit) <= 6 && LairTravel.safe(level, at), "the way back should end on a safe spot by the gate " + exit + ", got " + at);
 			require(LairTravel.exitOffer(player) == null, "the way back is used once");
 			require(!LairTravel.exit(player), "no second way back without a new clear");
-			JobProgression.set(player, JobData.DEFAULT);
 			player.getInventory().clearContent();
 			return at.toShortString();
 		});
 		MinecraftMode.LOGGER.info("[lair] back at the gate: {}", arrived);
+
+		// next cycle: the strong player kills a lord that woke at its own level, so everything pays at the lair's level
+		server.runCommand("time add " + ResetCycle.CYCLE_TICKS);
+		context.waitTicks(5);
+		String weak = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+			NamedDef named = def.named();
+			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(chest);
+			LairChestBlockEntity cache = cacheOf(level, chest, def);
+			long cycle = ResetCycle.cycle(level);
+			require(goal.beatenLevel(player, cycle) == 0 && cache.gradeLevel(player, cycle) == named.hi(),
+				"a new cycle forgets the beaten level; a cache without a beaten lord pays at the lair's level, got " + cache.gradeLevel(player, cycle));
+			// discovery always pays at the lair's level
+			player.setAttached(com.minecraftmode.registry.ModAttachments.LAIRS_FOUND, List.of());
+			int before = classExp(player);
+			LairExp.entered(player, def);
+			int found = classExp(player) - before;
+			require(paid(player, found, named.hi(), high, LairExp.DISCOVER), "discovery pays a share of the lair's level, got " + found);
+			// the lord wakes with nobody strong near and stays at its own level
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 60.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			NamedMob lord = goal.wakeLord(level, cycle);
+			require(lord != null && lord.powerLevel() == 0, "a lord woken with nobody strong near stays at its own level");
+			lord.setNoAi(true);
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			require(LairExp.lordExp(player, lord) == JobProgression.levelExp(player, named.hi(), LairExp.LORD), "a weak lord pays at its own level");
+			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0E9F);
+			require(!lord.isAlive() && goal.beatenLevel(player, cycle) == named.hi() && goal.gradeLevel(player, cycle) == named.hi(),
+				"the weak lord was beaten at the lair's level, got " + goal.beatenLevel(player, cycle));
+			goal.forgetPersonal();
+			before = classExp(player);
+			require(LairChestBlock.open(player, goal), "the treasure opens again next cycle");
+			int chestExp = classExp(player) - before;
+			require(paid(player, chestExp, named.hi(), high, LairExp.CHEST), "the treasure pays a share of the lair's level, "
+				+ JobProgression.levelExp(player, named.hi(), LairExp.CHEST) + ", got " + chestExp);
+			Container contents = goal.container(player, cycle);
+			for (int i = 0; i < contents.getContainerSize(); i++) {
+				ItemStack stack = contents.getItem(i);
+				require(!(stack.getItem() instanceof EvolutionEtherItem) || EvolutionEtherItem.grade(stack) <= named.hi(),
+					"the treasure of a weak lord holds ether of the lair's range, got " + EvolutionEtherItem.grade(stack));
+			}
+			player.closeContainer();
+			JobProgression.set(player, JobData.DEFAULT);
+			player.getInventory().clearContent();
+			return "discovery " + found + ", treasure " + chestExp + " exp at Lv " + high + " in a Lv " + named.lo() + "-" + named.hi() + " lair";
+		});
+		MinecraftMode.LOGGER.info("[lair] weak lord: {}", weak);
+		// the clear screen of that clear pops up once the chest closed; put it away
+		context.waitForScreen(LairClearScreen.class);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
+	}
+
+	/**
+	 * Whether {@code got} is {@code share} of a level measured at {@code content} (with the player's experience bonus), clearly below what the
+	 * same share of {@code own} would pay.
+	 */
+	private static boolean paid(final ServerPlayer player, final int got, final int content, final int own, final float share) {
+		float bonus = com.minecraftmode.job.weapon.JobWeapons.activeTotals(player).fraction(com.minecraftmode.job.engrave.EngraveStat.EXP_BONUS);
+		int wanted = Math.round(JobProgression.levelExp(player, content, share) * (1.0F + bonus));
+		return Math.abs(got - wanted) <= 1 && got < JobProgression.levelExp(player, own, share);
+	}
+
+	/** The total class experience of {@code player} (levels and progress) for exact before/after comparisons. */
+	private static int classExp(final ServerPlayer player) {
+		JobData data = JobProgression.get(player);
+		int total = data.exp();
+		for (int l = 1; l < data.level(); l++) {
+			total += JobProgression.expToNext(l);
+		}
+		return total;
+	}
+
+	/** One of the lair's dead-end caches (they lie on the maze floor around the goal chest). */
+	private static LairChestBlockEntity cacheOf(final ServerLevel level, final BlockPos chest, final LairDef def) {
+		int size = def.size();
+		for (int dx = -size; dx <= size; dx++) {
+			for (int dz = -size; dz <= size; dz++) {
+				BlockPos at = new BlockPos(chest.getX() + dx, chest.getY(), chest.getZ() + dz);
+				if (level.getBlockState(at).is(ModBlocks.LAIR_CACHE) && level.getBlockEntity(at) instanceof LairChestBlockEntity cache) {
+					return cache;
+				}
+			}
+		}
+		return null;
 	}
 
 	private static void setLanguage(final ClientGameTestContext context, final String code) {

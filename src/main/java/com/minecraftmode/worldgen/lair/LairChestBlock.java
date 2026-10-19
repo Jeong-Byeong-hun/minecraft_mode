@@ -123,11 +123,11 @@ public class LairChestBlock extends BaseEntityBlock {
 			if (!chest.isCache() && def != null) {
 				boolean firstClear = Progress.get(player).lairClears(def.id()) == 0;
 				Progress.lairCleared(player, def);
-				LairExp.chestOpened(player, def, false, firstClear);
+				LairExp.chestOpened(player, def, false, firstClear, chest.contentLevel(player, cycle));
 				Companions.rollDrop(player, Companions.LAIR_DROP, Rarity.RARE);
 				LairTravel.cleared(player, chest, def);
 			} else if (def != null) {
-				LairExp.chestOpened(player, def, true, false);
+				LairExp.chestOpened(player, def, true, false, chest.contentLevel(player, cycle));
 			}
 		}
 		return true;

@@ -190,6 +190,7 @@ public class LairPiece extends StructurePiece {
 				p.set(at.getX(), at.getY(), at.getZ(), ModBlocks.LAIR_CACHE.defaultBlockState());
 				if (level.getBlockEntity(at) instanceof LairChestBlockEntity cacheChest) {
 					cacheChest.setup(def.id(), this.seed ^ at.asLong(), true);
+					cacheChest.setGoal(this.goalPos());
 				}
 			}
 		}

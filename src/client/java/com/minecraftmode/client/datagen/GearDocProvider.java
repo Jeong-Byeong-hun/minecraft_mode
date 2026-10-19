@@ -88,6 +88,7 @@ import com.minecraftmode.residence.ResidenceDimension;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairExp;
@@ -656,8 +657,67 @@ public class GearDocProvider implements DataProvider {
 		{"entity.minecraft.cave_spider", "동굴 거미"}, {"entity.minecraft.witch", "마녀"}, {"entity.minecraft.drowned", "드라운드"},
 		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
 		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"},
-		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"}
+		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"},
+		{"entity.minecraft.enderman", "엔더맨"}, {"block.minecraft.oak_log", "참나무 원목"}, {"block.minecraft.spruce_log", "가문비나무 원목"}
 	};
+
+	/** The town quests of Stormhold's residents: where they stand, every quest with its goal and what it pays. */
+	private void townQuests(final StringBuilder md) {
+		md.append("## 주민 의뢰\n\n");
+		md.append("스톰홀드 주민 여섯 명이 의뢰를 줍니다(우클릭 → 의뢰 창: 수락·완료 보고·포기). 수락한 의뢰만 진행되고, 처치는 기여한 플레이어와 ")
+			.append((int)com.minecraftmode.progress.Progress.SHARE_RANGE).append("칸 안의 파티원에게 함께 셉니다(현상금과 같은 방식). 납품은 완료 보고 때 인벤토리, 그다음 가방에서 가져갑니다. ")
+			.append("일일 의뢰는 길드 현상금처럼 현실 시간 ").append(RealReset.RESET_HOUR).append("시에 다시 열리고(수락해 둔 의뢰는 날이 바뀌어도 그대로), ★ 의뢰는 캐릭터마다 한 번뿐입니다.\n\n");
+		for (CityNpc.Role role : CityNpc.Role.values()) {
+			if (role.isResident()) {
+				BlockPos home = CityZone.npcHome(role, 0);
+				md.append("- **").append(role.ko).append("** (x ").append(home.getX()).append(", z ").append(home.getZ()).append(")\n");
+			}
+		}
+		md.append("\n보상은 등급마다 정해져 있고, 경험치는 플레이어 자신의 레벨에서 다음 레벨까지 필요한 경험치의 비율, 동전은 그 레벨 구간의 길드 무기 가격(")
+			.append("`GearShop.bracketPrice`)의 배율입니다. 길드 일일 현상금 하나는 구간 가격의 1.2배와 강화석 3개를 주니, 주민 의뢰는 하나하나는 적고 가짓수가 많습니다.\n\n");
+		md.append("| 등급 | 경험치 | 동전 | 강화석 | Lv 10 | Lv 50 | Lv 90 |\n|---|---|---|---|---|---|---|\n");
+		for (TownQuests.Tier tier : TownQuests.Tier.values()) {
+			md.append("| ").append(tier.name().toLowerCase(java.util.Locale.ROOT)).append(" | 레벨의 ").append(Math.round(tier.exp * 100)).append("% | 구간 가격 x")
+				.append(tier.coins).append(" | ").append(tier.stones).append("개");
+			for (int level : new int[] {10, 50, 90}) {
+				md.append(" | 경험치 ").append(JobProgression.levelExp(level, tier.exp)).append(", ")
+					.append(Coins.format(Math.max(3, Math.round(GearShop.bracketPrice(level) * tier.coins))));
+			}
+			md.append(" |\n");
+		}
+		float exp = 0.0F;
+		float coins = 0.0F;
+		int stones = 0;
+		int daily = 0;
+		for (TownQuests.Quest quest : TownQuests.all()) {
+			if (quest.daily()) {
+				daily++;
+				exp += quest.tier().exp;
+				coins += quest.tier().coins;
+				stones += quest.tier().stones;
+			}
+		}
+		md.append("\n일일 의뢰 ").append(daily).append("개를 모두 하면 하루에 레벨의 약 ").append(Math.round(exp * 100)).append("%, 구간 가격의 ")
+			.append(Math.round(coins * 10) / 10.0F).append("배, 강화석 ").append(stones).append("개입니다.\n\n");
+		md.append("| 주민 | 의뢰 | 목표 | 레벨 | 반복 | 등급 | 추가 보상 |\n|---|---|---|---|---|---|---|\n");
+		for (TownQuests.Quest quest : TownQuests.all()) {
+			String target = switch (quest.goal()) {
+				case KILL -> this.ko.getOrDefault("entity." + quest.target().replace(':', '.'), quest.target());
+				case DELIVER -> this.itemName(com.minecraftmode.townquest.TownQuestService.item(quest.target()));
+				case CRAFT -> {
+					com.minecraftmode.craft.Profession profession = com.minecraftmode.craft.Profession.byId(quest.target());
+					yield profession == null ? quest.target() : profession.ko;
+				}
+				default -> "";
+			};
+			String goal = String.format(this.ko.getOrDefault(quest.goal().key(), quest.goal().id), quest.need(), target);
+			md.append("| ").append(quest.giver().ko).append(" | ").append(quest.titleKo()).append(" | ").append(goal).append(" | ")
+				.append(quest.minLevel() > 1 ? "Lv " + quest.minLevel() : "-").append(" | ").append(quest.daily() ? "매일" : "★ 한 번").append(" | ")
+				.append(quest.tier().name().toLowerCase(java.util.Locale.ROOT)).append(" | ")
+				.append(quest.bonus() == null ? "-" : this.itemName(quest.bonus()) + " " + quest.bonusCount() + "개").append(" |\n");
+		}
+		md.append("\n- **끈기의 숲**: 꼬마 핍의 의뢰 창에서 '숲으로 가기'를 누르면 점프 코스로 갑니다. 날아다니는 탈것은 쓸 수 없고, 끝에 닿으면 의뢰가 달성됩니다.\n\n");
+	}
 
 	private String itemName(final Item item) {
 		return this.ko.getOrDefault(item.getDescriptionId(), BuiltInRegistries.ITEM.getKey(item).getPath());
@@ -736,6 +796,7 @@ public class GearDocProvider implements DataProvider {
 			.append("위더 스켈레톤 해골 개당 ").append(Coins.format(asked(wither.get(0)))).append(", 영혼 모래 ").append(wither.get(1).resultCount()).append("개 ")
 			.append(Coins.format(asked(wither.get(1)))).append(" — 위더 하나에 해골 3개와 영혼 모래 4개. 워든·엘더 가디언·미스릴 골렘은 소환 아이템이 없고 개릭의 사냥터에서 나옵니다(위더도 나옴).\n");
 		md.append("- **전직 장비**: 전직할 때마다(1차 포함) 지금 레벨 구간에 맞는 직업 무기 1개와 방어구 한 벌(투구·흉갑·레깅스·부츠)을 받습니다. 직업·차수마다 한 번뿐입니다(직업 초기화 후 다시 받지 않음).\n\n");
+		this.townQuests(md);
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
 			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");

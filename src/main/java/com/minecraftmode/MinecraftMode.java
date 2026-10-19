@@ -53,6 +53,7 @@ import com.minecraftmode.registry.ModParticles;
 import com.minecraftmode.residence.IdleGrowth;
 import com.minecraftmode.residence.ResidenceRules;
 import com.minecraftmode.story.Story;
+import com.minecraftmode.townquest.TownQuestService;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import net.fabricmc.api.ModInitializer;
@@ -117,6 +118,7 @@ public class MinecraftMode implements ModInitializer {
 		HeldLight.init();
 		LootSessions.init();
 		LootBuyer.init();
+		TownQuestService.init();
 		ModNetworking.init();
 		JobCommand.init();
 		RaidCommands.init();

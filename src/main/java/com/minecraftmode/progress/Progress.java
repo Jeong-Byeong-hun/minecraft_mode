@@ -12,6 +12,8 @@ import com.minecraftmode.raid.RaidDifficulty;
 import com.minecraftmode.registry.ModAttachments;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.worldgen.lair.LairDef;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -86,6 +88,7 @@ public final class Progress {
 				Bounties.progress(player, BountyKind.KILL_NAMED, named.def().id(), 1);
 			}
 			Codex.killed(player, entity);
+			TownQuestService.killed(player, entity);
 			if (entity instanceof Enemy) {
 				Bounties.progress(player, BountyKind.KILL_ANY, "", 1);
 				Bounties.progress(player, BountyKind.KILL_TYPE, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString(), 1);
@@ -113,6 +116,7 @@ public final class Progress {
 	public static void lairCleared(final ServerPlayer player, final LairDef lair) {
 		set(player, get(player).withLairClear(lair.id()));
 		Bounties.progress(player, BountyKind.CLEAR_LAIR, lair.id(), 1);
+		TownQuestService.progress(player, TownQuests.Goal.CLEAR_LAIR, lair.id(), 1);
 		check(player);
 	}
 
@@ -124,6 +128,7 @@ public final class Progress {
 
 	public static void oreMined(final ServerPlayer player) {
 		Bounties.progress(player, BountyKind.MINE_ORE, "", 1);
+		TownQuestService.progress(player, TownQuests.Goal.MINE_ORE, "", 1);
 	}
 
 	public static void bountyDone(final ServerPlayer player) {
@@ -152,6 +157,7 @@ public final class Progress {
 
 	/** A dungeon run was cleared (the dungeon records are already updated). */
 	public static void dungeonCleared(final ServerPlayer player) {
+		TownQuestService.progress(player, TownQuests.Goal.DUNGEON, "", 1);
 		check(player);
 	}
 

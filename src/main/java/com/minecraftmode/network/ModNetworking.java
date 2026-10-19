@@ -33,6 +33,8 @@ import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.residence.LandOffice;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.travel.Destination;
 import com.minecraftmode.travel.Travel;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -78,6 +80,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenTravelPayload.TYPE, OpenTravelPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenLootBuyerPayload.TYPE, OpenLootBuyerPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LootSellPayload.TYPE, LootSellPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenTownQuestPayload.TYPE, OpenTownQuestPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TownQuestActionPayload.TYPE, TownQuestActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TravelPayload.TYPE, TravelPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
@@ -159,6 +163,16 @@ public final class ModNetworking {
 		ServerPlayNetworking.registerGlobalReceiver(LootSellPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			if (npc(context.player(), payload.entityId(), CityNpc.Role.LOOT_BUYER) != null) {
 				LootBuyer.sell(context.player(), payload.entityId(), payload.picks());
+			}
+		}));
+		ServerPlayNetworking.registerGlobalReceiver(TownQuestActionPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			TownQuests.Quest quest = TownQuests.get(payload.quest());
+			CityNpc giver = quest == null ? null : npc(context.player(), payload.entityId(), quest.giver());
+			if (giver != null) {
+				TownQuestService.act(context.player(), quest, payload.action());
+				if (payload.action() != TownQuestActionPayload.ENTER) {
+					ServerPlayNetworking.send(context.player(), TownQuestService.screen(context.player(), payload.entityId(), giver.role()));
+				}
 			}
 		}));
 	}

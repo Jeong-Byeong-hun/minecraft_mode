@@ -3,6 +3,8 @@ package com.minecraftmode.craft;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.registry.ModMenus;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import java.util.List;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -114,6 +116,7 @@ public class CraftMenu extends AbstractContainerMenu {
 			Bags.give(serverPlayer, out);
 			this.profession.addExp(serverPlayer, recipe.expFor(this.profession.level(player)));
 		}
+		TownQuestService.progress(serverPlayer, TownQuests.Goal.CRAFT, this.profession.id, times);
 		serverPlayer.sendOverlayMessage(Component.translatable(doubled > 0 ? "message.minecraft_mode.profession.crafted_double" : "message.minecraft_mode.profession.crafted",
 			recipe.output().apply(player).getHoverName(), made).withStyle(ChatFormatting.GREEN));
 		serverPlayer.level().playSound(null, player.getX(), player.getY(), player.getZ(), switch (this.profession) {

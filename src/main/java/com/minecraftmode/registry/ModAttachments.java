@@ -12,6 +12,7 @@ import com.minecraftmode.job.quest.QuestData;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import com.mojang.serialization.Codec;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -134,6 +135,15 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(List::of)
 			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Lairs this character cleared in the current lair cycle ({@code LairTravel.Cleared}: the cycle and {@code dimension|goal chest} keys), so the
+	 * lair map leads somewhere else and the exit button only serves a lair cleared now. Kept through death.
+	 */
+	public static final AttachmentType<LairTravel.Cleared> LAIR_CLEARED = AttachmentRegistry.create(
+		MinecraftMode.id("lair_cleared"),
+		builder -> builder.persistent(LairTravel.Cleared.CODEC).copyOnDeath()
 	);
 
 	/** Starter bags already handed out by Quartermaster Bram (see {@code Bags}). Kept through death. */

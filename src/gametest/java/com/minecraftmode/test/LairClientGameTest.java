@@ -1,26 +1,35 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.lair.LairClearScreen;
 import com.minecraftmode.consumable.ConsumableItem;
+import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
+import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.JobData;
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.gear.GearArmorItem;
 import com.minecraftmode.job.weapon.JobWeaponItem;
 import com.minecraftmode.loot.EvolutionEtherItem;
+import com.minecraftmode.network.LairTravelPayload;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.worldgen.lair.LairChestBlock;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
+import com.minecraftmode.worldgen.lair.LairExp;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import com.minecraftmode.worldgen.lair.Maze;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -245,6 +254,14 @@ public class LairClientGameTest implements FabricClientGameTest {
 			require(NamedMobs.def(lord.getType()) == def.named(), id + ": the lord should be the lair's named monster");
 			require(!LairChestBlock.open(player, goal), id + ": a sealed chest must not open");
 			lord.setNoAi(true);
+			// the lair map loop's gate spot: kept by the chest, just outside the gate (south of the maze), with safe ground to stand on
+			BlockPos exit = goal.exit(level);
+			require(exit != null && exit.equals(LairPiece.entrance(def, x, floor, z)), id + ": the chest should know its gate spot "
+				+ LairPiece.entrance(def, x, floor, z) + ", got " + exit);
+			require(exit.getZ() > z + half && exit.getZ() <= z + half + LairPiece.APRON, id + ": the gate spot should be just outside the maze, got " + exit);
+			BlockPos spot = LairTravel.safeSpot(level, exit);
+			require(spot != null && spot.distManhattan(exit) <= 4 && LairTravel.safe(level, spot), id + ": no safe spot by the gate " + exit + ", got " + spot);
+			require(level.getBlockState(new BlockPos(x, floor + 2, z + half)).isAir(), id + ": the gate is open in front of the spot");
 			return new int[] {chest.getX(), chest.getY(), chest.getZ(), height, coins, rewards, barrels};
 		});
 		MinecraftMode.LOGGER.info("[lair] {} at {}, {}: goal {} {} {}, landmark {} blocks high, {} coin and {} reward stacks, {} caches", id, x, z,
@@ -268,7 +285,133 @@ public class LairClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("lair_" + id);
 			server.runCommand("gamemode creative @p");
 		}
+		if (id.equals("wendigo")) {
+			checkLoop(context, server, dimension, def, new BlockPos(result[0], result[1], result[2]));
+		}
 		server.runCommand(in + "forceload remove all");
+	}
+
+	/**
+	 * The lair map loop on a built lair, for a player far above its range: rewards and the lord follow the player's level, the first open of the
+	 * cycle remembers the clear, hands out the next map and offers the way back, the clear screen shows once the chest closes (English and
+	 * Korean screenshots), and "Return to the exit" takes the player to the safe spot by the gate.
+	 */
+	private static void checkLoop(final ClientGameTestContext context, final TestServerContext server, final ResourceKey<Level> dimension, final LairDef def,
+		final BlockPos chest) {
+		int high = 85;
+		String report = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.WARRIOR, 4).withProgress(high, 0));
+			NamedDef named = def.named();
+			// rewards: the player's bracket above the lair, never below the lair's own range
+			LairLoot.Range range = LairLoot.range(named, high);
+			require(range.lo() == 80 && range.hi() == 90, "a Lv " + high + " player should be paid in 80-90, got " + range);
+			require(LairLoot.range(named, named.lo()).equals(new LairLoot.Range(named.lo(), named.hi())), "a player in range gets the lair's range");
+			require(LairLoot.range(named, 1).equals(new LairLoot.Range(named.lo(), named.hi())), "a low player never gets less than the lair's range");
+			require(LairLoot.range(named, 100).equals(new LairLoot.Range(90, 100)), "the cap pays the top bracket");
+			JobData data = JobProgression.get(player);
+			for (int seed = 0; seed < 20; seed++) {
+				for (ItemStack stack : LairLoot.goal(named, data, RandomSource.create(seed))) {
+					if (stack.getItem() instanceof EvolutionEtherItem) {
+						require(EvolutionEtherItem.grade(stack) >= 80, "ether for a Lv " + high + " player should be graded 80+, got " + EvolutionEtherItem.grade(stack));
+					}
+				}
+			}
+			// the lord rises to the strongest player near the chest
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 3.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(chest);
+			long cycle = ResetCycle.cycle(level);
+			NamedMob lord = goal.wakeLord(level, cycle);
+			require(lord != null && lord.powerLevel() == high && goal.lordPower() == high, "the lord should rise to Lv " + high + ", got "
+				+ (lord == null ? "none" : lord.powerLevel()));
+			double[] typical = NamedMobs.typicalPower(high);
+			float wantedTough = (float)(typical[0] / (named.health() * NamedMobs.levelScale(named, named.hi())));
+			require(MobPower.toughness(lord) >= wantedTough * 0.99F && MobPower.factor(lord) > 1.2F, "the raised lord should take damage divided by "
+				+ wantedTough + " and hit harder, got " + MobPower.toughness(lord) + " / " + MobPower.factor(lord));
+			float tough = MobPower.toughness(lord);
+			lord.raiseTo(high);
+			require(MobPower.toughness(lord) == tough, "raising twice to the same level changes nothing");
+			require(LairExp.lordExp(player, lord) == JobProgression.levelExp(player, high, LairExp.LORD)
+				&& LairExp.lordExp(player, lord) > JobProgression.levelExp(player, named.hi(), LairExp.LORD), "a lord pays a share of the player's own level");
+			lord.setNoAi(true);
+			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0E9F);
+			require(!lord.isAlive() && goal.victor(player, cycle), "the player should beat the raised lord");
+			// the first open of the cycle: graded by the player's level, remembered, the next map and the way back
+			goal.forgetPersonal();
+			player.getInventory().clearContent();
+			int expBefore = JobProgression.get(player).exp();
+			require(LairChestBlock.open(player, goal), "the treasure opens for the victor");
+			Container contents = goal.container(player, cycle);
+			boolean highEther = false;
+			for (int i = 0; i < contents.getContainerSize(); i++) {
+				ItemStack stack = contents.getItem(i);
+				highEther |= stack.getItem() instanceof EvolutionEtherItem && EvolutionEtherItem.grade(stack) >= 80;
+			}
+			require(highEther, "the treasure should hold ether of the player's bracket");
+			require(player.getInventory().countItem(ModItems.LAIR_MAP) == 1, "clearing a lair should hand out the next lair map");
+			LairTravel.Target exit = LairTravel.exitOffer(player);
+			require(exit != null && exit.entrance().equals(goal.exit(level)), "clearing should offer the way back to the gate");
+			require(LairTravel.cleared(player).contains(LairTravel.key(dimension, chest)) && LairTravel.clearedThisCycle(player, exit),
+				"the clear should be remembered for this cycle");
+			require(JobProgression.get(player).exp() > expBefore || JobProgression.get(player).level() > high, "the treasure pays experience");
+			// one step inside the maze for the way back
+			player.teleportTo(level, chest.getX() + 0.5, chest.getY(), chest.getZ() + 0.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			return "lord toughness " + tough + ", damage x" + MobPower.factor(lord) + ", exit " + exit.entrance();
+		});
+		MinecraftMode.LOGGER.info("[lair] loop: {}", report);
+		context.waitTicks(5);
+		// the clear screen waits for the chest screen to close
+		server.runOnServer(s -> s.getPlayerList().getPlayers().getFirst().closeContainer());
+		context.waitForScreen(LairClearScreen.class);
+		context.waitTicks(10);
+		context.takeScreenshot("lair_clear_en");
+		setLanguage(context, "ko_kr");
+		context.waitTicks(10);
+		context.takeScreenshot("lair_clear_ko");
+		setLanguage(context, "en_us");
+		// "Return to the exit"
+		context.runOnClient(minecraft -> {
+			ClientPlayNetworking.send(new LairTravelPayload(LairTravelPayload.EXIT));
+			minecraft.gui.setScreen(null);
+		});
+		for (int i = 0; i < 40; i++) {
+			context.waitTicks(5);
+			boolean busy = server.computeOnServer(s -> LairTravel.travelling(s.getPlayerList().getPlayers().getFirst()));
+			if (!busy) {
+				break;
+			}
+		}
+		String arrived = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			ServerPlayer player = s.getPlayerList().getPlayers().getFirst();
+			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(chest);
+			BlockPos exit = goal.exit(level);
+			BlockPos at = player.blockPosition();
+			require(at.distManhattan(exit) <= 6 && LairTravel.safe(level, at), "the way back should end on a safe spot by the gate " + exit + ", got " + at);
+			require(LairTravel.exitOffer(player) == null, "the way back is used once");
+			require(!LairTravel.exit(player), "no second way back without a new clear");
+			JobProgression.set(player, JobData.DEFAULT);
+			player.getInventory().clearContent();
+			return at.toShortString();
+		});
+		MinecraftMode.LOGGER.info("[lair] back at the gate: {}", arrived);
+	}
+
+	private static void setLanguage(final ClientGameTestContext context, final String code) {
+		java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>> reload = new java.util.concurrent.atomic.AtomicReference<>();
+		context.runOnClient(minecraft -> {
+			if (code.equals(minecraft.options.languageCode)) {
+				reload.set(java.util.concurrent.CompletableFuture.completedFuture(null));
+				return;
+			}
+			minecraft.options.languageCode = code;
+			minecraft.getLanguageManager().setSelected(code);
+			reload.set(minecraft.reloadResourcePacks());
+		});
+		context.waitFor(minecraft -> reload.get().isDone(), 20 * 120);
+		// the loading overlay fades out after the reload; screenshots taken under it show only the logo
+		context.waitFor(minecraft -> minecraft.gui.overlay() == null, 20 * 60);
 	}
 
 	private static boolean isCoin(final ItemStack stack) {

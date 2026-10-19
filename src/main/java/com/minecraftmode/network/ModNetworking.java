@@ -35,6 +35,7 @@ import com.minecraftmode.residence.LandOffice;
 import com.minecraftmode.talent.Talents;
 import com.minecraftmode.travel.Destination;
 import com.minecraftmode.travel.Travel;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -86,6 +87,9 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(AdminActionPayload.TYPE, AdminActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AdminStatePayload.TYPE, AdminStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CharacterListPayload.TYPE, CharacterListPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(LairOfferPayload.TYPE, LairOfferPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(LairClearPayload.TYPE, LairClearPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(LairTravelPayload.TYPE, LairTravelPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -154,6 +158,14 @@ public final class ModNetworking {
 			Destination destination = Destination.byOrdinal(payload.destination());
 			if (destination != null && npc(context.player(), payload.entityId(), CityNpc.Role.WAYMASTER) != null) {
 				Travel.go(context.player(), destination);
+			}
+		}));
+		ServerPlayNetworking.registerGlobalReceiver(LairTravelPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			switch (payload.action()) {
+				case LairTravelPayload.TRAVEL -> LairTravel.confirm(context.player());
+				case LairTravelPayload.EXIT -> LairTravel.exit(context.player());
+				default -> {
+				}
 			}
 		}));
 		ServerPlayNetworking.registerGlobalReceiver(LootSellPayload.TYPE, (payload, context) -> context.server().execute(() -> {

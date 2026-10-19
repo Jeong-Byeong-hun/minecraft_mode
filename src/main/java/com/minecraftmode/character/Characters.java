@@ -190,6 +190,8 @@ public final class Characters {
 			return fail(player, "busy");
 		}
 		CharacterRoster.Stored target = account.at(slot);
+		// a jump course still being prepared belongs to this character: the next one must not be sent in
+		com.minecraftmode.jump.JumpForest.cancel(player);
 		player.closeContainer();
 		if (player.getVehicle() instanceof MountEntity mount) {
 			player.stopRiding();

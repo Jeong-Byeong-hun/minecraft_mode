@@ -3,6 +3,8 @@ package com.minecraftmode.test;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDimension;
+import com.minecraftmode.dungeon.Dungeons;
+import com.minecraftmode.enchantment.ArmorEnchantments;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
@@ -18,12 +20,16 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -104,6 +110,10 @@ final class JumpChecks {
 			player.setOnGround(false);
 			require(!player.tryToStartFallFlying() && !player.isFallFlying(), "no gliding in the forest");
 			player.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+			// Leap V boots (+50% jump strength) are worn but do nothing here
+			ItemStack boots = new ItemStack(Items.IRON_BOOTS);
+			boots.enchant(s.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(ArmorEnchantments.LEAP.key()), 5);
+			player.setItemSlot(EquipmentSlot.FEET, boots);
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.ENDER_PEARL, 4));
 			require(UseItemCallback.EVENT.invoker().interact(player, level, InteractionHand.MAIN_HAND) == InteractionResult.FAIL, "ender pearls are refused");
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.CHORUS_FRUIT));
@@ -128,6 +138,9 @@ final class JumpChecks {
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			require(!player.getAbilities().mayfly && !player.getAbilities().flying, "survival players cannot fly in the forest");
+			AttributeInstance jump = player.getAttribute(Attributes.JUMP_STRENGTH);
+			require(jump.getModifier(JumpForest.LEVELER) != null && Math.abs(jump.getValue() - jump.getBaseValue()) < 1.0E-4,
+				"Leap boots do not raise jumps in the forest: " + jump.getValue() + " vs base " + jump.getBaseValue());
 			// stepping on the first checkpoint saves it
 			ServerLevel level = (ServerLevel)player.level();
 			Vec3 spot = JumpForest.spot(JumpForest.origin(player), JumpCourse.tenacity(), 1);
@@ -191,15 +204,28 @@ final class JumpChecks {
 			require(!JumpForest.busy(player) && !DungeonDimension.is(player.level()), "the player is sent back after the goal");
 			require(player.position().distanceTo(home) < 1.5, "back where they came from: " + player.position() + " not " + home);
 			require(player.getAttached(ModAttachments.JUMP_RETURN) == null, "the return point is forgotten");
+			AttributeInstance jump = player.getAttribute(Attributes.JUMP_STRENGTH);
+			require(jump.getModifier(JumpForest.LEVELER) == null && jump.getValue() > jump.getBaseValue() * 1.4, "the boots jump high again at home: " + jump.getValue());
+			player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
+			// a course still being prepared stops on a character switch (Characters.switchTo cancels it)
 			require(JumpForest.enter(player, JumpForest.TENACITY), "the forest opens again");
+			JumpForest.cancel(player);
+			require(!JumpForest.busy(player) && !DungeonDimension.is(player.level()), "cancelled while preparing");
+			// entering in mid-air (as from a flying mount) saves the ground under the player as the way back
+			player.teleportTo(home.x, home.y + 6, home.z);
+			player.setOnGround(false);
+			require(JumpForest.enter(player, JumpForest.TENACITY), "the forest opens from mid-air");
 		});
 
-		// the pause menu's "return home"
+		// /dungeon leave (the pause menu and the return scroll take the same way out)
 		waitIn(context, server, connection);
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			require(JumpForest.leave(player) && !JumpForest.busy(player), "leaving ends the climb");
-			require(!DungeonDimension.is(player.level()) && player.position().distanceTo(home) < 1.5, "leaving goes home");
+			require(Math.abs(player.getAttached(ModAttachments.JUMP_RETURN).y() - home.y) < 0.01, "the way back is on the ground, not in the air: " + player.getAttached(ModAttachments.JUMP_RETURN));
+			// /dungeon leave (and the return scroll) end a climb like the pause menu does
+			require(Dungeons.leave(player) && !JumpForest.busy(player), "/dungeon leave ends the climb");
+			require(!DungeonDimension.is(player.level()) && player.position().distanceTo(home) < 1.5, "/dungeon leave goes back to the saved point, not the plaza: " + player.position());
+			require(!player.hasEffect(MobEffects.SLOW_FALLING), "standing on ground needs no slow falling");
 			require(JumpForest.enter(player, JumpForest.TENACITY), "and in again");
 		});
 		// a reconnect (the server forgot the climb) and /kill end it too

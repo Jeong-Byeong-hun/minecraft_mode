@@ -472,7 +472,7 @@ public class SiteShotsClientGameTest implements FabricClientGameTest {
 		run.shots().add(new Shot(SiteShotFiles.saveJpeg(png, run.out(), section, name), page, after, caption));
 	}
 
-	private static void setLanguage(final ClientGameTestContext context, final String code) {
+	static void setLanguage(final ClientGameTestContext context, final String code) {
 		AtomicReference<CompletableFuture<Void>> reload = new AtomicReference<>();
 		context.runOnClient(minecraft -> {
 			if (code.equals(minecraft.options.languageCode)) {

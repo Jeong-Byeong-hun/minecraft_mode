@@ -3,6 +3,7 @@ package com.minecraftmode.client.raid;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.network.LootActionPayload;
 import com.minecraftmode.network.LootStatePayload;
+import com.minecraftmode.network.RaidReportPayload;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -28,8 +29,8 @@ public class LootScreen extends Screen {
 	private static final int W = 320;
 	private static final int H = 220;
 	private static final int ROW = 22;
-	/** Lot rows shown at once: they end above the bottom buttons. */
-	static final int ROWS = 7;
+	/** Lot rows shown at once: they end above the fight report button. */
+	static final int ROWS = 6;
 	private static final int LIST_X = 8;
 	private static final int LIST_Y = 24;
 	private static final int LIST_W = 106;
@@ -60,6 +61,14 @@ public class LootScreen extends Screen {
 		LootStatePayload state = RaidClient.loot();
 		this.shown = state;
 		this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> this.onClose()).bounds(this.left + 10, this.top + H - 28, 60, 20).build());
+		RaidReportPayload report = RaidClient.report();
+		if (report != null) {
+			this.addRenderableWidget(Button.builder(Component.translatable("screen.minecraft_mode.raid_report.open"), b -> {
+				if (this.minecraft != null) {
+					this.minecraft.gui.setScreen(new RaidReportScreen(report));
+				}
+			}).bounds(this.left + LIST_X, this.top + H - 52, LIST_W, 20).build());
+		}
 		if (state == null) {
 			return;
 		}

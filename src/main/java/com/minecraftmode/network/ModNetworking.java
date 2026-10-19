@@ -68,6 +68,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenRaidPayload.TYPE, OpenRaidPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(PartySyncPayload.TYPE, PartySyncPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(LootStatePayload.TYPE, LootStatePayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(RaidReportPayload.TYPE, RaidReportPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenBountyPayload.TYPE, OpenBountyPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AuctionStatePayload.TYPE, AuctionStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CityInfoPayload.TYPE, CityInfoPayload.CODEC);

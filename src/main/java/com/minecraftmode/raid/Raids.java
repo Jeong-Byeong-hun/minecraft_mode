@@ -13,6 +13,8 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.loot.GearDrops;
+import com.minecraftmode.network.RaidReportPayload;
+import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.progress.RealReset;
@@ -35,6 +37,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -602,9 +605,45 @@ public final class Raids {
 		if (place > 0) {
 			tell(server, instance, msg("record", place).withStyle(ChatFormatting.LIGHT_PURPLE, ChatFormatting.BOLD));
 		}
+		// before the loot session, so the report screen comes first
+		report(server, instance, boss, fightTicks);
 		if (!participants.isEmpty() && !items.isEmpty()) {
 			UUID leader = participants.containsKey(instance.leader) ? instance.leader : participants.keySet().iterator().next();
 			LootSessions.start(server, def, participants, leader, items);
+		}
+	}
+
+	/**
+	 * Damage report of the fight: every member's damage to the boss (its real health: the bar times the toughness divisor) and share
+	 * of the contribution (damage plus support, as {@link Contribution} credits kills), best first. With two or more members the top
+	 * one is the MVP (as in Lost Ark), named in chat too. The damage uses the divisor the boss has when it dies (set once at the start,
+	 * so it holds for the whole fight).
+	 */
+	private static void report(final MinecraftServer server, final RaidInstance instance, final RaidBoss boss, final int fightTicks) {
+		Map<UUID, Contribution.Part> parts = Contribution.parts(boss);
+		float total = 0.0F;
+		for (Contribution.Part part : parts.values()) {
+			total += part.credit();
+		}
+		List<RaidReportPayload.Entry> entries = new ArrayList<>();
+		for (RaidInstance.Member m : instance.members.values()) {
+			Contribution.Part part = parts.getOrDefault(m.id, new Contribution.Part(0.0F, 0.0F));
+			ServerPlayer p = server.getPlayerList().getPlayer(m.id);
+			int job = p == null ? 0 : JobProgression.get(p).job().ordinal();
+			entries.add(new RaidReportPayload.Entry(m.id, m.name, job, part.damage() * boss.divisor(), total > 0.0F ? part.credit() / total : 0.0F));
+		}
+		entries.sort((a, b) -> Float.compare(b.share(), a.share()));
+		RaidReportPayload payload = new RaidReportPayload(instance.boss.nameKey(), instance.difficulty.nameKey(), fightTicks, entries, false);
+		for (RaidInstance.Member m : instance.members.values()) {
+			ServerPlayer p = server.getPlayerList().getPlayer(m.id);
+			if (p != null && ServerPlayNetworking.canSend(p, RaidReportPayload.TYPE)) {
+				// only those still in the arena get the screen; who left or fell is elsewhere and keeps it for the loot screen
+				ServerPlayNetworking.send(p, payload.opening(m.active));
+			}
+		}
+		if (entries.size() > 1 && entries.getFirst().share() > 0.0F) {
+			RaidReportPayload.Entry mvp = entries.getFirst();
+			tell(server, instance, msg("mvp", mvp.name(), Math.round(mvp.share() * 100.0F)).withStyle(ChatFormatting.YELLOW));
 		}
 	}
 

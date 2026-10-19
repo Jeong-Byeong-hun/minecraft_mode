@@ -59,7 +59,13 @@ public final class Contribution {
 
 	private static final class Hit {
 		private float credit;
+		/** The health this player's own hits took (credit without support). */
+		private float damage;
 		private long last;
+	}
+
+	/** One player's whole part in a fight: health their hits took and their credit (damage plus support). */
+	public record Part(float damage, float credit) {
 	}
 
 	/** One contributor and their share of the kill (shares of a kill add up to 1). */
@@ -76,7 +82,7 @@ public final class Contribution {
 			return;
 		}
 		long now = victim.level().getGameTime();
-		credit(victim, id, lost, now);
+		credit(victim, id, lost, now).damage += lost;
 		FIGHTING.computeIfAbsent(id, k -> new WeakHashMap<>()).put(victim, now);
 		Map<UUID, Long> buffers = BUFFED.get(id);
 		if (buffers != null) {
@@ -148,10 +154,11 @@ public final class Contribution {
 		DEBUFFED.clear();
 	}
 
-	private static void credit(final LivingEntity monster, final UUID player, final float amount, final long now) {
+	private static Hit credit(final LivingEntity monster, final UUID player, final float amount, final long now) {
 		Hit hit = DEALT.computeIfAbsent(monster, k -> new HashMap<>()).computeIfAbsent(player, k -> new Hit());
 		hit.credit += amount;
 		hit.last = now;
+		return hit;
 	}
 
 	/** The player a hit counts for: the attacker, or the owner of a tamed creature or skill summon. */
@@ -176,6 +183,16 @@ public final class Contribution {
 					out.put(id, hit.credit);
 				}
 			});
+		}
+		return out;
+	}
+
+	/** Every player's part in the fight against {@code victim} so far, forgotten ones included (the raid report). */
+	public static Map<UUID, Part> parts(final LivingEntity victim) {
+		Map<UUID, Part> out = new LinkedHashMap<>();
+		Map<UUID, Hit> hits = DEALT.get(victim);
+		if (hits != null) {
+			hits.forEach((id, hit) -> out.put(id, new Part(hit.damage, hit.credit)));
 		}
 		return out;
 	}

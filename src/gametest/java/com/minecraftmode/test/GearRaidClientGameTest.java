@@ -15,6 +15,7 @@ import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.job.UpgradeScreen;
 import com.minecraftmode.client.raid.LootScreen;
 import com.minecraftmode.client.raid.RaidClient;
+import com.minecraftmode.client.raid.RaidReportScreen;
 import com.minecraftmode.client.raid.RaidScreen;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enhance.EnhanceMenu;
@@ -53,6 +54,7 @@ import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearUpgrades;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.network.LootActionPayload;
+import com.minecraftmode.network.RaidReportPayload;
 import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.Parties;
@@ -561,6 +563,43 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			return boss.isAlive() ? "boss should be dead" : "";
 		});
 		require(fight.isEmpty(), fight);
+		// the fight report comes first: the only fighter dealt every point of damage and is the MVP
+		context.waitForScreen(RaidReportScreen.class);
+		context.waitTicks(2);
+		context.takeScreenshot("raid_report");
+		requireFits(context, "raid report");
+		String report = context.computeOnClient(minecraft -> {
+			RaidReportPayload r = RaidClient.report();
+			if (r == null || r.entries().size() != 1) {
+				return "a solo raid report should list one member, got " + r;
+			}
+			RaidReportPayload.Entry me = r.entries().getFirst();
+			if (!me.name().equals(minecraft.player.getPlainTextName()) || me.share() < 0.999F || me.damage() <= 0.0F || r.fightTicks() <= 0) {
+				return "the solo fighter should hold the whole share and some damage, got " + me + " in " + r.fightTicks() + " ticks";
+			}
+			return "";
+		});
+		require(report.isEmpty(), report);
+		// a party's report (made up on the client): the top contributor's card is the MVP
+		context.runOnClient(minecraft -> {
+			List<RaidReportPayload.Entry> party = List.of(
+				new RaidReportPayload.Entry(minecraft.player.getUUID(), minecraft.player.getPlainTextName(), 3, 182400.0F, 0.41F),
+				new RaidReportPayload.Entry(UUID.randomUUID(), "Rin", 4, 131000.0F, 0.27F),
+				new RaidReportPayload.Entry(UUID.randomUUID(), "Gon", 6, 98700.0F, 0.2F),
+				new RaidReportPayload.Entry(UUID.randomUUID(), "Orihime", 2, 21500.0F, 0.12F));
+			minecraft.gui.setScreen(new RaidReportScreen(new RaidReportPayload(RaidBosses.ARACHNE.nameKey(), RaidDifficulty.HEROIC.nameKey(), 20 * 154, party, true)));
+		});
+		context.waitTicks(2);
+		context.takeScreenshot("raid_report_party");
+		requireFits(context, "party raid report");
+		// the Korean labels must fit the cards too
+		SiteShotsClientGameTest.setLanguage(context, "ko_kr");
+		context.waitFor(minecraft -> minecraft.gui.overlay() == null, 20 * 30);
+		context.waitTicks(2);
+		context.takeScreenshot("raid_report_party_ko");
+		SiteShotsClientGameTest.setLanguage(context, "en_us");
+		context.waitFor(minecraft -> minecraft.gui.overlay() == null, 20 * 30);
+		context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 		context.waitTicks(5);
 		String rewards = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();

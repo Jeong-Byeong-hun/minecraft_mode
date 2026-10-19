@@ -40,6 +40,9 @@ import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.job.skill.SkillContext;
+import com.minecraftmode.job.skill.SkillLook;
+import com.minecraftmode.job.skill.SkillProjectile;
+import com.minecraftmode.job.skill.SkillVfx;
 import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.BasicAttacks;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -72,6 +75,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.multiplayer.SessionSearchTrees;
@@ -146,6 +150,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			weaponTooltip(context, server, connection);
 			searchTooltips(context);
 			checkPointBlank(context, server, connection);
+			checkSkillLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -649,6 +654,136 @@ public class JobClientGameTest implements FabricClientGameTest {
 		require(farTaken >= wave * 1.5F, "both Twin Getsuga waves should hit a monster 15 blocks ahead, it took " + farTaken + " of " + wave + " per wave");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		MinecraftMode.LOGGER.info("[job] point blank: bolt from inside a husk, lightning on a husk in front and Getsuga over a spider all hit");
+	}
+
+	/**
+	 * Drawn skill looks reach the client: Getsuga Tensho flies as a crescent (black off Tensa Zangetsu, blue off True Zangetsu) and
+	 * Rasengan shows the sphere in the hand, then its burst. Screenshots from behind the caster.
+	 */
+	private static void checkSkillLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runCommand("time set midnight");
+		server.runCommand("title @a clear");
+		// the death puffs of the last check's targets lie along the waves' path
+		context.waitTicks(40);
+		for (String weapon : List.of("tensa_zangetsu", "true_zangetsu")) {
+			server.runOnServer(s -> {
+				ServerPlayer player = connection.getServerPlayer();
+				JobProgression.set(player, JobProgression.get(player).withJob(JobClass.SHINIGAMI, 4).withProgress(100, 0));
+				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def(weapon))));
+				JobStats.refresh(player);
+				player.removeAllEffects();
+				player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			});
+			context.waitTicks(3);
+			SkillCaster.Result cast = server.computeOnServer(s -> {
+				fill(connection.getServerPlayer());
+				return SkillCaster.tryCast(connection.getServerPlayer(), 0);
+			});
+			require(cast == SkillCaster.Result.OK, "Getsuga Tensho of " + weapon + " could not be cast: " + cast);
+			context.waitTicks(2);
+			int crescents = context.computeOnClient(minecraft -> lookCount(minecraft, SkillLook.GETSUGA));
+			require(crescents > 0, "the client sees no Getsuga crescent after casting it with " + weapon);
+			// hold the wave still and look at it from the side, then from behind
+			server.runCommand("tick freeze");
+			Vec3 wave = server.computeOnServer(s -> connection.getServerPlayer().level().getEntitiesOfClass(SkillProjectile.class,
+				connection.getServerPlayer().getBoundingBox().inflate(32)).getFirst().position());
+			lookShot(context, server, connection, wave.add(6.0, 0.4, 0.0), 90.0F, 0.0F, "look_getsuga_" + weapon + "_side");
+			lookShot(context, server, connection, wave.add(0.0, 0.2, 4.5), 180.0F, 5.0F, "look_getsuga_" + weapon);
+			server.runCommand("tick unfreeze");
+			context.waitTicks(20);
+		}
+
+		int target = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.ROGUE, 4).withProgress(100, 0));
+			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("rasenshuriken"))));
+			JobStats.refresh(player);
+			player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
+			return spawnTarget(player.level(), 0.5, -60, -6.5).getId();
+		});
+		// the held sphere moves with its caster: seen through the target's eyes as the caster dashes in, later in first person
+		context.waitTicks(3);
+		context.runOnClient(minecraft -> {
+			hideHud(minecraft, true);
+			Entity eyes = minecraft.level.getEntity(target);
+			require(eyes != null, "the client does not know the Rasengan target");
+			minecraft.setCameraEntity(eyes);
+		});
+		context.waitTicks(3);
+		SkillCaster.Result cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 0);
+		});
+		require(cast == SkillCaster.Result.OK, "Rasengan could not be cast: " + cast);
+		context.waitTicks(2);
+		require(context.computeOnClient(minecraft -> lookCount(minecraft, SkillLook.RASENGAN)) > 0, "the client sees no Rasengan in the hand");
+		context.takeScreenshot("look_rasengan");
+		context.runOnClient(minecraft -> {
+			hideHud(minecraft, false);
+			minecraft.setCameraEntity(minecraft.player);
+		});
+		context.waitTicks(5);
+		require(context.computeOnClient(minecraft -> lookCount(minecraft, SkillLook.RASENGAN_BURST)) > 0, "the client sees no Rasengan burst");
+		server.runCommand("tick freeze");
+		Vec3 burst = server.computeOnServer(s -> connection.getServerPlayer().level().getEntitiesOfClass(SkillVfx.class,
+			connection.getServerPlayer().getBoundingBox().inflate(32)).getFirst().position());
+		lookShot(context, server, connection, burst.add(0.0, 1.5, 8.0), 180.0F, 10.0F, "look_rasengan_burst");
+		server.runCommand("tick unfreeze");
+		context.waitTicks(20);
+		boolean gone = server.computeOnServer(s -> connection.getServerPlayer().level().getEntitiesOfClass(SkillVfx.class,
+			connection.getServerPlayer().getBoundingBox().inflate(32)).isEmpty());
+		require(gone, "Rasengan's drawn effects should be gone a second after the cast");
+
+		server.runOnServer(s -> connection.getServerPlayer().connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F));
+		context.waitTicks(3);
+		cast = server.computeOnServer(s -> {
+			fill(connection.getServerPlayer());
+			return SkillCaster.tryCast(connection.getServerPlayer(), 0);
+		});
+		require(cast == SkillCaster.Result.OK, "Rasengan could not be cast again: " + cast);
+		context.waitTicks(2);
+		context.runOnClient(minecraft -> hideHud(minecraft, true));
+		context.waitTicks(1);
+		context.takeScreenshot("look_rasengan_first_person");
+		context.runOnClient(minecraft -> hideHud(minecraft, false));
+		context.waitTicks(20);
+		server.runCommand("kill @e[tag=" + TARGET + "]");
+		server.runCommand("time set noon");
+		MinecraftMode.LOGGER.info("[job] Getsuga crescents and Rasengan's sphere and burst are drawn on the client");
+	}
+
+	/** A screenshot without the HUD in first person from {@code eye} (ticking frozen, so the effect stays put). */
+	private static void lookShot(
+		final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final Vec3 eye, final float yaw,
+		final float pitch, final String name
+	) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.connection.teleport(eye.x, eye.y - player.getEyeHeight(), eye.z, yaw, pitch);
+		});
+		context.runOnClient(minecraft -> {
+			hideHud(minecraft, true);
+			minecraft.options.setCameraType(CameraType.FIRST_PERSON);
+		});
+		context.waitTicks(3);
+		context.takeScreenshot(name);
+		context.runOnClient(minecraft -> hideHud(minecraft, false));
+	}
+
+	private static void hideHud(final Minecraft minecraft, final boolean hidden) {
+		if (minecraft.gui.hud.isHidden() != hidden) {
+			minecraft.gui.hud.toggle();
+		}
+	}
+
+	private static int lookCount(final Minecraft minecraft, final SkillLook look) {
+		int n = 0;
+		for (Entity e : minecraft.level.entitiesForRendering()) {
+			if (e instanceof SkillProjectile p && p.look() == look || e instanceof SkillVfx v && v.look() == look) {
+				n++;
+			}
+		}
+		return n;
 	}
 
 	/**

@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -81,7 +82,8 @@ public final class RogueContent extends ClassContent {
 
 		weapon("rasenshuriken", 2, 43, SHURIKEN, "Rasenshuriken", "나선수리검",
 			art(0xE8F6FF, 0x2E86C1, 0x00E5FF), fx(Fx.Kind.ORB, 0x7FDBFF),
-			skill("rasengan", "Rasengan", "나선환", ATTACK, 10, 16, dash(5, 1.0), delay(0.3, nova(3, 1.8)), delay(0.3, push(4, 1.6))),
+			skill("rasengan", "Rasengan", "나선환", ATTACK, 10, 16, look(SkillLook.RASENGAN, dash(5, 1.0)), delay(0.3, look(SkillLook.RASENGAN_BURST, nova(3, 1.8))),
+				delay(0.3, push(4, 1.6))),
 			skill("wind_rasenshuriken", "Wind Release: Rasenshuriken", "바람의 술 나선수리검", ATTACK, 16, 20,
 				shoot(ProjectileStyle.SHURIKEN, 2.0).speed(1.4F).explode(3.5F), inflict(BLEEDING, 5, 1)),
 			skill("sage_mode", "Sage Mode", "선인모드", UTILITY, 26, 12, boost(DAMAGE, 10, 20), boost(CRIT_CHANCE, 10, 10), restoreMana(15)));

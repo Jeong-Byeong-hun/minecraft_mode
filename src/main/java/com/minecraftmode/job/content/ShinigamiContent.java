@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -141,9 +142,9 @@ public final class ShinigamiContent extends ClassContent {
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
 		weapon("tensa_zangetsu", 4, 70, KATANA, "Tensa Zangetsu", "천쇄참월",
 			art(0x1A1A1A, 0x2A1A1A, 0xC8202A), fx(Fx.Kind.SLASH, 0x1A1A1A),
-			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10)),
+			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10).look(SkillLook.GETSUGA)),
 			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, blink(12), dash(6, 1.66)),
-			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10), inflict(WITHER, 4, 1)),
+			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10).look(SkillLook.GETSUGA), inflict(WITHER, 4, 1)),
 			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, boost(DAMAGE, 12, 30), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
 
 		weapon("senbonzakura_kageyoshi", 4, 75, KATANA, "Senbonzakura Kageyoshi", "천본앵경엄",
@@ -190,8 +191,8 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("true_zangetsu", 4, 100, GREATSWORD, "True Zangetsu", "진짜 참월",
 			art(0xE8E8F0, 0x1A1A1A, 0x3AA0FF), fx(Fx.Kind.SLASH, 0x6AC8FF),
-			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 1.99).speed(2.2F).pierce(12)),
-			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28, shoot(ProjectileStyle.WAVE, 1.24).count(2).parallel(1.8).speed(2.2F).pierce(12),
+			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 1.99).speed(2.2F).pierce(12).look(SkillLook.GETSUGA)),
+			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28, shoot(ProjectileStyle.WAVE, 1.24).count(2).parallel(1.8).speed(2.2F).pierce(12).look(SkillLook.GETSUGA),
 				slash(5, 180, 0.83)),
 			skill("final_flash_step", "Final Flash Step", "최후의 순보", MOVEMENT, 10, 18, blink(14), empower(3, 80, 6)),
 			skill("mugetsu", "Mugetsu", "무월", ULTIMATE, 90, 60, zone(8, 4, 1.84).at(12), beam(30, 5.52)));

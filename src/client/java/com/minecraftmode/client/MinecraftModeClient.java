@@ -14,6 +14,8 @@ import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
 import com.minecraftmode.client.style.StylistScreen;
 import com.minecraftmode.client.hud.DamageNumbers;
+import com.minecraftmode.client.vfx.SkillProjectileRenderer;
+import com.minecraftmode.client.vfx.SkillVfxRenderer;
 import com.minecraftmode.client.hud.DurabilityHud;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
@@ -111,8 +113,9 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenTrainerPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TrainerScreen(payload.entityId(), payload.job()))
 		));
-		// Skill projectiles show their item (or nothing) at full brightness; the trail is particles.
-		EntityRenderers.register(ModEntities.SKILL_PROJECTILE, context -> new ThrownItemRenderer<>(context, 1.0F, true));
+		// Skill projectiles show their item (or nothing, or their drawn look) at full brightness; the trail is particles.
+		EntityRenderers.register(ModEntities.SKILL_PROJECTILE, SkillProjectileRenderer::new);
+		EntityRenderers.register(ModEntities.SKILL_VFX, SkillVfxRenderer::new);
 		EntityRenderers.register(ModEntities.MOB_PROJECTILE, context -> new ThrownItemRenderer<>(context, 1.6F, true));
 
 		for (Fx.Kind kind : Fx.Kind.values()) {

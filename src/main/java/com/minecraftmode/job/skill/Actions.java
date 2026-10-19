@@ -598,6 +598,7 @@ public final class Actions {
 		private boolean homing;
 		private int interval;
 		private double parallel;
+		private SkillLook look = SkillLook.NONE;
 		private @Nullable BiConsumer<SkillContext, Vec3> impact;
 
 		ProjectileAction(final ProjectileStyle style, final double mult) {
@@ -651,6 +652,12 @@ public final class Actions {
 		/** Extra effect where it lands (e.g. a fire field). */
 		public ProjectileAction onImpact(final BiConsumer<SkillContext, Vec3> impact) {
 			this.impact = impact;
+			return this;
+		}
+
+		/** Draws each projectile in this shape ({@link SkillLook#GETSUGA}) instead of its item and trail. */
+		public ProjectileAction look(final SkillLook look) {
+			this.look = look;
 			return this;
 		}
 
@@ -718,7 +725,7 @@ public final class Actions {
 			}
 			Vec3 dir = Vec3.directionFromRotation(pitch, (float)(yaw + yawOffset));
 			Vec3 from = side == 0.0 ? eye : SkillContext.openPoint(p, eye.add(Vec3.directionFromRotation(0.0F, yaw + 90.0F).scale(side)));
-			SkillProjectile shot = spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false, fan);
+			SkillProjectile shot = spawn(ctx, this.style, from, dir, this.speed, this.each(), this.pierce, this.explode, this.homing, this.impact, false, fan, this.look);
 			if (shot != null && volley != null) {
 				// the middle shot flies at the enemy in the crosshair and keeps it
 				shot.volley(volley, yawOffset == 0.0 && side == 0.0 ? aimed : null);
@@ -772,10 +779,10 @@ public final class Actions {
 		final @Nullable BiConsumer<SkillContext, Vec3> impact,
 		final boolean randomWeapon
 	) {
-		return spawn(ctx, style, from, dir, speed, mult, pierce, explode, homing, impact, randomWeapon, null);
+		return spawn(ctx, style, from, dir, speed, mult, pierce, explode, homing, impact, randomWeapon, null, SkillLook.NONE);
 	}
 
-	/** {@link #spawn} as one shot of {@code fan}: each enemy takes one of its shots. */
+	/** {@link #spawn} as one shot of {@code fan} (each enemy takes one of its shots), drawn as {@code look}. */
 	static @Nullable SkillProjectile spawn(
 		final SkillContext ctx,
 		final ProjectileStyle style,
@@ -788,7 +795,8 @@ public final class Actions {
 		final boolean homing,
 		final @Nullable BiConsumer<SkillContext, Vec3> impact,
 		final boolean randomWeapon,
-		final BasicAttacks.@Nullable Fan fan
+		final BasicAttacks.@Nullable Fan fan,
+		final SkillLook look
 	) {
 		if (style == ProjectileStyle.ARROW && pierce == 0 && explode == 0 && !homing && impact == null) {
 			Arrow arrow = new Arrow(ctx.level, ctx.caster, new ItemStack(Items.ARROW), ctx.stack);
@@ -813,6 +821,7 @@ public final class Actions {
 			.homing(homing)
 			.onImpact(impact)
 			.fan(fan)
+			.look(look)
 			.launch(from, dir, speed);
 		ctx.level.addFreshEntity(projectile);
 		return projectile;
@@ -1502,6 +1511,50 @@ public final class Actions {
 	/** A {@link #repeat} or {@link #delay} of {@code inner} with its supports (a repeated buff still lasts as long, a delayed one too). */
 	private static SkillAction keepSupports(final SkillAction wrapped, final SkillAction inner) {
 		return supporting(wrapped, inner.supports());
+	}
+
+	/**
+	 * {@code action} with a drawn effect ({@link SkillLook}, a {@link SkillVfx} shown when it runs: put it inside a {@link #delay} to
+	 * show it when the delayed step lands). Changes nothing else: tooltip, estimate and supports are the action's own.
+	 */
+	public static SkillAction look(final SkillLook look, final SkillAction action) {
+		return new SkillAction() {
+			@Override
+			public void run(final SkillContext ctx) {
+				SkillVfx.spawn(ctx, look);
+				action.run(ctx);
+			}
+
+			@Override
+			public Component describe() {
+				return action.describe();
+			}
+
+			@Override
+			public boolean isModifier() {
+				return action.isModifier();
+			}
+
+			@Override
+			public boolean moves() {
+				return action.moves();
+			}
+
+			@Override
+			public boolean damages() {
+				return action.damages();
+			}
+
+			@Override
+			public double estimate(final int targets) {
+				return action.estimate(targets);
+			}
+
+			@Override
+			public List<SkillSupport> supports() {
+				return action.supports();
+			}
+		};
 	}
 
 	public static SkillAction delay(final double seconds, final SkillAction action) {

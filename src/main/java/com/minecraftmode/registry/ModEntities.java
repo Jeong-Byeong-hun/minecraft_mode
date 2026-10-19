@@ -10,6 +10,7 @@ import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.job.skill.SkillProjectile;
+import com.minecraftmode.job.skill.SkillVfx;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
 import net.fabricmc.fabric.api.biome.v1.ModificationPhase;
@@ -88,6 +89,21 @@ public final class ModEntities {
 			.updateInterval(5)
 			.noSave()
 			.build(SKILL_PROJECTILE_KEY)
+	);
+
+	public static final ResourceKey<EntityType<?>> SKILL_VFX_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("skill_vfx"));
+
+	/** Drawn skill effects (Rasengan...). Never saved, cannot be summoned. */
+	public static final EntityType<SkillVfx> SKILL_VFX = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		SKILL_VFX_KEY,
+		EntityType.Builder.<SkillVfx>of(SkillVfx::new, MobCategory.MISC)
+			.sized(0.5F, 0.5F)
+			.clientTrackingRange(6)
+			.updateInterval(2)
+			.noSave()
+			.noSummon()
+			.build(SKILL_VFX_KEY)
 	);
 
 	public static final ResourceKey<EntityType<?>> MOB_PROJECTILE_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("mob_projectile"));

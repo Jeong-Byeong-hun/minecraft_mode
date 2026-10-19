@@ -89,6 +89,38 @@ public final class NamedMobs {
 		return EGGS.get(def.id());
 	}
 
+	/** How much a named monster grows across its range: health and damage up to +30% at its top level (see {@code NamedMob.applyLevel}). */
+	public static double levelScale(final NamedDef def, final int level) {
+		return 1.0 + 0.3 * (level - def.lo()) / Math.max(1, def.hi() - def.lo());
+	}
+
+	/**
+	 * Health and damage {@code {health, damage}} of a typical named monster of {@code level}: the mean of every monster whose range holds it,
+	 * at that level (the top range past 100). Lair lords raised for a stronger player take these numbers ({@code NamedMob.raiseTo}).
+	 */
+	public static double[] typicalPower(final int level) {
+		double health = 0.0;
+		double damage = 0.0;
+		int n = 0;
+		NamedDef top = null;
+		for (NamedDef def : DEFS.values()) {
+			if (top == null || def.hi() > top.hi()) {
+				top = def;
+			}
+			if (level >= def.lo() && level <= def.hi()) {
+				double scale = levelScale(def, level);
+				health += def.health() * scale;
+				damage += def.damage() * scale;
+				n++;
+			}
+		}
+		if (n == 0) {
+			double scale = levelScale(top, Math.min(level, top.hi()));
+			return new double[] {top.health() * scale, top.damage() * scale};
+		}
+		return new double[] {health / n, damage / n};
+	}
+
 	// ------------------------------------------------------------------ definitions
 
 	private static void define() {

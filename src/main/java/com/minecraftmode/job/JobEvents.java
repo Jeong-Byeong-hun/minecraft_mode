@@ -16,6 +16,7 @@ import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearShop;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.progress.Progress;
+import com.minecraftmode.worldgen.lair.LairExp;
 import java.util.List;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
@@ -61,7 +62,7 @@ import org.jspecify.annotations.Nullable;
  * stat refresh, death penalty, Avalon, and cleanup of summons.
  */
 public final class JobEvents {
-	/** A named monster's kill is worth this share of a level to each of its killers (lords, titans and warlords: {@link #LORD_SHARE}). */
+	/** A named monster's kill is worth this share of a level to each of its killers (titans, warlords and dungeon champions: {@link #LORD_SHARE}; lair lords: {@code LairExp.LORD}). */
 	public static final float NAMED_SHARE = 0.25F;
 	public static final float LORD_SHARE = 0.5F;
 
@@ -148,7 +149,8 @@ public final class JobEvents {
 		for (int i = 0; i < shares.size() && !event; i++) {
 			Contribution.Share share = shares.get(i);
 			int solo = entity instanceof NamedMob named
-				? JobProgression.levelExp(share.player(), named.namedLevel(), named.isLord() || named.isChampion() ? LORD_SHARE : NAMED_SHARE)
+				? named.isLord() ? LairExp.lordExp(share.player(), named)
+				: JobProgression.levelExp(share.player(), named.namedLevel(), named.isChampion() ? LORD_SHARE : NAMED_SHARE)
 				: trial != null ? JobProgression.levelExp(share.player(), trial.level(), trial.share()) : Math.max(3, Math.round(health));
 			int exp = Contribution.portion(solo, share, shares.size()) * TrainingGrounds.expMultiplier(entity, share.player());
 			gainExp(share.player(), exp);

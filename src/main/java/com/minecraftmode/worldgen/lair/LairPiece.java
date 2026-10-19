@@ -136,6 +136,31 @@ public class LairPiece extends StructurePiece {
 		return this.floor;
 	}
 
+	/** The lair's middle: on the maze floor, or at the tower's foot for underground lairs. */
+	public BlockPos center() {
+		LairDef def = this.def();
+		return new BlockPos(this.cx, def != null && def.setting() == Setting.UNDERGROUND ? this.surface : this.floor, this.cz);
+	}
+
+	/** Where a traveller stands just outside the maze gate (feet position, facing north into the maze); see {@link #entrance(LairDef, int, int, int)}. */
+	public BlockPos entrance() {
+		return entrance(this.def(), this.cx, this.floor, this.cz);
+	}
+
+	/**
+	 * The feet position just outside the maze gate of a lair centered on {@code cx}, {@code cz} with its floor at {@code floor}: on the paved
+	 * approach three blocks south of the gate for lairs with an apron, in the corridor between the gate and the shaft for underground ones.
+	 * The gate sits in the middle cell of the south wall ({@link Maze#entranceX}), so its middle column is {@code cx}.
+	 */
+	public static BlockPos entrance(final LairDef def, final int cx, final int floor, final int cz) {
+		int size = def.size();
+		int z0 = cz - size / 2;
+		int gateZ = z0 + size;
+		int x = cx - size / 2 + 2 + CELL * (def.cells() / 2);
+		int z = def.setting() == Setting.UNDERGROUND ? gateZ + 1 : gateZ + 3;
+		return new BlockPos(x, floor + 1, z);
+	}
+
 	@Override
 	public void postProcess(final WorldGenLevel level, final StructureManager structureManager, final ChunkGenerator generator, final RandomSource random,
 		final BoundingBox chunkBB, final ChunkPos chunkPos, final BlockPos referencePos) {
@@ -424,6 +449,7 @@ public class LairPiece extends StructurePiece {
 		p.set(gx, this.floor + 1, gz, ModBlocks.LAIR_CHEST.defaultBlockState());
 		if (level.getBlockEntity(chest) instanceof LairChestBlockEntity treasure) {
 			treasure.setup(def.id(), this.seed, false);
+			treasure.setExit(this.entrance());
 		}
 	}
 

@@ -67,6 +67,10 @@ public class LairChestBlockEntity extends BlockEntity {
 	private long victorCycle = -1L;
 	private final Set<String> victors = new HashSet<>();
 	private final Map<String, Personal> personal = new HashMap<>();
+	/** Where a traveller stands outside the maze gate (set when the lair is built; older chests look it up, see {@link #exit}). */
+	private @Nullable BlockPos exit;
+	/** The level this cycle's lord was raised to for a stronger player (0 = its own), applied again when it loads ({@code MobPower} is not saved). */
+	private int lordPower;
 
 	public LairChestBlockEntity(final BlockPos pos, final BlockState state) {
 		super(ModBlockEntities.LAIR_CHEST, pos, state);
@@ -77,6 +81,28 @@ public class LairChestBlockEntity extends BlockEntity {
 		this.seed = seed;
 		this.cache = cache;
 		this.setChanged();
+	}
+
+	public void setExit(final BlockPos exit) {
+		this.exit = exit.immutable();
+		this.setChanged();
+	}
+
+	/**
+	 * Where a traveller stands just outside this lair's maze gate: kept by the chest since the lair map loop (0.5.36); a goal chest built before
+	 * asks the lair's structure start once (natural lairs only). Null for caches and chests that belong to no known lair.
+	 */
+	public @Nullable BlockPos exit(final ServerLevel level) {
+		if (this.exit == null && !this.cache) {
+			for (var start : level.structureManager().startsForStructure(this.worldPosition.getX() >> 4,
+				this.worldPosition.getZ() >> 4, s -> s instanceof LairStructure)) {
+				if (start.isValid() && !start.getPieces().isEmpty() && start.getPieces().getFirst() instanceof LairPiece piece && piece.def() != null
+					&& piece.goalPos().equals(this.worldPosition)) {
+					this.setExit(piece.entrance());
+				}
+			}
+		}
+		return this.exit;
 	}
 
 	public String lair() {
@@ -153,7 +179,12 @@ public class LairChestBlockEntity extends BlockEntity {
 		}
 		long cycle = ResetCycle.cycle(server);
 		chest.newCycle(cycle);
-		if (chest.lord() != null) {
+		NamedMob current = chest.lord();
+		if (current != null) {
+			// a raised lord that was unloaded and loaded again lost its power (MobPower lives in memory only)
+			if (chest.lordPower > 0 && current.powerLevel() < chest.lordPower) {
+				current.raiseTo(chest.lordPower);
+			}
 			return;
 		}
 		// someone who has not beaten this cycle's lord comes near: a lord rises for them
@@ -184,6 +215,12 @@ public class LairChestBlockEntity extends BlockEntity {
 		mob.makeLord(this.worldPosition);
 		mob.setPersistenceRequired();
 		level.addFreshEntity(mob);
+		// a lord woken by players above the lair's range rises to the strongest one's level, like a map of a higher tier
+		int power = this.challengerLevel(level);
+		this.lordPower = power > def.named().hi() ? power : 0;
+		if (this.lordPower > 0) {
+			mob.raiseTo(this.lordPower);
+		}
 		this.lord = mob.getUUID();
 		this.lordCycle = cycle;
 		this.setChanged();
@@ -193,6 +230,20 @@ public class LairChestBlockEntity extends BlockEntity {
 				Component.translatable(def.nameKey())).withStyle(ChatFormatting.RED));
 		}
 		return mob;
+	}
+
+	/** The highest class level among the players within {@link #CREDIT_RANGE} of the chest (0 when nobody is there). */
+	public int challengerLevel(final ServerLevel level) {
+		int best = 0;
+		for (ServerPlayer p : level.getPlayers(p -> !p.isSpectator() && p.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(this.worldPosition)) <= CREDIT_RANGE * CREDIT_RANGE)) {
+			best = Math.max(best, JobProgression.get(p).level());
+		}
+		return best;
+	}
+
+	/** The level this cycle's lord was raised to (0 = the lair's own). */
+	public int lordPower() {
+		return this.lordPower;
 	}
 
 	// ------------------------------------------------------------------ personal loot
@@ -244,7 +295,7 @@ public class LairChestBlockEntity extends BlockEntity {
 			return slots;
 		}
 		RandomSource random = RandomSource.create(this.seed ^ player.getMostSignificantBits() ^ player.getLeastSignificantBits() * 31L ^ cycle * 0x9E3779B97F4A7C15L);
-		List<ItemStack> loot = this.cache ? LairLoot.cache(def.named(), random) : LairLoot.goal(def.named(), job, random);
+		List<ItemStack> loot = this.cache ? LairLoot.cache(def.named(), job, random) : LairLoot.goal(def.named(), job, random);
 		for (ItemStack stack : loot) {
 			for (int tries = 0; tries < 40; tries++) {
 				int slot = random.nextInt(SIZE);
@@ -277,6 +328,10 @@ public class LairChestBlockEntity extends BlockEntity {
 		}
 		output.store("Personal", PERSONAL_CODEC, this.personal);
 		output.putLong("VictorCycle", this.victorCycle);
+		if (this.exit != null) {
+			output.putLong("Exit", this.exit.asLong());
+		}
+		output.putInt("LordPower", this.lordPower);
 		output.store("Victors", Codec.STRING.listOf(), new ArrayList<>(this.victors));
 	}
 
@@ -291,6 +346,8 @@ public class LairChestBlockEntity extends BlockEntity {
 		this.personal.clear();
 		this.personal.putAll(input.read("Personal", PERSONAL_CODEC).orElse(Map.of()));
 		this.victorCycle = input.getLongOr("VictorCycle", -1L);
+		this.exit = input.getLong("Exit").map(BlockPos::of).orElse(null);
+		this.lordPower = input.getIntOr("LordPower", 0);
 		this.victors.clear();
 		this.victors.addAll(input.read("Victors", Codec.STRING.listOf()).orElse(List.of()));
 	}

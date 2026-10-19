@@ -39,8 +39,8 @@ final class EndgameLang {
 		b.add("container.minecraft_mode.lair_cache", ko ? "소굴 보급품 (이번 주기 개인 보상)" : "Lair Cache (yours this cycle)");
 		b.add(ModItems.LAIR_MAP, ko ? "소굴 지도" : "Lair Map");
 		b.add("item.minecraft_mode.lair_map.filled", ko ? "소굴 지도 (%s, %s)" : "Lair Map (%s, %s)");
-		b.add("item.minecraft_mode.lair_map.tooltip", ko ? "사용하면 가장 가까운 네임드 소굴을 지도(M)와 미니맵에 표시하고, 그곳을 그린 지도를 줍니다."
-			: "Use it to mark the nearest named lair on your map (M) and minimap, and get a map of the place.");
+		b.add("item.minecraft_mode.lair_map.tooltip", ko ? "사용하면 내 레벨에 맞는(이번 주기에 정복하지 않은) 소굴을 찾아 지도(M)에 표시하고, 확인하면 그 입구로 이동합니다. 이동하면 소모됩니다."
+			: "Use it to find a lair for your level (one you have not cleared this cycle), mark it on your map (M) and, if you agree, travel to its gate. Used up on arrival.");
 		b.add("message.minecraft_mode.lair.map_found", ko ? "소굴 지도: %s (%s, Lv %s-%s) — X %s, Z %s. 지도(M)에 표시했습니다."
 			: "Lair map: %s (%s, Lv %s-%s) at X %s, Z %s. Marked on your map (M).");
 		b.add("entity.minecraft_mode.lair_lord", ko ? "소굴의 군주 %s" : "Lair Lord %s");
@@ -52,6 +52,27 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.lair.chest_exp", ko ? "%s의 보물: 직업 경험치 +%s" : "Treasure of %s: +%s class experience");
 		b.add("message.minecraft_mode.lair.lord_awakens", ko ? "%2$s의 군주 %1$s이(가) 깨어났다!" : "%s, lord of %s, awakens!");
 		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는 소굴이 근처에 없습니다." : "There is no lair within reach of this map.");
+		b.add("message.minecraft_mode.lair.map_here", ko ? "이곳에서는 소굴 지도를 쓸 수 없습니다." : "Lair maps do not work here.");
+		b.add("message.minecraft_mode.lair.travel_no_map", ko ? "소굴 지도가 없어 이동할 수 없습니다." : "You no longer hold a lair map.");
+		b.add("message.minecraft_mode.lair.travel_cleared", ko ? "이번 주기에 이미 정복한 소굴입니다." : "You already cleared that lair this cycle.");
+		b.add("message.minecraft_mode.lair.travel_wait", ko ? "%s(으)로 가는 길을 여는 중..." : "Opening the way to %s...");
+		b.add("message.minecraft_mode.lair.travel_failed", ko ? "%s(으)로 가는 길을 열지 못했습니다. 지도는 그대로 남아 있습니다." : "The way to %s could not be opened. Your map is kept.");
+		b.add("message.minecraft_mode.lair.travel_arrived", ko ? "%s의 입구에 도착했습니다." : "You arrive at the gate of %s.");
+		b.add("message.minecraft_mode.lair.next_map", ko ? "전리품 속에서 새 소굴 지도를 찾았습니다! 이번 주기에 정복하지 않은 소굴로 안내합니다."
+			: "A new lair map lies among the spoils! It leads to a lair you have not cleared this cycle.");
+		b.add("message.minecraft_mode.lair.exit_far", ko ? "%s에서 너무 멀리 떨어져 있어 입구로 돌아갈 수 없습니다." : "You are too far from %s to return to its gate.");
+		b.add("screen.minecraft_mode.lair_travel.title", ko ? "소굴 지도" : "Lair Map");
+		b.add("screen.minecraft_mode.lair_travel.monster", ko ? "%s · Lv %s-%s" : "%s · Lv %s-%s");
+		b.add("screen.minecraft_mode.lair_travel.fits", ko ? "내 레벨에 맞는 소굴입니다." : "This lair suits your level.");
+		b.add("screen.minecraft_mode.lair_travel.nearest", ko ? "레벨에 맞는 소굴이 없어 가장 가까운 소굴을 찾았습니다." : "None suits your level: this is the nearest lair.");
+		b.add("screen.minecraft_mode.lair_travel.where", ko ? "입구 X %s, Y %s, Z %s · %s블록 거리" : "Gate at X %s, Y %s, Z %s · %s blocks away");
+		b.add("screen.minecraft_mode.lair_travel.note", ko ? "이동하면 지도가 소모됩니다. 바로 소굴 입구로 갑니다." : "Travelling uses the map up and takes you to the gate.");
+		b.add("screen.minecraft_mode.lair_travel.go", ko ? "이동" : "Travel");
+		b.add("screen.minecraft_mode.lair_clear.title", ko ? "소굴 정복!" : "Lair Cleared!");
+		b.add("screen.minecraft_mode.lair_clear.body", ko ? "이번 주기의 %s을(를) 정복했습니다." : "You cleared %s for this cycle.");
+		b.add("screen.minecraft_mode.lair_clear.next", ko ? "다음 소굴로 가는 소굴 지도를 받았습니다." : "You got a lair map to the next lair.");
+		b.add("screen.minecraft_mode.lair_clear.exit", ko ? "출구로 돌아가기" : "Return to the exit");
+		b.add("screen.minecraft_mode.lair_clear.close", ko ? "닫기" : "Close");
 	}
 
 	private static void raids(final TranslationBuilder b, final boolean ko) {

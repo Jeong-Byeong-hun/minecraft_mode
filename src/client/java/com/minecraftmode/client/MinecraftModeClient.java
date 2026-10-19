@@ -29,6 +29,7 @@ import com.minecraftmode.client.guide.GuideScreen;
 import com.minecraftmode.client.guide.NoticeScreen;
 import com.minecraftmode.client.job.EngravingScreen;
 import com.minecraftmode.client.job.JobHud;
+import com.minecraftmode.client.lair.LairClient;
 import com.minecraftmode.client.map.MapClient;
 import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.job.JobKeys;
@@ -90,6 +91,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		}
 		CompanionClient.init();
 		MapClient.init();
+		LairClient.init();
 		ClientPlayNetworking.registerGlobalReceiver(OpenGuidePayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new GuideScreen(payload.entityId()))
 		));

@@ -56,13 +56,46 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 	@Override
 	public void submit(final ThrownItemRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
 		State s = (State)state;
-		if (s.look == SkillLook.GETSUGA) {
-			submitGetsuga(s, poseStack, submitNodeCollector);
+		switch (s.look) {
+			case GETSUGA -> submitGetsuga(s, poseStack, submitNodeCollector, false);
+			case GETSUGA_DUAL -> submitGetsuga(s, poseStack, submitNodeCollector, true);
+			case TAIMATSU -> submitTaimatsu(s, poseStack, submitNodeCollector, camera);
+			default -> {
+			}
 		}
 		super.submit(state, poseStack, submitNodeCollector, camera);
 	}
 
-	private static void submitGetsuga(final State s, final PoseStack poseStack, final SubmitNodeCollector collector) {
+	/**
+	 * Taimatsu: a ball of fire, white at the heart, its flames streaming back from the flight in licking tongues, a glow round it all.
+	 */
+	private static void submitTaimatsu(final State s, final PoseStack poseStack, final SubmitNodeCollector collector, final CameraRenderState camera) {
+		Vector3f back = new Vector3f(s.forward).negate();
+		Vector3f right = new Vector3f(1.0F, 0.0F, 0.0F).rotate(camera.orientation);
+		Vector3f up = new Vector3f(0.0F, 1.0F, 0.0F).rotate(camera.orientation);
+		float time = s.ageInTicks;
+		float pulse = 1.0F + 0.08F * Mth.sin(time * 2.3F);
+		poseStack.pushPose();
+		poseStack.translate(0.0F, 0.15F, 0.0F);
+		SkillVfxRenderer.glow(poseStack, collector, o -> {
+			Vector3f c = new Vector3f();
+			o.sprite(c, right, up, 1.6F * pulse, VfxOut.argb(0.55F, 0xFF5A1A));
+			o.sprite(c, right, up, 0.85F * pulse, VfxOut.argb(0.9F, 0xFFB050));
+			o.sprite(c, right, up, 0.4F, VfxOut.argb(1.0F, 0xFFF4D0));
+			for (int i = 0; i < 10; i++) {
+				float a = Mth.TWO_PI * i / 10 + time * 0.4F;
+				Vector3f sideways = VfxOut.across(back).mul(Mth.cos(a) * 0.3F).add(new Vector3f(VfxOut.across(back)).cross(back).normalize().mul(Mth.sin(a) * 0.3F));
+				o.flame(sideways, back, 1.3F + 0.9F * VfxOut.hash(i), 0.5F, time * 0.9F + i * 1.7F, VfxOut.argb(0.85F, 0xFFD27A), VfxOut.argb(0.0F, 0xFF2A00));
+			}
+		});
+		collector.submitCustomGeometry(poseStack, VfxDraw.GLOW, (pose, buffer) -> VfxDraw.ball(pose, buffer, 0.38F * pulse, 0xFF9A3A, 0.35F));
+		poseStack.popPose();
+	}
+
+	/**
+	 * The crescent; {@code dual} (True Zangetsu) adds a black crescent riding inside the white one, the two sides of Ichigo's power.
+	 */
+	private static void submitGetsuga(final State s, final PoseStack poseStack, final SubmitNodeCollector collector, final boolean dual) {
 		Vector3f f = new Vector3f(s.forward);
 		Vector3f side = new Vector3f(f).cross(0.0F, 1.0F, 0.0F);
 		if (side.lengthSquared() < 1.0E-4F) {
@@ -90,11 +123,13 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 				crescent(pose, buffer, f, axis, shift, RADIUS * grow * (1 - 0.07F * echo), THICKNESS * grow, glow, glow, alpha, time, 0.0F);
 			}
 			// a dark body still glows a deep red under its shade, or it vanishes against the night
-			crescent(pose, buffer, f, axis, new Vector3f(), RADIUS * grow, THICKNESS * grow, glow, dark ? 0xFF8A80 : VfxDraw.whiten(s.color, 0.75F), 1.0F, time,
+			crescent(pose, buffer, f, axis, new Vector3f(), RADIUS * grow, THICKNESS * grow, glow, dark ? 0xFF8A80 : VfxDraw.whiten(s.color, dual ? 1.0F : 0.75F), 1.0F, time,
 				dark ? 0.45F : 1.0F);
 		});
 		if (dark) {
 			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, RADIUS * grow, THICKNESS * grow, time));
+		} else if (dual) {
+			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, RADIUS * grow * 0.8F, THICKNESS * grow * 0.6F, time));
 		}
 		poseStack.popPose();
 	}

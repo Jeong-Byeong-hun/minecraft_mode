@@ -1,6 +1,8 @@
 package com.minecraftmode.job.skill;
 
 import com.minecraftmode.registry.ModEntities;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -13,17 +15,27 @@ import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A drawn skill effect ({@link SkillLook}) with no body: it only carries what the client draws (look, color, size, the entity it is
- * held by) and removes itself after the look's ticks. Never saved, never hit.
+ * A drawn skill effect ({@link SkillLook}) with no body: it only carries what the client draws (look, color, size, how long it lasts,
+ * where it points, the entity it is held by) and removes itself after its ticks. Never saved, never hit.
  */
 public class SkillVfx extends Entity {
 	private static final EntityDataAccessor<Integer> DATA_LOOK = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_COLOR = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> DATA_SIZE = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.FLOAT);
 	private static final EntityDataAccessor<Integer> DATA_ANCHOR = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Integer> DATA_TICKS = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Vector3fc> DATA_REACH = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.VECTOR3);
+	private static final EntityDataAccessor<Float> DATA_ARG = SynchedEntityData.defineId(SkillVfx.class, EntityDataSerializers.FLOAT);
+	/** How many positions of its holder a {@link SkillLook.Hold#TRAIL} look keeps on the client. */
+	private static final int TRAIL_POINTS = 24;
+
+	/** Client only: where the holder of a {@link SkillLook.Hold#TRAIL} look has been, oldest first. */
+	public final List<Vec3> trail = new ArrayList<>();
 
 	public SkillVfx(final EntityType<? extends SkillVfx> type, final Level level) {
 		super(type, level);
@@ -32,16 +44,31 @@ public class SkillVfx extends Entity {
 
 	/** Shows {@code look} where the caster stands (held by them for anchored looks), sized by the Expansion engraving. */
 	public static void spawn(final SkillContext ctx, final SkillLook look) {
-		if (look == SkillLook.NONE || look.ticks() <= 0) {
+		spawn(ctx, look, ctx.caster.position(), ctx.flatLook(), (float)ctx.area(look.size()), 0.0F, look.ticks(), look.anchored() ? ctx.caster : null);
+	}
+
+	/**
+	 * Shows {@code look} at {@code at} for {@code ticks}, pointing along {@code reach} (a beam's whole length, a cone's direction times its
+	 * range), {@code size} blocks across (its radius or length), {@code arg} for whatever else the look needs (a cone's arc), held by
+	 * {@code holder} for anchored looks.
+	 */
+	public static void spawn(
+		final SkillContext ctx, final SkillLook look, final Vec3 at, final Vec3 reach, final float size, final float arg, final int ticks, final @Nullable Entity holder
+	) {
+		if (look == SkillLook.NONE || ticks <= 0) {
 			return;
 		}
 		SkillVfx vfx = new SkillVfx(ModEntities.SKILL_VFX, ctx.level);
-		Vec3 at = look.anchored() ? ctx.caster.position() : ctx.caster.position().add(0, 0.2, 0);
 		vfx.setPos(at.x, at.y, at.z);
+		vfx.setYRot(ctx.caster.getYRot());
+		vfx.setXRot(ctx.caster.getXRot());
 		vfx.entityData.set(DATA_LOOK, look.ordinal());
 		vfx.entityData.set(DATA_COLOR, ctx.fx.color());
-		vfx.entityData.set(DATA_SIZE, (float)ctx.area(look.size()));
-		vfx.entityData.set(DATA_ANCHOR, look.anchored() ? ctx.caster.getId() : -1);
+		vfx.entityData.set(DATA_SIZE, size);
+		vfx.entityData.set(DATA_TICKS, ticks);
+		vfx.entityData.set(DATA_REACH, new Vector3f((float)reach.x, (float)reach.y, (float)reach.z));
+		vfx.entityData.set(DATA_ARG, arg);
+		vfx.entityData.set(DATA_ANCHOR, look.anchored() && holder != null ? holder.getId() : -1);
 		ctx.level.addFreshEntity(vfx);
 	}
 
@@ -57,6 +84,21 @@ public class SkillVfx extends Entity {
 		return this.entityData.get(DATA_SIZE);
 	}
 
+	/** How many ticks it is shown. */
+	public int life() {
+		return this.entityData.get(DATA_TICKS);
+	}
+
+	/** Where it points from its position: a beam's whole length, a cone's direction times its range. */
+	public Vector3fc reach() {
+		return this.entityData.get(DATA_REACH);
+	}
+
+	/** The look's own extra number (a cone's arc in degrees). */
+	public float arg() {
+		return this.entityData.get(DATA_ARG);
+	}
+
 	public @Nullable Entity anchor() {
 		int id = this.entityData.get(DATA_ANCHOR);
 		return id < 0 ? null : this.level().getEntity(id);
@@ -68,22 +110,38 @@ public class SkillVfx extends Entity {
 		entityData.define(DATA_COLOR, 0xFFFFFF);
 		entityData.define(DATA_SIZE, 1.0F);
 		entityData.define(DATA_ANCHOR, -1);
+		entityData.define(DATA_TICKS, 20);
+		entityData.define(DATA_REACH, new Vector3f(0.0F, 0.0F, 1.0F));
+		entityData.define(DATA_ARG, 0.0F);
 	}
 
 	@Override
 	public void tick() {
+		SkillLook look = this.look();
+		Entity anchor = this.anchor();
 		if (this.level().isClientSide()) {
+			if (look.hold() == SkillLook.Hold.TRAIL && anchor != null) {
+				this.trail.add(anchor.position());
+				if (this.trail.size() > TRAIL_POINTS) {
+					this.trail.removeFirst();
+				}
+			}
 			return;
 		}
-		Entity anchor = this.anchor();
-		if (this.tickCount >= this.look().ticks() || this.look().anchored() && (anchor == null || anchor.isRemoved())) {
+		if (this.tickCount >= this.life() || look.hold() == SkillLook.Hold.HAND && (anchor == null || anchor.isRemoved())) {
 			this.discard();
 			return;
 		}
-		if (anchor != null) {
-			// keeps it tracked (and culled) where the holder is; the client draws it at the holder's hand
+		if (anchor != null && !anchor.isRemoved() && (look.hold() == SkillLook.Hold.HAND || look.hold() == SkillLook.Hold.FOLLOW)) {
+			// keeps it tracked (and culled) where the holder is; the client draws it at the holder itself
 			this.setPos(anchor.getX(), anchor.getY(), anchor.getZ());
 		}
+	}
+
+	/** Drawn as far as it is tracked: its tiny box would hide a 30-block beam a few blocks away. */
+	@Override
+	public boolean shouldRenderAtSqrDistance(final double distance) {
+		return distance < 128.0 * 128.0;
 	}
 
 	@Override

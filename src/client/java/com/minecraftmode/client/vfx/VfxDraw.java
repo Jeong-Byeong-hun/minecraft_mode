@@ -1,7 +1,15 @@
 package com.minecraftmode.client.vfx;
 
+import com.minecraftmode.MinecraftMode;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.DepthStencilState;
+import com.mojang.renderpearl.api.pipeline.RenderPipeline;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.util.ARGB;
@@ -9,11 +17,18 @@ import net.minecraft.util.Mth;
 import org.joml.Vector3f;
 
 /**
- * Geometry for drawn skill effects, written as position + color quads. {@link #GLOW} adds light (the lightning render type: additive,
- * culled, sorted), {@link #SHADE} darkens (translucent, both sides), so a black wave still shows on a dark night.
+ * Geometry for drawn skill effects, written as position + color quads. {@link #GLOW} adds light (the lightning shader: additive, culled,
+ * sorted, but without writing depth, so a glow's clear edges never cut holes in the glow behind them), {@link #SHADE} darkens
+ * (translucent, both sides), so a black wave still shows on a dark night.
  */
 final class VfxDraw {
-	static final RenderType GLOW = RenderTypes.lightning();
+	/** Vanilla's lightning pipeline minus the depth write. Built lazily on first use (never touches the GPU in static init). */
+	private static final RenderPipeline GLOW_PIPELINE = RenderPipeline.builder(RenderPipelines.LIGHTNING_SNIPPET)
+		.withLocation(MinecraftMode.id("pipeline/skill_glow"))
+		.withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
+		.withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+		.build();
+	static final RenderType GLOW = RenderType.create("minecraft_mode_skill_glow", RenderSetup.builder(GLOW_PIPELINE).sortOnUpload().createRenderSetup());
 	static final RenderType SHADE = RenderTypes.debugQuads();
 
 	/** One quad seen from both sides (the glow type culls back faces). */

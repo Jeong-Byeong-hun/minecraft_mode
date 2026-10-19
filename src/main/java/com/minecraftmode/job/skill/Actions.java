@@ -1514,47 +1514,139 @@ public final class Actions {
 	}
 
 	/**
-	 * {@code action} with a drawn effect ({@link SkillLook}, a {@link SkillVfx} shown when it runs: put it inside a {@link #delay} to
-	 * show it when the delayed step lands). Changes nothing else: tooltip, estimate and supports are the action's own.
+	 * {@code action} with a drawn effect ({@link SkillLook}, a {@link SkillVfx} shown when it runs: put it inside a {@link #delay} or
+	 * {@link #repeat} to show it when the step lands, each time). Where it appears is set on the returned {@link LookAction} (the caster's
+	 * feet by default). Changes nothing else: tooltip, estimate and supports are the action's own.
 	 */
-	public static SkillAction look(final SkillLook look, final SkillAction action) {
-		return new SkillAction() {
-			@Override
-			public void run(final SkillContext ctx) {
-				SkillVfx.spawn(ctx, look);
-				action.run(ctx);
-			}
+	public static LookAction look(final SkillLook look, final SkillAction action) {
+		return new LookAction(look, action);
+	}
 
-			@Override
-			public Component describe() {
-				return action.describe();
-			}
+	/** A step with a drawn effect; see {@link #look}. Purely visual: everything but {@link #run} is the wrapped action's. */
+	public static final class LookAction implements SkillAction {
+		private enum Place {
+			FEET,
+			AIM,
+			TARGET,
+			BEAM,
+			CONE
+		}
 
-			@Override
-			public boolean isModifier() {
-				return action.isModifier();
-			}
+		private final SkillLook look;
+		private final SkillAction action;
+		private Place place = Place.FEET;
+		private double size = -1.0;
+		private double range;
+		private double arc;
+		private double seconds = -1.0;
 
-			@Override
-			public boolean moves() {
-				return action.moves();
-			}
+		LookAction(final SkillLook look, final SkillAction action) {
+			this.look = look;
+			this.action = action;
+		}
 
-			@Override
-			public boolean damages() {
-				return action.damages();
-			}
+		/** Radius (or length) of the drawing before the Expansion engraving; the look's own size by default. */
+		public LookAction size(final double size) {
+			this.size = size;
+			return this;
+		}
 
-			@Override
-			public double estimate(final int targets) {
-				return action.estimate(targets);
-			}
+		/** On the ground where the caster aims, like {@link ZoneAction#at} and {@link #rain}. */
+		public LookAction at(final double range) {
+			this.place = Place.AIM;
+			this.range = range;
+			return this;
+		}
 
-			@Override
-			public List<SkillSupport> supports() {
-				return action.supports();
+		/** On (and held by) the enemy in the crosshair within {@code range}, like {@link #shadowstep}; nothing when there is none. */
+		public LookAction onTarget(final double range) {
+			this.place = Place.TARGET;
+			this.range = range;
+			return this;
+		}
+
+		/** From the eyes to where the caster looks, up to {@code length}, like {@link #beam}. */
+		public LookAction beam(final double length) {
+			this.place = Place.BEAM;
+			this.range = length;
+			return this;
+		}
+
+		/** In front of the caster, {@code range} out over {@code arc} degrees, like {@link #slash}. */
+		public LookAction cone(final double range, final double arc) {
+			this.place = Place.CONE;
+			this.range = range;
+			this.arc = arc;
+			return this;
+		}
+
+		/** Shown this long (a zone's duration) instead of the look's own ticks. */
+		public LookAction lasting(final double seconds) {
+			this.seconds = seconds;
+			return this;
+		}
+
+		@Override
+		public void run(final SkillContext ctx) {
+			this.show(ctx);
+			this.action.run(ctx);
+		}
+
+		private void show(final SkillContext ctx) {
+			int ticks = this.seconds > 0 ? (int)Math.round(this.seconds * 20) : this.look.ticks();
+			float size = (float)ctx.area(this.size > 0 ? this.size : this.look.size());
+			Entity holder = ctx.caster;
+			switch (this.place) {
+				case FEET -> SkillVfx.spawn(ctx, this.look, ctx.caster.position(), ctx.flatLook(), size, 0.0F, ticks, holder);
+				case AIM -> SkillVfx.spawn(ctx, this.look, ctx.groundPoint(this.range), ctx.flatLook(), size, 0.0F, ticks, holder);
+				case TARGET -> {
+					LivingEntity target = ctx.lookTarget(this.range);
+					if (target != null) {
+						// size: the target's height, arg: its width, so the drawing wraps the body
+						SkillVfx.spawn(ctx, this.look, target.position(), ctx.flatLook(), target.getBbHeight(), target.getBbWidth(), ticks, target);
+					}
+				}
+				case BEAM -> {
+					Vec3 from = ctx.eye().add(0, -0.2, 0);
+					Vec3 to = ctx.lookPoint(this.range);
+					SkillVfx.spawn(ctx, this.look, from, to.subtract(from), (float)to.distanceTo(from), size, ticks, holder);
+				}
+				case CONE -> {
+					double r = ctx.area(this.range);
+					SkillVfx.spawn(ctx, this.look, ctx.eye().add(0, -0.4, 0), ctx.flatLook().scale(r), (float)r, (float)this.arc, ticks, holder);
+				}
 			}
-		};
+		}
+
+		@Override
+		public Component describe() {
+			return this.action.describe();
+		}
+
+		@Override
+		public boolean isModifier() {
+			return this.action.isModifier();
+		}
+
+		@Override
+		public boolean moves() {
+			return this.action.moves();
+		}
+
+		@Override
+		public boolean damages() {
+			return this.action.damages();
+		}
+
+		@Override
+		public double estimate(final int targets) {
+			return this.action.estimate(targets);
+		}
+
+		@Override
+		public List<SkillSupport> supports() {
+			return this.action.supports();
+		}
 	}
 
 	public static SkillAction delay(final double seconds, final SkillAction action) {

@@ -4,7 +4,11 @@ import com.minecraftmode.client.ClientSettings;
 import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobClass;
+import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.job.gear.ItemLevels;
 import com.minecraftmode.loot.Coins;
+import com.minecraftmode.loot.EtherAutoFuse;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.network.CharacterListPayload;
 import com.minecraftmode.network.MenuActionPayload;
 import com.minecraftmode.network.PartySyncPayload;
@@ -28,6 +32,7 @@ public class AdventurerScreen extends MenuScreenBase {
 	private static final int H = 230;
 	private static final int PARTY = 0;
 	private static final int PAY = 1;
+	private static final int SETTINGS = 2;
 	static final int CHARACTERS = 3;
 	private static final int NAMES_PER_PAGE = 8;
 
@@ -36,6 +41,7 @@ public class AdventurerScreen extends MenuScreenBase {
 	private int shownBalance;
 	private int namesPage;
 	private String payee = "";
+	private int shownEther;
 
 	public AdventurerScreen() {
 		super(Component.translatable(K + "title"), W, H);
@@ -77,7 +83,8 @@ public class AdventurerScreen extends MenuScreenBase {
 		super.tick();
 		// what this screen shows of the party (health changes every sync in a fight and is not shown); payments change the balance
 		if (!partyKey().equals(this.shownParty) || !RaidClient.invitedBy().equals(this.shownInvite)
-			|| this.minecraft.player != null && Wallet.balance(this.minecraft.player) != this.shownBalance) {
+			|| this.minecraft.player != null && Wallet.balance(this.minecraft.player) != this.shownBalance
+			|| this.tab == SETTINGS && this.minecraft.player != null && EtherAutoFuse.setting(this.minecraft.player) != this.shownEther) {
 			this.rebuildWidgets();
 		}
 	}
@@ -168,6 +175,27 @@ public class AdventurerScreen extends MenuScreenBase {
 		this.toggle(x, y + ROW + 4, "enhance_effects", ClientSettings.enhanceEffects, ClientSettings::setEnhanceEffects);
 		this.toggle(x, y + 2 * (ROW + 4), "hp_bar", ClientSettings.hpBar, ClientSettings::setHpBar);
 		this.toggle(x, y + 3 * (ROW + 4), "durability", ClientSettings.durability, ClientSettings::setDurability);
+		this.etherAuto(x, y + 4 * (ROW + 4) + 8);
+	}
+
+	/** Automatic ether fusing (server side, {@link EtherAutoFuse}): on/off and the grade ether is fused up to. */
+	private void etherAuto(final int x, final int y) {
+		LocalPlayer self = this.minecraft.player;
+		int setting = EtherAutoFuse.setting(self);
+		int grade = EtherAutoFuse.shownGrade(setting, JobProgression.get(self).level());
+		boolean on = setting > 0;
+		this.shownEther = setting;
+		this.label(x, y + 3, Component.translatable(K + "setting.ether_auto"));
+		Component state = Component.translatable(on ? "options.on" : "options.off").withStyle(on ? ChatFormatting.GREEN : ChatFormatting.GRAY);
+		this.button(x + 200, y, 80, state, Component.translatable(K + "setting.ether_auto.hint", EvolutionEtherItem.FUSE),
+			() -> send(MenuActionPayload.ETHER_AUTO, "", on ? -grade : grade));
+		int ry = y + ROW + 4;
+		this.label(x, ry + 3, Component.translatable(K + "setting.ether_auto.grade"));
+		this.button(x + 200, ry, 20, Component.literal("-"), () -> send(MenuActionPayload.ETHER_AUTO, "", on ? grade - 10 : -(grade - 10))).active =
+			grade > ItemLevels.MIN_BRACKET + 10;
+		this.label(x + 226, ry + 4, Component.translatable(K + "setting.ether_auto.level", grade).withStyle(on ? ChatFormatting.LIGHT_PURPLE : ChatFormatting.GRAY));
+		this.button(x + 260, ry, 20, Component.literal("+"), () -> send(MenuActionPayload.ETHER_AUTO, "", on ? grade + 10 : -(grade + 10))).active =
+			grade < ItemLevels.MAX_BRACKET;
 	}
 
 	private void toggle(final int x, final int y, final String key, final boolean on, final Consumer<Boolean> set) {

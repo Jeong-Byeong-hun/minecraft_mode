@@ -10,6 +10,8 @@ import com.minecraftmode.command.DiceCommand;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobProgression;
+import com.minecraftmode.loot.EtherAutoFuse;
+import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.network.AdminActionPayload;
 import com.minecraftmode.network.MenuActionPayload;
@@ -63,6 +65,7 @@ final class MenuChecks {
 		checkPay(server, connection);
 		checkDice(context, server, connection);
 		checkSettings(context);
+		checkEtherAuto(context, server, connection);
 		// the test world has no cheats: its player is a plain player until made an operator
 		server.runOnServer(s -> require(!Admin.allowed(connection.getServerPlayer()), "without cheats the singleplayer owner is no operator"));
 		// (/op is a dedicated-server command)
@@ -132,6 +135,41 @@ final class MenuChecks {
 			ClientSettings.setHpBar(was);
 		});
 	}
+
+	/**
+	 * Automatic ether fusing from the settings tab: nine Lv 10 and one Lv 20 ether with fusing up to Lv 40 become one Lv 20 and one
+	 * Lv 30 (9 -> 3, 3 + 1 -> 1 + 1 left); Lv 40 and above is never touched, and switched off nothing fuses.
+	 */
+	private static void checkEtherAuto(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.getInventory().add(EvolutionEtherItem.of(10, 9));
+			player.getInventory().add(EvolutionEtherItem.of(20, 1));
+			player.getInventory().add(EvolutionEtherItem.of(40, 3));
+		});
+		context.runOnClient(mc -> ClientPlayNetworking.send(new MenuActionPayload(MenuActionPayload.ETHER_AUTO, "", 40)));
+		context.waitFor(mc -> EtherAutoFuse.setting(mc.player) == 40, WAIT);
+		context.waitTicks(25);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			int[] counts = {EtherAutoFuse.count(player, 10), EtherAutoFuse.count(player, 20), EtherAutoFuse.count(player, 30), EtherAutoFuse.count(player, 40)};
+			require(counts[0] == 0 && counts[1] == 1 && counts[2] == 1 && counts[3] == 3, "auto fusing up to Lv 40: " + java.util.Arrays.toString(counts));
+			player.getInventory().add(EvolutionEtherItem.of(10, 3));
+		});
+		context.runOnClient(mc -> ClientPlayNetworking.send(new MenuActionPayload(MenuActionPayload.ETHER_AUTO, "", -40)));
+		context.waitFor(mc -> EtherAutoFuse.setting(mc.player) == -40, WAIT);
+		context.waitTicks(25);
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			require(EtherAutoFuse.count(player, 10) == 3, "switched off, nothing fuses");
+			for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
+				if (player.getInventory().getItem(i).is(ModItems.EVOLUTION_ETHER)) {
+					player.getInventory().setItem(i, ItemStack.EMPTY);
+				}
+			}
+		});
+	}
+
 
 	private static void checkAdmin(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		server.runOnServer(s -> {

@@ -213,6 +213,18 @@ public final class ModAttachments {
 			.syncWith(ItemStack.OPTIONAL_LIST_STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 	);
 
+	/**
+	 * Automatic ether fusing (0.5.36, {@code loot/EtherAutoFuse}): the grade ether is fused up to, negative while switched off, 0 when never
+	 * set. Per character, kept through death; synced to the owner for the adventurer's menu.
+	 */
+	public static final AttachmentType<Integer> ETHER_AUTO = AttachmentRegistry.create(
+		MinecraftMode.id("ether_auto"),
+		builder -> builder.persistent(Codec.INT)
+			.copyOnDeath()
+			.initializer(() -> 0)
+			.syncWith(ByteBufCodecs.VAR_INT.cast(), AttachmentSyncPredicate.targetOnly())
+	);
+
 	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */
 	private static final List<AttachmentType<?>> ALL = collect();
 

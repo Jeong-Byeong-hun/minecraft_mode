@@ -855,7 +855,7 @@ public class GearDocProvider implements DataProvider {
 			md.append("| ").append(this.ko(a.nameKey())).append(" | +").append(a.level()).append(" | ").append(this.ko(a.descKey())).append(" |\n");
 		}
 		md.append("\n- 견고/폭군은 주기마다, 강화/분노는 두 주기마다 번갈아 나옵니다.\n");
-		md.append("- 보상(클리어한 사람마다, 단계는 +").append(Dungeons.REWARD_SOFT_CAP).append("부터 절반 속도로 셈): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계)), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, ")
+		md.append("- 보상(클리어한 사람마다, 단계는 +").append(Dungeons.REWARD_SOFT_CAP).append("부터 절반 속도로 셈): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계) × ").append(Dungeons.COIN_SCALE).append("), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, ")
 			.append("장비 (40 + 4 × 단계)% (+7부터 강화된 채), +5부터 각성의 결정 (15 + 3 × 단계)%, 희귀 펫·탈것 2% (+10부터 영웅 2% + 단계당 0.5%). 제한 시간을 넘기면 ")
 			.append(Math.round(Dungeons.LATE_SHARE * 100)).append("%만 받습니다.\n");
 		md.append("- 직업 경험치: 한 판에 레벨의 ").append(Math.round(Dungeons.RUN_EXP * 100)).append("% (늦으면 절반, 단계·인원과 무관). 던전 몬스터는 처치 경험치가 없습니다. 레벨 ")

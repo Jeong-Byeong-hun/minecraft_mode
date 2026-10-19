@@ -28,6 +28,8 @@ public record MenuActionPayload(int action, String name, int amount) implements 
 	public static final int CHARACTER_BUY = 11;
 	public static final int CHARACTER_ENTER = 12;
 	public static final int DICE = 13;
+	/** Automatic ether fusing ({@code loot/EtherAutoFuse}): {@code amount} is the grade, negative to switch it off. */
+	public static final int ETHER_AUTO = 14;
 	public static final Type<MenuActionPayload> TYPE = new Type<>(MinecraftMode.id("menu_action"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, MenuActionPayload> CODEC = StreamCodec.composite(
 		ByteBufCodecs.VAR_INT, MenuActionPayload::action,

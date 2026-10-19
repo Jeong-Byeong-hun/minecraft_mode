@@ -28,6 +28,7 @@ import com.minecraftmode.enchantment.ToolEnchantmentHandlers;
 import com.minecraftmode.event.WorldEvents;
 import com.minecraftmode.job.JobEvents;
 import com.minecraftmode.light.HeldLight;
+import com.minecraftmode.loot.EtherAutoFuse;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
@@ -117,6 +118,7 @@ public class MinecraftMode implements ModInitializer {
 		HeldLight.init();
 		LootSessions.init();
 		LootBuyer.init();
+		EtherAutoFuse.init();
 		ModNetworking.init();
 		JobCommand.init();
 		RaidCommands.init();

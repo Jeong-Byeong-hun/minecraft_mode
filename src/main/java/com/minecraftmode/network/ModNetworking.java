@@ -22,6 +22,7 @@ import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.skill.SkillCaster;
+import com.minecraftmode.loot.EtherAutoFuse;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.raid.BossDef;
@@ -251,6 +252,7 @@ public final class ModNetworking {
 			case MenuActionPayload.CHARACTER_BUY -> Characters.buySlot(player);
 			case MenuActionPayload.CHARACTER_ENTER -> Characters.enter(player, payload.amount());
 			case MenuActionPayload.DICE -> DiceCommand.roll(player);
+			case MenuActionPayload.ETHER_AUTO -> EtherAutoFuse.set(player, payload.amount() > 0, Math.abs(payload.amount()));
 			default -> {
 			}
 		}

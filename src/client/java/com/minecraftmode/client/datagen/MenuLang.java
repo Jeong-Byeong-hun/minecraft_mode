@@ -59,6 +59,10 @@ final class MenuLang {
 		b.add(s + "setting.hp_bar.hint", ko ? "끄면 바닐라 하트와 방어 아이콘으로 돌아갑니다." : "Off brings back vanilla hearts and armor icons.");
 		b.add(s + "setting.durability", ko ? "도구 내구도 숫자" : "Tool durability numbers");
 		b.add(s + "setting.durability.hint", ko ? "손에 든 도구가 닳으면 남은 내구도를 핫바 오른쪽에 숫자로 보여 줍니다." : "Once the held tool is worn, its durability shows as numbers right of the hotbar.");
+		b.add(s + "setting.ether_auto", ko ? "에테르 자동 조합" : "Auto ether fusing");
+		b.add(s + "setting.ether_auto.hint", ko ? "켜 두면 매초 정한 레벨 아래의 진화의 에테르를 %s개씩 한 단계 위로 합칩니다 (인벤토리와 가방). 정한 레벨까지 올라갑니다." : "While on, every second Evolution Ether below the chosen level is fused %s into one of the next grade (inventory and bags), up to the chosen level.");
+		b.add(s + "setting.ether_auto.grade", ko ? "  조합할 최고 레벨" : "  Fuse up to");
+		b.add(s + "setting.ether_auto.level", ko ? "Lv.%s" : "Lv %s");
 		// characters
 		b.add(s + "characters", ko ? "캐릭터" : "Characters");
 		b.add(s + "character.loading", ko ? "불러오는 중..." : "Loading...");

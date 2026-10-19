@@ -22,6 +22,9 @@ final class LootLang {
 		b.add("item.minecraft_mode.evolution_ether.split", ko ? "웅크리고 우클릭: 1개 → Lv.%2$s 에테르 %1$s개" : "Sneak-use: 1 → %s Lv %s Ether");
 		b.add("message.minecraft_mode.ether.fused", ko ? "진화의 에테르 (Lv.%2$s) %1$s개로 합쳤습니다" : "Fused into %s Evolution Ether (Lv %s)");
 		b.add("message.minecraft_mode.ether.split", ko ? "진화의 에테르 (Lv.%2$s) %1$s개로 나눴습니다" : "Broken into %s Evolution Ether (Lv %s)");
+		b.add("message.minecraft_mode.ether.auto_on", ko ? "에테르 자동 조합 켜짐: Lv.%s 아래 에테르를 계속 합칩니다" : "Auto ether fusing on: ether below Lv %s keeps fusing");
+		b.add("message.minecraft_mode.ether.auto_off", ko ? "에테르 자동 조합 꺼짐 (설정 Lv.%s)" : "Auto ether fusing off (set to Lv %s)");
+		b.add("message.minecraft_mode.ether.auto_fused", ko ? "에테르 자동 조합: %s개 만듦 (최고 Lv.%s)" : "Auto ether fusing: made %s (up to Lv %s)");
 		b.add("message.minecraft_mode.ether.fuse_need", ko ? "합치려면 같은 등급 에테르 %s개를 한 칸에 들고 있어야 합니다" : "Hold %s Ether of one grade to fuse them");
 		b.add("message.minecraft_mode.ether.fuse_max", ko ? "가장 높은 등급이라 더 합칠 수 없습니다" : "This is the highest grade");
 		b.add("message.minecraft_mode.ether.split_min", ko ? "가장 낮은 등급이라 더 나눌 수 없습니다" : "This is the lowest grade");

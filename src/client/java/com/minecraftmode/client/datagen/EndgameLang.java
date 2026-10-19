@@ -70,7 +70,7 @@ final class EndgameLang {
 		b.add("screen.minecraft_mode.lair_travel.note", ko ? "이동하면 지도가 소모됩니다. 바로 소굴 입구로 갑니다." : "Travelling uses the map up and takes you to the gate.");
 		b.add("screen.minecraft_mode.lair_travel.go", ko ? "이동" : "Travel");
 		b.add("screen.minecraft_mode.lair_clear.title", ko ? "소굴 정복!" : "Lair Cleared!");
-		b.add("screen.minecraft_mode.lair_clear.body", ko ? "이번 주기의 %s을(를) 정복했습니다." : "You cleared %s for this cycle.");
+		b.add("screen.minecraft_mode.lair_clear.body", ko ? "이번 주기 소굴 정복: %s" : "You cleared %s for this cycle.");
 		b.add("screen.minecraft_mode.lair_clear.next", ko ? "다음 소굴로 가는 소굴 지도를 받았습니다." : "You got a lair map to the next lair.");
 		b.add("screen.minecraft_mode.lair_clear.exit", ko ? "출구로 돌아가기" : "Return to the exit");
 		b.add("screen.minecraft_mode.lair_clear.close", ko ? "닫기" : "Close");

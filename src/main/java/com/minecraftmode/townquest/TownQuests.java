@@ -178,8 +178,8 @@ public final class TownQuests {
 		// ---- Little Pip
 		add(daily("pip_tenacity", Role.CHILD, Goal.JUMP, JumpForest.TENACITY, 1, 1, Tier.NORMAL,
 			"The Forest of Tenacity", "끈기의 숲",
-			"Bet you can't reach the end of the Forest of Tenacity! It's all jumping, branch to branch, and if you fall you start again. No mounts or flying either, they don't work in there. No cheating!",
-			"끈기의 숲 끝까지 못 갈걸요? 나뭇가지에서 나뭇가지로 계속 점프해야 하고, 떨어지면 처음부터예요. 탈것도 비행도 거기선 안 돼요. 반칙 금지!"));
+			"Bet you can't reach the end of the Forest of Tenacity! It's all jumping, branch to branch, and if you fall you start again. No cheating!",
+			"끈기의 숲 끝까지 못 갈걸요? 나뭇가지에서 나뭇가지로 계속 점프해야 하고, 떨어지면 처음부터예요. 반칙 금지!"));
 		add(daily("pip_spiders", Role.CHILD, Goal.KILL, "minecraft:spider", 10, 1, Tier.EASY,
 			"Scary Spiders", "무서운 거미",
 			"There are spiders outside the walls and they have EIGHT eyes. Can you make them go away? Please?",

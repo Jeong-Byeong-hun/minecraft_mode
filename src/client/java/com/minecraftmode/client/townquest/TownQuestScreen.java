@@ -321,6 +321,10 @@ public class TownQuestScreen extends Screen {
 		List<FormattedCharSequence> text = this.font.split(Component.translatable(quest.textKey()).withStyle(ChatFormatting.ITALIC), tw);
 		for (int i = 0; i < text.size() && i < room; i++) {
 			g.text(this.font, text.get(i), tx, ty, 0xFFC8C8C8, false);
+			if (i == room - 1 && text.size() > room) {
+				// cut short: say so rather than ending mid-sentence
+				g.text(this.font, "…", Math.min(tx + tw - this.font.width("…"), tx + this.font.width(text.get(i)) + 1), ty, 0xFFC8C8C8, false);
+			}
 			ty += 10;
 		}
 		if (note != null) {

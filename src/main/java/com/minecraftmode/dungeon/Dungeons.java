@@ -7,6 +7,7 @@ import com.minecraftmode.companion.Companions;
 import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.job.quest.TrialHunts;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.MobPower;
@@ -114,6 +115,8 @@ public final class Dungeons {
 	public static final float LATE_SHARE = 0.6F;
 	/** Rewards grow at half speed past this keystone level. */
 	public static final int REWARD_SOFT_CAP = 20;
+	/** Coins of a clear: the dungeon power bracket's price x (0.6 + 0.15 x step) x this (0.5.36: +30%). */
+	public static final float COIN_SCALE = 1.3F;
 	/** Class experience of a clear, as a share of a level (levels come from lairs; dungeons are for gear and currency). */
 	public static final float RUN_EXP = 0.12F;
 	/** Past the level cap keystones raise the share by 2% a level, up to this. */
@@ -495,6 +498,10 @@ public final class Dungeons {
 
 	/** {@code /dungeon leave}: go home now (during a run this gives the run up for this player). */
 	public static boolean leave(final ServerPlayer player) {
+		// a jump course climber goes back to where they entered, not to the plaza
+		if (JumpForest.busy(player)) {
+			return JumpForest.leave(player);
+		}
 		DungeonInstance instance = instanceOf(player);
 		if (instance == null) {
 			if (DungeonDimension.is(player.level())) {
@@ -518,6 +525,10 @@ public final class Dungeons {
 	private static boolean fall(final ServerPlayer player) {
 		if (!DungeonDimension.is(player.level())) {
 			return false;
+		}
+		// a jump course sends its climber home itself
+		if (JumpForest.fall(player)) {
+			return true;
 		}
 		player.setHealth(1.0F);
 		DungeonInstance instance = instanceOf(player);
@@ -1007,7 +1018,7 @@ public final class Dungeons {
 		NamedDef boss = NamedMobs.byId(def.boss());
 		int lo = boss == null ? 10 : boss.lo();
 		int hi = boss == null ? 20 : boss.hi();
-		Coins.give(player, Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, def.power())) * (0.6F + 0.15F * rl) * pay)));
+		Coins.give(player, Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, def.power())) * (0.6F + 0.15F * rl) * COIN_SCALE * pay)));
 		give(player, EvolutionEtherItem.of(hi, Math.max(1, Math.round((2 + rl / 2) * pay))));
 		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, Math.max(1, Math.round((1 + rl / 3) * pay))));
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, Math.max(1, Math.round((1 + rl / 4) * pay))));

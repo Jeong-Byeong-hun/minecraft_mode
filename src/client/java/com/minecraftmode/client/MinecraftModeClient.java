@@ -14,6 +14,8 @@ import com.minecraftmode.client.endgame.EnhanceScreen;
 import com.minecraftmode.client.hud.BagTooltips;
 import com.minecraftmode.client.style.StylistScreen;
 import com.minecraftmode.client.hud.DamageNumbers;
+import com.minecraftmode.client.vfx.SkillProjectileRenderer;
+import com.minecraftmode.client.vfx.SkillVfxRenderer;
 import com.minecraftmode.client.hud.DurabilityHud;
 import com.minecraftmode.client.hud.TargetHealthHud;
 import com.minecraftmode.client.hud.TooltipLayout;
@@ -27,6 +29,7 @@ import com.minecraftmode.client.guide.GuideScreen;
 import com.minecraftmode.client.guide.NoticeScreen;
 import com.minecraftmode.client.job.EngravingScreen;
 import com.minecraftmode.client.job.JobHud;
+import com.minecraftmode.client.lair.LairClient;
 import com.minecraftmode.client.map.MapClient;
 import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.job.JobKeys;
@@ -37,6 +40,7 @@ import com.minecraftmode.client.particle.SkillParticle;
 import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.client.residence.LandBorders;
 import com.minecraftmode.client.residence.LandScreen;
+import com.minecraftmode.client.townquest.TownQuestScreen;
 import com.minecraftmode.client.travel.TravelScreen;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.named.NamedDef;
@@ -46,6 +50,7 @@ import com.minecraftmode.network.OpenGuidePayload;
 import com.minecraftmode.network.OpenLandPayload;
 import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.network.OpenLootBuyerPayload;
+import com.minecraftmode.network.OpenTownQuestPayload;
 import com.minecraftmode.network.OpenTravelPayload;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.raid.BossDef;
@@ -88,6 +93,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		}
 		CompanionClient.init();
 		MapClient.init();
+		LairClient.init();
 		ClientPlayNetworking.registerGlobalReceiver(OpenGuidePayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new GuideScreen(payload.entityId()))
 		));
@@ -98,6 +104,13 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenTravelPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TravelScreen(payload))
 		));
+		ClientPlayNetworking.registerGlobalReceiver(OpenTownQuestPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			if (context.client().gui.screen() instanceof TownQuestScreen screen && screen.entityId() == payload.entityId()) {
+				screen.update(payload);
+			} else {
+				context.client().gui.setScreen(new TownQuestScreen(payload));
+			}
+		}));
 		ClientPlayNetworking.registerGlobalReceiver(OpenLootBuyerPayload.TYPE, (payload, context) -> context.client().execute(() -> {
 			if (context.client().gui.screen() instanceof LootBuyerScreen screen && screen.entityId() == payload.entityId()) {
 				screen.update(payload);
@@ -111,8 +124,9 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenTrainerPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TrainerScreen(payload.entityId(), payload.job()))
 		));
-		// Skill projectiles show their item (or nothing) at full brightness; the trail is particles.
-		EntityRenderers.register(ModEntities.SKILL_PROJECTILE, context -> new ThrownItemRenderer<>(context, 1.0F, true));
+		// Skill projectiles show their item (or nothing, or their drawn look) at full brightness; the trail is particles.
+		EntityRenderers.register(ModEntities.SKILL_PROJECTILE, SkillProjectileRenderer::new);
+		EntityRenderers.register(ModEntities.SKILL_VFX, SkillVfxRenderer::new);
 		EntityRenderers.register(ModEntities.MOB_PROJECTILE, context -> new ThrownItemRenderer<>(context, 1.6F, true));
 
 		for (Fx.Kind kind : Fx.Kind.values()) {

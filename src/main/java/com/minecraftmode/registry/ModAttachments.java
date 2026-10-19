@@ -9,9 +9,12 @@ import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.quest.QuestData;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuestData;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import com.mojang.serialization.Codec;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -136,6 +139,15 @@ public final class ModAttachments {
 			.syncWith(ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), AttachmentSyncPredicate.targetOnly())
 	);
 
+	/**
+	 * Lairs this character cleared in the current lair cycle ({@code LairTravel.Cleared}: the cycle and {@code dimension|goal chest} keys), so the
+	 * lair map leads somewhere else and the exit button only serves a lair cleared now. Kept through death.
+	 */
+	public static final AttachmentType<LairTravel.Cleared> LAIR_CLEARED = AttachmentRegistry.create(
+		MinecraftMode.id("lair_cleared"),
+		builder -> builder.persistent(LairTravel.Cleared.CODEC).copyOnDeath()
+	);
+
 	/** Starter bags already handed out by Quartermaster Bram (see {@code Bags}). Kept through death. */
 	public static final AttachmentType<Boolean> STARTER_BAGS = AttachmentRegistry.create(
 		MinecraftMode.id("starter_bags"),
@@ -211,6 +223,39 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(List::of)
 			.syncWith(ItemStack.OPTIONAL_LIST_STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Automatic ether fusing (0.5.36, {@code loot/EtherAutoFuse}): the grade ether is fused up to, negative while switched off, 0 when never
+	 * set. Per character, kept through death; synced to the owner for the adventurer's menu.
+	 */
+	public static final AttachmentType<Integer> ETHER_AUTO = AttachmentRegistry.create(
+		MinecraftMode.id("ether_auto"),
+		builder -> builder.persistent(Codec.INT)
+			.copyOnDeath()
+			.initializer(() -> 0)
+			.syncWith(ByteBufCodecs.VAR_INT.cast(), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Town quests from Stormhold's residents (0.5.36, {@code townquest/TownQuests}): accepted quests with progress and the real day each was
+	 * last handed in. Per character, kept through death; synced to the owner for the quest screen.
+	 */
+	public static final AttachmentType<TownQuestData> TOWN_QUESTS = AttachmentRegistry.create(
+		MinecraftMode.id("town_quests"),
+		builder -> builder.persistent(TownQuestData.CODEC)
+			.copyOnDeath()
+			.initializer(() -> TownQuestData.DEFAULT)
+			.syncWith(TownQuestData.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Where a player climbing a jump course goes back to ({@code jump/JumpForest}). Set only while they climb, so a logout or a server
+	 * stop mid-climb still brings them home on the next join. Not synced.
+	 */
+	public static final AttachmentType<JumpForest.Return> JUMP_RETURN = AttachmentRegistry.create(
+		MinecraftMode.id("jump_return"),
+		builder -> builder.persistent(JumpForest.Return.CODEC).copyOnDeath()
 	);
 
 	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */

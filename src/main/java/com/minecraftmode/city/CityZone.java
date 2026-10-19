@@ -132,6 +132,14 @@ public final class CityZone {
 			case STYLIST -> new BlockPos(-9, base, 53);
 			case WAYMASTER -> new BlockPos(-9, base, 0);
 			case LOOT_BUYER -> new BlockPos(8, base, -55);
+			// residents with town quests: by the grocer's stall, by the forge on the south square, on the harbor pier, outside the
+			// Adventurers' Guild, in the plaza's south-east garden and among the archer park's trees
+			case FARMER_WIFE -> new BlockPos(-16, base, 78);
+			case OLD_MINER -> new BlockPos(-12, base, 85);
+			case FISHERMAN -> new BlockPos(49, base, 73);
+			case VETERAN -> new BlockPos(6, base, 54);
+			case CHILD -> new BlockPos(12, base, 28);
+			case LUMBERJACK -> new BlockPos(-48, base, 70);
 		};
 	}
 

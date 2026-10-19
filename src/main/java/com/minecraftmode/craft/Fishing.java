@@ -4,6 +4,8 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enchantment.EnchantLevels;
 import com.minecraftmode.enchantment.LifeEnchantments;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -111,8 +113,14 @@ public final class Fishing {
 			ItemInstance tool = context.getOptional(LootContextParams.TOOL);
 			ItemInstance rod = tool != null ? tool : player.getMainHandItem();
 			for (int i = 0; i < drops.size(); i++) {
-				if (drops.get(i).is(ItemTags.FISHES) && context.getRandom().nextFloat() < CUSTOM_SHARE) {
+				if (!drops.get(i).is(ItemTags.FISHES)) {
+					continue;
+				}
+				if (context.getRandom().nextFloat() < CUSTOM_SHARE) {
 					drops.set(i, land(player, hook.position(), rod, context.getLuck(), context.getRandom()));
+				} else {
+					// a vanilla fish still counts for "catch fish" town quests (land counts the mod's own)
+					TownQuestService.progress(player, TownQuests.Goal.FISH, BuiltInRegistries.ITEM.getKey(drops.get(i).getItem()).getPath(), 1);
 				}
 			}
 		});
@@ -166,6 +174,7 @@ public final class Fishing {
 		}
 		int wisdom = EnchantLevels.get(level, LifeEnchantments.ANGLERS_WISDOM, rod);
 		Profession.FISHING.addExp(player, Math.round(def.tier().exp * (1.0F + WISDOM_PER_LEVEL * wisdom)));
+		TownQuestService.progress(player, TownQuests.Goal.FISH, def.id(), 1);
 		return new ItemStack(item(def), count);
 	}
 

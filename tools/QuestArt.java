@@ -61,6 +61,12 @@ final class QuestArt {
 		TextureGen.write("entity/npc/stylist", celeste());
 		TextureGen.write("entity/npc/waymaster", orin());
 		TextureGen.write("entity/npc/loot_buyer", tobin());
+		TextureGen.write("entity/npc/farmer_wife", martha());
+		TextureGen.write("entity/npc/old_miner", dugan());
+		TextureGen.write("entity/npc/fisherman", pell());
+		TextureGen.write("entity/npc/veteran", rowan());
+		TextureGen.write("entity/npc/child", pip());
+		TextureGen.write("entity/npc/lumberjack", bjorn());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1401,6 +1407,309 @@ final class QuestArt {
 		legs(cloakDark);
 		fill(0, 26, 16, 6, boot);            // dusty travelling boots
 		fill(0, 26, 16, 1, dust);
+		fill(8, 16, 4, 4, boot);
+		return img;
+	}
+
+	/** Farmer's Wife Martha: a wide straw hat over a chestnut braid, a green work dress with a white apron and rolled sleeves. */
+	static BufferedImage martha() {
+		BufferedImage img = newSkin(122);
+		int skin = 0xF0C8A8, hair = 0x7A4A2A, straw = 0xE8C870, strawDark = 0xB89848, band = 0xC04A3A, dress = 0x4A8A3A, dark = 0x2E5E26,
+			apron = 0xF4F0E4, soil = 0x7A5A3A, cheek = 0xE8988A, shoe = 0x4A3020;
+		head(skin, hair);
+		hair(hair, 2, 6, 8);                 // hair down the sides into a braid at the back
+		fill(28, 14, 2, 2, band);
+		eyes(12, 0xFFFFFF, 0x5A7A3A);
+		px(9, 13, cheek);
+		px(14, 13, cheek);
+		px(11, 14, 0xC86A60);
+		px(12, 14, 0xC86A60);
+		fill(40, 0, 8, 8, straw);            // straw hat: crown on top, a red band, the brim round the hat layer's upper rows
+		fill(40, 8, 8, 2, straw);
+		fill(40, 10, 8, 1, band);
+		fill(32, 8, 8, 3, straw);
+		fill(48, 8, 8, 3, straw);
+		fill(56, 8, 8, 3, straw);
+		fill(32, 10, 8, 1, band);
+		fill(48, 10, 8, 1, band);
+		fill(56, 10, 8, 1, band);
+		px(42, 2, strawDark);
+		px(45, 5, strawDark);
+		px(43, 8, strawDark);
+
+		body(dress);
+		fill(21, 21, 6, 11, apron);          // apron with soil on it, strings round the waist
+		fill(16, 25, 4, 1, apron);
+		fill(28, 25, 12, 1, apron);
+		px(22, 28, soil);
+		px(25, 30, soil);
+		px(23, 31, soil);
+		fill(20, 20, 8, 1, dark);
+
+		arms(dress);
+		fill(40, 25, 16, 1, dark);           // rolled sleeves and bare forearms
+		fill(40, 26, 16, 6, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(dress);
+		fill(0, 29, 16, 3, shoe);
+		fill(0, 28, 16, 1, 0x6A4A30);
+		fill(8, 16, 4, 4, shoe);
+		return img;
+	}
+
+	/** Old Miner Dugan: a dented mining helmet with a lamp, bushy white eyebrows and beard, sooty overalls over a grey shirt. */
+	static BufferedImage dugan() {
+		BufferedImage img = newSkin(123);
+		int skin = 0xD8A888, hair = 0xE8E8E0, helmet = 0xE0B030, helmetDark = 0xA07A20, lamp = 0xFFF4B0, overalls = 0x6A5A40,
+			overallsDark = 0x4A3E2A, shirt = 0x8A8A8A, soot = 0x3A3A3A, buckle = 0xB8B8B8, boot = 0x2E241A;
+		head(skin, hair);
+		hair(hair, 0, 3, 4);
+		eyes(12, 0xFFFFFF, 0x4A6A8A);
+		fill(9, 11, 2, 1, hair);             // bushy white brows
+		fill(13, 11, 2, 1, hair);
+		fill(8, 13, 8, 3, hair);             // a big white beard
+		fill(10, 15, 4, 1, hair);
+		px(11, 14, 0x8A5A4A);
+		px(12, 14, 0x8A5A4A);
+		px(10, 12, soot);                    // soot on the cheek
+		fill(40, 0, 8, 8, helmet);           // mining helmet with a lamp on the front
+		fill(32, 8, 8, 3, helmet);
+		fill(48, 8, 8, 3, helmet);
+		fill(56, 8, 8, 3, helmet);
+		fill(40, 8, 8, 3, helmet);
+		fill(43, 8, 2, 2, lamp);
+		px(42, 8, helmetDark);
+		px(45, 8, helmetDark);
+		fill(40, 10, 8, 1, helmetDark);
+		fill(32, 10, 8, 1, helmetDark);
+		fill(48, 10, 8, 1, helmetDark);
+		fill(56, 10, 8, 1, helmetDark);
+		px(44, 3, helmetDark);               // a dent
+
+		body(shirt);
+		fill(20, 24, 8, 8, overalls);        // overall bib with straps and buckles
+		fill(21, 20, 1, 4, overalls);
+		fill(26, 20, 1, 4, overalls);
+		px(21, 23, buckle);
+		px(26, 23, buckle);
+		fill(32, 22, 8, 10, overalls);
+		px(23, 27, soot);
+		px(25, 29, soot);
+		fill(16, 24, 4, 8, overalls);
+		fill(28, 24, 4, 8, overalls);
+
+		arms(shirt);
+		fill(40, 28, 16, 4, skin);           // grimy hands
+		px(42, 30, soot);
+		px(46, 31, soot);
+		fill(48, 16, 4, 4, skin);
+
+		legs(overalls);
+		fill(0, 27, 16, 5, boot);
+		fill(0, 26, 16, 1, overallsDark);
+		fill(8, 16, 4, 4, boot);
+		return img;
+	}
+
+	/** Fisherman Pell: a yellow rain hat, a grizzled beard, a knitted navy sweater and tall green waders. */
+	static BufferedImage pell() {
+		BufferedImage img = newSkin(124);
+		int skin = 0xC8946A, hair = 0x8A7A6A, hat = 0xF0C828, hatDark = 0xB8941A, sweater = 0x2A3A6A, knit = 0x3A4E86, waders = 0x3A5A3A,
+			wadersDark = 0x264026, rope = 0xC8B08A;
+		head(skin, hair);
+		hair(hair, 0, 3, 5);
+		eyes(12, 0xFFFFFF, 0x3A6A9A);
+		fill(9, 14, 6, 2, hair);             // grizzled stubble beard
+		fill(8, 13, 1, 3, hair);
+		fill(15, 13, 1, 3, hair);
+		px(11, 14, 0x7A4A3A);
+		px(12, 14, 0x7A4A3A);
+		px(9, 11, 0x5A4030);                 // weathered squint lines
+		px(14, 11, 0x5A4030);
+		fill(40, 0, 8, 8, hat);              // rain hat: low at the back, a brim in front
+		fill(32, 8, 8, 4, hat);
+		fill(48, 8, 8, 4, hat);
+		fill(56, 8, 8, 6, hat);
+		fill(40, 8, 8, 2, hat);
+		fill(40, 10, 8, 1, hatDark);
+		fill(32, 11, 8, 1, hatDark);
+		fill(48, 11, 8, 1, hatDark);
+		fill(56, 13, 8, 1, hatDark);
+
+		body(sweater);
+		for (int x = 16; x < 40; x += 2) {   // cable knit
+			fill(x, 21, 1, 9, knit);
+		}
+		fill(20, 20, 8, 1, knit);
+		fill(16, 30, 24, 2, wadersDark);     // the top of the waders and a coil of rope at the hip
+		fill(21, 30, 6, 2, waders);
+		fill(27, 28, 1, 4, rope);
+		px(26, 29, rope);
+
+		arms(sweater);
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(waders);
+		fill(0, 21, 16, 1, wadersDark);
+		fill(0, 30, 16, 2, wadersDark);
+		fill(8, 16, 4, 4, wadersDark);
+		return img;
+	}
+
+	/** Retired Adventurer Rowan: grey swept hair, a scar across the eye, a faded red cloak over old chain mail and a worn leather belt. */
+	static BufferedImage rowan() {
+		BufferedImage img = newSkin(125);
+		int skin = 0xDCA888, hair = 0x9A9AA0, scar = 0xB06A60, cloak = 0x9A3A32, cloakDark = 0x6A2620, mail = 0x8A9098, mailDark = 0x5A6068,
+			leather = 0x6A4A2A, buckle = 0xC8A040, trousers = 0x4A4038, boot = 0x3A2A1A;
+		head(skin, hair);
+		hair(hair, 2, 3, 6);
+		eyes(12, 0xFFFFFF, 0x6A7A8A);
+		fill(13, 10, 1, 4, scar);            // an old scar down over the left eye
+		fill(9, 14, 6, 1, hair);             // a trimmed grey moustache
+		px(11, 15, 0x9A5A4A);
+		px(12, 15, 0x9A5A4A);
+
+		body(mail);
+		for (int y = 21; y < 32; y += 2) {   // rings on the mail
+			for (int x = 16 + (y / 2) % 2; x < 40; x += 2) {
+				px(x, y, mailDark);
+			}
+		}
+		fill(20, 20, 2, 12, cloak);          // the cloak hangs open over the shoulders and down the back
+		fill(26, 20, 2, 12, cloak);
+		fill(32, 20, 8, 12, cloak);
+		fill(32, 30, 8, 2, cloakDark);
+		fill(20, 16, 8, 4, cloak);
+		fill(28, 16, 8, 4, cloak);
+		fill(22, 20, 4, 1, buckle);          // the cloak's clasp
+		fill(16, 28, 24, 2, leather);        // belt with a brass buckle
+		px(24, 28, buckle);
+		px(24, 29, buckle);
+
+		arms(cloak);
+		fill(40, 26, 16, 4, leather);        // leather bracers and hands
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 25, 16, 7, boot);
+		fill(0, 25, 16, 1, leather);
+		fill(8, 16, 4, 4, boot);
+		return img;
+	}
+
+	/** Little Pip: a mop of orange hair, freckles and big eyes, a red-and-white striped shirt, blue shorts and scuffed knees. */
+	static BufferedImage pip() {
+		BufferedImage img = newSkin(126);
+		int skin = 0xF4D0B0, hair = 0xE07A2A, hairDark = 0xB85A1A, freckle = 0xD8946A, red = 0xD83A3A, white = 0xF4F0EA, shorts = 0x3A6AC8,
+			shortsDark = 0x2A4E98, knee = 0xE8A890, sock = 0xF0F0F0, shoe = 0x8A3A2A;
+		head(skin, hair);
+		hair(hair, 2, 4, 6);
+		px(9, 10, hairDark);                 // messy fringe
+		px(12, 10, skin);
+		px(14, 10, hairDark);
+		fill(9, 12, 2, 2, 0xFFFFFF);         // big eyes
+		fill(13, 12, 2, 2, 0xFFFFFF);
+		px(10, 12, 0x3A6AA0);
+		px(10, 13, 0x2A4A80);
+		px(13, 12, 0x3A6AA0);
+		px(13, 13, 0x2A4A80);
+		px(9, 14, freckle);                  // freckles and a grin
+		px(14, 14, freckle);
+		px(8, 13, freckle);
+		px(15, 13, freckle);
+		fill(11, 15, 2, 1, 0xC85A50);
+		fill(40, 0, 8, 8, hair);             // tufts sticking up on the hat layer
+		px(42, 7, hairDark);
+		px(45, 6, hairDark);
+		px(40, 8, hair);
+		px(47, 9, hair);
+
+		body(white);
+		for (int y = 20; y < 30; y += 3) {   // stripes all round
+			fill(16, y, 24, 1, red);
+		}
+		fill(20, 16, 8, 4, red);
+		fill(16, 30, 24, 2, shorts);
+
+		arms(white);
+		for (int y = 20; y < 26; y += 3) {
+			fill(40, y, 16, 1, red);
+		}
+		fill(40, 26, 16, 6, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(shorts);
+		fill(0, 23, 16, 4, skin);            // bare knees, one with a plaster
+		fill(0, 23, 16, 1, shortsDark);
+		px(2, 25, knee);
+		fill(9, 25, 2, 1, 0xF0D8A0);
+		fill(0, 27, 16, 2, sock);
+		fill(0, 29, 16, 3, shoe);
+		fill(8, 16, 4, 4, shoe);
+		return img;
+	}
+
+	/** Lumberjack Bjorn: a bushy red beard under a green knit cap, a red-and-black check shirt, braces and heavy boots. */
+	static BufferedImage bjorn() {
+		BufferedImage img = newSkin(127);
+		int skin = 0xE0A880, hair = 0xB8481E, beard = 0xC8582A, cap = 0x2E6A3A, capDark = 0x1E4A28, check = 0xC02A24, black = 0x1E1A1A,
+			braces = 0x5A3A22, trousers = 0x5A4A3A, boot = 0x3A2616, lace = 0xC8B48A;
+		head(skin, hair);
+		hair(hair, 1, 3, 4);
+		eyes(12, 0xFFFFFF, 0x3A5A8A);
+		fill(9, 11, 2, 1, hair);
+		fill(13, 11, 2, 1, hair);
+		fill(8, 13, 8, 3, beard);            // a big bushy beard round the jaw
+		fill(0, 13, 8, 3, beard);
+		fill(16, 13, 8, 3, beard);
+		px(11, 14, 0x8A3A2A);
+		px(12, 14, 0x8A3A2A);
+		fill(40, 0, 8, 8, cap);              // knit cap with a folded cuff
+		fill(32, 8, 8, 3, cap);
+		fill(48, 8, 8, 3, cap);
+		fill(56, 8, 8, 3, cap);
+		fill(40, 8, 8, 3, cap);
+		fill(40, 10, 8, 1, capDark);
+		fill(32, 10, 8, 1, capDark);
+		fill(48, 10, 8, 1, capDark);
+		fill(56, 10, 8, 1, capDark);
+		px(43, 2, capDark);
+		px(44, 5, capDark);
+
+		body(check);
+		for (int y = 20; y < 32; y++) {      // buffalo check
+			for (int x = 16; x < 40; x++) {
+				if ((x / 2 + y / 2) % 2 == 0 && (y / 2) % 2 == 0) {
+					px(x, y, black);
+				}
+			}
+		}
+		fill(21, 20, 1, 12, braces);         // braces front and back
+		fill(26, 20, 1, 12, braces);
+		fill(33, 20, 1, 12, braces);
+		fill(38, 20, 1, 12, braces);
+		fill(16, 30, 24, 2, trousers);
+
+		arms(check);
+		for (int y = 20; y < 30; y++) {
+			for (int x = 40; x < 56; x++) {
+				if ((x / 2 + y / 2) % 2 == 0 && (y / 2) % 2 == 0) {
+					px(x, y, black);
+				}
+			}
+		}
+		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 25, 16, 7, boot);
+		px(2, 27, lace);
+		px(6, 27, lace);
+		px(10, 27, lace);
+		px(14, 27, lace);
 		fill(8, 16, 4, 4, boot);
 		return img;
 	}

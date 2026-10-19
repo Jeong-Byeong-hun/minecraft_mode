@@ -71,6 +71,7 @@ public final class NamedLairs {
 
 	public static void init() {
 		define();
+		LairTravel.init();
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 40 == 0) {
 				for (ServerPlayer player : server.getPlayerList().getPlayers()) {

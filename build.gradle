@@ -101,7 +101,7 @@ def gameTests = new groovy.json.JsonSlurper().parseText(
 ).entrypoints."fabric-client-gametest".collect { it.tokenize(".").last().replace("ClientGameTest", "").toLowerCase(Locale.ROOT) }
 def manualGameTests = ["multiplayer", "siteshots", "portraits", "damage"]
 // Seconds each test takes in a full run (0.3.6), to balance the shards; a test missing here counts as 60.
-def gameTestSeconds = [job: 300, normalworld: 275, lair: 232, economy: 219, gearraid: 132, endgame: 55, town: 47, content: 30,
+def gameTestSeconds = [job: 420, normalworld: 330, lair: 290, economy: 219, gearraid: 132, endgame: 55, town: 95, content: 30,
 	minecraftmode: 17, enchantment: 9]
 def requestedGameTests = providers.gradleProperty("tests").getOrElse("").tokenize(", ").collect { it.toLowerCase(Locale.ROOT) }
 def unknownGameTests = requestedGameTests - gameTests

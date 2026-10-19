@@ -7,6 +7,7 @@ import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.EngraveTotals;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.registry.ModEffects;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -70,6 +71,10 @@ public final class SkillCaster {
 			return Result.STUNNED;
 		}
 		Skill skill = def.skills().get(slot);
+		// jump courses are climbed by jumping: dashes, leaps, blinks and grapples are refused there (with their own message)
+		if (skill.actions().stream().anyMatch(SkillAction::moves) && JumpForest.refusesMove(player)) {
+			return Result.NO_SKILL;
+		}
 		long now = player.level().getGameTime();
 		if (readyAt(data, skill, slot) > now) {
 			return Result.COOLDOWN;

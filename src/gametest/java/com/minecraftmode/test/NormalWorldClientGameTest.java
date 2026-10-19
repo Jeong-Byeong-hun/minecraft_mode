@@ -1,23 +1,32 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.lair.LairClearScreen;
+import com.minecraftmode.client.lair.LairTravelScreen;
 import com.minecraftmode.client.map.MapClient;
 import com.minecraftmode.client.map.MapScreen;
 import com.minecraftmode.client.map.Waypoints;
 import com.minecraftmode.entity.SpawnCandidates;
+import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.combat.PlayerArmor;
+import com.minecraftmode.network.LairTravelPayload;
+import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.worldgen.lair.LairChestBlock;
+import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairMapItem;
 import com.minecraftmode.worldgen.lair.LairPiece;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import com.minecraftmode.worldgen.lair.NamedLairs;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -395,12 +404,14 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 	}
 
 	/**
-	 * Reading a lair map near that lair gives an explorer map of it and marks it on the player's own map: one waypoint at its
-	 * middle with its name, which a second map of the same lair does not repeat.
+	 * The lair map loop on a natural lair: reading a map near it offers that lair (confirm screen in English and Korean, the map is kept) and
+	 * marks it on the player's own map once; Travel uses the map up and lands on a safe spot just outside the gate; clearing it hands out the
+	 * next map and the way back to the gate, and the next map leads to another lair.
 	 */
 	private static void checkLairMap(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection,
 		final BlockPos center) {
 		context.runOnClient(minecraft -> MapClient.currentWaypoints().removeIf(w -> w.color == LairMapItem.MARK_COLOR));
+		server.runCommand("time set noon");
 		String key = null;
 		for (int i = 0; i < 2; i++) {
 			key = server.computeOnServer(s -> {
@@ -409,12 +420,22 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.LAIR_MAP));
 				require(player.getItemInHand(InteractionHand.MAIN_HAND).use(player.level(), player, InteractionHand.MAIN_HAND).consumesAction(),
 					"reading a lair map works next to a lair");
-				require(player.getInventory().hasAnyMatching(stack -> stack.is(Items.FILLED_MAP)), "the lair map gives an explorer map of the place");
-				LairMapItem.Found found = LairMapItem.find(player.level(), player.blockPosition());
-				require(found != null && found.pos().getX() == center.getX() && found.pos().getZ() == center.getZ(),
-					"the lair map finds the lair at " + center + ", got " + (found == null ? "none" : found.pos()));
-				return found.lair().nameKey();
+				LairTravel.Target target = LairTravel.offered(player);
+				require(target != null && target.center().getX() == center.getX() && target.center().getZ() == center.getZ(),
+					"the lair map offers the lair at " + center + ", got " + (target == null ? "none" : target.center()));
+				require(player.getInventory().countItem(ModItems.LAIR_MAP) == 1, "reading the map keeps it until the trip");
+				return target.lair().nameKey();
 			});
+			context.waitForScreen(LairTravelScreen.class);
+			if (i == 0) {
+				context.waitTicks(10);
+				context.takeScreenshot("lair_map_confirm_en");
+				setLanguage(context, "ko_kr");
+				context.waitTicks(10);
+				context.takeScreenshot("lair_map_confirm_ko");
+				setLanguage(context, "en_us");
+			}
+			context.runOnClient(minecraft -> minecraft.gui.setScreen(null));
 			context.waitTicks(10);
 		}
 		String name = key;
@@ -441,8 +462,96 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			MapClient.currentWaypoints().removeIf(w -> w.color == LairMapItem.MARK_COLOR);
 			MapClient.waypoints().touch();
 		});
-		server.runOnServer(s -> connection.getServerPlayer().getInventory().clearContent());
 		MinecraftMode.LOGGER.info("[normal] lair map: {}", report);
+
+		// Travel: the map is used up on arrival and the player stands just outside the gate
+		server.runCommand("gamemode survival @p");
+		LairTravel.Target target = server.computeOnServer(s -> LairTravel.offered(connection.getServerPlayer()));
+		require(target != null, "the second reading should still be on offer");
+		context.runOnClient(minecraft -> ClientPlayNetworking.send(new LairTravelPayload(LairTravelPayload.TRAVEL)));
+		waitForTrip(context, server, connection);
+		String travel = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			BlockPos at = player.blockPosition();
+			require(at.distManhattan(target.entrance()) <= LairTravel.SPOT_SEARCH + 3 && LairTravel.safe(level, at),
+				"travel should end on a safe spot by the gate " + target.entrance() + ", got " + at + " (" + level.getBlockState(at.below()) + ")");
+			require(at.getZ() > target.center().getZ() + target.lair().size() / 2, "the spot should be outside the maze, south of the gate: " + at);
+			require(player.getInventory().countItem(ModItems.LAIR_MAP) == 0, "travelling uses the map up");
+			return at.toShortString() + " on " + level.getBlockState(at.below()).getBlock();
+		});
+		server.runCommand("gamemode creative @p");
+		context.waitTicks(40);
+		context.takeScreenshot("lair_map_arrived");
+		MinecraftMode.LOGGER.info("[normal] lair map travel to {}: {}", target.lair().id(), travel);
+
+		// clearing it: the next map, the clear remembered and the way back to the gate
+		String clear = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			level.getChunk(target.goal());
+			require(level.getBlockEntity(target.goal()) instanceof LairChestBlockEntity, "the offered goal " + target.goal() + " should be a lair chest");
+			LairChestBlockEntity goal = (LairChestBlockEntity)level.getBlockEntity(target.goal());
+			require(target.entrance().equals(goal.exit(level)), "the chest should know the same gate spot " + target.entrance() + ", got " + goal.exit(level));
+			player.teleportTo(level, target.goal().getX() + 0.5, target.goal().getY(), target.goal().getZ() + 2.5, java.util.Set.of(), 180.0F, 0.0F, true);
+			long cycle = ResetCycle.cycle(level);
+			NamedMob lord = goal.wakeLord(level, cycle);
+			require(lord != null, "a lord should wake");
+			lord.setNoAi(true);
+			lord.hurtServer(level, player.damageSources().playerAttack(player), 1.0E9F);
+			require(goal.victor(player, cycle), "the player should beat the lord");
+			goal.forgetPersonal();
+			require(LairChestBlock.open(player, goal), "the treasure opens");
+			require(player.getInventory().countItem(ModItems.LAIR_MAP) == 1, "the clear hands out the next lair map");
+			require(LairTravel.clearedThisCycle(player, target), "the clear is remembered");
+			require(LairTravel.exitOffer(player) != null, "the clear offers the way back");
+			return goal.getBlockPos().toShortString();
+		});
+		server.runOnServer(s -> connection.getServerPlayer().closeContainer());
+		context.waitForScreen(LairClearScreen.class);
+		context.runOnClient(minecraft -> {
+			ClientPlayNetworking.send(new LairTravelPayload(LairTravelPayload.EXIT));
+			minecraft.gui.setScreen(null);
+		});
+		waitForTrip(context, server, connection);
+		String next = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			BlockPos at = player.blockPosition();
+			require(at.distManhattan(target.entrance()) <= LairTravel.SPOT_SEARCH + 3, "the way back ends by the gate " + target.entrance() + ", got " + at);
+			// the next map skips the lair cleared this cycle
+			LairTravel.Target other = LairTravel.find(player.level(), at, 1, LairTravel.cleared(player));
+			require(other != null && !other.key().equals(target.key()), "the next map should lead to another lair, got "
+				+ (other == null ? "none" : other.center()));
+			player.getInventory().clearContent();
+			return other.lair().id() + " at " + other.center().toShortString();
+		});
+		MinecraftMode.LOGGER.info("[normal] lair cleared at {}, next map leads to {}", clear, next);
+	}
+
+	private static void waitForTrip(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		for (int i = 0; i < 100; i++) {
+			context.waitTicks(5);
+			if (!server.computeOnServer(s -> LairTravel.travelling(connection.getServerPlayer()))) {
+				return;
+			}
+		}
+		throw new AssertionError("the lair trip did not finish");
+	}
+
+	private static void setLanguage(final ClientGameTestContext context, final String code) {
+		java.util.concurrent.atomic.AtomicReference<java.util.concurrent.CompletableFuture<Void>> reload = new java.util.concurrent.atomic.AtomicReference<>();
+		context.runOnClient(minecraft -> {
+			if (code.equals(minecraft.options.languageCode)) {
+				reload.set(java.util.concurrent.CompletableFuture.completedFuture(null));
+				return;
+			}
+			minecraft.options.languageCode = code;
+			minecraft.getLanguageManager().setSelected(code);
+			reload.set(minecraft.reloadResourcePacks());
+		});
+		context.waitFor(minecraft -> reload.get().isDone(), 20 * 120);
+		// the loading overlay fades out after the reload; screenshots taken under it show only the logo
+		context.waitFor(minecraft -> minecraft.gui.overlay() == null, 20 * 60);
 	}
 
 	/** An underground lair: the maze is sealed far below, a shaft with a spiral stair leads up into a beacon tower. */
@@ -499,7 +608,12 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 				}
 			}
 			require(stairs >= (top - 24 - floor) * 3 / 4, "the shaft should have a stair on almost every level, got " + stairs);
-			return "floor " + floor + ", tower top " + top + ", " + stairs + " stairs";
+			// the lair map's gate spot: in the corridor between the gate and the shaft, down on the maze floor
+			BlockPos gate = LairPiece.entrance(def, x, floor, z);
+			BlockPos spot = LairTravel.safeSpot(level, gate);
+			require(spot != null && spot.distManhattan(gate) <= 2 && spot.getY() == floor + 1 && spot.getZ() > z + half,
+				"the underground gate spot should be the corridor outside the gate " + gate + ", got " + spot);
+			return "floor " + floor + ", tower top " + top + ", " + stairs + " stairs, gate spot " + spot.toShortString();
 		});
 		server.runCommand("forceload remove all");
 		MinecraftMode.LOGGER.info("[normal] underground lair: {}", report);

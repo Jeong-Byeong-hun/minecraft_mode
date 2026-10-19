@@ -82,7 +82,9 @@ public final class Characters {
 	/** Player data the account keeps: never saved with a character or loaded from one. */
 	private static final List<String> ACCOUNT_KEYS = List.of("EnderItems", "recipeBook", "RootVehicle", "ender_pearls");
 	/** Attachments every character of an account shares: the monster and item codex, and the wallet. */
-	private static final Set<AttachmentType<?>> SHARED = Set.of(ModAttachments.MONSTER_KILLS, ModAttachments.ITEMS_FOUND, ModAttachments.WALLET);
+	/** {@code LAIR_CLEARED} too (0.5.36): lair chests remember the account (UUID), so a map must skip what any character cleared this cycle. */
+	private static final Set<AttachmentType<?>> SHARED = Set.of(ModAttachments.MONSTER_KILLS, ModAttachments.ITEMS_FOUND, ModAttachments.WALLET,
+		ModAttachments.LAIR_CLEARED);
 	/** Players on the select screen after joining (server memory: a reconnect starts choosing again). */
 	private static final Set<UUID> CHOOSING = new HashSet<>();
 
@@ -188,6 +190,8 @@ public final class Characters {
 			return fail(player, "busy");
 		}
 		CharacterRoster.Stored target = account.at(slot);
+		// a jump course still being prepared belongs to this character: the next one must not be sent in
+		com.minecraftmode.jump.JumpForest.cancel(player);
 		player.closeContainer();
 		if (player.getVehicle() instanceof MountEntity mount) {
 			player.stopRiding();

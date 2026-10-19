@@ -669,7 +669,8 @@ final class CityChecks {
 		}
 
 		for (CityNpc.Role role : new CityNpc.Role[] {CityNpc.Role.BOUNTY_CLERK, CityNpc.Role.BROKER, CityNpc.Role.ENHANCER, CityNpc.Role.DUNGEON_WARDEN,
-			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER, CityNpc.Role.HUNT_MASTER}) {
+			CityNpc.Role.HERALD, CityNpc.Role.GUIDE, CityNpc.Role.QUARTERMASTER, CityNpc.Role.BAKER, CityNpc.Role.HUNT_MASTER,
+			CityNpc.Role.FARMER_WIFE, CityNpc.Role.OLD_MINER, CityNpc.Role.FISHERMAN, CityNpc.Role.VETERAN, CityNpc.Role.CHILD, CityNpc.Role.LUMBERJACK}) {
 			BlockPos home = CityZone.npcHome(role, base);
 			view(context, server, "npc_" + role.id(), besideHome(server, home, true), home.above());
 		}

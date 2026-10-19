@@ -68,6 +68,10 @@ public class ReturnScrollItem extends Item {
 				return;
 			}
 			held.shrink(1);
+			// in a jump course the scroll ends the climb: back where the climber entered (and their pet with them)
+			if (com.minecraftmode.jump.JumpForest.inCourse(sp) && com.minecraftmode.jump.JumpForest.leave(sp)) {
+				return;
+			}
 			ServerLevel overworld = sp.level().getServer().overworld();
 			BlockPos to = CityZone.isCityLevel(overworld) ? CityZone.spawn(CityZone.baseY(overworld)) : overworld.getRespawnData().pos();
 			sp.teleportTo(overworld, to.getX() + 0.5, to.getY(), to.getZ() + 0.5, Set.of(), 180.0F, 0.0F, true);

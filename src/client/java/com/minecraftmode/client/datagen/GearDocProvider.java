@@ -88,6 +88,7 @@ import com.minecraftmode.residence.ResidenceDimension;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.talent.TalentTree;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairExp;
@@ -395,7 +396,15 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 보물 상자: 동전(소굴 최고 레벨 구간 무기값의 50–100%) **항상** + 보상 1개 **항상**(60% 확률로 1개 더, 그중 25%로 또 1개). 보상은 소모품 ")
 			.append(Math.round((1 - LairLoot.GEAR_SHARE) * 100)).append("% / 그 네임드 레벨 범위의 장비 ").append(Math.round(LairLoot.GEAR_SHARE * 100))
 			.append("%. 진화의 에테르와 정수도 들어 있습니다.\n");
-		md.append("- 소굴 구역(구조물 둘레 ").append(LairPiece.GROUNDS).append("블록 포함)에서는 일반 몬스터와 함께 그 네임드가 평소의 2배 비율(스폰의 6–20%)로 나타나고, 네임드끼리 거리 제한도 96 → 20블록으로 줄어듭니다. 들어서면 소굴 이름이 화면에 뜹니다.\n\n");
+		md.append("- 소굴 구역(구조물 둘레 ").append(LairPiece.GROUNDS).append("블록 포함)에서는 일반 몬스터와 함께 그 네임드가 평소의 2배 비율(스폰의 6–20%)로 나타나고, 네임드끼리 거리 제한도 96 → 20블록으로 줄어듭니다. 들어서면 소굴 이름이 화면에 뜹니다.\n");
+		md.append("- **소굴 지도 순환**: 소굴 지도를 쓰면 내 직업 레벨이 네임드 레벨 범위에 드는 가장 가까운 소굴(없으면 가장 가까운 소굴, 이번 주기에 정복한 소굴은 제외)을 찾아 확인 창을 띄우고, ")
+			.append("**이동**을 누르면 지도를 쓰고 그 소굴 입구로 바로 갑니다. 보물 상자를 그 주기에 처음 열면(정복) 다음 소굴 지도를 하나 받고, **출구로 돌아가기** 버튼으로 입구에 돌아갈 수 있습니다.\n");
+		md.append("- **싸운 만큼 받습니다**: 소굴의 군주는 상자 ").append((int)LairChestBlockEntity.CREDIT_RANGE)
+			.append("블록 안에서 가장 높은 직업 레벨에 맞춰 강해지고(그 레벨 네임드의 평균 체력·공격력), 싸우지 않는 동안(")
+			.append(LairChestBlockEntity.REFIT_CALM / 20).append("초 동안 맞지 않음) 주변 사람이 바뀌면 다시 맞춥니다. 강한 사람이 떠나면 원래 레벨로 돌아오고, 지난 주기의 군주는 사라집니다. ")
+			.append("보물 상자·보급품·군주 전리품과 경험치는 **군주를 쓰러뜨린 레벨**(소굴 최고 레벨 이상)과 내 레벨 중 낮은 쪽으로 정해집니다. ")
+			.append("그래서 높은 레벨이 내 레벨로 강해진 군주를 잡으면 내 레벨 구간(10레벨 단위, 최고 90–100)의 보상과 경험치를 받고, ")
+			.append("약한 군주를 잡거나 군주 없이 보급품만 열면 소굴 레벨만큼만 받습니다. 첫 발견 경험치는 늘 소굴 레벨 기준입니다.\n\n");
 		md.append("| 소굴 | 네임드 | 레벨 | 모양 | 미로 | 위치 | 바이옴 |\n|---|---|---|---|---|---|---|\n");
 		for (LairDef lair : NamedLairs.all()) {
 			NamedDef named = lair.named();
@@ -656,8 +665,70 @@ public class GearDocProvider implements DataProvider {
 		{"entity.minecraft.cave_spider", "동굴 거미"}, {"entity.minecraft.witch", "마녀"}, {"entity.minecraft.drowned", "드라운드"},
 		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
 		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"},
-		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"}
+		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"},
+		{"entity.minecraft.enderman", "엔더맨"}, {"block.minecraft.oak_log", "참나무 원목"}, {"block.minecraft.spruce_log", "가문비나무 원목"},
+		{"item.minecraft.raw_iron", "철 원석"}, {"block.minecraft.oak_sapling", "참나무 묘목"}, {"block.minecraft.spruce_sapling", "가문비나무 묘목"}
 	};
+
+	/** The town quests of Stormhold's residents: where they stand, every quest with its goal and what it pays. */
+	private void townQuests(final StringBuilder md) {
+		md.append("## 주민 의뢰\n\n");
+		md.append("스톰홀드 주민 여섯 명이 의뢰를 줍니다(우클릭 → 의뢰 창: 수락·완료 보고·포기). 수락한 의뢰만 진행되고, 처치는 기여한 플레이어와 ")
+			.append((int)com.minecraftmode.progress.Progress.SHARE_RANGE).append("칸 안의 파티원에게 함께 셉니다(현상금과 같은 방식). 납품은 완료 보고 때 인벤토리, 그다음 가방에서 가져갑니다. ")
+			.append("일일 의뢰는 길드 현상금처럼 현실 시간 ").append(RealReset.RESET_HOUR).append("시에 다시 열리고(수락해 둔 의뢰는 날이 바뀌어도 그대로), ★ 의뢰는 캐릭터마다 한 번뿐입니다.\n\n");
+		for (CityNpc.Role role : CityNpc.Role.values()) {
+			if (role.isResident()) {
+				BlockPos home = CityZone.npcHome(role, 0);
+				md.append("- **").append(role.ko).append("** (x ").append(home.getX()).append(", z ").append(home.getZ()).append(")\n");
+			}
+		}
+		md.append("\n보상은 등급마다 정해져 있고, 경험치는 플레이어 자신의 레벨에서 다음 레벨까지 필요한 경험치의 비율, 동전은 그 레벨 구간의 길드 무기 가격(")
+			.append("`GearShop.bracketPrice`)의 배율입니다. 길드 일일 현상금 하나는 구간 가격의 1.2배와 강화석 3개를 주니, 주민 의뢰는 하나하나는 적고 가짓수가 많습니다. 강화석은 직업 Lv ")
+			.append(com.minecraftmode.townquest.TownQuestService.STONE_LEVEL).append("부터 줍니다(귀속이 아니라 새 캐릭터로 모아 넘기지 못하게). ")
+			.append("납품 물건은 상점에서 팔지 않는 채집품입니다.\n\n");
+		md.append("| 등급 | 경험치 | 동전 | 강화석 | Lv 10 | Lv 50 | Lv 90 |\n|---|---|---|---|---|---|---|\n");
+		for (TownQuests.Tier tier : TownQuests.Tier.values()) {
+			md.append("| ").append(tier.name().toLowerCase(java.util.Locale.ROOT)).append(" | 레벨의 ").append(Math.round(tier.exp * 100)).append("% | 구간 가격 x")
+				.append(tier.coins).append(" | ").append(tier.stones).append("개");
+			for (int level : new int[] {10, 50, 90}) {
+				md.append(" | 경험치 ").append(JobProgression.levelExp(level, tier.exp)).append(", ")
+					.append(Coins.format(Math.max(3, Math.round(GearShop.bracketPrice(level) * tier.coins))));
+			}
+			md.append(" |\n");
+		}
+		float exp = 0.0F;
+		float coins = 0.0F;
+		int stones = 0;
+		int daily = 0;
+		for (TownQuests.Quest quest : TownQuests.all()) {
+			if (quest.daily()) {
+				daily++;
+				exp += quest.tier().exp;
+				coins += quest.tier().coins;
+				stones += quest.tier().stones;
+			}
+		}
+		md.append("\n일일 의뢰 ").append(daily).append("개를 모두 하면 하루에 레벨의 약 ").append(Math.round(exp * 100)).append("%, 구간 가격의 ")
+			.append(Math.round(coins * 10) / 10.0F).append("배, 강화석 ").append(stones).append("개입니다.\n\n");
+		md.append("| 주민 | 의뢰 | 목표 | 레벨 | 반복 | 등급 | 추가 보상 |\n|---|---|---|---|---|---|---|\n");
+		for (TownQuests.Quest quest : TownQuests.all()) {
+			String target = switch (quest.goal()) {
+				case KILL -> this.ko.getOrDefault("entity." + quest.target().replace(':', '.'), quest.target());
+				case DELIVER -> this.itemName(com.minecraftmode.townquest.TownQuestService.item(quest.target()));
+				case CRAFT -> {
+					com.minecraftmode.craft.Profession profession = com.minecraftmode.craft.Profession.byId(quest.target());
+					yield profession == null ? quest.target() : profession.ko;
+				}
+				default -> "";
+			};
+			String goal = String.format(this.ko.getOrDefault(quest.goal().key(), quest.goal().id), quest.need(), target);
+			md.append("| ").append(quest.giver().ko).append(" | ").append(quest.titleKo()).append(" | ").append(goal).append(" | ")
+				.append(quest.minLevel() > 1 ? "Lv " + quest.minLevel() : "-").append(" | ").append(quest.daily() ? "매일" : "★ 한 번").append(" | ")
+				.append(quest.tier().name().toLowerCase(java.util.Locale.ROOT)).append(" | ")
+				.append(quest.bonus() == null ? "-" : this.itemName(quest.bonus()) + " " + quest.bonusCount() + "개").append(" |\n");
+		}
+		md.append("\n- **끈기의 숲**: 꼬마 핍의 의뢰 창에서 '숲으로 가기'를 누르면 점프 코스로 갑니다. 탈것·펫·비행은 쓸 수 없고, 끝에 닿으면 의뢰가 달성됩니다.\n\n");
+	}
 
 	private String itemName(final Item item) {
 		return this.ko.getOrDefault(item.getDescriptionId(), BuiltInRegistries.ITEM.getKey(item).getPath());
@@ -736,6 +807,7 @@ public class GearDocProvider implements DataProvider {
 			.append("위더 스켈레톤 해골 개당 ").append(Coins.format(asked(wither.get(0)))).append(", 영혼 모래 ").append(wither.get(1).resultCount()).append("개 ")
 			.append(Coins.format(asked(wither.get(1)))).append(" — 위더 하나에 해골 3개와 영혼 모래 4개. 워든·엘더 가디언·미스릴 골렘은 소환 아이템이 없고 개릭의 사냥터에서 나옵니다(위더도 나옴).\n");
 		md.append("- **전직 장비**: 전직할 때마다(1차 포함) 지금 레벨 구간에 맞는 직업 무기 1개와 방어구 한 벌(투구·흉갑·레깅스·부츠)을 받습니다. 직업·차수마다 한 번뿐입니다(직업 초기화 후 다시 받지 않음).\n\n");
+		this.townQuests(md);
 		md.append("## 지도·미니맵과 손에 든 광원\n\n");
 		md.append("- **미니맵**(오른쪽 위, 쉼표 키로 켜고 끔): 돌아다닌 지형이 바닐라 지도 색으로 그려집니다(북쪽이 위). 자기 위치와 바라보는 방향, 다른 플레이어, 수도, 웨이포인트(화면 밖이면 가장자리에 고정)와 좌표가 표시됩니다. 크기 ")
 			.append(MapSettings.SIZES[0]).append("/").append(MapSettings.SIZES[1]).append("/").append(MapSettings.SIZES[2]).append(" px, 배율 x0.5/x1/x2.\n");
@@ -855,7 +927,7 @@ public class GearDocProvider implements DataProvider {
 			md.append("| ").append(this.ko(a.nameKey())).append(" | +").append(a.level()).append(" | ").append(this.ko(a.descKey())).append(" |\n");
 		}
 		md.append("\n- 견고/폭군은 주기마다, 강화/분노는 두 주기마다 번갈아 나옵니다.\n");
-		md.append("- 보상(클리어한 사람마다, 단계는 +").append(Dungeons.REWARD_SOFT_CAP).append("부터 절반 속도로 셈): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계)), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, ")
+		md.append("- 보상(클리어한 사람마다, 단계는 +").append(Dungeons.REWARD_SOFT_CAP).append("부터 절반 속도로 셈): 동전(던전 힘 구간 가격 × (0.6 + 0.15 × 단계) × ").append(Dungeons.COIN_SCALE).append("), 진화의 에테르 2 + 단계/2, 강화석 1 + 단계/3, 응축된 정수 1 + 단계/4, ")
 			.append("장비 (40 + 4 × 단계)% (+7부터 강화된 채), +5부터 각성의 결정 (15 + 3 × 단계)%, 희귀 펫·탈것 2% (+10부터 영웅 2% + 단계당 0.5%). 제한 시간을 넘기면 ")
 			.append(Math.round(Dungeons.LATE_SHARE * 100)).append("%만 받습니다.\n");
 		md.append("- 직업 경험치: 한 판에 레벨의 ").append(Math.round(Dungeons.RUN_EXP * 100)).append("% (늦으면 절반, 단계·인원과 무관). 던전 몬스터는 처치 경험치가 없습니다. 레벨 ")
@@ -894,7 +966,7 @@ public class GearDocProvider implements DataProvider {
 		int[] levels = {15, 45, 90};
 		md.append("\n## 성장 경험치\n\n");
 		md.append("- 레벨을 올리는 주된 길은 **소굴 탐험**입니다. 소굴·레이드·던전·네임드는 \"레벨분\"(다음 레벨까지 필요한 경험치의 비율)으로 주므로 레벨이 올라도 비중이 같고, ")
-			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다. 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음) 주고, ")
+			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다(소굴은 군주를 쓰러뜨린 레벨 기준: 군주가 내 레벨로 강해졌다면 어느 소굴이든 내 레벨만큼 줍니다). 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음) 주고, ")
 			.append("시련 보스(위더·엔더 드래곤·워든·엘더 가디언·미스릴 골렘)도 레벨분으로 그 보스를 잡는 시련의 레벨까지 셉니다.\n");
 		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후에는 경험치가 파라곤 레벨로 들어갑니다.\n\n");
 		md.append("| 활동 | Lv ").append(levels[0]).append(" | Lv ").append(levels[1]).append(" | Lv ").append(levels[2]).append(" |\n|---|---|---|---|\n");
@@ -910,10 +982,13 @@ public class GearDocProvider implements DataProvider {
 				l -> exp(JobProgression.levelExp(Math.min(l, boss.level()), boss.share()), l));
 		}
 		this.growthRow(md, "소굴 첫 발견 (소굴마다 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.DISCOVER), l));
-		this.growthRow(md, "소굴 군주 처치", levels, l -> exp(JobProgression.levelExp(l, JobEvents.LORD_SHARE), l));
+		this.growthRow(md, "소굴 군주 처치 (기여도로 나눔)", levels, l -> exp(JobProgression.levelExp(l, LairExp.LORD), l));
 		this.growthRow(md, "소굴 보물 상자 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CHEST), l));
 		this.growthRow(md, "소굴 첫 공략 (상자에 더해, 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.FIRST_CLEAR), l));
 		this.growthRow(md, "막다른 길 보물함 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CACHE), l));
+		float cycle = LairExp.LORD + LairExp.CHEST + 3 * LairExp.CACHE;
+		this.growthRow(md, "소굴 한 주기 합계 (군주+상자+보급품 3개, 내 레벨로 싸움)", levels, l -> exp(JobProgression.levelExp(l, cycle), l));
+		this.growthRow(md, "Lv 10–20 소굴 한 주기 (약한 군주, 혼자)", levels, l -> exp(JobProgression.levelExp(Math.min(l, 20), cycle), l));
 		for (RaidDifficulty d : RaidDifficulty.values()) {
 			this.growthRow(md, "레이드 클리어 (" + this.ko(d.nameKey()) + ")", levels, l -> exp(JobProgression.levelExp(l, d.exp), l));
 		}

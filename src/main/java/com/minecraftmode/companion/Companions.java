@@ -406,7 +406,8 @@ public final class Companions {
 		dismissPet(owner);
 		set(owner, data.withActive(id));
 		GearStats.invalidate(owner);
-		if (!id.isEmpty()) {
+		// in a jump course the pet waits at home (it comes back when the climb ends)
+		if (!id.isEmpty() && !com.minecraftmode.jump.JumpForest.inCourse(owner)) {
 			spawnPet(owner, PETS.get(id));
 		}
 		return true;
@@ -439,7 +440,7 @@ public final class Companions {
 	/** After join, respawn, a world change or a character switch: the active pet comes along (not into the character lobby). */
 	public static void restore(final ServerPlayer player) {
 		dismissPet(player);
-		if (com.minecraftmode.character.Lobby.is(player.level())) {
+		if (com.minecraftmode.character.Lobby.is(player.level()) || com.minecraftmode.jump.JumpForest.inCourse(player)) {
 			return;
 		}
 		Data data = data(player);
@@ -471,6 +472,10 @@ public final class Companions {
 		Data data = data(owner);
 		MountDef def = MOUNTS.get(id);
 		if (def == null || !data.hasMount(id)) {
+			return false;
+		}
+		// jump courses are climbed on foot (no flying mounts, and no mount's jump either)
+		if (com.minecraftmode.jump.JumpForest.refusesMount(owner)) {
 			return false;
 		}
 		if (RaidDimension.is(owner.level()) || com.minecraftmode.dungeon.DungeonDimension.is(owner.level()) || owner.isPassenger() || owner.isInWater()

@@ -49,6 +49,7 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private static final EntityDataAccessor<Integer> DATA_COLOR = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> DATA_TRAIL = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Float> DATA_GRAVITY = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.FLOAT);
+	private static final EntityDataAccessor<Integer> DATA_LOOK = SynchedEntityData.defineId(SkillProjectile.class, EntityDataSerializers.INT);
 	/** Extra up-and-down reach of {@link #reach} on top of the projectile's own (see there). */
 	public static final double VERTICAL_REACH = 0.4;
 
@@ -122,6 +123,20 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		this.entityData.set(DATA_GRAVITY, gravity);
 	}
 
+	/** Drawn in this shape instead of its item ({@link SkillLook#GETSUGA}); set before it is added to the level. */
+	public SkillProjectile look(final SkillLook look) {
+		this.entityData.set(DATA_LOOK, look.ordinal());
+		return this;
+	}
+
+	public SkillLook look() {
+		return SkillLook.byId(this.entityData.get(DATA_LOOK));
+	}
+
+	public int color() {
+		return this.entityData.get(DATA_COLOR);
+	}
+
 	public SkillProjectile pierce(final int pierce) {
 		this.pierce = pierce;
 		return this;
@@ -181,6 +196,7 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		entityData.define(DATA_COLOR, 0xFFFFFF);
 		entityData.define(DATA_TRAIL, Fx.Kind.SPARK.ordinal());
 		entityData.define(DATA_GRAVITY, 0.0F);
+		entityData.define(DATA_LOOK, SkillLook.NONE.ordinal());
 	}
 
 	@Override
@@ -201,6 +217,10 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		super.tick();
 		if (this.level().isClientSide()) {
 			Fx.Kind trail = Fx.Kind.values()[Math.floorMod(this.entityData.get(DATA_TRAIL), Fx.Kind.values().length)];
+			if (this.look() != SkillLook.NONE) {
+				// the drawn shape is the wave itself: a few sparks shed behind it instead of the slash sprites
+				trail = Fx.Kind.SPARK;
+			}
 			ColorParticleOption option = ColorParticleOption.create(trail.type(), 0xFF000000 | this.entityData.get(DATA_COLOR));
 			this.level().addParticle(option, this.getX(), this.getY() + 0.1, this.getZ(), 0.0, 0.0, 0.0);
 			return;

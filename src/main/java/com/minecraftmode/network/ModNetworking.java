@@ -21,7 +21,9 @@ import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.job.skill.SkillCaster;
+import com.minecraftmode.loot.EtherAutoFuse;
 import com.minecraftmode.market.AuctionService;
 import com.minecraftmode.progress.Progress;
 import com.minecraftmode.raid.BossDef;
@@ -33,8 +35,11 @@ import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.residence.LandOffice;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.travel.Destination;
 import com.minecraftmode.travel.Travel;
+import com.minecraftmode.worldgen.lair.LairTravel;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -78,6 +83,8 @@ public final class ModNetworking {
 		PayloadTypeRegistry.clientboundPlay().register(OpenTravelPayload.TYPE, OpenTravelPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenLootBuyerPayload.TYPE, OpenLootBuyerPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LootSellPayload.TYPE, LootSellPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(OpenTownQuestPayload.TYPE, OpenTownQuestPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(TownQuestActionPayload.TYPE, TownQuestActionPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(TravelPayload.TYPE, TravelPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(LandActionPayload.TYPE, LandActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(MapMarkPayload.TYPE, MapMarkPayload.CODEC);
@@ -86,6 +93,9 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(AdminActionPayload.TYPE, AdminActionPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(AdminStatePayload.TYPE, AdminStatePayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(CharacterListPayload.TYPE, CharacterListPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(LairOfferPayload.TYPE, LairOfferPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(LairClearPayload.TYPE, LairClearPayload.CODEC);
+		PayloadTypeRegistry.serverboundPlay().register(LairTravelPayload.TYPE, LairTravelPayload.CODEC);
 		ServerPlayerEvents.JOIN.register(player -> ServerPlayNetworking.send(player, new CityInfoPayload(CityZone.isCityLevel(player.level().getServer().overworld()))));
 
 		ServerPlayNetworking.registerGlobalReceiver(CastSkillPayload.TYPE, (payload, context) -> context.server().execute(
@@ -156,9 +166,27 @@ public final class ModNetworking {
 				Travel.go(context.player(), destination);
 			}
 		}));
+		ServerPlayNetworking.registerGlobalReceiver(LairTravelPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			switch (payload.action()) {
+				case LairTravelPayload.TRAVEL -> LairTravel.confirm(context.player());
+				case LairTravelPayload.EXIT -> LairTravel.exit(context.player());
+				default -> {
+				}
+			}
+		}));
 		ServerPlayNetworking.registerGlobalReceiver(LootSellPayload.TYPE, (payload, context) -> context.server().execute(() -> {
 			if (npc(context.player(), payload.entityId(), CityNpc.Role.LOOT_BUYER) != null) {
 				LootBuyer.sell(context.player(), payload.entityId(), payload.picks());
+			}
+		}));
+		ServerPlayNetworking.registerGlobalReceiver(TownQuestActionPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+			TownQuests.Quest quest = TownQuests.get(payload.quest());
+			CityNpc giver = quest == null ? null : npc(context.player(), payload.entityId(), quest.giver());
+			if (giver != null) {
+				TownQuestService.act(context.player(), quest, payload.action());
+				if (payload.action() != TownQuestActionPayload.ENTER) {
+					ServerPlayNetworking.send(context.player(), TownQuestService.screen(context.player(), payload.entityId(), giver.role()));
+				}
 			}
 		}));
 	}
@@ -240,7 +268,9 @@ public final class ModNetworking {
 				}
 			}
 			case MenuActionPayload.LEAVE -> {
-				if (RaidDimension.is(player.level())) {
+				if (JumpForest.busy(player)) {
+					JumpForest.leave(player);
+				} else if (RaidDimension.is(player.level())) {
 					Raids.leave(player);
 				} else if (DungeonDimension.is(player.level())) {
 					Dungeons.leave(player);
@@ -251,6 +281,7 @@ public final class ModNetworking {
 			case MenuActionPayload.CHARACTER_BUY -> Characters.buySlot(player);
 			case MenuActionPayload.CHARACTER_ENTER -> Characters.enter(player, payload.amount());
 			case MenuActionPayload.DICE -> DiceCommand.roll(player);
+			case MenuActionPayload.ETHER_AUTO -> EtherAutoFuse.set(player, payload.amount() > 0, Math.abs(payload.amount()));
 			default -> {
 			}
 		}

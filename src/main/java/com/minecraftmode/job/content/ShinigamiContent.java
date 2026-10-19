@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -139,68 +140,83 @@ public final class ShinigamiContent extends ClassContent {
 			skill("baboon_bone_guard", "Baboon Bone Guard", "비골 수호", DEFENSE, 20, 16, shield(10, 8), taunt(6)));
 
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.36): visual only, the numbers are the wrapped actions'. Where the
+		// weapon's big sprites (runes, slashes) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("tensa_zangetsu", 4, 70, KATANA, "Tensa Zangetsu", "천쇄참월",
 			art(0x1A1A1A, 0x2A1A1A, 0xC8202A), fx(Fx.Kind.SLASH, 0x1A1A1A),
-			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10)),
-			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, blink(12), dash(6, 1.66)),
-			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10), inflict(WITHER, 4, 1)),
-			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, boost(DAMAGE, 12, 30), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
+			skill("getsuga_tensho", "Getsuga Tensho", "월아천충", ATTACK, 8, 20, shoot(ProjectileStyle.WAVE, 1.91).pierce(10).look(SkillLook.GETSUGA)),
+			skill("bankai_speed", "Bankai Speed", "만해의 속도", MOVEMENT, 10, 16, look(SkillLook.FLASH_TRAIL, blink(12)).lasting(1.0), dash(6, 1.66)),
+			skill("black_getsuga", "Black Getsuga Tensho", "검은 월아천충", ATTACK, 16, 28, shoot(ProjectileStyle.WAVE, 2.76).count(3).spread(30).pierce(10).look(SkillLook.GETSUGA), inflict(WITHER, 4, 1)),
+			skill("hollow_mask", "Hollow Mask", "호로화", ULTIMATE, 50, 40, look(SkillLook.REIATSU, boost(DAMAGE, 12, 30)), buff(SPEED, 12, 1), lifestealFor(12, 15), empower(8, 80, 12)));
 
 		weapon("senbonzakura_kageyoshi", 4, 75, KATANA, "Senbonzakura Kageyoshi", "천본앵경엄",
 			art(0xFFE0EC, 0x2A2A3A, 0xFF7AA0), fx(Fx.Kind.PETAL, 0xFF9AB8),
-			skill("thousand_blades", "A Thousand Blades", "천 개의 칼날", ATTACK, 10, 24, repeat(6, 4, nova(6, 0.45)), inflict(BLEEDING, 6, 1)),
-			skill("gokei", "Gokei", "항경", ATTACK, 14, 26, pull(8, 1.4), delay(0.5, nova(6, 2.21))),
-			skill("senkei", "Senkei", "섬경", ATTACK, 22, 24, boost(DAMAGE, 8, 25), zone(6, 6, 0.59)),
-			skill("shukei_hakuteiken", "Shukei: Hakuteiken", "종경 백제검", ULTIMATE, 55, 45, beam(26, 4.6), dash(8, 1.84)));
+			skill("thousand_blades", "A Thousand Blades", "천 개의 칼날", ATTACK, 10, 24, look(SkillLook.PETAL_STORM, repeat(6, 4, nova(6, 0.45))).size(6).lasting(1.4),
+				inflict(BLEEDING, 6, 1)),
+			skill("gokei", "Gokei", "항경", ATTACK, 14, 26, look(SkillLook.PETAL_SPHERE, pull(8, 1.4)).size(6), delay(0.5, nova(6, 2.21))),
+			skill("senkei", "Senkei", "섬경", ATTACK, 22, 24, boost(DAMAGE, 8, 25), look(SkillLook.SENKEI, zone(6, 6, 0.59)).size(6).lasting(6)),
+			skill("shukei_hakuteiken", "Shukei: Hakuteiken", "종경 백제검", ULTIMATE, 55, 45, look(SkillLook.HAKUTEIKEN, beam(26, 4.6)).beam(26), dash(8, 1.84)));
 
 		weapon("daiguren_hyorinmaru", 4, 78, KATANA, "Daiguren Hyorinmaru", "대홍련빙륜환",
 			art(0xD0F0FF, 0x1A3A6A, 0x8AE0FF), fx(Fx.Kind.SHARD, 0xBFEFFF),
-			skill("ryusenka", "Ryusenka", "용산가", ATTACK, 9, 22, shadowstep(10, 1.77), inflict(SLOWNESS, 5, 3)),
-			skill("sennen_hyoro", "Sennen Hyoro", "천년빙뢰", ATTACK, 16, 28, rain(ProjectileStyle.ICICLE, 16, 4, 14, 0.25), inflict(SLOWNESS, 5, 2)),
-			skill("ice_wings", "Ice Wings", "얼음 날개", MOVEMENT, 12, 18, leap(8, 3, 1.29), buff(SLOW_FALLING, 6, 0)),
-			skill("hyoten_hyakkaso", "Hyoten Hyakkaso", "빙천백화장", ULTIMATE, 55, 45, zone(7, 6, 1.1).at(14).effect(SLOWNESS, 4), stun(2.0)));
+			skill("ryusenka", "Ryusenka", "용산가", ATTACK, 9, 22, look(SkillLook.ICE_FLOWER, shadowstep(10, 1.77)).onTarget(10), inflict(SLOWNESS, 5, 3)),
+			skill("sennen_hyoro", "Sennen Hyoro", "천년빙뢰", ATTACK, 16, 28, look(SkillLook.ICE_PRISON, rain(ProjectileStyle.ICICLE, 16, 4, 14, 0.25)).at(16).size(4),
+				inflict(SLOWNESS, 5, 2)),
+			skill("ice_wings", "Ice Wings", "얼음 날개", MOVEMENT, 12, 18, look(SkillLook.ICE_WINGS, leap(8, 3, 1.29)).lasting(6), buff(SLOW_FALLING, 6, 0)),
+			skill("hyoten_hyakkaso", "Hyoten Hyakkaso", "빙천백화장", ULTIMATE, 55, 45,
+				look(SkillLook.ICE_BLOOM, zone(7, 6, 1.1).at(14).effect(SLOWNESS, 4)).at(14).size(7).lasting(6), stun(2.0)));
 
 		weapon("ryujin_jakka", 4, 82, KATANA, "Ryujin Jakka", "류인약화",
 			art(0x6A5A4A, 0x2A1A0A, 0xFF5A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
-			skill("all_things_to_ash", "Reduce All Creation to Ash", "만상일체 잿더미가 되어라", ATTACK, 10, 24, nova(6, 1.84), burn(6)),
-			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", DEFENSE, 22, 26, zone(6, 6, 0.74), shield(14, 6)),
-			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F), burn(6)),
-			skill("zanka_no_tachi", "Zanka no Tachi", "잔화태도", ULTIMATE, 60, 50, slash(8, 360, 7.59), burn(8)));
+			skill("all_things_to_ash", "Reduce All Creation to Ash", "만상일체 잿더미가 되어라", ATTACK, 10, 24, look(SkillLook.FLAME_BURST, nova(6, 1.84)).size(6), burn(6)),
+			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", DEFENSE, 22, 26, look(SkillLook.FLAME_WALL, zone(6, 6, 0.74)).size(6).lasting(6), shield(14, 6)),
+			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F).look(SkillLook.TAIMATSU), burn(6)),
+			skill("zanka_no_tachi", "Zanka no Tachi", "잔화태도", ULTIMATE, 60, 50, look(SkillLook.ZANKA, slash(8, 360, 7.59)).size(8), burn(8)));
 
 		weapon("kamishini_no_yari", 4, 85, SPEAR, "Kamishini no Yari", "신살창",
 			art(0xF0F0F0, 0x8A8A9A, 0xC8D0E0), fx(Fx.Kind.SLASH, 0xE8F0FF),
-			skill("thirteen_kilometers", "Thirteen Kilometers", "13킬로미터", ATTACK, 10, 24, beam(30, 2.58)),
-			skill("butou_renjin_kai", "Butou Renjin", "무답연인", ATTACK, 14, 26, repeat(6, 3, beam(20, 0.66))),
-			skill("dust_to_dust", "Dust to Dust", "먼지로", UTILITY, 18, 20, debuff(8, WITHER, 6, 2), mark(20, 8, 40)),
-			skill("korose", "Korose, Kamishini no Yari", "죽여라, 신살창", ULTIMATE, 55, 45, beam(30, 6.62), inflict(WITHER, 8, 3)));
+			skill("thirteen_kilometers", "Thirteen Kilometers", "13킬로미터", ATTACK, 10, 24, look(SkillLook.SPEAR, beam(30, 2.58)).beam(30)).withFx(Fx.Kind.SPARK),
+			skill("butou_renjin_kai", "Butou Renjin", "무답연인", ATTACK, 14, 26, repeat(6, 3, look(SkillLook.SPEAR, beam(20, 0.66)).beam(20).lasting(0.3))).withFx(Fx.Kind.SPARK),
+			skill("dust_to_dust", "Dust to Dust", "먼지로", UTILITY, 18, 20, look(SkillLook.DUST, debuff(8, WITHER, 6, 2)).size(8), mark(20, 8, 40)).withFx(Fx.Kind.SPARK),
+			skill("korose", "Korose, Kamishini no Yari", "죽여라, 신살창", ULTIMATE, 55, 45, look(SkillLook.SPEAR_KILL, beam(30, 6.62)).beam(30), inflict(WITHER, 8, 3))
+				.withFx(Fx.Kind.SPARK));
 
 		weapon("kyoka_suigetsu", 4, 88, KATANA, "Kyoka Suigetsu", "경화수월",
 			art(0xE8E4F0, 0x3A2A5A, 0x8A5AFF), fx(Fx.Kind.RUNE, 0xB08AFF),
-			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, stealth(5, 80), debuff(8, BLINDNESS, 5, 0)),
-			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도의 90 흑관", ATTACK, 18, 32, zone(4, 3, 1.6).at(16).pull(0.8), inflict(VULNERABLE, 6, 1)),
-			skill("illusion_step", "Illusion Step", "환영 보법", MOVEMENT, 10, 16, blink(12), boost(CRIT_CHANCE, 3, 30)),
-			skill("hogyoku", "Hogyoku", "붕옥", ULTIMATE, 60, 50, boost(DAMAGE, 15, 30), boost(CRIT_CHANCE, 15, 20), restoreMana(40), nova(6, 6.0)));
+			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, look(SkillLook.MIRROR, stealth(5, 80)), debuff(8, BLINDNESS, 5, 0))
+				.withFx(Fx.Kind.SPARK),
+			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도의 90 흑관", ATTACK, 18, 32,
+				look(SkillLook.KUROHITSUGI, zone(4, 3, 1.6).at(16).pull(0.8)).at(16).size(4).lasting(3), inflict(VULNERABLE, 6, 1)).withFx(Fx.Kind.SPARK),
+			skill("illusion_step", "Illusion Step", "환영 보법", MOVEMENT, 10, 16, look(SkillLook.MIRROR, blink(12)), boost(CRIT_CHANCE, 3, 30)).withFx(Fx.Kind.SPARK),
+			skill("hogyoku", "Hogyoku", "붕옥", ULTIMATE, 60, 50, boost(DAMAGE, 15, 30), boost(CRIT_CHANCE, 15, 20), restoreMana(40),
+				look(SkillLook.HOGYOKU, nova(6, 6.0)).size(6)).withFx(Fx.Kind.SPARK));
 
 		weapon("karamatsu_shinju", 4, 92, TWIN_BLADES, "Katen Kyokotsu: Karamatsu Shinju", "화천광골 고송심중",
 			art(0xC8C0D8, 0x4A2A6A, 0xFF5AA0), fx(Fx.Kind.PETAL, 0xFF5AA0),
-			skill("first_act", "First Act: Tragedy of Wounds Shared", "첫째 단 주저자분합", ATTACK, 12, 24, lifesteal(25), repeat(3, 6, slash(5, 200, 0.92))),
-			skill("second_act", "Second Act: Shame of Wounds Undone", "둘째 단 참괴의 깔개", ATTACK, 14, 26, inflict(BLEEDING, 8, 2), inflict(WEAKNESS, 8, 1), slash(4, 160, 1.47)),
-			skill("third_act", "Third Act: Drowning Abyss", "셋째 단 단어연", UTILITY, 18, 24, zone(6, 5, 0.74).at(10).pull(1.0), stun(1.5)),
-			skill("final_act", "Final Act: Itosabaki", "마지막 단 사절협혈염후", ULTIMATE, 60, 50, execute(6, 5.89, 50, 3.0), inflict(STUN, 2, 0)));
+			skill("first_act", "First Act: Tragedy of Wounds Shared", "첫째 단 주저자분합", ATTACK, 12, 24, lifesteal(25),
+				repeat(3, 6, look(SkillLook.SLASH, slash(5, 200, 0.92)).cone(5, 200))),
+			skill("second_act", "Second Act: Shame of Wounds Undone", "둘째 단 참괴의 깔개", ATTACK, 14, 26, inflict(BLEEDING, 8, 2), inflict(WEAKNESS, 8, 1),
+				look(SkillLook.CROSS_SLASH, slash(4, 160, 1.47)).cone(4, 160)),
+			skill("third_act", "Third Act: Drowning Abyss", "셋째 단 단어연", UTILITY, 18, 24, look(SkillLook.ABYSS, zone(6, 5, 0.74).at(10).pull(1.0)).at(10).size(6).lasting(5),
+				stun(1.5)),
+			skill("final_act", "Final Act: Itosabaki", "마지막 단 사절협혈염후", ULTIMATE, 60, 50, look(SkillLook.BINDING, execute(6, 5.89, 50, 3.0)).onTarget(6),
+				inflict(STUN, 2, 0)));
 
 		weapon("true_zangetsu", 4, 100, GREATSWORD, "True Zangetsu", "진짜 참월",
 			art(0xE8E8F0, 0x1A1A1A, 0x3AA0FF), fx(Fx.Kind.SLASH, 0x6AC8FF),
-			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 1.99).speed(2.2F).pierce(12)),
-			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28, shoot(ProjectileStyle.WAVE, 1.24).count(2).parallel(1.8).speed(2.2F).pierce(12),
-				slash(5, 180, 0.83)),
-			skill("final_flash_step", "Final Flash Step", "최후의 순보", MOVEMENT, 10, 18, blink(14), empower(3, 80, 6)),
-			skill("mugetsu", "Mugetsu", "무월", ULTIMATE, 90, 60, zone(8, 4, 1.84).at(12), beam(30, 5.52)));
+			skill("true_getsuga", "Getsuga Tensho", "월아천충", ATTACK, 8, 22, shoot(ProjectileStyle.WAVE, 1.99).speed(2.2F).pierce(12).look(SkillLook.GETSUGA_DUAL)),
+			skill("twin_getsuga", "Twin Getsuga", "쌍 월아천충", ATTACK, 14, 28,
+				shoot(ProjectileStyle.WAVE, 1.24).count(2).parallel(1.8).speed(2.2F).pierce(12).look(SkillLook.GETSUGA_DUAL),
+				look(SkillLook.SLASH, slash(5, 180, 0.83)).cone(5, 180)),
+			skill("final_flash_step", "Final Flash Step", "최후의 순보", MOVEMENT, 10, 18, look(SkillLook.FLASH_TRAIL, blink(14)), empower(3, 80, 6)),
+			skill("mugetsu", "Mugetsu", "무월", ULTIMATE, 90, 60, look(SkillLook.MUGETSU_VOID, zone(8, 4, 1.84).at(12)).at(12).size(8).lasting(4),
+				look(SkillLook.MUGETSU, beam(30, 5.52)).beam(30)));
 
 		weapon("soo_zabimaru", 4, 95, WHIP_SWORD, "Soo Zabimaru", "쌍왕 사미환",
 			art(0xF0E8D8, 0x5A1414, 0xFF2A2A), fx(Fx.Kind.SHARD, 0xFF4040),
-			skill("higa_zekko", "Higa Zekko", "비아절교", ULTIMATE, 50, 40, pull(6, 1.0), repeat(3, 8, nova(6, 2.2))),
-			skill("zaga_tesso", "Zaga Tesso", "사아철포", ATTACK, 9, 20, beam(16, 2.3)),
-			skill("twin_king_lash", "Twin King Lash", "쌍왕 채찍", ATTACK, 7, 18, slash(7, 220, 1.7)),
-			skill("bone_armor", "Baboon Bone Armor", "비골 갑주", DEFENSE, 24, 20, shield(14, 8), taunt(8)));
+			skill("higa_zekko", "Higa Zekko", "비아절교", ULTIMATE, 50, 40, pull(6, 1.0), look(SkillLook.BONE_FANGS, repeat(3, 8, nova(6, 2.2))).size(6)),
+			skill("zaga_tesso", "Zaga Tesso", "사아철포", ATTACK, 9, 20, look(SkillLook.BONE_SNAKE, beam(16, 2.3)).beam(16)),
+			skill("twin_king_lash", "Twin King Lash", "쌍왕 채찍", ATTACK, 7, 18, look(SkillLook.BONE_LASH, slash(7, 220, 1.7)).cone(7, 220)),
+			skill("bone_armor", "Baboon Bone Armor", "비골 갑주", DEFENSE, 24, 20, look(SkillLook.BONE_CAGE, shield(14, 8)), taunt(8)));
 	}
 }

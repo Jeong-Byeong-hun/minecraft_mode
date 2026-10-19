@@ -22,6 +22,7 @@ import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.style.StylistMenu;
+import com.minecraftmode.townquest.TownQuestService;
 import com.minecraftmode.travel.Travel;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +107,26 @@ public class CityNpc extends PathfinderMob {
 			"어디로 모실까요, 여행자님? 갈 곳을 고르시면 길을 열어 드리지요."),
 		LOOT_BUYER("loot_buyer", 0x3FA060, "Loot Buyer Tobin", "전리품 상인 토빈",
 			"Back from a raid with more gear than you can carry? Pick what you do not need and I will buy it all at once, at guild prices.",
-			"레이드에서 장비를 잔뜩 들고 왔나? 필요 없는 걸 골라 주면 길드 시세로 한꺼번에 사 주지.");
+			"레이드에서 장비를 잔뜩 들고 왔나? 필요 없는 걸 골라 주면 길드 시세로 한꺼번에 사 주지."),
+		// residents who hand out town quests (townquest/TownQuests, 0.5.36)
+		FARMER_WIFE("farmer_wife", 0xC8A040, "Farmer's Wife Martha", "농부의 아내 마사",
+			"Oh, an adventurer! The farm never runs out of chores. Could you lend a hand today?",
+			"어머, 모험가님이네! 농사일은 끝이 없어요. 오늘 일손 좀 빌려줄래요?"),
+		OLD_MINER("old_miner", 0x9A8A70, "Old Miner Dugan", "늙은 광부 듀건",
+			"Heh, young legs. The mines still need someone who is not afraid of the dark.",
+			"허허, 젊은 다리로구먼. 광산엔 아직 어둠을 겁내지 않는 사람이 필요하다네."),
+		FISHERMAN("fisherman", 0x3A8AB8, "Fisherman Pell", "어부 펠",
+			"Quiet water today. Got time to help an old fisherman out?",
+			"오늘은 물이 잔잔하네. 늙은 어부 좀 도와줄 시간 있나?"),
+		VETERAN("veteran", 0xB04A3A, "Retired Adventurer Rowan", "은퇴한 모험가 로완",
+			"I hung up my sword years ago, but I still know where the trouble is. Want some work?",
+			"칼은 오래전에 내려놨지만 어디에 골칫거리가 있는지는 아직 훤하지. 일거리 좀 줄까?"),
+		CHILD("child", 0xE88AB0, "Little Pip", "꼬마 핍",
+			"Are you a real adventurer? Can you do something cool for me? Pleeease?",
+			"진짜 모험가예요? 나 대신 멋진 거 해 줄 수 있어요? 네에?"),
+		LUMBERJACK("lumberjack", 0x6A9A3A, "Lumberjack Bjorn", "나무꾼 비요른",
+			"Ha! Strong arms. Stormhold eats timber faster than I can fell it. Give me a hand?",
+			"하! 팔뚝 튼튼하네. 스톰홀드는 내가 베는 것보다 나무를 빨리 먹어 치워. 좀 도와줄래?");
 
 		private final String id;
 		private final int color;
@@ -138,6 +158,14 @@ public class CityNpc extends PathfinderMob {
 
 		public String greetingKey() {
 			return this.nameKey() + ".greeting";
+		}
+
+		/** The townsfolk who hand out town quests ({@code townquest/TownQuests}); their right-click opens the quest screen. */
+		public boolean isResident() {
+			return switch (this) {
+				case FARMER_WIFE, OLD_MINER, FISHERMAN, VETERAN, CHILD, LUMBERJACK -> true;
+				default -> false;
+			};
 		}
 
 		public static Role byId(final String id) {
@@ -188,6 +216,12 @@ public class CityNpc extends PathfinderMob {
 		this.entityData.set(DATA_ROLE, role.ordinal());
 		this.setCustomName(Component.translatable(role.nameKey()).withColor(role.color()));
 		this.setCustomNameVisible(true);
+		// Little Pip is a child: a smaller body (and name tag and hitbox with it)
+		net.minecraft.world.entity.ai.attributes.AttributeInstance scale = this.getAttribute(Attributes.SCALE);
+		if (scale != null) {
+			scale.setBaseValue(role == Role.CHILD ? 0.7 : 1.0);
+			this.refreshDimensions();
+		}
 		this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(switch (role) {
 			case BLACKSMITH -> Items.IRON_AXE;
 			case RAID_MARSHAL -> Items.NETHERITE_SWORD;
@@ -204,6 +238,12 @@ public class CityNpc extends PathfinderMob {
 			case STYLIST -> Items.SHEARS;
 			case WAYMASTER -> Items.ENDER_PEARL;
 			case LOOT_BUYER -> Items.BUNDLE;
+			case FARMER_WIFE -> Items.WHEAT;
+			case OLD_MINER -> Items.IRON_PICKAXE;
+			case FISHERMAN -> Items.FISHING_ROD;
+			case VETERAN -> Items.SPYGLASS;
+			case CHILD -> Items.COOKIE;
+			case LUMBERJACK -> Items.STONE_AXE;
 		}));
 	}
 
@@ -286,6 +326,7 @@ public class CityNpc extends PathfinderMob {
 					Component.translatable("container.minecraft_mode.stylist")));
 				case WAYMASTER -> Travel.open(serverPlayer, this.getId());
 				case LOOT_BUYER -> LootBuyer.open(serverPlayer, this.getId());
+				case FARMER_WIFE, OLD_MINER, FISHERMAN, VETERAN, CHILD, LUMBERJACK -> TownQuestService.open(serverPlayer, this.getId(), role);
 			}
 		}
 		return InteractionResult.SUCCESS;

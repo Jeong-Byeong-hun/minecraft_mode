@@ -4,6 +4,8 @@ import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enchantment.EnchantLevels;
 import com.minecraftmode.enchantment.LifeEnchantments;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -166,6 +168,7 @@ public final class Fishing {
 		}
 		int wisdom = EnchantLevels.get(level, LifeEnchantments.ANGLERS_WISDOM, rod);
 		Profession.FISHING.addExp(player, Math.round(def.tier().exp * (1.0F + WISDOM_PER_LEVEL * wisdom)));
+		TownQuestService.progress(player, TownQuests.Goal.FISH, def.id(), 1);
 		return new ItemStack(item(def), count);
 	}
 

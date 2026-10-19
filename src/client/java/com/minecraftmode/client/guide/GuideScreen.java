@@ -60,7 +60,7 @@ public class GuideScreen extends Screen {
 	private static final float MAP_ZOOM = 2.0F;
 
 	public enum Topic {
-		START, LEVELING, CLASSES, KEYS, PLACES, MONEY, GEAR, NAMED, DUNGEONS, BOUNTIES, COMPANIONS, EVENTS, TOWN;
+		START, LEVELING, CLASSES, KEYS, PLACES, MONEY, GEAR, NAMED, DUNGEONS, BOUNTIES, QUESTS, COMPANIONS, EVENTS, TOWN;
 
 		public String key() {
 			return "guide.minecraft_mode." + this.name().toLowerCase(Locale.ROOT);

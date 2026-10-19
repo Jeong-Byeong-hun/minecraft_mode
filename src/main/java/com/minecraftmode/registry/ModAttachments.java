@@ -12,6 +12,7 @@ import com.minecraftmode.job.quest.QuestData;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
+import com.minecraftmode.townquest.TownQuestData;
 import com.minecraftmode.worldgen.lair.LairTravel;
 import com.mojang.serialization.Codec;
 import java.lang.reflect.Field;
@@ -233,6 +234,18 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(() -> 0)
 			.syncWith(ByteBufCodecs.VAR_INT.cast(), AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Town quests from Stormhold's residents (0.5.36, {@code townquest/TownQuests}): accepted quests with progress and the real day each was
+	 * last handed in. Per character, kept through death; synced to the owner for the quest screen.
+	 */
+	public static final AttachmentType<TownQuestData> TOWN_QUESTS = AttachmentRegistry.create(
+		MinecraftMode.id("town_quests"),
+		builder -> builder.persistent(TownQuestData.CODEC)
+			.copyOnDeath()
+			.initializer(() -> TownQuestData.DEFAULT)
+			.syncWith(TownQuestData.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
 	);
 
 	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */

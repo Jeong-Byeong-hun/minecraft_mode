@@ -40,6 +40,7 @@ import com.minecraftmode.client.particle.SkillParticle;
 import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.client.residence.LandBorders;
 import com.minecraftmode.client.residence.LandScreen;
+import com.minecraftmode.client.townquest.TownQuestScreen;
 import com.minecraftmode.client.travel.TravelScreen;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.named.NamedDef;
@@ -49,6 +50,7 @@ import com.minecraftmode.network.OpenGuidePayload;
 import com.minecraftmode.network.OpenLandPayload;
 import com.minecraftmode.network.OpenNoticePayload;
 import com.minecraftmode.network.OpenLootBuyerPayload;
+import com.minecraftmode.network.OpenTownQuestPayload;
 import com.minecraftmode.network.OpenTravelPayload;
 import com.minecraftmode.network.OpenTrainerPayload;
 import com.minecraftmode.raid.BossDef;
@@ -102,6 +104,13 @@ public class MinecraftModeClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(OpenTravelPayload.TYPE, (payload, context) -> context.client().execute(
 			() -> context.client().gui.setScreen(new TravelScreen(payload))
 		));
+		ClientPlayNetworking.registerGlobalReceiver(OpenTownQuestPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			if (context.client().gui.screen() instanceof TownQuestScreen screen && screen.entityId() == payload.entityId()) {
+				screen.update(payload);
+			} else {
+				context.client().gui.setScreen(new TownQuestScreen(payload));
+			}
+		}));
 		ClientPlayNetworking.registerGlobalReceiver(OpenLootBuyerPayload.TYPE, (payload, context) -> context.client().execute(() -> {
 			if (context.client().gui.screen() instanceof LootBuyerScreen screen && screen.entityId() == payload.entityId()) {
 				screen.update(payload);

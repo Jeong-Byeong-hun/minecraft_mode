@@ -6,6 +6,8 @@ import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.enchantment.EnchantLevels;
 import com.minecraftmode.enchantment.LifeEnchantments;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.townquest.TownQuestService;
+import com.minecraftmode.townquest.TownQuests;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -277,6 +279,7 @@ public final class Crops {
 		RandomSource random = player.getRandom();
 		int wisdom = EnchantLevels.get(level, LifeEnchantments.FARMERS_WISDOM, tool);
 		Profession.FARMING.addExp(player, Math.round((def.advanced() ? ADVANCED_EXP : BASIC_EXP) * (1.0F + WISDOM_PER_LEVEL * wisdom)));
+		TownQuestService.progress(player, TownQuests.Goal.HARVEST, def.id(), 1);
 		if (random.nextInt(100) < Profession.FARMING.doubleChance(player)) {
 			Block.popResource(level, pos, new ItemStack(produce(def)));
 		}

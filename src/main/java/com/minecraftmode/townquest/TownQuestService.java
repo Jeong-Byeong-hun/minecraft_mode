@@ -99,9 +99,16 @@ public final class TownQuestService {
 		return data(player).isActive(quest.id()) && progress(player, quest) >= quest.need();
 	}
 
+	/**
+	 * Enhancement stones only from this class level on: they are not bound and characters share the ender chest, so fresh characters
+	 * doing the dailies would otherwise farm them for the main one.
+	 */
+	public static final int STONE_LEVEL = 10;
+
 	public static Reward reward(final Player player, final Quest quest) {
 		int level = level(player);
-		return new Reward(JobProgression.levelExp(player, level, quest.tier().exp), coins(quest, level), quest.tier().stones, quest.bonus(), quest.bonusCount());
+		return new Reward(JobProgression.levelExp(player, level, quest.tier().exp), coins(quest, level), level >= STONE_LEVEL ? quest.tier().stones : 0,
+			quest.bonus(), quest.bonusCount());
 	}
 
 	/** Coins {@code quest} pays at class level {@code level}. */
@@ -241,6 +248,10 @@ public final class TownQuestService {
 			case TownQuestActionPayload.ABANDON -> abandon(player, quest);
 			case TownQuestActionPayload.ENTER -> {
 				if (quest.goal() == Goal.JUMP && status(player, quest, today(player)) != Status.LOCKED) {
+					// going in from a quest not taken yet takes it, or the climb would count for nothing
+					if (status(player, quest, today(player)) == Status.AVAILABLE) {
+						accept(player, quest);
+					}
 					JumpForest.enter(player, quest.target());
 				}
 			}

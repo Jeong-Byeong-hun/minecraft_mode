@@ -28,7 +28,12 @@ final class VfxDraw {
 		.withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
 		.withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
 		.build();
-	static final RenderType GLOW = RenderType.create("minecraft_mode_skill_glow", RenderSetup.builder(GLOW_PIPELINE).sortOnUpload().createRenderSetup());
+	/**
+	 * With improved transparency (the Fabulous preset) every blended type goes through order-independent transparency, which throws for a
+	 * type without OIT pipelines: vanilla lightning's OIT set (additive, no depth write there either) keeps it drawing.
+	 */
+	static final RenderType GLOW = RenderType.create("minecraft_mode_skill_glow",
+		RenderSetup.builder(GLOW_PIPELINE).setOitPipelines(RenderPipelines.OIT_LIGHTNING).sortOnUpload().createRenderSetup());
 	static final RenderType SHADE = RenderTypes.debugQuads();
 
 	/** One quad seen from both sides (the glow type culls back faces). */

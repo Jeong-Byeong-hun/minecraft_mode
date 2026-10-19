@@ -1,12 +1,14 @@
 package com.minecraftmode.jump;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.character.Characters;
 import com.minecraftmode.character.Lobby;
 import com.minecraftmode.city.CityZone;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.dungeon.DungeonDimension;
 import com.minecraftmode.jump.JumpCourse.Pad;
+import com.minecraftmode.market.AuctionHouse;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModAttachments;
 import com.mojang.serialization.Codec;
@@ -54,6 +56,7 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.BoatItem;
@@ -465,7 +468,16 @@ public final class JumpForest {
 	private static void clearEntities(final ServerLevel level, final Run run) {
 		AABB box = new AABB(run.origin.getX() - 2, run.origin.getY() + JumpForestBuilder.BOTTOM - 4, run.origin.getZ() - 2,
 			run.origin.getX() + JumpCourse.SIZE + 2, run.origin.getY() + run.layout.top + JumpForestBuilder.ABOVE_TOP + 4, run.origin.getZ() + JumpCourse.SIZE + 2);
+		ServerPlayer owner = level.getServer().getPlayerList().getPlayer(run.player);
 		for (Entity e : level.getEntitiesOfClass(Entity.class, box, e -> !(e instanceof Player))) {
+			// what the climber dropped goes back to them (the market mailbox when full or offline), never into the void
+			if (e instanceof ItemEntity item && !item.getItem().isEmpty()) {
+				if (owner != null) {
+					Bags.giveOrMail(owner, item.getItem());
+				} else {
+					AuctionHouse.get(level.getServer()).sendItem(run.player, item.getItem().copy());
+				}
+			}
 			e.discard();
 		}
 	}

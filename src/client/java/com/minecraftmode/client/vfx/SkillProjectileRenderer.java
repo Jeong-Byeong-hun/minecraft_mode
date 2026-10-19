@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.client.renderer.entity.state.ThrownItemRenderState;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
@@ -29,6 +30,13 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 
 	public SkillProjectileRenderer(final EntityRendererProvider.Context context) {
 		super(context, 1.0F, true);
+	}
+
+	/** A drawn shape (a crescent almost 3 blocks wide, a fireball's trailing flames) reaches well past the projectile's small box. */
+	@Override
+	protected AABB getBoundingBoxForCulling(final SkillProjectile entity, final float partialTicks) {
+		AABB box = super.getBoundingBoxForCulling(entity, partialTicks);
+		return entity.look() == SkillLook.NONE ? box : box.inflate(2.5);
 	}
 
 	@Override

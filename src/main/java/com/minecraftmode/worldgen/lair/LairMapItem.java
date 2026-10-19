@@ -22,6 +22,9 @@ public class LairMapItem extends Item {
 	/** Waypoint colour of a lair (orange). */
 	public static final int MARK_COLOR = 0xFFFF9020;
 
+	/** Ticks before a lair map can be read again. */
+	public static final int USE_COOLDOWN = 40;
+
 	public LairMapItem(final Properties properties) {
 		super(properties);
 	}
@@ -31,6 +34,8 @@ public class LairMapItem extends Item {
 		if (!(level instanceof ServerLevel) || !(player instanceof ServerPlayer serverPlayer)) {
 			return InteractionResult.SUCCESS;
 		}
+		// the search may generate structure starts on the server thread: holding use down must not repeat it every few ticks
+		serverPlayer.getCooldowns().addCooldown(player.getItemInHand(hand), USE_COOLDOWN);
 		return LairTravel.offer(serverPlayer) == null ? InteractionResult.FAIL : InteractionResult.SUCCESS;
 	}
 

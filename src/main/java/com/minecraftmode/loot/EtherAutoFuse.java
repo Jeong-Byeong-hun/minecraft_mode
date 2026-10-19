@@ -26,7 +26,7 @@ public final class EtherAutoFuse {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 20 == 10) {
 				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-					if (target(player) > 0 && !Characters.choosing(player)) {
+					if (target(player) > 0 && player.isAlive() && !player.isSpectator() && !Characters.choosing(player)) {
 						fuse(player);
 					}
 				}
@@ -68,7 +68,8 @@ public final class EtherAutoFuse {
 			int fused = count(player, grade) / EvolutionEtherItem.FUSE;
 			if (fused > 0) {
 				take(player, grade, fused * EvolutionEtherItem.FUSE);
-				Bags.give(player, EvolutionEtherItem.of(grade + 10, fused));
+				// never on the floor: a full inventory sends it to the market mailbox (instances and jump courses sweep the floor)
+				Bags.giveOrMail(player, EvolutionEtherItem.of(grade + 10, fused));
 				made += fused;
 				top = grade + 10;
 			}

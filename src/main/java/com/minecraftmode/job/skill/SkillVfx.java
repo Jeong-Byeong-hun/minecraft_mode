@@ -128,7 +128,10 @@ public class SkillVfx extends Entity {
 			}
 			return;
 		}
-		if (this.tickCount >= this.life() || look.hold() == SkillLook.Hold.HAND && (anchor == null || anchor.isRemoved())) {
+		// a held or following look goes with its holder (logged out, dead, gone to another dimension)
+		boolean holderGone = anchor == null || anchor.isRemoved() || !anchor.isAlive();
+		if (this.tickCount >= this.life() || look.hold() == SkillLook.Hold.HAND && holderGone
+			|| look.hold() == SkillLook.Hold.FOLLOW && this.entityData.get(DATA_ANCHOR) >= 0 && holderGone) {
 			this.discard();
 			return;
 		}

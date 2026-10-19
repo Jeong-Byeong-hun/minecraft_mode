@@ -721,7 +721,7 @@ public class GearDocProvider implements DataProvider {
 				.append(quest.tier().name().toLowerCase(java.util.Locale.ROOT)).append(" | ")
 				.append(quest.bonus() == null ? "-" : this.itemName(quest.bonus()) + " " + quest.bonusCount() + "개").append(" |\n");
 		}
-		md.append("\n- **끈기의 숲**: 꼬마 핍의 의뢰 창에서 '숲으로 가기'를 누르면 점프 코스로 갑니다. 날아다니는 탈것은 쓸 수 없고, 끝에 닿으면 의뢰가 달성됩니다.\n\n");
+		md.append("\n- **끈기의 숲**: 꼬마 핍의 의뢰 창에서 '숲으로 가기'를 누르면 점프 코스로 갑니다. 탈것·펫·비행은 쓸 수 없고, 끝에 닿으면 의뢰가 달성됩니다.\n\n");
 	}
 
 	private String itemName(final Item item) {

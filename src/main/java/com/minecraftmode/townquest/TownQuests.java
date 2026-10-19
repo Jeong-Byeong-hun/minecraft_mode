@@ -122,18 +122,18 @@ public final class TownQuests {
 			"Back to the Seam", "다시 광맥으로",
 			"Forty years I swung a pick down there. My knees won't take the ladders any more, but yours will. Dig some ore and tell me how the seams look.",
 			"사십 년을 저 아래서 곡괭이질을 했지. 이젠 무릎이 사다리를 못 버티지만 자네 무릎은 멀쩡하잖나. 광석 좀 캐 보고 광맥이 어떤지 들려주게."));
-		add(daily("dugan_iron", Role.OLD_MINER, Goal.DELIVER, "minecraft:iron_ingot", 16, 1, Tier.EASY,
+		add(daily("dugan_iron", Role.OLD_MINER, Goal.DELIVER, "minecraft:raw_iron", 24, 1, Tier.EASY,
 			"Iron for the Forge", "대장간에 보낼 철",
-			"Volund at the forge never has enough iron. Smelt me some ingots and I'll carry them over. He still owes me a favour.",
-			"대장간의 볼룬드는 늘 철이 모자라지. 철 주괴를 좀 녹여 오게. 내가 갖다주겠네. 그 친구 나한테 빚진 게 있거든."));
+			"Volund at the forge says shop iron is all slag. He wants it straight from the rock. Dig me some raw iron and I'll carry it over. He still owes me a favour.",
+			"대장간의 볼룬드 말로는 가게 철은 죄다 찌꺼기래. 바위에서 막 캔 걸 원하지. 철 원석을 좀 캐 오게. 내가 갖다주겠네. 그 친구 나한테 빚진 게 있거든."));
 		add(daily("dugan_bones", Role.OLD_MINER, Goal.KILL, "minecraft:skeleton", 15, 1, Tier.NORMAL,
 			"Rattling in the Tunnels", "갱도의 달그락 소리",
 			"Skeletons have taken over the old tunnels again. Clear them out so the young miners can work in peace.",
 			"옛 갱도에 또 스켈레톤이 들끓는다네. 젊은 광부들이 마음 놓고 일하게 좀 쓸어 주게."));
-		add(daily("dugan_mythril", Role.OLD_MINER, Goal.DELIVER, "minecraft_mode:mythril_ingot", 4, 25, Tier.HARD,
+		add(daily("dugan_mythril", Role.OLD_MINER, Goal.DELIVER, "minecraft_mode:raw_mythril", 4, 25, Tier.HARD,
 			"Mythril Fever", "미스릴 열병",
-			"Blue ore, deep down, harder to find than diamond. I found a vein once, long ago. Bring me mythril ingots and let an old man hold them again.",
-			"깊은 곳의 푸른 광석, 다이아몬드보다 찾기 어렵지. 오래전에 딱 한 번 광맥을 찾았었다네. 미스릴 주괴를 가져와서 이 늙은이 손에 다시 쥐여 주게."));
+			"Blue ore, deep down, harder to find than diamond. I found a vein once, long ago. Bring me raw mythril, fresh from the vein, and let an old man hold it again.",
+			"깊은 곳의 푸른 광석, 다이아몬드보다 찾기 어렵지. 오래전에 딱 한 번 광맥을 찾았었다네. 광맥에서 막 캔 미스릴 원석을 가져와서 이 늙은이 손에 다시 쥐여 주게."));
 		add(once("dugan_diamonds", Role.OLD_MINER, Goal.DELIVER, "minecraft:diamond", 3, 30, Tier.HARD, ModItems.PROTECTION_SCROLL, 1,
 			"The Old Man's Last Pick", "노광부의 마지막 곡괭이",
 			"Before I hang up my helmet I want to forge one last pick, a diamond one. Bring me the stones and I'll give you something I've kept for years.",
@@ -178,8 +178,8 @@ public final class TownQuests {
 		// ---- Little Pip
 		add(daily("pip_tenacity", Role.CHILD, Goal.JUMP, JumpForest.TENACITY, 1, 1, Tier.NORMAL,
 			"The Forest of Tenacity", "끈기의 숲",
-			"Bet you can't reach the end of the Forest of Tenacity! It's all jumping, branch to branch, and if you fall you start again. No flying mounts either, they don't work in there. No cheating!",
-			"끈기의 숲 끝까지 못 갈걸요? 나뭇가지에서 나뭇가지로 계속 점프해야 하고, 떨어지면 처음부터예요. 날아다니는 탈것도 거기선 안 돼요. 반칙 금지!"));
+			"Bet you can't reach the end of the Forest of Tenacity! It's all jumping, branch to branch, and if you fall you start again. No mounts or flying either, they don't work in there. No cheating!",
+			"끈기의 숲 끝까지 못 갈걸요? 나뭇가지에서 나뭇가지로 계속 점프해야 하고, 떨어지면 처음부터예요. 탈것도 비행도 거기선 안 돼요. 반칙 금지!"));
 		add(daily("pip_spiders", Role.CHILD, Goal.KILL, "minecraft:spider", 10, 1, Tier.EASY,
 			"Scary Spiders", "무서운 거미",
 			"There are spiders outside the walls and they have EIGHT eyes. Can you make them go away? Please?",
@@ -190,14 +190,14 @@ public final class TownQuests {
 			"엄마가 저녁 전엔 단 거 안 된대요. 근데 열매는 단 거 아니죠? 달콤한 열매는 가문비나무 숲에 있어요. 좀 따다 줘요!"));
 
 		// ---- Lumberjack Bjorn
-		add(daily("bjorn_oak", Role.LUMBERJACK, Goal.DELIVER, "minecraft:oak_log", 64, 1, Tier.EASY,
-			"Timber for the Harbor", "부두에 쓸 목재",
-			"The harbor needs new piers before the storms come, and I can't fell trees fast enough alone. Bring me oak logs.",
-			"폭풍 오기 전에 부두를 새로 놔야 하는데 혼자서는 나무를 다 못 베겠어. 참나무 원목 좀 가져다줘."));
-		add(daily("bjorn_spruce", Role.LUMBERJACK, Goal.DELIVER, "minecraft:spruce_log", 32, 1, Tier.EASY,
-			"Masts and Beams", "돛대와 대들보",
-			"The shipwrights want spruce for masts, tall and straight. It grows in the cold forests.",
-			"배 목수들이 돛대로 쓸 가문비나무를 찾아. 곧고 높은 놈으로. 추운 숲에 많이 자라."));
+		add(daily("bjorn_oak", Role.LUMBERJACK, Goal.DELIVER, "minecraft:oak_sapling", 16, 1, Tier.EASY,
+			"Replant the Grove", "숲 다시 심기",
+			"Every tree I fell for the harbor piers leaves a hole in the grove. Bring me oak saplings from the leaves you clear and I'll plant them back.",
+			"부두 놓느라 나무를 벨 때마다 숲에 구멍이 나. 나뭇잎을 치우다 나오는 참나무 묘목을 가져다줘. 내가 다시 심을게."));
+		add(daily("bjorn_spruce", Role.LUMBERJACK, Goal.DELIVER, "minecraft:spruce_sapling", 12, 1, Tier.EASY,
+			"Masts for Tomorrow", "내일의 돛대",
+			"The shipwrights will want tall spruce for masts long after I'm gone. Bring me spruce saplings from the cold forests and we'll plant the masts of tomorrow.",
+			"내가 떠난 뒤에도 배 목수들은 돛대로 쓸 높은 가문비나무를 찾을 거야. 추운 숲에서 가문비나무 묘목을 가져다줘. 내일의 돛대를 심자고."));
 		add(daily("bjorn_night", Role.LUMBERJACK, Goal.KILL, "minecraft:zombie", 15, 1, Tier.NORMAL,
 			"The Night Shift", "밤 근무",
 			"Zombies come out of the woods every night and chase my crew off. Teach them some manners.",

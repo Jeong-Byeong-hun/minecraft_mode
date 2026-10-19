@@ -696,6 +696,14 @@ public class JobClientGameTest implements FabricClientGameTest {
 				connection.getServerPlayer().getBoundingBox().inflate(32)).getFirst().position());
 			lookShot(context, server, connection, wave.add(6.0, 0.4, 0.0), 90.0F, 0.0F, "look_getsuga_" + weapon + "_side");
 			lookShot(context, server, connection, wave.add(0.0, 0.2, 4.5), 180.0F, 5.0F, "look_getsuga_" + weapon);
+			if (weapon.equals("true_zangetsu")) {
+				// the Fabulous preset draws blended types through order-independent transparency; the glow type crashed there until 0.5.36
+				context.runOnClient(minecraft -> minecraft.options.improvedTransparency().set(true));
+				context.waitTicks(5);
+				lookShot(context, server, connection, wave.add(0.0, 0.2, 4.5), 180.0F, 5.0F, "look_getsuga_" + weapon + "_fabulous");
+				context.runOnClient(minecraft -> minecraft.options.improvedTransparency().set(false));
+				context.waitTicks(5);
+			}
 			server.runCommand("tick unfreeze");
 			context.waitTicks(20);
 		}

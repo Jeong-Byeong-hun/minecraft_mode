@@ -113,8 +113,14 @@ public final class Fishing {
 			ItemInstance tool = context.getOptional(LootContextParams.TOOL);
 			ItemInstance rod = tool != null ? tool : player.getMainHandItem();
 			for (int i = 0; i < drops.size(); i++) {
-				if (drops.get(i).is(ItemTags.FISHES) && context.getRandom().nextFloat() < CUSTOM_SHARE) {
+				if (!drops.get(i).is(ItemTags.FISHES)) {
+					continue;
+				}
+				if (context.getRandom().nextFloat() < CUSTOM_SHARE) {
 					drops.set(i, land(player, hook.position(), rod, context.getLuck(), context.getRandom()));
+				} else {
+					// a vanilla fish still counts for "catch fish" town quests (land counts the mod's own)
+					TownQuestService.progress(player, TownQuests.Goal.FISH, BuiltInRegistries.ITEM.getKey(drops.get(i).getItem()).getPath(), 1);
 				}
 			}
 		});

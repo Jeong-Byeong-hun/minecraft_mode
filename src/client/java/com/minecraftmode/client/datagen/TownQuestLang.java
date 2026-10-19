@@ -23,7 +23,7 @@ final class TownQuestLang {
 			{"craft", "Make %s things at the %s station", "%2$s 작업대에서 %1$s번 만들기"},
 			{"clear_lair", "Clear %s lair(s): beat the lord, open the treasure", "소굴 %s곳 정복 (군주를 쓰러뜨리고 보물 열기)"},
 			{"dungeon", "Clear %s dungeon run(s)", "던전 %s번 돌파"},
-			{"jump", "Reach the end of the Forest of Tenacity (no flying mounts)", "끈기의 숲 끝까지 가기 (나는 탈것 금지)"},
+			{"jump", "Reach the end of the Forest of Tenacity (no mounts or flying)", "끈기의 숲 끝까지 가기 (탈것·비행 금지)"},
 		};
 		for (String[] g : goals) {
 			b.add("townquest.minecraft_mode.goal." + g[0], ko ? g[2] : g[1]);
@@ -69,16 +69,16 @@ final class TownQuestLang {
 				+ "· 늙은 광부 듀건(남쪽 광장, 대장간 앞): 광석 채굴, 철·미스릴·다이아몬드 납품, 스켈레톤.\n"
 				+ "· 어부 펠(항구 서쪽 부두): 낚시, 붕어 납품, 드라운드.\n"
 				+ "· 은퇴한 모험가 로완(모험가 길드 앞): 네임드, 소굴 정복, 소굴의 군주, 던전, 엔더맨.\n"
-				+ "· 꼬마 핍(광장 남동쪽 정원): 끈기의 숲 점프 코스(나는 탈것은 쓸 수 없음), 거미, 달콤한 열매.\n"
+				+ "· 꼬마 핍(광장 남동쪽 정원): 끈기의 숲 점프 코스(탈것·비행은 쓸 수 없음), 거미, 달콤한 열매.\n"
 				+ "· 나무꾼 비요른(궁수 공원 숲): 원목 납품, 좀비.\n\n"
-				+ "처치는 파티원이 근처에 있으면 함께 셉니다. 납품은 완료 보고할 때 인벤토리와 가방에서 가져갑니다. 보상은 직업 경험치(지금 레벨 기준), 동전, 강화석이고, 한 번뿐인 의뢰(★)는 보호 주문서나 각성의 수정도 줍니다. 일일 의뢰는 현실 시간 "
+				+ "처치는 파티원이 근처에 있으면 함께 셉니다. 납품은 완료 보고할 때 인벤토리와 가방에서 가져갑니다. 보상은 직업 경험치(지금 레벨 기준), 동전, 강화석이고, 한 번뿐인 의뢰(★)는 보호 주문서나 각성의 결정도 줍니다. 일일 의뢰는 현실 시간 "
 				+ RealReset.RESET_HOUR + "시에 다시 열립니다."
 			: "Six residents of Stormhold hand out quests. Right-click one for their list; only quests you accept make progress.\n\n"
 				+ "· Farmer's Wife Martha (south of the grocer's stall in the market): wheat and cabbage, harvesting, cooking.\n"
 				+ "· Old Miner Dugan (south square, by the forge): mining, iron, mythril and diamonds, skeletons.\n"
 				+ "· Fisherman Pell (the west pier of the harbor): fishing, crucian carp, drowned.\n"
 				+ "· Retired Adventurer Rowan (outside the Adventurers' Guild): named monsters, lairs, lair lords, dungeons, endermen.\n"
-				+ "· Little Pip (the plaza's south-east garden): the Forest of Tenacity jump course (no flying mounts), spiders, sweet berries.\n"
+				+ "· Little Pip (the plaza's south-east garden): the Forest of Tenacity jump course (no mounts or flying), spiders, sweet berries.\n"
 				+ "· Lumberjack Bjorn (the archer park's woods): logs, zombies.\n\n"
 				+ "Kills count for party members nearby too. Deliveries are taken from your inventory and bags when you turn the quest in. Rewards are class EXP (measured at your level), coins and enhancement stones; one-time quests (★) also give a protection scroll or an awakening crystal. Daily quests open again at "
 				+ RealReset.RESET_HOUR + ":00 real time.");

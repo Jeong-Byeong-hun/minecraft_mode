@@ -663,7 +663,8 @@ public class GearDocProvider implements DataProvider {
 		{"entity.minecraft.skeleton", "스켈레톤"}, {"entity.minecraft.stray", "스트레이"}, {"entity.minecraft.blaze", "블레이즈"},
 		{"entity.minecraft.magma_cube", "마그마 큐브"}, {"entity.minecraft.wither_skeleton", "위더 스켈레톤"}, {"entity.minecraft.phantom", "팬텀"},
 		{"entity.minecraft.bogged", "보그드"}, {"entity.minecraft.zombie_villager", "좀비 주민"}, {"entity.minecraft.evoker", "소환사"},
-		{"entity.minecraft.enderman", "엔더맨"}, {"block.minecraft.oak_log", "참나무 원목"}, {"block.minecraft.spruce_log", "가문비나무 원목"}
+		{"entity.minecraft.enderman", "엔더맨"}, {"block.minecraft.oak_log", "참나무 원목"}, {"block.minecraft.spruce_log", "가문비나무 원목"},
+		{"item.minecraft.raw_iron", "철 원석"}, {"block.minecraft.oak_sapling", "참나무 묘목"}, {"block.minecraft.spruce_sapling", "가문비나무 묘목"}
 	};
 
 	/** The town quests of Stormhold's residents: where they stand, every quest with its goal and what it pays. */
@@ -679,7 +680,9 @@ public class GearDocProvider implements DataProvider {
 			}
 		}
 		md.append("\n보상은 등급마다 정해져 있고, 경험치는 플레이어 자신의 레벨에서 다음 레벨까지 필요한 경험치의 비율, 동전은 그 레벨 구간의 길드 무기 가격(")
-			.append("`GearShop.bracketPrice`)의 배율입니다. 길드 일일 현상금 하나는 구간 가격의 1.2배와 강화석 3개를 주니, 주민 의뢰는 하나하나는 적고 가짓수가 많습니다.\n\n");
+			.append("`GearShop.bracketPrice`)의 배율입니다. 길드 일일 현상금 하나는 구간 가격의 1.2배와 강화석 3개를 주니, 주민 의뢰는 하나하나는 적고 가짓수가 많습니다. 강화석은 직업 Lv ")
+			.append(com.minecraftmode.townquest.TownQuestService.STONE_LEVEL).append("부터 줍니다(귀속이 아니라 새 캐릭터로 모아 넘기지 못하게). ")
+			.append("납품 물건은 상점에서 팔지 않는 채집품입니다.\n\n");
 		md.append("| 등급 | 경험치 | 동전 | 강화석 | Lv 10 | Lv 50 | Lv 90 |\n|---|---|---|---|---|---|---|\n");
 		for (TownQuests.Tier tier : TownQuests.Tier.values()) {
 			md.append("| ").append(tier.name().toLowerCase(java.util.Locale.ROOT)).append(" | 레벨의 ").append(Math.round(tier.exp * 100)).append("% | 구간 가격 x")

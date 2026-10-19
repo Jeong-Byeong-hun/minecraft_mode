@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.CombatState;
+import com.minecraftmode.jump.JumpForest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.damagesource.DamageSource;
@@ -26,6 +27,15 @@ public abstract class PlayerMixin {
 	private void minecraftMode$cityNoBreak(final Level level, final BlockPos pos, final GameType gameType, final CallbackInfoReturnable<Boolean> cir) {
 		if (CityServices.blocksBuilding((Player)(Object)this, pos)) {
 			cir.setReturnValue(true);
+		}
+	}
+
+	/** No elytra gliding in a jump course ({@code JumpForest}): the server refuses the start, which also stops the client's glide. */
+	@Inject(method = "tryToStartFallFlying", at = @At("HEAD"), cancellable = true)
+	private void minecraftMode$noGlideInCourse(final CallbackInfoReturnable<Boolean> cir) {
+		Player self = (Player)(Object)this;
+		if (self instanceof net.minecraft.server.level.ServerPlayer && !self.isCreative() && JumpForest.inCourse(self)) {
+			cir.setReturnValue(false);
 		}
 	}
 

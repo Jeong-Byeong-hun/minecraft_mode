@@ -35,6 +35,7 @@
 		"ServerGamePacketListenerImplMixin",
 		"ServerPlayerTabNameMixin",
 		"ShulkerMixin",
+		"VineBlockMixin",
 		"WitherBossMixin"
 	],
 	"injectors": {

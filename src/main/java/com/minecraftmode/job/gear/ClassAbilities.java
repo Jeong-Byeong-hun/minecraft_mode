@@ -112,6 +112,10 @@ public final class ClassAbilities {
 			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.ability.locked", LevelRewards.INNATE_LEVEL).withStyle(ChatFormatting.RED));
 			return;
 		}
+		// everything but War Cry and En moves its user, which jump courses refuse
+		if (ability != Ability.WAR_CRY && ability != Ability.EN && com.minecraftmode.jump.JumpForest.refusesMove(player)) {
+			return;
+		}
 		long now = player.level().getGameTime();
 		long ready = data.readyAt(ability.cooldownKey());
 		if (ready > now) {

@@ -114,6 +114,7 @@ public class MinecraftMode implements ModInitializer {
 		Raids.init();
 		Dungeons.init();
 		TrialHunts.init();
+		com.minecraftmode.jump.JumpForest.init();
 		WorldEvents.init();
 		Story.init();
 		HeldLight.init();

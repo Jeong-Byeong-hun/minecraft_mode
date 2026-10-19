@@ -231,6 +231,7 @@ final class JobLang {
 		MenuLang.add(b, ko);
 		AccessoryLang.add(b, ko);
 		TownQuestLang.add(b, ko);
+		JumpLang.add(b, ko);
 	}
 
 	private JobLang() {

@@ -9,6 +9,7 @@ import com.minecraftmode.economy.Buyback;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.quest.QuestData;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.progress.PlayerRecords;
 import com.minecraftmode.story.StoryData;
 import com.minecraftmode.talent.Talents;
@@ -246,6 +247,15 @@ public final class ModAttachments {
 			.copyOnDeath()
 			.initializer(() -> TownQuestData.DEFAULT)
 			.syncWith(TownQuestData.STREAM_CODEC, AttachmentSyncPredicate.targetOnly())
+	);
+
+	/**
+	 * Where a player climbing a jump course goes back to ({@code jump/JumpForest}). Set only while they climb, so a logout or a server
+	 * stop mid-climb still brings them home on the next join. Not synced.
+	 */
+	public static final AttachmentType<JumpForest.Return> JUMP_RETURN = AttachmentRegistry.create(
+		MinecraftMode.id("jump_return"),
+		builder -> builder.persistent(JumpForest.Return.CODEC).copyOnDeath()
 	);
 
 	/** Every attachment type above, in declaration order (character select swaps them, {@code character/Characters}). */

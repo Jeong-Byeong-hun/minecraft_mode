@@ -21,6 +21,7 @@ import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.job.Paragon;
 import com.minecraftmode.job.gear.ClassAbilities;
 import com.minecraftmode.job.quest.QuestService;
+import com.minecraftmode.jump.JumpForest;
 import com.minecraftmode.job.skill.SkillCaster;
 import com.minecraftmode.loot.EtherAutoFuse;
 import com.minecraftmode.market.AuctionService;
@@ -267,7 +268,9 @@ public final class ModNetworking {
 				}
 			}
 			case MenuActionPayload.LEAVE -> {
-				if (RaidDimension.is(player.level())) {
+				if (JumpForest.busy(player)) {
+					JumpForest.leave(player);
+				} else if (RaidDimension.is(player.level())) {
 					Raids.leave(player);
 				} else if (DungeonDimension.is(player.level())) {
 					Dungeons.leave(player);

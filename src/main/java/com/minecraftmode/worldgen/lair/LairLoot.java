@@ -19,8 +19,9 @@ import org.jspecify.annotations.Nullable;
  * of class gear (45%) - with a 60% and then 25% chance of more, plus Evolution Ether, essence and enhancement stones. Dead-end caches
  * hold small change, a snack and sometimes a stone. Every player rolls their own contents each cycle.
  * <p>
- * The range follows the opener like a map tier (0.5.36): a player above the lair's range is paid at their own class level's bracket
- * ({@link #range}), never below the lair's own range, so any lair the map leads to is worth opening.
+ * The range follows what was fought (0.5.36): chests are graded at the lower of the opener's level and the level they beat this cycle's
+ * lord at ({@code LairChestBlockEntity#gradeLevel}); a lord rises to the strongest player near it, so a strong player who fights it at
+ * their level is paid in their own bracket ({@link #range}), never below the lair's own range.
  */
 public final class LairLoot {
 	/** Chance that a reward item is gear rather than a consumable. */
@@ -48,7 +49,12 @@ public final class LairLoot {
 
 	/** {@code data}: the opener's class, so gear leans toward it like other drops do ({@link GearDrops#pick}) and the range follows their level. */
 	public static List<ItemStack> goal(final NamedDef def, final @Nullable JobData data, final RandomSource random) {
-		Range r = range(def, data);
+		return goal(def, data, data == null ? 0 : data.level(), random);
+	}
+
+	/** A goal chest graded at {@code grade} ({@link #range}): the chest passes the lower of the opener's level and the level they beat the lord at. */
+	public static List<ItemStack> goal(final NamedDef def, final @Nullable JobData data, final int grade, final RandomSource random) {
+		Range r = range(def, grade);
 		List<ItemStack> out = new ArrayList<>();
 		int copper = Math.max(6, Math.round(GearShop.bracketPrice(r.hi()) * (0.5F + random.nextFloat() * 0.5F)));
 		out.addAll(Coins.asItems(copper));
@@ -85,9 +91,9 @@ public final class LairLoot {
 		return supply;
 	}
 
-	/** A dead-end cache: a little coin, sometimes a consumable, sometimes essence (graded like the goal chest). */
-	public static List<ItemStack> cache(final NamedDef def, final @Nullable JobData data, final RandomSource random) {
-		Range r = range(def, data);
+	/** A dead-end cache: a little coin, sometimes a consumable, sometimes essence, graded at {@code grade}: the lair's own range unless the opener beat this cycle's lord higher. */
+	public static List<ItemStack> cache(final NamedDef def, final @Nullable JobData data, final int grade, final RandomSource random) {
+		Range r = range(def, grade);
 		List<ItemStack> out = new ArrayList<>(Coins.asItems(Math.max(2, Math.round(GearShop.bracketPrice(r.lo()) * (0.08F + random.nextFloat() * 0.12F)))));
 		if (random.nextFloat() < 0.5F) {
 			out.add(Consumables.forLevel(r.lo(), random));

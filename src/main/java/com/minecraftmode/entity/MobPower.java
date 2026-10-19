@@ -48,6 +48,11 @@ public final class MobPower {
 		return victim == null ? 1.0F : TOUGHNESS.getOrDefault(victim.getUUID(), 1.0F);
 	}
 
+	/** Drops the damage multiplier only (a lair lord lowered back to its own level keeps the toughness of its health). */
+	public static void clearDamage(final UUID id) {
+		DAMAGE.remove(id);
+	}
+
 	public static void clear(final UUID id) {
 		DAMAGE.remove(id);
 		TOUGHNESS.remove(id);

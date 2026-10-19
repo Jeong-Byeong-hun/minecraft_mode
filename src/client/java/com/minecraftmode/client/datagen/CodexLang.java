@@ -85,7 +85,7 @@ final class CodexLang {
 			{"accessory_inherit_2", "3티어 레이드(라이진·말라카르·에테릭스) 분배 품목 (확률, 경매·주사위)", "Tier 3 raid loot: Raijin, Malachar, Aethryx (chance, auction or dice)"},
 			{"accessory_orb", "영웅·악몽 레이드 클리어 보상 (영웅 1개, 악몽 2개)", "Heroic and Nightmare raid clears (1 on Heroic, 2 on Nightmare)"},
 			{"titan_shard", "거신 처치", "Titan kills"},
-			{"lair_map", "현상금 공적", "Bounty merit"},
+			{"lair_map", "소굴 정복(주기마다 소굴마다 1장), 메인 스토리(소굴 장, 2장), 현상금 공적", "Every lair clear (one per lair each cycle), the main story (lair chapter, 2), bounty merit"},
 			{"dungeon_keystone", "던전 클리어·주기마다 던전 관리인", "Dungeon clears and the warden each cycle"},
 			{"golem_core", "미스릴 골렘", "Mythril golems"},
 			{"raw_mythril", "미스릴 광석 (깊은 곳)", "Mythril ore (deep)"},

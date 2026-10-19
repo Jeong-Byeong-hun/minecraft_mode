@@ -399,9 +399,12 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 소굴 구역(구조물 둘레 ").append(LairPiece.GROUNDS).append("블록 포함)에서는 일반 몬스터와 함께 그 네임드가 평소의 2배 비율(스폰의 6–20%)로 나타나고, 네임드끼리 거리 제한도 96 → 20블록으로 줄어듭니다. 들어서면 소굴 이름이 화면에 뜹니다.\n");
 		md.append("- **소굴 지도 순환**: 소굴 지도를 쓰면 내 직업 레벨이 네임드 레벨 범위에 드는 가장 가까운 소굴(없으면 가장 가까운 소굴, 이번 주기에 정복한 소굴은 제외)을 찾아 확인 창을 띄우고, ")
 			.append("**이동**을 누르면 지도를 쓰고 그 소굴 입구로 바로 갑니다. 보물 상자를 그 주기에 처음 열면(정복) 다음 소굴 지도를 하나 받고, **출구로 돌아가기** 버튼으로 입구에 돌아갈 수 있습니다.\n");
-		md.append("- **보상은 내 레벨을 따라갑니다**: 소굴 범위보다 레벨이 높으면 보물 상자·보급품·군주 전리품이 내 레벨 구간(10레벨 단위, 최고 90–100) 기준으로 나오고(소굴 범위보다 낮아지지는 않음), ")
-			.append("그런 플레이어가 깨운 군주는 상자 ").append((int)LairChestBlockEntity.CREDIT_RANGE)
-			.append("블록 안에서 가장 높은 레벨에 맞춰 강해집니다(그 레벨 네임드의 평균 체력·공격력).\n\n");
+		md.append("- **싸운 만큼 받습니다**: 소굴의 군주는 상자 ").append((int)LairChestBlockEntity.CREDIT_RANGE)
+			.append("블록 안에서 가장 높은 직업 레벨에 맞춰 강해지고(그 레벨 네임드의 평균 체력·공격력), 싸우지 않는 동안(")
+			.append(LairChestBlockEntity.REFIT_CALM / 20).append("초 동안 맞지 않음) 주변 사람이 바뀌면 다시 맞춥니다. 강한 사람이 떠나면 원래 레벨로 돌아오고, 지난 주기의 군주는 사라집니다. ")
+			.append("보물 상자·보급품·군주 전리품과 경험치는 **군주를 쓰러뜨린 레벨**(소굴 최고 레벨 이상)과 내 레벨 중 낮은 쪽으로 정해집니다. ")
+			.append("그래서 높은 레벨이 내 레벨로 강해진 군주를 잡으면 내 레벨 구간(10레벨 단위, 최고 90–100)의 보상과 경험치를 받고, ")
+			.append("약한 군주를 잡거나 군주 없이 보급품만 열면 소굴 레벨만큼만 받습니다. 첫 발견 경험치는 늘 소굴 레벨 기준입니다.\n\n");
 		md.append("| 소굴 | 네임드 | 레벨 | 모양 | 미로 | 위치 | 바이옴 |\n|---|---|---|---|---|---|---|\n");
 		for (LairDef lair : NamedLairs.all()) {
 			NamedDef named = lair.named();
@@ -963,7 +966,7 @@ public class GearDocProvider implements DataProvider {
 		int[] levels = {15, 45, 90};
 		md.append("\n## 성장 경험치\n\n");
 		md.append("- 레벨을 올리는 주된 길은 **소굴 탐험**입니다. 소굴·레이드·던전·네임드는 \"레벨분\"(다음 레벨까지 필요한 경험치의 비율)으로 주므로 레벨이 올라도 비중이 같고, ")
-			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다(소굴만은 예외: 소굴 최고 레벨과 내 레벨 중 높은 쪽 기준이라 어느 소굴이든 내 레벨만큼 줍니다). 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음) 주고, ")
+			.append("내 레벨이 더 높으면 그 콘텐츠의 최고 레벨 기준으로 줍니다(소굴은 군주를 쓰러뜨린 레벨 기준: 군주가 내 레벨로 강해졌다면 어느 소굴이든 내 레벨만큼 줍니다). 일반 몬스터는 기본 체력만큼(던전·이벤트로 늘어난 체력은 치지 않음) 주고, ")
 			.append("시련 보스(위더·엔더 드래곤·워든·엘더 가디언·미스릴 골렘)도 레벨분으로 그 보스를 잡는 시련의 레벨까지 셉니다.\n");
 		md.append("- 레벨 ").append(JobProgression.MAX_LEVEL).append(" 이후에는 경험치가 파라곤 레벨로 들어갑니다.\n\n");
 		md.append("| 활동 | Lv ").append(levels[0]).append(" | Lv ").append(levels[1]).append(" | Lv ").append(levels[2]).append(" |\n|---|---|---|---|\n");
@@ -983,6 +986,9 @@ public class GearDocProvider implements DataProvider {
 		this.growthRow(md, "소굴 보물 상자 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CHEST), l));
 		this.growthRow(md, "소굴 첫 공략 (상자에 더해, 1번)", levels, l -> exp(JobProgression.levelExp(l, LairExp.FIRST_CLEAR), l));
 		this.growthRow(md, "막다른 길 보물함 (주기마다)", levels, l -> exp(JobProgression.levelExp(l, LairExp.CACHE), l));
+		float cycle = LairExp.LORD + LairExp.CHEST + 3 * LairExp.CACHE;
+		this.growthRow(md, "소굴 한 주기 합계 (군주+상자+보급품 3개, 내 레벨로 싸움)", levels, l -> exp(JobProgression.levelExp(l, cycle), l));
+		this.growthRow(md, "Lv 10–20 소굴 한 주기 (약한 군주, 혼자)", levels, l -> exp(JobProgression.levelExp(Math.min(l, 20), cycle), l));
 		for (RaidDifficulty d : RaidDifficulty.values()) {
 			this.growthRow(md, "레이드 클리어 (" + this.ko(d.nameKey()) + ")", levels, l -> exp(JobProgression.levelExp(l, d.exp), l));
 		}

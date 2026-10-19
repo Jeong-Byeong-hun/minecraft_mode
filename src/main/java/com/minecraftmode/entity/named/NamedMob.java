@@ -275,8 +275,40 @@ public class NamedMob extends CreatureMob {
 		this.powerLevel = level;
 		MobPower.setToughness(this.getUUID(), base * health);
 		MobPower.set(this.getUUID(), damage);
+		this.nameLord(level);
+	}
+
+	/**
+	 * Fits a lair lord to the strongest challenger's {@code level}: raises it ({@link #raiseTo}), or lowers it back to its own level when
+	 * nobody above its range is near, healing it whenever the power changes (so chipping it at a low level and raising it never pays).
+	 * Returns true when anything changed.
+	 */
+	public boolean fitPower(final int level) {
+		int wanted = level > this.def().hi() ? level : 0;
+		if (wanted == this.powerLevel) {
+			return false;
+		}
+		if (wanted > 0) {
+			this.raiseTo(wanted);
+		} else {
+			MobPower.setToughness(this.getUUID(), MobPower.toughness(this) / this.powerToughness);
+			MobPower.clearDamage(this.getUUID());
+			this.powerToughness = 1.0F;
+			this.powerLevel = 0;
+			this.nameLord(this.namedLevel);
+		}
+		this.setHealth(this.getMaxHealth());
+		return true;
+	}
+
+	/** Whether a player (or anything) hurt it within the last {@code ticks}: a lord is only refitted out of combat. */
+	public boolean hurtWithin(final int ticks) {
+		return this.getLastHurtByMob() != null && this.tickCount - this.getLastHurtByMobTimestamp() < ticks;
+	}
+
+	private void nameLord(final int level) {
 		Component name = Component.translatable("entity.minecraft_mode.lair_lord", Component.literal("[Lv." + level + "] ").withStyle(ChatFormatting.GRAY)
-			.append(Component.translatable(def.nameKey()).withStyle(ChatFormatting.GOLD))).withStyle(ChatFormatting.RED);
+			.append(Component.translatable(this.def().nameKey()).withStyle(ChatFormatting.GOLD))).withStyle(ChatFormatting.RED);
 		this.setCustomName(name);
 		if (this.lordBar != null) {
 			this.lordBar.setName(name);
@@ -542,8 +574,9 @@ public class NamedMob extends CreatureMob {
 		}
 		ServerPlayer mvp = shares.getFirst().player();
 		NamedDef def = this.def();
-		// a lord raised for a stronger player drops like a monster of that level (lair map tiers)
-		LairLoot.Range range = LairLoot.range(def, this.powerLevel);
+		// a raised lord drops at the level it was beaten at, but never above the top contributor's own level (lair map tiers)
+		int dropLevel = this.powerLevel > 0 ? Math.min(com.minecraftmode.job.JobProgression.get(mvp).level(), this.powerLevel) : this.namedLevel;
+		LairLoot.Range range = LairLoot.range(def, dropLevel);
 		this.dropGlowing(level, GearDrops.ether(range.lo(), range.hi(), this.getRandom()));
 		if (this.lord) {
 			this.dropGlowing(level, new ItemStack(ModItems.ENHANCEMENT_STONE, 1 + this.getRandom().nextInt(2)));
@@ -554,7 +587,7 @@ public class NamedMob extends CreatureMob {
 			this.dropGlowing(level, new ItemStack(ModItems.ENHANCEMENT_STONE));
 		}
 		// coins grow with the level: about 4 copper at Lv 20, about a gold coin at Lv 90
-		int copper = Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, this.effectiveLevel())) * 0.15F * (0.6F + this.getRandom().nextFloat() * 0.8F)));
+		int copper = Math.max(1, Math.round(GearShop.bracketPrice(Math.max(10, Math.max(this.namedLevel, dropLevel))) * 0.15F * (0.6F + this.getRandom().nextFloat() * 0.8F)));
 		if (shares.size() == 1) {
 			for (ItemStack coins : Coins.asItems(copper)) {
 				this.spawnAtLocation(level, coins);
@@ -571,7 +604,7 @@ public class NamedMob extends CreatureMob {
 				}
 			}
 		}
-		ItemStack supply = Consumables.namedDrop(Math.max(range.lo(), this.effectiveLevel()), this.getRandom());
+		ItemStack supply = Consumables.namedDrop(Math.max(range.lo(), Math.max(this.namedLevel, dropLevel)), this.getRandom());
 		if (!supply.isEmpty()) {
 			this.dropGlowing(level, supply);
 		}

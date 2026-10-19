@@ -61,6 +61,7 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.lair.next_map", ko ? "전리품 속에서 새 소굴 지도를 찾았습니다! 이번 주기에 정복하지 않은 소굴로 안내합니다."
 			: "A new lair map lies among the spoils! It leads to a lair you have not cleared this cycle.");
 		b.add("message.minecraft_mode.lair.exit_far", ko ? "%s에서 너무 멀리 떨어져 있어 입구로 돌아갈 수 없습니다." : "You are too far from %s to return to its gate.");
+		b.add("message.minecraft_mode.lair.exit_failed", ko ? "%s의 입구로 가는 길을 열지 못했습니다." : "The way back to the gate of %s could not be opened.");
 		b.add("screen.minecraft_mode.lair_travel.title", ko ? "소굴 지도" : "Lair Map");
 		b.add("screen.minecraft_mode.lair_travel.monster", ko ? "%s · Lv %s-%s" : "%s · Lv %s-%s");
 		b.add("screen.minecraft_mode.lair_travel.fits", ko ? "내 레벨에 맞는 소굴입니다." : "This lair suits your level.");

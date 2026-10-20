@@ -29,12 +29,13 @@ import org.joml.Vector4f;
  * radius while it fades, a flash at the middle and a shock ring running along the ground. The Soul Reaper bankai looks are drawn by
  * {@link BladeLooks}, {@link NatureLooks} and {@link SpiritLooks}; the archer's (King of Heroes) by {@link HeavenLooks}, {@link WarLooks}
  * and {@link KingLooks}, and their projectiles by {@link ArrowLooks}; the mage's (Grand Caster) by {@link WitchLooks}, {@link EastLooks},
- * {@link ArcaneLooks} and {@link FairyLooks}, their projectiles by {@link MageBolts}.
+ * {@link ArcaneLooks} and {@link FairyLooks}, their projectiles by {@link MageBolts}; the pirate's (Pirate King) by {@link NavyLooks},
+ * {@link GhostSeaLooks}, {@link EmperorLooks} and {@link HakiLooks}, their projectiles by {@link PirateShots}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
 	private static final float HELD_RADIUS = 0.42F;
-	/** Enkidu binds (and Drain Touch drains) at most this many enemies (its chains are many links each). */
+	/** Enkidu binds (and Drain Touch and Soul Pocus drain) at most this many enemies (its chains are many links each). */
 	private static final int MAX_TARGETS = 8;
 
 	public SkillVfxRenderer(final EntityRendererProvider.Context context) {
@@ -59,9 +60,18 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		grow += switch (entity.look()) {
 			case JUDRADJIM, ARS_ALMADEL, HECATIC_SKY, EXPLOSION -> entity.size() * 1.2;
 			case AVALON -> 6.0;
+			// the ghost fleet behind the caster, the planes passing over, the ship and the arm coming down from behind
+			case WILD_HUNT, AIR_STRIKE -> 10.0;
+			case BATTLESHIP, KRAKEN_SLAM -> 5.0;
+			case GOLDEN_HIND, BAJRANG_GUN -> Math.max(10.0, entity.arg() + 4.0);
 			default -> 0.0;
 		};
-		double up = entity.look() == SkillLook.FAIRY_LAW ? 28.0 : entity.look() == SkillLook.EXPLOSION ? 22.0 : 10.0;
+		double up = switch (entity.look()) {
+			case FAIRY_LAW -> 28.0;
+			case EXPLOSION -> 22.0;
+			case BAJRANG_GUN, GOLDEN_HIND, HAKI_CLASH -> 16.0;
+			default -> 10.0;
+		};
 		return box.inflate(grow, grow + up, grow);
 	}
 
@@ -116,7 +126,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			}
 		}
 		state.targets.clear();
-		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH) {
+		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH || state.look == SkillLook.SOUL_POCUS) {
 			enemies(entity, state, origin.add(state.offset), partialTicks);
 		}
 	}
@@ -182,6 +192,11 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case EXPLOSION, DRAIN_TOUCH, CRIMSON_POSE, MANATITE, ARS_ALMADEL, DEMON_PILLARS, CLAIRVOYANCE, TEN_RINGS -> ArcaneLooks.submit(state, poseStack, collector);
 			case FAIRY_LAW, GLITTER_BURST, FAIRY_SPHERE, FAIRY_WINGS, AVALON, HERO_CREATION, ILLUSION, ZOLTRAAK_CIRCLE, JUDRADJIM, HEX_BARRIER, FLOWER_FIELD ->
 				FairyLooks.submit(state, poseStack, collector);
+			case BATTLESHIP, CANNON_BLAST, OCTOPUS, AIR_STRIKE, BULLSEYE, BROADSIDE, THUNDER_FLASH, BUCKSHOT, RECOIL -> NavyLooks.submit(state, poseStack, collector);
+			case WILD_HUNT, GHOST_CANNON, GOLDEN_HIND, STORM_VOYAGE, STAR_WAKE, KRAKEN, KRAKEN_SLAM, TENTACLE_LASH, DAVY_JONES, DEEP_RISE ->
+				GhostSeaLooks.submit(state, poseStack, collector);
+			case FREE_BIRD, CUTLASS_ARC, TWIN_BIRDS, IKOKU_SWING, SOUL_POCUS, ZEUS, CROQUEMBOUCHE, QUAKE, ANCHOR_DROP, MY_SONS -> EmperorLooks.submit(state, poseStack, collector);
+			case BAJRANG_GUN, RED_HAWK, JET_GATLING, LIBERATION_DRUMS, KAMUSARI, HAKI_CLASH, WILL_OF_D, PIRATE_ERA -> HakiLooks.submit(state, poseStack, collector);
 			default -> {
 			}
 		}

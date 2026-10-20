@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -133,71 +134,93 @@ public final class PirateContent extends ClassContent {
 			skill("reload_drill", "Reload Drill", "장전 훈련", UTILITY, 20, 14, boost(DAMAGE, 8, 15), buff(SPEED, 8, 1)));
 
 		// ---------------------------------------------------------------- tier 4: Pirate King
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.40): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (coins, bolts, rings) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("battleship_cannon", 4, 70, HAND_CANNON, "Battleship Cannon", "배틀쉽 캐논",
 			art(0x4F5B66, 0x2C3E50, 0xF1C40F), fx(Fx.Kind.SPARK, 0xFFC94D),
-			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, shield(16, 10), boost(DAMAGE, 10, 20),
-				shoot(ProjectileStyle.CANNONBALL, 4.8).count(3).spread(30).explode(3.0F)),
-			skill("octopus", "Octopus", "옥토퍼스", ATTACK, 18, 24, zone(4, 6, 0.9).at(12).effect(BLINDNESS, 0)),
-			skill("air_strike", "Air Strike", "에어 스트라이크", ATTACK, 14, 26, strike(20, 3.5, 5, 0.88)),
-			skill("bullseye", "Bullseye", "불스아이", UTILITY, 20, 18, mark(24, 10, 40), empower(3, 50, 10)));
+			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, look(SkillLook.BATTLESHIP, shield(16, 10)), boost(DAMAGE, 10, 20),
+				shoot(ProjectileStyle.CANNONBALL, 4.8).count(3).spread(30).explode(3.0F).look(SkillLook.CANNON_SHOT)
+					.onImpact(lookWhereItLands(SkillLook.CANNON_BLAST, 3.0))),
+			skill("octopus", "Octopus", "옥토퍼스", ATTACK, 18, 24, look(SkillLook.OCTOPUS, zone(4, 6, 0.9).at(12).effect(BLINDNESS, 0)).at(12).size(4).lasting(6)),
+			skill("air_strike", "Air Strike", "에어 스트라이크", ATTACK, 14, 26, look(SkillLook.AIR_STRIKE, strike(20, 3.5, 5, 0.88)).at(20).size(3.5)),
+			skill("bullseye", "Bullseye", "불스아이", UTILITY, 20, 18, look(SkillLook.BULLSEYE, mark(24, 10, 40)).onTarget(24), empower(3, 50, 10)));
 
 		weapon("el_draque", 4, 73, PISTOL, "El Draque", "엘 드라케",
 			art(0xD4AF37, 0x5B1A1A, 0xFFF2A8), fx(Fx.Kind.COIN, 0xFFD700),
-			skill("golden_wild_hunt", "Golden Wild Hunt", "황금 사슴과 폭풍의 밤", ULTIMATE, 50, 40, barrage(ProjectileStyle.CANNONBALL, 14, 0.42),
-				delay(1.5, strike(22, 5, 1, 2.45)), loot(25)),
-			skill("golden_rule", "Golden Rule", "황금률", ATTACK, 9, 20, shoot(ProjectileStyle.COIN, 1.6).count(5).spread(40).pierce(1), loot(30)),
-			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, allyBoost(10, DAMAGE, 10, 20), allyBuff(10, DOLPHINS_GRACE, 10, 0)),
-			skill("pioneer_of_the_stars", "Pioneer of the Stars", "별의 개척자", MOVEMENT, 12, 18, dash(10, 1.6), buff(SPEED, 8, 2)));
+			skill("golden_wild_hunt", "Golden Wild Hunt", "황금 사슴과 폭풍의 밤", ULTIMATE, 50, 40,
+				look(SkillLook.WILD_HUNT, barrage(ProjectileStyle.CANNONBALL, 14, 0.42, SkillLook.GHOST_CANNON, SkillLook.CANNON_SHOT)),
+				delay(1.5, look(SkillLook.GOLDEN_HIND, strike(22, 5, 1, 2.45)).at(22).size(5)), loot(25)).withFx(Fx.Kind.SPARK),
+			skill("golden_rule", "Golden Rule", "황금률", ATTACK, 9, 20, shoot(ProjectileStyle.COIN, 1.6).count(5).spread(40).pierce(1).look(SkillLook.COIN_SHOT), loot(30)),
+			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, look(SkillLook.STORM_VOYAGE, allyBoost(10, DAMAGE, 10, 20)).size(10),
+				allyBuff(10, DOLPHINS_GRACE, 10, 0)).withFx(Fx.Kind.SPARK),
+			skill("pioneer_of_the_stars", "Pioneer of the Stars", "별의 개척자", MOVEMENT, 12, 18, look(SkillLook.STAR_WAKE, dash(10, 1.6)).lasting(1.2), buff(SPEED, 8, 2))
+				.withFx(Fx.Kind.SPARK));
 
 		weapon("bonny_read_musket", 4, 77, MUSKET, "Anne & Mary's Musket", "앤과 메리의 머스킷",
 			art(0x8A9099, 0x5D3A1A, 0x29B6F6), fx(Fx.Kind.FEATHER, 0x7FDBFF),
-			skill("caribbean_free_bird", "Caribbean Free Bird", "비익이자 연리", ULTIMATE, 45, 38, shadowstep(16, 2.0),
-				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4)), inflict(VULNERABLE, 5, 1)),
-			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, slash(4.5, 160, 2.2), inflict(BLEEDING, 5, 1)),
-			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22, shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F), inflict(SLOWNESS, 3, 1)),
-			skill("pirates_glory", "Pirate's Glory", "해적의 명예", DEFENSE, 22, 18, boost(CRIT_CHANCE, 6, 25), heal(15)));
+			skill("caribbean_free_bird", "Caribbean Free Bird", "비익이자 연리", ULTIMATE, 45, 38, look(SkillLook.FREE_BIRD, shadowstep(16, 2.0)).onTarget(16),
+				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4).look(SkillLook.BIRD_SHOT)), inflict(VULNERABLE, 5, 1)).withFx(Fx.Kind.SPARK),
+			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, look(SkillLook.CUTLASS_ARC, slash(4.5, 160, 2.2)).cone(4.5, 160), inflict(BLEEDING, 5, 1)).withFx(Fx.Kind.SPARK),
+			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22,
+				shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F).look(SkillLook.MUSKET_SHOT).onImpact(lookWhereItLands(SkillLook.CANNON_BLAST, 2.0)), inflict(SLOWNESS, 3, 1)),
+			skill("pirates_glory", "Pirate's Glory", "해적의 명예", DEFENSE, 22, 18, look(SkillLook.TWIN_BIRDS, boost(CRIT_CHANCE, 6, 25)), heal(15)).withFx(Fx.Kind.SPARK));
 
 		weapon("dutchman_harpoon", 4, 81, HARPOON, "Flying Dutchman's Harpoon", "플라잉 더치맨의 작살",
 			art(0x5F7F74, 0x2E3B30, 0x3FFFD2), fx(Fx.Kind.BUBBLE, 0x3FC5A8),
-			skill("release_the_kraken", "Release the Kraken", "크라켄을 풀어라", ULTIMATE, 55, 40, zone(6, 5, 1.0).at(16).pull(1.8).effect(SLOWNESS, 2),
-				delay(2.0, strike(16, 5, 1, 3.5))),
-			skill("tentacle_lash", "Tentacle Lash", "촉수 채찍", ATTACK, 8, 20, pull(6, 1.2), slash(5, 180, 2.2)),
-			skill("fear_death", "Do You Fear Death?", "죽음이 두려운가?", UTILITY, 22, 20, debuff(10, WEAKNESS, 8, 1), debuff(10, DARKNESS, 5, 0)),
-			skill("rise_from_the_deep", "Rise from the Deep", "심해에서 떠오르다", MOVEMENT, 14, 18, blink(12), buff(DOLPHINS_GRACE, 10, 0), buff(WATER_BREATHING, 15, 0)));
+			skill("release_the_kraken", "Release the Kraken", "크라켄을 풀어라", ULTIMATE, 55, 40,
+				look(SkillLook.KRAKEN, zone(6, 5, 1.0).at(16).pull(1.8).effect(SLOWNESS, 2)).at(16).size(6).lasting(5),
+				delay(2.0, look(SkillLook.KRAKEN_SLAM, strike(16, 5, 1, 3.5)).at(16).size(5))).withFx(Fx.Kind.SPARK),
+			skill("tentacle_lash", "Tentacle Lash", "촉수 채찍", ATTACK, 8, 20, pull(6, 1.2), look(SkillLook.TENTACLE_LASH, slash(5, 180, 2.2)).cone(5, 180)).withFx(Fx.Kind.SPARK),
+			skill("fear_death", "Do You Fear Death?", "죽음이 두려운가?", UTILITY, 22, 20, look(SkillLook.DAVY_JONES, debuff(10, WEAKNESS, 8, 1)).size(10),
+				debuff(10, DARKNESS, 5, 0)),
+			skill("rise_from_the_deep", "Rise from the Deep", "심해에서 떠오르다", MOVEMENT, 14, 18, look(SkillLook.DEEP_RISE, blink(12)), buff(DOLPHINS_GRACE, 10, 0),
+				buff(WATER_BREATHING, 15, 0)));
 
 		weapon("napoleon_rapier", 4, 85, RAPIER, "Napoleon", "나폴레옹",
 			art(0xE8E3D3, 0xD81B60, 0xFFC107), fx(Fx.Kind.PETAL, 0xFF8FC7),
-			skill("ikoku_sovereignty", "Ikoku Sovereignty", "위국", ULTIMATE, 50, 40, shoot(ProjectileStyle.WAVE, 6.72).pierce(12), push(6, 2.0)),
-			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), nova(6, 1.8), inflict(WEAKNESS, 6, 1)),
-			skill("zeus_raitei", "Zeus: Raitei", "제우스: 뇌정", ATTACK, 10, 22, lightning(18, 4, 2.6), stun(0.8)),
-			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, heal(25), boost(DAMAGE, 10, 30), buff(SPEED, 10, 1)));
+			skill("ikoku_sovereignty", "Ikoku Sovereignty", "위국", ULTIMATE, 50, 40,
+				look(SkillLook.IKOKU_SWING, shoot(ProjectileStyle.WAVE, 6.72).pierce(12).look(SkillLook.IKOKU_WAVE)).cone(6, 140), push(6, 2.0)),
+			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), look(SkillLook.SOUL_POCUS, nova(6, 1.8)).size(6).quiet(), inflict(WEAKNESS, 6, 1))
+				.withFx(Fx.Kind.SPARK),
+			skill("zeus_raitei", "Zeus: Raitei", "제우스: 뇌정", ATTACK, 10, 22, look(SkillLook.ZEUS, lightning(18, 4, 2.6)).at(18).size(4), stun(0.8)).withFx(Fx.Kind.SPARK),
+			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, look(SkillLook.CROQUEMBOUCHE, heal(25)), boost(DAMAGE, 10, 30),
+				buff(SPEED, 10, 1)));
 
 		weapon("moby_dick_anchor", 4, 89, ANCHOR, "Moby Dick's Anchor", "모비딕호의 닻",
 			art(0x7E8790, 0x4A3424, 0xF0F0F0), fx(Fx.Kind.RING, 0xE0F0FF),
-			skill("island_shaker", "Island Shaker", "섬 흔들기", ULTIMATE, 55, 40, nova(8, 7.0), stun(1.5), delay(0.5, launch(8, 5))),
-			skill("seaquake", "Seaquake", "해진", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10)),
-			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, leap(7, 5, 2.6), inflict(SLOWNESS, 3, 2)),
-			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, allyBoost(12, DAMAGE, 12, 20), allyBoost(12, CRIT_CHANCE, 12, 10), allyHeal(12, 15)));
+			skill("island_shaker", "Island Shaker", "섬 흔들기", ULTIMATE, 55, 40, look(SkillLook.QUAKE, nova(8, 7.0)).size(8), stun(1.5), delay(0.5, launch(8, 5)))
+				.withFx(Fx.Kind.SPARK),
+			skill("seaquake", "Seaquake", "해진", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10).look(SkillLook.TSUNAMI)),
+			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, look(SkillLook.ANCHOR_DROP, leap(7, 5, 2.6)).size(5).lasting(3), inflict(SLOWNESS, 3, 2))
+				.withFx(Fx.Kind.SPARK),
+			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, look(SkillLook.MY_SONS, allyBoost(12, DAMAGE, 12, 20)).size(12), allyBoost(12, CRIT_CHANCE, 12, 10),
+				allyHeal(12, 15)).withFx(Fx.Kind.SPARK));
 
 		weapon("nika_knuckles", 4, 94, KNUCKLE, "Nika's Knuckles", "니카의 너클",
 			art(0xF5F5F5, 0xC0392B, 0xFFD54F), fx(Fx.Kind.SPARK, 0xFFF6D5),
-			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바즈랑 건", ULTIMATE, 50, 40, strike(20, 6, 1, 8.1), stun(1.5)),
-			skill("red_hawk", "Gum-Gum Red Hawk", "고무고무 레드 호크", ATTACK, 9, 22, beam(10, 2.6), burn(5)),
-			skill("jet_gatling", "Gum-Gum Jet Gatling", "고무고무 제트 개틀링", ATTACK, 10, 24, buff(SPEED, 6, 1), repeat(5, 3, slash(4, 100, 0.6))),
-			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", UTILITY, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2), boost(CRIT_DAMAGE, 6, 50)));
+			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바즈랑 건", ULTIMATE, 50, 40, look(SkillLook.BAJRANG_GUN, strike(20, 6, 1, 8.1)).at(20).size(6), stun(1.5)),
+			skill("red_hawk", "Gum-Gum Red Hawk", "고무고무 레드 호크", ATTACK, 9, 22, look(SkillLook.RED_HAWK, beam(10, 2.6)).beam(10), burn(5)),
+			skill("jet_gatling", "Gum-Gum Jet Gatling", "고무고무 제트 개틀링", ATTACK, 10, 24, buff(SPEED, 6, 1),
+				look(SkillLook.JET_GATLING, repeat(5, 3, look(SkillLook.NONE, slash(4, 100, 0.6)).quiet())).cone(4, 100).lasting(1.0)),
+			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", UTILITY, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2),
+				look(SkillLook.LIBERATION_DRUMS, boost(CRIT_DAMAGE, 6, 50))));
 
 		weapon("pirate_kings_sabre", 4, 100, CUTLASS, "Pirate King's Sabre", "해적왕의 검",
 			art(0xF2F2F2, 0x8B0000, 0xFFD700), fx(Fx.Kind.BOLT, 0xD01E2E),
-			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, slash(6, 180, 4.0), shoot(ProjectileStyle.WAVE, 5.0).pierce(15), stun(1.0)),
-			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, nova(6, 3.4), push(8, 3.0)),
-			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), heal(20), boost(DAMAGE, 6, 25)),
-			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, allyBoost(12, DAMAGE, 12, 30), allyBoost(12, CRIT_CHANCE, 15, 10)));
+			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, look(SkillLook.KAMUSARI, slash(6, 180, 4.0)).cone(6, 180).quiet(),
+				shoot(ProjectileStyle.WAVE, 5.0).pierce(15).look(SkillLook.KAMUSARI_WAVE), stun(1.0)).withFx(Fx.Kind.SPARK),
+			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, look(SkillLook.HAKI_CLASH, nova(6, 3.4)).size(8), push(8, 3.0)).withFx(Fx.Kind.SPARK),
+			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), look(SkillLook.WILL_OF_D, heal(20)), boost(DAMAGE, 6, 25)),
+			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, look(SkillLook.PIRATE_ERA, allyBoost(12, DAMAGE, 12, 30)).size(12),
+				allyBoost(12, CRIT_CHANCE, 15, 10)).withFx(Fx.Kind.SPARK));
 
 		weapon("thunderclap_blunderbuss", 4, 96, BLUNDERBUSS, "Thunderclap Blunderbuss", "벽력 나팔총",
 			art(0x4A4E58, 0x2A1810, 0xFFD700), fx(Fx.Kind.BOLT, 0xFFE066),
-			skill("thunderclap_broadside", "Thunderclap Broadside", "벽력 일제사격", ULTIMATE, 50, 40, rain(ProjectileStyle.CANNONBALL, 18, 6, 8, 0.75)),
-			skill("buckshot_storm", "Buckshot Storm", "산탄 폭풍", ATTACK, 9, 20, slash(6, 100, 1.9)),
-			skill("armament_round", "Armament Round", "무장색 탄환", ATTACK, 8, 18, inflict(VULNERABLE, 4, 0), shoot(ProjectileStyle.BULLET, 1.6).pierce(3)),
-			skill("recoil_leap", "Recoil Leap", "반동 도약", MOVEMENT, 12, 14, push(4, 1.5), dash(8, 1.4)));
+			skill("thunderclap_broadside", "Thunderclap Broadside", "벽력 일제사격", ULTIMATE, 50, 40,
+				look(SkillLook.BROADSIDE, rain(ProjectileStyle.CANNONBALL, 18, 6, 8, 0.75, 0.0F, SkillLook.THUNDER_FLASH, SkillLook.THUNDER_SHOT)).at(18).size(6).lasting(2.5))
+				.withFx(Fx.Kind.SPARK),
+			skill("buckshot_storm", "Buckshot Storm", "산탄 폭풍", ATTACK, 9, 20, look(SkillLook.BUCKSHOT, slash(6, 100, 1.9)).cone(6, 100)).withFx(Fx.Kind.SPARK),
+			skill("armament_round", "Armament Round", "무장색 탄환", ATTACK, 8, 18, inflict(VULNERABLE, 4, 0), shoot(ProjectileStyle.BULLET, 1.6).pierce(3).look(SkillLook.HAKI_SHOT)),
+			skill("recoil_leap", "Recoil Leap", "반동 도약", MOVEMENT, 12, 14, push(4, 1.5), look(SkillLook.RECOIL, dash(8, 1.4)).lasting(1.0)).withFx(Fx.Kind.SPARK));
 	}
 }

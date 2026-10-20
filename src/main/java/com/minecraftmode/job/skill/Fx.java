@@ -56,9 +56,27 @@ public record Fx(Kind kind, int color) {
 		return option(this.kind);
 	}
 
-	/** Same color, different sprite (e.g. a spark burst for a slash skill). */
+	/** Same color, different sprite (e.g. a spark burst for a slash skill); inside {@link #quietly} always the skill's own sprite. */
 	public ColorParticleOption option(final Kind sprite) {
-		return ColorParticleOption.create(sprite.type(), 0xFF000000 | this.color);
+		return ColorParticleOption.create((QUIET.get() ? this.kind : sprite).type(), 0xFF000000 | this.color);
+	}
+
+	/** Set while {@link #quietly} runs a step (server thread). */
+	private static final ThreadLocal<Boolean> QUIET = ThreadLocal.withInitial(() -> false);
+
+	/**
+	 * Runs {@code step} with every fixed sprite it asks for (the slash arc's blades, the nova's big ring) swapped for the skill's own
+	 * sprite: a drawn look ({@code Actions.LookAction#quiet}) whose step would otherwise lay big pixel sprites over the drawing. Purely
+	 * visual; only what the step emits right away (its scheduled parts run later, as usual).
+	 */
+	public static void quietly(final Runnable step) {
+		boolean was = QUIET.get();
+		QUIET.set(true);
+		try {
+			step.run();
+		} finally {
+			QUIET.set(was);
+		}
 	}
 
 	public void burst(final ServerLevel level, final Vec3 pos, final int count, final double spread, final double speed) {

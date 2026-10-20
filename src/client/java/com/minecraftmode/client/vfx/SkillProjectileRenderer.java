@@ -40,8 +40,8 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		if (look == SkillLook.NONE) {
 			return box;
 		}
-		// the archer's arrows and the mage's bolts trail light several blocks behind them
-		return box.inflate(Math.max(ArrowLooks.reach(look), MageBolts.reach(look)));
+		// the archer's arrows, the mage's bolts and the pirate's shots trail light several blocks behind them
+		return box.inflate(Math.max(ArrowLooks.reach(look), Math.max(MageBolts.reach(look), PirateShots.reach(look))));
 	}
 
 	@Override
@@ -79,6 +79,7 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 			case TAIMATSU -> submitTaimatsu(s, poseStack, submitNodeCollector, camera);
 			case STAR_ARROW, TRACER, MOON_ARROW, CRESCENT_ARROW, FLAME_ARROW, GEM, TREASURE, SIN_WAVE, DISCUS -> ArrowLooks.submit(s, poseStack, submitNodeCollector);
 			case WITCH_BOLT, RUNE_SYLLABLE, WIND_FIRE, FAIRY_GLITTER, PETAL_ORB, ZOLTRAAK -> MageBolts.submit(s, poseStack, submitNodeCollector);
+			case CANNON_SHOT, COIN_SHOT, BIRD_SHOT, MUSKET_SHOT, IKOKU_WAVE, TSUNAMI, KAMUSARI_WAVE, THUNDER_SHOT, HAKI_SHOT -> PirateShots.submit(s, poseStack, submitNodeCollector);
 			default -> {
 			}
 		}

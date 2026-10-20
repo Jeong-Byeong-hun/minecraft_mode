@@ -240,7 +240,101 @@ public enum SkillLook {
 	/** Clairvoyance: a golden eye opening over the target, its sigil under it. */
 	CLAIRVOYANCE(40, 1.0F, Hold.FOLLOW),
 	/** Rings of Solomon: ten gold rings orbiting the caster. */
-	TEN_RINGS(80, 1.4F, Hold.FOLLOW);
+	TEN_RINGS(80, 1.4F, Hold.FOLLOW),
+
+	// ------------------------------------------------------------ Pirate, Pirate King (0.5.40)
+	/** Battleship: a galleon of the caster's own coming together round them, sails filling, its guns run out and firing. */
+	BATTLESHIP(50, 1.0F, Hold.FOLLOW),
+	/** A cannonball ablaze, a tail of fire and powder smoke behind it (projectile). */
+	CANNON_SHOT(0, 1.0F, Hold.FREE),
+	/** A shot bursting where it lands: a fireball, a ring of smoke and splinters flying. */
+	CANNON_BLAST(18, 3.0F, Hold.FREE),
+	/** Octopus: the Corsair's octopus gunner sitting in a pool of ink on the aimed ground, eight arms waving, squirting ink. */
+	OCTOPUS(120, 4.0F, Hold.FREE),
+	/** Air Strike: a target circle on the ground and bombs whistling down onto it out of a flight of planes passing over. */
+	AIR_STRIKE(46, 3.5F, Hold.FREE),
+	/** Bullseye: a red and white target board over the target, a crosshair closing on its middle. */
+	BULLSEYE(40, 1.0F, Hold.FOLLOW),
+	/** Golden Wild Hunt: the ghost fleet rising behind the caster, spectral galleons with golden sails, their guns run out. */
+	WILD_HUNT(50, 1.0F, Hold.FOLLOW),
+	/** One ghostly cannon of the fleet a shot flies out of (facing along its reach). */
+	GHOST_CANNON(14, 0.7F, Hold.FREE),
+	/** The Golden Hind ramming the aimed spot: a ghost galleon plunging bow first and a burst of gold coins. */
+	GOLDEN_HIND(34, 5.0F, Hold.FREE),
+	/** Golden Rule: a spinning gold coin of light with a golden streak (projectile). */
+	COIN_SHOT(0, 1.0F, Hold.FREE),
+	/** Voyager of the Storm: a ship's wheel of gold turning behind the caster, storm wind round them and a swell rolling out. */
+	STORM_VOYAGE(50, 10.0F, Hold.FOLLOW),
+	/** Pioneer of the Stars: a ship's wake of foam along the caster's path, stars glinting over it. */
+	STAR_WAKE(24, 1.0F, Hold.TRAIL),
+	/** Caribbean Free Bird: Mary's cutlass crossing the target, the pair's wings closing round it and Anne's shot flashing. */
+	FREE_BIRD(26, 1.0F, Hold.FOLLOW),
+	/** Caribbean Free Bird's shot: a bullet flying on wings of light (projectile). */
+	BIRD_SHOT(0, 1.0F, Hold.FREE),
+	/** Mary's Cutlass: a broad cutlass sweeping its arc, feathers scattering (along a cone). */
+	CUTLASS_ARC(10, 4.5F, Hold.FREE),
+	/** Anne's Powder Shot: a red-hot musket ball trailing sparks and smoke (projectile). */
+	MUSKET_SHOT(0, 1.0F, Hold.FREE),
+	/** Pirate's Glory: two birds of light, a blue and a red, circling the caster, feathers falling. */
+	TWIN_BIRDS(50, 1.0F, Hold.FOLLOW),
+	/** Release the Kraken: a green ghostly whirlpool on the aimed ground and the kraken's arms rising out of it. */
+	KRAKEN(100, 6.0F, Hold.FREE),
+	/** The kraken's great arm rearing up beyond the aimed spot and slamming down on it. */
+	KRAKEN_SLAM(30, 5.0F, Hold.FREE),
+	/** Tentacle Lash: a suckered tentacle sweeping its arc (along a cone). */
+	TENTACLE_LASH(12, 5.0F, Hold.FREE),
+	/** Do You Fear Death?: Davy Jones's face of ghost light over the caster, its beard of tentacles writhing, a sea fog rolling out. */
+	DAVY_JONES(50, 10.0F, Hold.FOLLOW),
+	/** Rise from the Deep: a whirlpool swallowing where the caster was and the sea bursting up where they rise. */
+	DEEP_RISE(24, 1.0F, Hold.TRAIL),
+	/** Ikoku Sovereignty: Napoleon's great swing, a sweep of pink and gold force (along a cone). */
+	IKOKU_SWING(14, 6.0F, Hold.FREE),
+	/** Ikoku Sovereignty's wave: a vast crescent of pink and gold force (projectile). */
+	IKOKU_WAVE(0, 1.0F, Hold.FREE),
+	/** Soul Pocus: souls pulled out of every enemy near and drawn into the caster's hand. */
+	SOUL_POCUS(28, 6.0F, Hold.FOLLOW),
+	/** Zeus: the thundercloud homie over the aimed spot, grinning, and the bolt it throws down. */
+	ZEUS(26, 4.0F, Hold.FREE),
+	/** Croquembouche Craving: a tower of cream puffs gobbled up, and Prometheus the sun blazing over the caster's shoulder. */
+	CROQUEMBOUCHE(50, 1.0F, Hold.FOLLOW),
+	/** Island Shaker: the air cracking like glass in front of the caster and the quake rolling out over cracked ground. */
+	QUAKE(34, 8.0F, Hold.FREE),
+	/** Seaquake: a wall of sea curling over, white foam on its crest (projectile). */
+	TSUNAMI(0, 1.0F, Hold.FREE),
+	/** Anchor Drop: a great anchor raised over the caster on its chain, and the crash where they land. */
+	ANCHOR_DROP(60, 5.0F, Hold.TRAIL),
+	/** My Sons: the Whitebeard Pirates' mark over the caster and light washing out to the crew. */
+	MY_SONS(50, 12.0F, Hold.FOLLOW),
+	/** Bajrang Gun: the caster's arm stretching up into the sky and a gigantic white fist coming down on the aimed spot. */
+	BAJRANG_GUN(36, 6.0F, Hold.FREE),
+	/** Red Hawk: an arm stretching out with its fist in flames (along a beam). */
+	RED_HAWK(14, 10.0F, Hold.FREE),
+	/** Jet Gatling: a storm of fist afterimages pounding forward (along a cone). */
+	JET_GATLING(20, 4.0F, Hold.FREE),
+	/** Drums of Liberation: the drumbeat pulsing out in rings of white cloud, the Sun God's mane of cloud round the caster. */
+	LIBERATION_DRUMS(50, 1.0F, Hold.FOLLOW),
+	/** Kamusari: a red-black slash of Conqueror's Haki with black lightning crackling round it (along a cone). */
+	KAMUSARI(14, 6.0F, Hold.FREE),
+	/** Kamusari's wave: a black crescent rimmed in red, black lightning crackling round it (projectile). */
+	KAMUSARI_WAVE(0, 1.0F, Hold.FREE),
+	/** Conqueror's Clash: black lightning bursting out of the caster in every direction, the air splitting red and black. */
+	HAKI_CLASH(24, 8.0F, Hold.FREE),
+	/** Will of D.: a straw hat floating down onto the caster and a crimson aura rising. */
+	WILL_OF_D(50, 1.0F, Hold.FOLLOW),
+	/** Dawn of the Great Pirate Era: the Pirate King's Jolly Roger flying behind the caster, treasure glittering and gold washing out. */
+	PIRATE_ERA(60, 12.0F, Hold.FOLLOW),
+	/** Thunderclap Broadside: the target zone on the ground, lightning crawling round its rim and shots striking it. */
+	BROADSIDE(50, 6.0F, Hold.FREE),
+	/** A crack of thunder a cannonball falls out of (facing along its fall). */
+	THUNDER_FLASH(12, 0.8F, Hold.FREE),
+	/** A cannonball wrapped in crackling lightning (projectile). */
+	THUNDER_SHOT(0, 1.0F, Hold.FREE),
+	/** Buckshot Storm: a roaring muzzle flash and a cone of pellets with smoke behind (along a cone). */
+	BUCKSHOT(12, 6.0F, Hold.FREE),
+	/** Armament Round: a bullet coated black in Armament Haki, a red sheen on it (projectile). */
+	HAKI_SHOT(0, 1.0F, Hold.FREE),
+	/** Recoil Leap: the blunderbuss's blast behind where the caster was and a streak of smoke along their flight. */
+	RECOIL(20, 1.0F, Hold.TRAIL);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

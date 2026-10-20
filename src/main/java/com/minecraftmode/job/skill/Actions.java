@@ -1573,6 +1573,7 @@ public final class Actions {
 		private double range;
 		private double arc;
 		private double seconds = -1.0;
+		private boolean quiet;
 
 		LookAction(final SkillLook look, final SkillAction action) {
 			this.look = look;
@@ -1585,7 +1586,7 @@ public final class Actions {
 			return this;
 		}
 
-		/** On the ground where the caster aims, like {@link ZoneAction#at} and {@link #rain}. */
+		/** On the ground where the caster aims, like {@link ZoneAction#at} and {@link #rain}; its arg is how far that is from the caster. */
 		public LookAction at(final double range) {
 			this.place = Place.AIM;
 			this.range = range;
@@ -1614,6 +1615,15 @@ public final class Actions {
 			return this;
 		}
 
+		/**
+		 * The wrapped step's fixed sprites (a slash's blade arc, a nova's big ring) come as the skill's own small sprite instead
+		 * ({@link Fx#quietly}), so they do not lay blocky pixel art over the drawing. Visual only.
+		 */
+		public LookAction quiet() {
+			this.quiet = true;
+			return this;
+		}
+
 		/** Shown this long (a zone's duration) instead of the look's own ticks. */
 		public LookAction lasting(final double seconds) {
 			this.seconds = seconds;
@@ -1623,7 +1633,11 @@ public final class Actions {
 		@Override
 		public void run(final SkillContext ctx) {
 			this.show(ctx);
-			this.action.run(ctx);
+			if (this.quiet) {
+				Fx.quietly(() -> this.action.run(ctx));
+			} else {
+				this.action.run(ctx);
+			}
 		}
 
 		private void show(final SkillContext ctx) {
@@ -1632,7 +1646,12 @@ public final class Actions {
 			Entity holder = ctx.caster;
 			switch (this.place) {
 				case FEET -> SkillVfx.spawn(ctx, this.look, ctx.caster.position(), ctx.flatLook(), size, 0.0F, ticks, holder);
-				case AIM -> SkillVfx.spawn(ctx, this.look, ctx.groundPoint(this.range), ctx.flatLook(), size, 0.0F, ticks, holder);
+				case AIM -> {
+					// arg: how far the spot lies from the caster along the ground (Bajrang Gun's arm reaches back to them)
+					Vec3 at = ctx.groundPoint(this.range);
+					float away = (float)Math.sqrt(at.subtract(ctx.caster.position()).horizontalDistanceSqr());
+					SkillVfx.spawn(ctx, this.look, at, ctx.flatLook(), size, away, ticks, holder);
+				}
 				case TARGET -> {
 					LivingEntity target = ctx.lookTarget(this.range);
 					if (target != null) {

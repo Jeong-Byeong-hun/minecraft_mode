@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -134,70 +135,100 @@ public final class MageContent extends ClassContent {
 			skill("azoth_release", "Azoth Release", "아조트 해방", UTILITY, 22, 10, boost(DAMAGE, 8, 15), restoreMana(20)));
 
 		// ---------------------------------------------------------------- tier 4: Grand Caster
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.39): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (orbs, runes) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("colchis_scepter", 4, 70, SCEPTER, "Scepter of Colchis", "콜키스의 홀",
 			art(0x5B3A8C, 0x2A1A3A, 0xC77DFF), fx(Fx.Kind.ORB, 0xD070FF),
-			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38, rain(ProjectileStyle.ORB, 24, 7, 20, 0.56, 2.0F), inflict(SLOWNESS, 3, 1)),
-			skill("rule_breaker", "Rule Breaker", "파계해야 할 모든 부적", ATTACK, 14, 24, shadowstep(10, 2.87), inflict(VULNERABLE, 8, 2)),
-			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, refresh(50), buff(MANA_FLOW, 10, 0)),
-			skill("argon_coin", "Argon Coin", "황금양모", DEFENSE, 26, 22, heal(25), shield(8, 10)));
+			skill("hecatic_wizard", "Hecatic Wizard", "헤카틱 위저드", ULTIMATE, 50, 38,
+				look(SkillLook.HECATIC_SKY, rain(ProjectileStyle.ORB, 24, 7, 20, 0.56, 2.0F, SkillLook.WITCH_CIRCLE, SkillLook.WITCH_BOLT)).at(24).size(7),
+				inflict(SLOWNESS, 3, 1)),
+			skill("rule_breaker", "Rule Breaker", "파계해야 할 모든 부적", ATTACK, 14, 24, look(SkillLook.RULE_BREAKER, shadowstep(10, 2.87)).onTarget(10),
+				inflict(VULNERABLE, 8, 2)),
+			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, look(SkillLook.DIVINE_WORDS, refresh(50)),
+				buff(MANA_FLOW, 10, 0)),
+			skill("argon_coin", "Argon Coin", "황금양모", DEFENSE, 26, 22, look(SkillLook.GOLDEN_FLEECE, heal(25)), shield(8, 10)).withFx(Fx.Kind.SPARK));
 
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
 			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "수천일광천조팔야진석", ULTIMATE, 50, 36,
-				allyHeal(12, 35), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)),
-			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, strike(18, 3.5, 3, 1.01), burn(4)),
-			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.34), inflict(SLOWNESS, 4, 2)),
-			skill("shapeshift", "Shapeshift", "변화", UTILITY, 24, 20, boost(DAMAGE, 7, 25), cleanse()));
+				look(SkillLook.AMATERASU, allyHeal(12, 35)).size(12), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)).withFx(Fx.Kind.SPARK),
+			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, look(SkillLook.ENTEN, strike(18, 3.5, 3, 1.01)).at(18).size(3.5), burn(4))
+				.withFx(Fx.Kind.SPARK, 0xFF8A3A),
+			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22,
+				look(SkillLook.HYOTEN, rain(ProjectileStyle.ICICLE, 18, 4, 10, 0.34, 0.0F, SkillLook.ICE_OFUDA, SkillLook.NONE)).at(18).size(4),
+				inflict(SLOWNESS, 4, 2)).withFx(Fx.Kind.SPARK),
+			skill("shapeshift", "Shapeshift", "변화", UTILITY, 24, 20, look(SkillLook.FOX_FIRE, boost(DAMAGE, 7, 25)), cleanse()));
 
 		weapon("megumin_staff", 4, 78, STAFF, "Megumin's Staff", "메구밍의 지팡이",
 			art(0xD4AF37, 0x4A2E1A, 0xE0213B), fx(Fx.Kind.SPARK, 0xFF3A2A),
-			skill("explosion", "EXPLOSION!", "익스플로전!", ULTIMATE, 60, 40, strike(24, 8, 1, 14.56), burn(6), buff(SLOWNESS, 5, 2)),
-			skill("drain_touch", "Drain Touch", "드레인 터치", ATTACK, 10, 16, nova(3.5, 2.42), lifesteal(40), restoreMana(12)),
-			skill("crimson_demon_pose", "Crimson Demon Pose", "홍마족의 포즈", UTILITY, 18, 16, empower(4, 70, 10), buff(SPEED, 8, 1)),
-			skill("manatite", "Manatite Crystal", "마나타이트", UTILITY, 30, 16, restoreMana(40), refresh(25)));
+			skill("explosion", "EXPLOSION!", "익스플로전!", ULTIMATE, 60, 40, look(SkillLook.EXPLOSION, strike(24, 8, 1, 14.56)).at(24).size(8), burn(6),
+				buff(SLOWNESS, 5, 2)),
+			skill("drain_touch", "Drain Touch", "드레인 터치", ATTACK, 10, 16, look(SkillLook.DRAIN_TOUCH, nova(3.5, 2.42)).size(3.5), lifesteal(40),
+				restoreMana(12)).withFx(Fx.Kind.SPARK, 0x6AFF7A),
+			skill("crimson_demon_pose", "Crimson Demon Pose", "홍마족의 포즈", UTILITY, 18, 16, look(SkillLook.CRIMSON_POSE, empower(4, 70, 10)), buff(SPEED, 8, 1)),
+			skill("manatite", "Manatite Crystal", "마나타이트", UTILITY, 30, 16, look(SkillLook.MANATITE, restoreMana(40)), refresh(25)).withFx(Fx.Kind.SPARK, 0x4AA8FF));
 
 		weapon("sleeping_dragon_treatise", 4, 82, GRIMOIRE, "Treatise of the Sleeping Dragon", "와룡의 병법서",
 			art(0xD4AF37, 0x2E4A6E, 0x7FC8FF), fx(Fx.Kind.RUNE, 0x8FD4FF),
 			skill("stone_sentinel_maze", "Stone Sentinel Maze", "석병팔진", ULTIMATE, 55, 38,
-				zone(8, 6, 1.34).at(20).pull(1.0).effect(STUN, 0), inflict(VULNERABLE, 8, 1)),
+				look(SkillLook.STONE_MAZE, zone(8, 6, 1.34).at(20).pull(1.0).effect(STUN, 0)).at(20).size(8).lasting(6), inflict(VULNERABLE, 8, 1)).withFx(Fx.Kind.SPARK),
 			skill("red_cliffs_east_wind", "East Wind of Red Cliffs", "적벽의 동남풍", ATTACK, 12, 26,
-				push(4, 1.2), shoot(ProjectileStyle.FIREBALL, 1.22).count(5).spread(50).explode(2.0F), burn(5)),
-			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, mark(24, 10, 40), allyBoost(10, DAMAGE, 10, 20)),
-			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, allyBoost(10, DAMAGE, 10, 20), allyHeal(10, 15)));
+				look(SkillLook.EAST_WIND, push(4, 1.2)).cone(8, 60), shoot(ProjectileStyle.FIREBALL, 1.22).count(5).spread(50).explode(2.0F).look(SkillLook.WIND_FIRE),
+				burn(5)).withFx(Fx.Kind.SPARK),
+			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, look(SkillLook.DISCERNING_EYE, mark(24, 10, 40)).onTarget(24),
+				allyBoost(10, DAMAGE, 10, 20)).withFx(Fx.Kind.SPARK),
+			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, look(SkillLook.WAR_BANNER, allyBoost(10, DAMAGE, 10, 20)).size(10),
+				allyHeal(10, 15)).withFx(Fx.Kind.SPARK));
 
 		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 이스트왈",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
-			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, debuff(16, SLOWNESS, 2, 2), delay(1.0, nova(16, 8.87))),
-			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28, shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing(), inflict(VULNERABLE, 6, 1)),
-			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", UTILITY, 30, 30, boost(CRIT_CHANCE, 8, 30), allyBoost(10, DAMAGE, 8, 30)),
-			skill("fairy_tactician", "Fairy Tactician", "요정군사", UTILITY, 20, 20, allyBuff(12, SPEED, 10, 1), allyBuff(12, MANA_FLOW, 10, 0), refresh(20)));
+			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, look(SkillLook.FAIRY_LAW, debuff(16, SLOWNESS, 2, 2)).size(16), delay(1.0, nova(16, 8.87))),
+			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28,
+				shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing().look(SkillLook.FAIRY_GLITTER).onImpact(lookWhereItLands(SkillLook.GLITTER_BURST, 3.5)),
+				inflict(VULNERABLE, 6, 1)),
+			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", UTILITY, 30, 30, look(SkillLook.FAIRY_SPHERE, boost(CRIT_CHANCE, 8, 30)).lasting(4),
+				allyBoost(10, DAMAGE, 8, 30)),
+			skill("fairy_tactician", "Fairy Tactician", "요정군사", UTILITY, 20, 20, look(SkillLook.FAIRY_WINGS, allyBuff(12, SPEED, 10, 1)),
+				allyBuff(12, MANA_FLOW, 10, 0), refresh(20)));
 
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
-			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, sanctuary(10, 10, 5), allyBoost(10, DAMAGE, 10, 20)),
-			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, allyBoost(10, DAMAGE, 12, 20), allyBoost(10, CRIT_DAMAGE, 12, 40)),
-			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing(), inflict(WEAKNESS, 4, 0)),
-			skill("illusion", "Illusion", "환술", UTILITY, 18, 18, boost(CRIT_CHANCE, 7, 25), blink(8)));
+			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, look(SkillLook.AVALON, sanctuary(10, 10, 5)).size(10).lasting(10),
+				allyBoost(10, DAMAGE, 10, 20)),
+			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, look(SkillLook.HERO_CREATION, allyBoost(10, DAMAGE, 12, 20)).size(10),
+				allyBoost(10, CRIT_DAMAGE, 12, 40)),
+			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing().look(SkillLook.PETAL_ORB),
+				inflict(WEAKNESS, 4, 0)),
+			skill("illusion", "Illusion", "환술", UTILITY, 18, 18, boost(CRIT_CHANCE, 7, 25), look(SkillLook.ILLUSION, blink(8))));
 
 		weapon("frieren_staff", 4, 95, STAFF, "Frieren's Staff", "프리렌의 지팡이",
 			art(0xD4AF37, 0xEDEAE0, 0xD9304A), fx(Fx.Kind.BOLT, 0xE8F0FF),
-			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40, barrage(ProjectileStyle.ORB, 30, 0.31)),
-			skill("judradjim", "Judradjim", "쥬드라질룸", ATTACK, 10, 26, lightning(22, 4.5, 2.91), stun(0.8)),
-			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, boost(DAMAGE, 6, 30), shield(12, 6)),
-			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24, sanctuary(7, 8, 4), cleanse()));
+			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40,
+				barrage(ProjectileStyle.ORB, 30, 0.31, SkillLook.ZOLTRAAK_CIRCLE, SkillLook.ZOLTRAAK)),
+			skill("judradjim", "Judradjim", "쥬드라질룸", ATTACK, 10, 26, look(SkillLook.JUDRADJIM, lightning(22, 4.5, 2.91)).at(22).size(4.5), stun(0.8)),
+			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, look(SkillLook.HEX_BARRIER, boost(DAMAGE, 6, 30)).lasting(3), shield(12, 6)),
+			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24,
+				look(SkillLook.FLOWER_FIELD, sanctuary(7, 8, 4)).size(7).lasting(8), cleanse()));
 
 		weapon("lemegeton", 4, 100, GRIMOIRE, "Lemegeton", "레메게톤",
 			art(0xD4AF37, 0x24203A, 0xFF4A3A), fx(Fx.Kind.RUNE, 0xFFC94A),
-			skill("ars_almadel_salomonis", "Ars Almadel Salomonis", "아르스 알마델 살로모니스", ULTIMATE, 60, 40, strike(24, 7, 12, 0.96), inflict(VULNERABLE, 8, 1)),
-			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5), nova(6, 3.81)),
-			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, mark(24, 12, 50), debuff(14, GLOWING, 10, 0)),
-			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, boost(CRIT_DAMAGE, 6, 50), shield(12, 10)));
+			skill("ars_almadel_salomonis", "Ars Almadel Salomonis", "아르스 알마델 살로모니스", ULTIMATE, 60, 40,
+				look(SkillLook.ARS_ALMADEL, strike(24, 7, 12, 0.96)).at(24).size(7), inflict(VULNERABLE, 8, 1)).withFx(Fx.Kind.SPARK),
+			skill("demon_pillar_eruption", "Demon Pillar Eruption", "마신주 강림", ATTACK, 12, 28, launch(6, 5),
+				look(SkillLook.DEMON_PILLARS, nova(6, 3.81)).size(6)).withFx(Fx.Kind.SPARK),
+			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, look(SkillLook.CLAIRVOYANCE, mark(24, 12, 50)).onTarget(24),
+				debuff(14, GLOWING, 10, 0)).withFx(Fx.Kind.SPARK),
+			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, look(SkillLook.TEN_RINGS, boost(CRIT_DAMAGE, 6, 50)).lasting(4),
+				shield(12, 10)).withFx(Fx.Kind.SPARK));
 
 		weapon("rule_breaker", 4, 92, SPELLBLADE, "Rule Breaker", "룰 브레이커",
 			art(0xB89BE0, 0x3A1F5C, 0xF0E6FF), fx(Fx.Kind.RUNE, 0xD6B8FF),
-			skill("all_spells_broken", "All Spells Must Be Broken", "파계해야 할 모든 부적", ULTIMATE, 45, 40, cleanse(), mark(20, 10, 40), beam(14, 5.8)),
-			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", ATTACK, 8, 20, barrage(ProjectileStyle.ORB, 4, 0.5)),
-			skill("witch_dagger", "Witch's Dagger", "마녀의 단검", ATTACK, 7, 16, slash(4, 180, 1.9)),
-			skill("territory_creation", "Territory Creation", "진지작성", UTILITY, 26, 12, allyBoost(10, DAMAGE, 12, 15), restoreMana(25)));
+			skill("all_spells_broken", "All Spells Must Be Broken", "파계해야 할 모든 부적", ULTIMATE, 45, 40, cleanse(), mark(20, 10, 40),
+				look(SkillLook.SPELL_BREAK, beam(14, 5.8)).beam(14)).withFx(Fx.Kind.SPARK),
+			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", ATTACK, 8, 20,
+				barrage(ProjectileStyle.ORB, 4, 0.5, SkillLook.WITCH_CIRCLE, SkillLook.RUNE_SYLLABLE)).withFx(Fx.Kind.SPARK),
+			skill("witch_dagger", "Witch's Dagger", "마녀의 단검", ATTACK, 7, 16, look(SkillLook.WITCH_SLASH, slash(4, 180, 1.9)).cone(4, 180)).withFx(Fx.Kind.SPARK),
+			skill("territory_creation", "Territory Creation", "진지작성", UTILITY, 26, 12, look(SkillLook.TERRITORY, allyBoost(10, DAMAGE, 12, 15)).size(10),
+				restoreMana(25)).withFx(Fx.Kind.SPARK));
 	}
 }

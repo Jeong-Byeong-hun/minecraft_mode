@@ -1548,6 +1548,14 @@ public final class Actions {
 		return new LookAction(look, action);
 	}
 
+	/**
+	 * For {@link ProjectileAction#onImpact}: shows {@code look} where the projectile lands, {@code size} blocks across before the Expansion
+	 * engraving (Fairy Glitter's burst of stars). Purely visual.
+	 */
+	public static BiConsumer<SkillContext, Vec3> lookWhereItLands(final SkillLook look, final double size) {
+		return (ctx, at) -> SkillVfx.spawn(ctx, look, at, ctx.flatLook(), (float)ctx.area(size), 0.0F, look.ticks(), null);
+	}
+
 	/** A step with a drawn effect; see {@link #look}. Purely visual: everything but {@link #run} is the wrapped action's. */
 	public static final class LookAction implements SkillAction {
 		private enum Place {

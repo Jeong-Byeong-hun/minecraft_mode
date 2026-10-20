@@ -40,8 +40,8 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		if (look == SkillLook.NONE) {
 			return box;
 		}
-		// the archer's arrows trail light several blocks behind them
-		return box.inflate(ArrowLooks.reach(look));
+		// the archer's arrows and the mage's bolts trail light several blocks behind them
+		return box.inflate(Math.max(ArrowLooks.reach(look), MageBolts.reach(look)));
 	}
 
 	@Override
@@ -78,6 +78,7 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 			case GETSUGA_DUAL -> submitGetsuga(s, poseStack, submitNodeCollector, true);
 			case TAIMATSU -> submitTaimatsu(s, poseStack, submitNodeCollector, camera);
 			case STAR_ARROW, TRACER, MOON_ARROW, CRESCENT_ARROW, FLAME_ARROW, GEM, TREASURE, SIN_WAVE, DISCUS -> ArrowLooks.submit(s, poseStack, submitNodeCollector);
+			case WITCH_BOLT, RUNE_SYLLABLE, WIND_FIRE, FAIRY_GLITTER, PETAL_ORB, ZOLTRAAK -> MageBolts.submit(s, poseStack, submitNodeCollector);
 			default -> {
 			}
 		}

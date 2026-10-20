@@ -154,7 +154,93 @@ public enum SkillLook {
 	/** Divine Discus: a spinning blue-white disc of light round the chakram (projectile). */
 	DISCUS(0, 1.0F, Hold.FREE),
 	/** Pashupata (chakram): the destroyer's sigil on the aimed ground and a great discus of light coming down onto it. */
-	PASHUPATA_DISC(26, 5.0F, Hold.FREE);
+	PASHUPATA_DISC(26, 5.0F, Hold.FREE),
+
+	// ------------------------------------------------------------ Mage, Grand Caster (0.5.39)
+	/** Hecatic Wizard: a sky of violet magic circles over the aimed spot and the witch's circle turning on the ground under it. */
+	HECATIC_SKY(52, 7.0F, Hold.FREE),
+	/** One witch's magic circle a bolt flies out of (facing along its reach). */
+	WITCH_CIRCLE(14, 0.8F, Hold.FREE),
+	/** A bolt of violet witchcraft with runes tumbling in its wake (projectile). */
+	WITCH_BOLT(0, 1.0F, Hold.FREE),
+	/** High-Speed Divine Words (the dagger's): one glowing runic syllable flying spinning (projectile). */
+	RUNE_SYLLABLE(0, 1.0F, Hold.FREE),
+	/** Rule Breaker in the target: the zigzag rainbow dagger stabbing in and the contracts round it cracking apart in light. */
+	RULE_BREAKER(24, 1.0F, Hold.FOLLOW),
+	/** High-Speed Divine Words: glowing runic syllables racing round the caster, small circles flashing open at a word each. */
+	DIVINE_WORDS(36, 1.0F, Hold.FOLLOW),
+	/** Argon Coin: the golden fleece's curls glowing over the caster's shoulders, warm light rising. */
+	GOLDEN_FLEECE(50, 1.0F, Hold.FOLLOW),
+	/** All Spells Must Be Broken: the rainbow dagger thrust out as a beam, contract circles shattering along it (along a beam). */
+	SPELL_BREAK(22, 14.0F, Hold.FREE),
+	/** Witch's Dagger: a violet dagger arc with runes in its wake (along a cone). */
+	WITCH_SLASH(10, 4.0F, Hold.FREE),
+	/** Territory Creation: the witch's ward circle on the ground, a wall of light rising on its rim. */
+	TERRITORY(60, 10.0F, Hold.FREE),
+	/** Eightfold Blessings of Amaterasu: the eight-lobed sun mirror over the caster, a torii of light and ofuda turning round. */
+	AMATERASU(60, 12.0F, Hold.FOLLOW),
+	/** Enten: fire talismans dropping onto the aimed ground and bursting into pillars of flame. */
+	ENTEN(36, 3.5F, Hold.FREE),
+	/** Hyoten: a ring of ice talismans over the aimed ground, frost spreading under it and ice jutting up. */
+	HYOTEN(40, 4.0F, Hold.FREE),
+	/** One ice talisman an icicle falls out of. */
+	ICE_OFUDA(14, 0.6F, Hold.FREE),
+	/** Shapeshift: fox-fire wisps circling the caster and nine fox tails of light fanning behind. */
+	FOX_FIRE(60, 1.0F, Hold.FOLLOW),
+	/** EXPLOSION!: crimson magic circles stacking in the sky over the aimed spot, then the blast: a fire column, a mushroom cloud, a shock ring. */
+	EXPLOSION(70, 8.0F, Hold.FREE),
+	/** Drain Touch: green threads of life drawn from every enemy near into the caster's hand. */
+	DRAIN_TOUCH(24, 3.5F, Hold.FOLLOW),
+	/** Crimson Demon Pose: the crimson eyes flaring and a burst of colour behind the pose. */
+	CRIMSON_POSE(30, 1.0F, Hold.FOLLOW),
+	/** Manatite: a blue crystal crushed in the hand, its shards and mana flowing into the caster. */
+	MANATITE(30, 1.0F, Hold.FOLLOW),
+	/** Stone Sentinel Maze: eight stone pillars standing in an octagon, the bagua's trigrams turning on the ground. */
+	STONE_MAZE(120, 8.0F, Hold.FREE),
+	/** East Wind of Red Cliffs: streams of wind sweeping forward with embers (along a cone). */
+	EAST_WIND(22, 8.0F, Hold.FREE),
+	/** A fireball riding the east wind (projectile). */
+	WIND_FIRE(0, 1.0F, Hold.FREE),
+	/** Discerning Eye: an analysis sigil locking onto the target. */
+	DISCERNING_EYE(40, 1.0F, Hold.FOLLOW),
+	/** Tactician's Advice: a command banner of light behind the caster, waves of order washing out. */
+	WAR_BANNER(50, 10.0F, Hold.FOLLOW),
+	/** Fairy Law: the fairy's sigil over the caster, light gathering, then a blinding dome of golden-white light. */
+	FAIRY_LAW(46, 16.0F, Hold.FOLLOW),
+	/** Fairy Glitter: a homing orb in a ring of rainbow stars (projectile). */
+	FAIRY_GLITTER(0, 1.0F, Hold.FREE),
+	/** Fairy Glitter landing: a burst of rainbow stars. */
+	GLITTER_BURST(18, 3.5F, Hold.FREE),
+	/** Fairy Sphere: a translucent golden sphere round the caster. */
+	FAIRY_SPHERE(80, 1.8F, Hold.FOLLOW),
+	/** Fairy Tactician: wings of light on the caster and motes rising. */
+	FAIRY_WINGS(50, 1.0F, Hold.FOLLOW),
+	/** Garden of Avalon: flowers blooming over the ground, petals drifting, the tower standing beyond. */
+	AVALON(200, 10.0F, Hold.FREE),
+	/** Hero Creation: sparkling rings rising round the caster and a crown of light. */
+	HERO_CREATION(40, 10.0F, Hold.FOLLOW),
+	/** Flower Storm: an orb trailing petals (projectile). */
+	PETAL_ORB(0, 1.0F, Hold.FREE),
+	/** Illusion: a shimmering afterimage where the caster stood and petals to where they are. */
+	ILLUSION(24, 1.0F, Hold.TRAIL),
+	/** A small white magic circle a Zoltraak flies out of (facing along its reach). */
+	ZOLTRAAK_CIRCLE(14, 0.8F, Hold.FREE),
+	/** Zoltraak: a crisp white line of killing magic (projectile). */
+	ZOLTRAAK(0, 1.0F, Hold.FREE),
+	/** Judradjim: a web of lightning spread over the sky and its bolt thrown down. */
+	JUDRADJIM(26, 4.5F, Hold.FREE),
+	/** Defensive Magic: hexagonal barrier panels in front of the caster. */
+	HEX_BARRIER(60, 1.6F, Hold.FOLLOW),
+	/** Spell to Make a Field of Flowers: blue moon-weed flowers blooming out in a circle. */
+	FLOWER_FIELD(160, 7.0F, Hold.FREE),
+	/** Ars Almadel Salomonis: Solomon's ten rings and a circle of 72 sigils over the aimed spot, pillars of light striking down. */
+	ARS_ALMADEL(80, 7.0F, Hold.FREE),
+	/** Demon Pillar Eruption: fleshy demon pillars bursting out of the ground round the caster, eyes opening on them. */
+	DEMON_PILLARS(30, 6.0F, Hold.FREE),
+	/** Clairvoyance: a golden eye opening over the target, its sigil under it. */
+	CLAIRVOYANCE(40, 1.0F, Hold.FOLLOW),
+	/** Rings of Solomon: ten gold rings orbiting the caster. */
+	TEN_RINGS(80, 1.4F, Hold.FOLLOW);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

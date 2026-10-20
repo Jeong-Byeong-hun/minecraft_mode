@@ -28,12 +28,13 @@ import org.joml.Vector4f;
  * held at the caster's right hand (in first person low right of the view). Its burst: the same spiral sphere swelling out to the hit
  * radius while it fades, a flash at the middle and a shock ring running along the ground. The Soul Reaper bankai looks are drawn by
  * {@link BladeLooks}, {@link NatureLooks} and {@link SpiritLooks}; the archer's (King of Heroes) by {@link HeavenLooks}, {@link WarLooks}
- * and {@link KingLooks}, and their projectiles by {@link ArrowLooks}.
+ * and {@link KingLooks}, and their projectiles by {@link ArrowLooks}; the mage's (Grand Caster) by {@link WitchLooks}, {@link EastLooks},
+ * {@link ArcaneLooks} and {@link FairyLooks}, their projectiles by {@link MageBolts}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
 	private static final float HELD_RADIUS = 0.42F;
-	/** Enkidu binds at most this many enemies (its chains are many links each). */
+	/** Enkidu binds (and Drain Touch drains) at most this many enemies (its chains are many links each). */
 	private static final int MAX_TARGETS = 8;
 
 	public SkillVfxRenderer(final EntityRendererProvider.Context context) {
@@ -54,7 +55,14 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		if (entity.look().hold() == SkillLook.Hold.TRAIL) {
 			grow += 24.0;
 		}
-		return box.inflate(grow, grow + 10.0, grow);
+		// skies wider than the ground they stand over (Judradjim's web, Solomon's sigils, the mushroom cloud) and the tower beyond Avalon
+		grow += switch (entity.look()) {
+			case JUDRADJIM, ARS_ALMADEL, HECATIC_SKY, EXPLOSION -> entity.size() * 1.2;
+			case AVALON -> 6.0;
+			default -> 0.0;
+		};
+		double up = entity.look() == SkillLook.FAIRY_LAW ? 28.0 : entity.look() == SkillLook.EXPLOSION ? 22.0 : 10.0;
+		return box.inflate(grow, grow + up, grow);
 	}
 
 	@Override
@@ -108,7 +116,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			}
 		}
 		state.targets.clear();
-		if (state.look == SkillLook.ENKIDU) {
+		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH) {
 			enemies(entity, state, origin.add(state.offset), partialTicks);
 		}
 	}
@@ -169,6 +177,11 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case GUN_KATA, ULW_FIELD, COUNTER_GUARDIAN, PASHUPATA_BOLT, PASHUPATA_DISC, ENDOWED, MANA_FLAME -> WarLooks.submit(state, poseStack, collector);
 			case BABYLON_GATE, BABYLON_SKY, ENKIDU, TREASURY_SHIELDS, EA_CHARGE, ENUMA_ELISH, SHA_NAQBA, GOLDEN_RULE, VENUS_STAR, BEAUTY, VENUS_WINGS ->
 				KingLooks.submit(state, poseStack, collector);
+			case HECATIC_SKY, WITCH_CIRCLE, RULE_BREAKER, DIVINE_WORDS, GOLDEN_FLEECE, SPELL_BREAK, WITCH_SLASH, TERRITORY -> WitchLooks.submit(state, poseStack, collector);
+			case AMATERASU, ENTEN, HYOTEN, ICE_OFUDA, FOX_FIRE, STONE_MAZE, EAST_WIND, DISCERNING_EYE, WAR_BANNER -> EastLooks.submit(state, poseStack, collector);
+			case EXPLOSION, DRAIN_TOUCH, CRIMSON_POSE, MANATITE, ARS_ALMADEL, DEMON_PILLARS, CLAIRVOYANCE, TEN_RINGS -> ArcaneLooks.submit(state, poseStack, collector);
+			case FAIRY_LAW, GLITTER_BURST, FAIRY_SPHERE, FAIRY_WINGS, AVALON, HERO_CREATION, ILLUSION, ZOLTRAAK_CIRCLE, JUDRADJIM, HEX_BARRIER, FLOWER_FIELD ->
+				FairyLooks.submit(state, poseStack, collector);
 			default -> {
 			}
 		}

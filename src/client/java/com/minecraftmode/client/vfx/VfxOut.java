@@ -344,6 +344,137 @@ final class VfxOut {
 		}
 	}
 
+	// ------------------------------------------------------------ magecraft
+
+	/**
+	 * A rune: three or four strokes between the points of a 3 x 3 grid picked by {@code seed}, standing in the plane of {@code a} (across)
+	 * and {@code b} (up), {@code r} from its middle to the top.
+	 */
+	void rune(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int seed, final float width, final int color) {
+		int strokes = 3 + (hash(seed * 7 + 3) < 0.5F ? 0 : 1);
+		int from = (int)(hash(seed * 11 + 1) * 8.99F);
+		for (int i = 0; i < strokes; i++) {
+			int to = (int)(hash(seed * 31 + i * 17 + 5) * 8.99F);
+			if (to == from) {
+				to = (to + 4) % 9;
+			}
+			this.bar(grid(c, a, b, r, from), grid(c, a, b, r, to), width, width, color, color);
+			// mostly one stroke on from the last, sometimes a fresh one
+			from = hash(seed * 13 + i * 5) < 0.7F ? to : (int)(hash(seed * 19 + i) * 8.99F);
+		}
+	}
+
+	private static Vector3f grid(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int k) {
+		return new Vector3f(a).mul((k % 3 - 1) * r * 0.6F).add(new Vector3f(b).mul((k / 3 - 1) * r)).add(c);
+	}
+
+	/**
+	 * A star polygon of {@code points} points {@code r} out in the plane of {@code a} and {@code b}, each line joining a point to the one
+	 * {@code step} on ({@code step} 1: a plain polygon; 6 points step 2: a hexagram), turned by {@code spin}.
+	 */
+	void polygram(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int points, final int step, final float spin, final float width,
+		final int color) {
+		for (int i = 0; i < points; i++) {
+			float t0 = spin + Mth.TWO_PI * i / points;
+			float t1 = spin + Mth.TWO_PI * (i + step) / points;
+			Vector3f p0 = new Vector3f(a).mul(Mth.cos(t0) * r).add(new Vector3f(b).mul(Mth.sin(t0) * r)).add(c);
+			Vector3f p1 = new Vector3f(a).mul(Mth.cos(t1) * r).add(new Vector3f(b).mul(Mth.sin(t1) * r)).add(c);
+			this.bar(p0, p1, width, width, color, color);
+		}
+	}
+
+	/**
+	 * A magic circle of radius {@code r} in the plane of {@code a} and {@code b}: a double outer ring with a band of runes between (turning
+	 * with {@code spin}), a {@code points}-pointed star polygon turning the other way, an inner ring and a small one in the middle;
+	 * {@code color} for the lines, {@code dim} for the runes. Line widths and the number of runes grow with its size.
+	 */
+	void magicCircle(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final float spin, final int seed, final int points, final int color,
+		final int dim) {
+		if (r <= 0.02F) {
+			return;
+		}
+		float w = Math.max(0.015F, r * 0.012F);
+		int n = Mth.clamp((int)(r * 10), 16, 48);
+		this.circle(c, a, b, r, w * 1.4F, n, color);
+		this.circle(c, a, b, r * 0.84F, w, n, color);
+		this.circle(c, a, b, r * 0.45F, w, Math.max(12, n / 2), color);
+		this.circle(c, a, b, r * 0.12F, w, 10, color);
+		int runes = Mth.clamp((int)(r * 5), 6, 24);
+		for (int i = 0; i < runes; i++) {
+			float t = spin + Mth.TWO_PI * i / runes;
+			Vector3f out = new Vector3f(a).mul(Mth.cos(t)).add(new Vector3f(b).mul(Mth.sin(t)));
+			Vector3f along = new Vector3f(a).mul(-Mth.sin(t)).add(new Vector3f(b).mul(Mth.cos(t)));
+			this.rune(new Vector3f(out).mul(r * 0.92F).add(c), along, out, r * 0.055F, seed * 37 + i, w * 0.8F, dim);
+		}
+		this.polygram(c, a, b, r * 0.84F, points, points >= 6 ? 2 : Math.max(1, points / 2), -spin * 1.3F, w, color);
+		// small runes on the inner ring
+		for (int i = 0; i < 6; i++) {
+			float t = -spin * 0.7F + Mth.TWO_PI * i / 6;
+			Vector3f out = new Vector3f(a).mul(Mth.cos(t)).add(new Vector3f(b).mul(Mth.sin(t)));
+			Vector3f along = new Vector3f(a).mul(-Mth.sin(t)).add(new Vector3f(b).mul(Mth.cos(t)));
+			this.rune(new Vector3f(out).mul(r * 0.32F).add(c), along, out, r * 0.06F, seed * 53 + i, w * 0.8F, dim);
+		}
+	}
+
+	/**
+	 * A jagged bolt of lightning from {@code from} to {@code to}: {@code steps} kinks thrown out up to {@code jag} blocks (picked by
+	 * {@code seed}), a soft glow {@code width} wide and a hot core.
+	 */
+	void bolt(final Vector3fc from, final Vector3fc to, final int seed, final float jag, final int steps, final float width, final int glow, final int core) {
+		Vector3f d = new Vector3f(to).sub(from);
+		Vector3f u = across(d.lengthSquared() < 1.0E-6F ? new Vector3f(0, 1, 0) : new Vector3f(d).normalize());
+		Vector3f v = new Vector3f(d).cross(u).normalize();
+		Vector3f prev = new Vector3f(from);
+		for (int i = 1; i <= steps; i++) {
+			float t = (float)i / steps;
+			Vector3f next = new Vector3f(d).mul(t).add(from);
+			if (i < steps) {
+				float k = jag * Mth.sin(t * Mth.PI);
+				next.add(new Vector3f(u).mul((hash(seed * 17 + i) - 0.5F) * 2 * k)).add(new Vector3f(v).mul((hash(seed * 29 + i) - 0.5F) * 2 * k));
+			}
+			this.glowLine(prev, next, width, glow, glow);
+			this.bar(prev, next, width * 0.18F, width * 0.18F, core, core);
+			prev = next;
+		}
+	}
+
+	/** A flat hexagon panel facing {@code normal}: a faint fill and lit edges ({@code fill} 0 alpha leaves just the edges). */
+	void hexagon(final Vector3fc c, final Vector3fc normal, final float r, final float spin, final float width, final int edge, final int fill) {
+		Vector3f n = new Vector3f(normal).normalize();
+		Vector3f a = across(n);
+		Vector3f b = new Vector3f(n).cross(a).normalize();
+		Vector3f prev = null;
+		for (int i = 0; i <= 6; i++) {
+			float t = spin + Mth.TWO_PI * i / 6;
+			Vector3f p = new Vector3f(a).mul(Mth.cos(t) * r).add(new Vector3f(b).mul(Mth.sin(t) * r)).add(c);
+			if (prev != null) {
+				if ((fill >>> 24) > 0) {
+					this.tri(c, prev, p, fill, fill & 0xFFFFFF, fill & 0xFFFFFF);
+				}
+				if (width > 0.0F) {
+					this.bar(prev, p, width, width, edge, edge);
+				}
+			}
+			prev = p;
+		}
+	}
+
+	/**
+	 * A flower of {@code petals} petals {@code r} long round {@code at}, opened {@code open} (0: a closed bud pointing up, 1: lying wide
+	 * open, tips raised a little), turned by {@code turn}: petals {@code petal} at their base to {@code tip}, a {@code heart} dot in the
+	 * middle.
+	 */
+	void bloom(final Vector3fc at, final int petals, final float r, final float open, final float turn, final int petal, final int tip, final int heart) {
+		float lift = 1.2F - 0.9F * open;
+		for (int k = 0; k < petals; k++) {
+			float a = turn + Mth.TWO_PI * k / petals;
+			Vector3f d = new Vector3f(Mth.cos(a), lift, Mth.sin(a)).normalize();
+			Vector3f end = new Vector3f(d).mul(r).add(at);
+			this.blade(at, end, new Vector3f(-Mth.sin(a), 0, Mth.cos(a)), r * 0.42F, petal, tip);
+		}
+		this.bar(at, new Vector3f(at).add(0, r * 0.25F, 0), r * 0.12F, r * 0.08F, heart, heart);
+	}
+
 	// ------------------------------------------------------------ paths
 
 	/** A trail's points with the ones closer than 0.2 blocks to the last kept dropped (a still holder leaves no zero-length parts). */

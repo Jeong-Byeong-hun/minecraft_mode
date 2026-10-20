@@ -157,6 +157,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkSkillLooks(context, server, connection);
 			checkReaperLooks(context, server, connection);
 			checkArcherLooks(context, server, connection);
+			checkMageLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -772,32 +773,37 @@ public class JobClientGameTest implements FabricClientGameTest {
 	 * One drawn look of a tier 4 skill: the weapon and skill slot, the looks the client must see after {@code ticks} ticks, the one
 	 * photographed ({@code focus}, the first by default; {@link SkillLook#NONE}: the caster), where the camera stands from what it looks at (caster facing north:
 	 * {@code side} east, {@code back} south), how far above the look's spot the camera aims ({@code lift}, for looks high in the sky)
-	 * and the screenshot's name ({@code look_<skill>} by default).
+	 * and the screenshot's name ({@code look_<skill>} by default); the husk stands {@code husk} blocks in front of the caster.
 	 */
 	private record LookCase(
-		String weapon, int slot, List<SkillLook> looks, SkillLook focus, int ticks, double side, double up, double back, double lift, String shot
+		String weapon, int slot, List<SkillLook> looks, SkillLook focus, int ticks, double side, double up, double back, double lift, String shot, double husk
 	) {
 		LookCase(final String weapon, final int slot, final SkillLook look, final int ticks, final double side, final double up, final double back) {
 			this(weapon, slot, List.of(look), ticks, side, up, back);
 		}
 
 		LookCase(final String weapon, final int slot, final List<SkillLook> looks, final int ticks, final double side, final double up, final double back) {
-			this(weapon, slot, looks, looks.getFirst(), ticks, side, up, back, 0.0, "");
+			this(weapon, slot, looks, looks.getFirst(), ticks, side, up, back, 0.0, "", 6.0);
 		}
 
 		/** Aims {@code lift} blocks above the look's spot. */
 		LookCase lift(final double blocks) {
-			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, blocks, this.shot);
+			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, blocks, this.shot, this.husk);
 		}
 
 		/** Photographs {@code look} (one of {@link #looks}). */
 		LookCase focus(final SkillLook look) {
-			return new LookCase(this.weapon, this.slot, this.looks, look, this.ticks, this.side, this.up, this.back, this.lift, this.shot);
+			return new LookCase(this.weapon, this.slot, this.looks, look, this.ticks, this.side, this.up, this.back, this.lift, this.shot, this.husk);
 		}
 
 		/** Names the screenshot {@code look_<name>} (a skill photographed twice). */
 		LookCase shot(final String name) {
-			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, this.lift, name);
+			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, this.lift, name, this.husk);
+		}
+
+		/** Puts the husk {@code blocks} in front of the caster (a skill that only reaches close by). */
+		LookCase husk(final double blocks) {
+			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, this.lift, this.shot, blocks);
 		}
 	}
 
@@ -898,6 +904,56 @@ public class JobClientGameTest implements FabricClientGameTest {
 	}
 
 	/**
+	 * Every skill of the nine tier 4 Mage weapons draws its own look (0.5.39): Medea's witchcraft, Tamamo's mirror and talismans,
+	 * Megumin's EXPLOSION, Zhuge Liang's maze, Mavis's Fairy Law, Merlin's garden, Frieren's Zoltraak and Solomon's rings. Screenshots
+	 * {@code look_<skill>}, and EXPLOSION! once more with improved transparency ({@code _fabulous}).
+	 */
+	private static void checkMageLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("colchis_scepter", 0, List.of(SkillLook.HECATIC_SKY, SkillLook.WITCH_CIRCLE, SkillLook.WITCH_BOLT), 14, 7, 1, 20).lift(5),
+			new LookCase("colchis_scepter", 1, SkillLook.RULE_BREAKER, 6, 4, 1.5, 4),
+			new LookCase("colchis_scepter", 2, SkillLook.DIVINE_WORDS, 10, 2.5, 1.5, -5),
+			new LookCase("colchis_scepter", 3, SkillLook.GOLDEN_FLEECE, 10, 2, 1.2, 4),
+			new LookCase("yata_no_kagami", 0, SkillLook.AMATERASU, 10, 3, 2.5, 7).lift(1.5),
+			new LookCase("yata_no_kagami", 1, SkillLook.ENTEN, 16, 3, 4, 9).lift(1),
+			new LookCase("yata_no_kagami", 2, List.of(SkillLook.HYOTEN, SkillLook.ICE_OFUDA), 12, 5, 2, 15).lift(4),
+			new LookCase("yata_no_kagami", 3, SkillLook.FOX_FIRE, 10, 2.5, 1.5, 5),
+			new LookCase("megumin_staff", 0, SkillLook.EXPLOSION, 6, 6, 1, 22).lift(5).shot("megumin_staff.explosion_chant"),
+			new LookCase("megumin_staff", 0, SkillLook.EXPLOSION, 20, 8, 3, 26).lift(6),
+			new LookCase("megumin_staff", 1, SkillLook.DRAIN_TOUCH, 8, 3.5, 1.5, 3).husk(3.2),
+			new LookCase("megumin_staff", 2, SkillLook.CRIMSON_POSE, 6, 2.5, 0.5, -6),
+			new LookCase("megumin_staff", 3, SkillLook.MANATITE, 8, 2.5, 1, -4),
+			new LookCase("sleeping_dragon_treatise", 0, SkillLook.STONE_MAZE, 14, 6, 6, 16).lift(1),
+			new LookCase("sleeping_dragon_treatise", 1, List.of(SkillLook.EAST_WIND, SkillLook.WIND_FIRE), 3, 6, 3, 4),
+			new LookCase("sleeping_dragon_treatise", 2, SkillLook.DISCERNING_EYE, 10, 3, 1.5, 4),
+			new LookCase("sleeping_dragon_treatise", 3, SkillLook.WAR_BANNER, 10, 3, 2, 6).lift(1),
+			new LookCase("lumen_histoire", 0, SkillLook.FAIRY_LAW, 10, 3, 2, 8).lift(2.5).shot("lumen_histoire.fairy_law_gather"),
+			new LookCase("lumen_histoire", 0, SkillLook.FAIRY_LAW, 24, 10, 6, 24).lift(2),
+			new LookCase("lumen_histoire", 1, SkillLook.FAIRY_GLITTER, 2, 3, 1, 3),
+			new LookCase("lumen_histoire", 1, SkillLook.GLITTER_BURST, 6, 4, 2, 6).shot("lumen_histoire.fairy_glitter_burst"),
+			new LookCase("lumen_histoire", 2, SkillLook.FAIRY_SPHERE, 8, 2.5, 1.5, -5),
+			new LookCase("lumen_histoire", 3, SkillLook.FAIRY_WINGS, 8, 2, 1.2, 4),
+			new LookCase("merlin_staff", 0, SkillLook.AVALON, 40, 5, 6, 14),
+			new LookCase("merlin_staff", 1, SkillLook.HERO_CREATION, 8, 2.5, 1.5, -5),
+			new LookCase("merlin_staff", 2, SkillLook.PETAL_ORB, 2, 3, 1.5, 3),
+			new LookCase("merlin_staff", 3, SkillLook.ILLUSION, 4, 10, 3, 0),
+			new LookCase("frieren_staff", 0, List.of(SkillLook.ZOLTRAAK_CIRCLE, SkillLook.ZOLTRAAK), 12, 6, 1.5, -7).focus(SkillLook.NONE),
+			new LookCase("frieren_staff", 1, SkillLook.JUDRADJIM, 3, 5, 0, 17).lift(4.5),
+			new LookCase("frieren_staff", 2, SkillLook.HEX_BARRIER, 10, 3, 1.5, -5),
+			new LookCase("frieren_staff", 3, SkillLook.FLOWER_FIELD, 40, 4, 5, 11),
+			new LookCase("lemegeton", 0, SkillLook.ARS_ALMADEL, 26, 7, 4, 22).lift(5),
+			new LookCase("lemegeton", 1, SkillLook.DEMON_PILLARS, 10, 4, 3, 9),
+			new LookCase("lemegeton", 2, SkillLook.CLAIRVOYANCE, 10, 3, 1.5, 5).lift(1),
+			new LookCase("lemegeton", 3, SkillLook.TEN_RINGS, 10, 2.5, 1.5, -5),
+			new LookCase("rule_breaker", 0, SkillLook.SPELL_BREAK, 4, 10, 3, 2),
+			new LookCase("rule_breaker", 1, List.of(SkillLook.WITCH_CIRCLE, SkillLook.RUNE_SYLLABLE), 4, 5, 1.5, -6).focus(SkillLook.NONE),
+			new LookCase("rule_breaker", 2, SkillLook.WITCH_SLASH, 2, 3, 2.5, 5),
+			new LookCase("rule_breaker", 3, SkillLook.TERRITORY, 10, 4, 6, 14)
+		);
+		checkClassLooks(context, server, connection, JobClass.MAGE, cases, SkillLook.HECATIC_SKY, SkillLook.TEN_RINGS, "megumin_staff.explosion");
+	}
+
+	/**
 	 * Casts each case's skill as a tier 4 {@code job} with a big husk in front, checks the client sees its looks, then freezes ticking
 	 * and photographs the look from an invisible armor stand (the caster stays where the skill left them), by night and by day; the
 	 * shot named {@code fabulous} is taken again with improved transparency (the Fabulous preset draws blended types through
@@ -926,7 +982,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 				player.removeAllEffects();
 				player.setHealth(player.getMaxHealth());
 				player.connection.teleport(0.5, -60, 0.5, 180.0F, 0.0F);
-				LivingEntity husk = spawnTarget(level, 0.5, -60, -5.5);
+				LivingEntity husk = spawnTarget(level, 0.5, -60, 0.5 - look.husk());
 				husk.getAttribute(Attributes.MAX_HEALTH).setBaseValue(4000.0);
 				husk.setHealth(4000.0F);
 			});

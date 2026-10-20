@@ -253,6 +253,137 @@ final class VfxOut {
 		}
 	}
 
+	// ------------------------------------------------------------ stars, arrows, chains
+
+	/**
+	 * A flat star of {@code points} points in the plane of {@code a} and {@code b} (unit vectors; the camera's right and up make it face
+	 * the camera): tips {@code r} out, the notches {@code inner} times that, turned by {@code spin}; {@code core} in the middle fading to
+	 * {@code tip}.
+	 */
+	void star(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int points, final float inner, final float spin, final int core,
+		final int tip) {
+		int n = points * 2;
+		Vector3f prev = null;
+		for (int i = 0; i <= n; i++) {
+			float t = spin + Mth.TWO_PI * i / n;
+			float rr = i % 2 == 0 ? r : r * inner;
+			Vector3f p = new Vector3f(a).mul(Mth.cos(t) * rr).add(new Vector3f(b).mul(Mth.sin(t) * rr)).add(c);
+			if (prev != null) {
+				this.tri(c, prev, p, core, i % 2 == 0 ? lerp(core, tip, 0.5F) : tip, i % 2 == 0 ? tip : lerp(core, tip, 0.5F));
+			}
+			prev = p;
+		}
+	}
+
+	/** A twinkle: a thin four-pointed glint ({@link #star} with deep notches) and a soft dot, facing the camera. */
+	void glint(final Vector3fc c, final Vector3fc right, final Vector3fc up, final float r, final float spin, final int color) {
+		this.star(c, right, up, r, 4, 0.12F, spin, color, color & 0xFFFFFF);
+		this.sprite(c, right, up, r * 0.35F, color);
+	}
+
+	/** An arrow from {@code tail} to {@code tip}: a shaft, a head and fletching, flat in the plane of {@code side}. */
+	void arrow(final Vector3fc tail, final Vector3fc tip, final Vector3fc side, final float width, final int shaft, final int head) {
+		Vector3f d = new Vector3f(tip).sub(tail);
+		float length = d.length();
+		if (length < 1.0E-4F) {
+			return;
+		}
+		d.div(length);
+		Vector3f neck = new Vector3f(d).mul(-Math.min(0.45F, length * 0.3F)).add(tip);
+		this.bar(tail, neck, width * 0.25F, width * 0.25F, shaft, shaft);
+		this.blade(neck, tip, side, width, head, head);
+		Vector3f fl = new Vector3f(d).mul(Math.min(0.35F, length * 0.25F)).add(tail);
+		this.diamond(new Vector3f(tail).lerp(fl, 0.5F).add(new Vector3f(side).normalize(width * 0.6F)), d, side, Math.min(0.35F, length * 0.25F), width * 0.7F,
+			shaft & 0xFFFFFF, shaft);
+		this.diamond(new Vector3f(tail).lerp(fl, 0.5F).sub(new Vector3f(side).normalize(width * 0.6F)), d, side, Math.min(0.35F, length * 0.25F), width * 0.7F,
+			shaft & 0xFFFFFF, shaft);
+	}
+
+	/**
+	 * A chain from {@code from} to {@code to}: oval links {@code link} long, each turned a quarter from the last, drawn as thin bars;
+	 * {@code turn} rolls the whole chain.
+	 */
+	void chain(final Vector3fc from, final Vector3fc to, final float link, final float turn, final int color) {
+		Vector3f d = new Vector3f(to).sub(from);
+		float length = d.length();
+		if (length < 1.0E-3F) {
+			return;
+		}
+		d.div(length);
+		Vector3f u = across(d);
+		Vector3f v = new Vector3f(d).cross(u).normalize();
+		int links = Math.min(64, Math.max(1, (int)(length / (link * 0.8F))));
+		float step = length / links;
+		for (int i = 0; i < links; i++) {
+			float a = turn + (i % 2 == 0 ? 0.0F : Mth.HALF_PI);
+			Vector3f w = new Vector3f(u).mul(Mth.cos(a)).add(new Vector3f(v).mul(Mth.sin(a))).mul(link * 0.28F);
+			Vector3f s = new Vector3f(d).mul(step * i).add(from);
+			Vector3f e = new Vector3f(d).mul(step * i + link).add(from);
+			Vector3f s1 = new Vector3f(d).mul(step * i + link * 0.22F).add(from);
+			Vector3f e1 = new Vector3f(d).mul(step * i + link * 0.78F).add(from);
+			// an octagon-ish loop: two long sides and the rounded ends
+			this.bar(new Vector3f(s1).add(w), new Vector3f(e1).add(w), link * 0.12F, link * 0.12F, color, color);
+			this.bar(new Vector3f(s1).sub(w), new Vector3f(e1).sub(w), link * 0.12F, link * 0.12F, color, color);
+			this.bar(s, new Vector3f(s1).add(w), link * 0.1F, link * 0.1F, color, color);
+			this.bar(s, new Vector3f(s1).sub(w), link * 0.1F, link * 0.1F, color, color);
+			this.bar(e, new Vector3f(e1).add(w), link * 0.1F, link * 0.1F, color, color);
+			this.bar(e, new Vector3f(e1).sub(w), link * 0.1F, link * 0.1F, color, color);
+		}
+	}
+
+	/** A circle (a polyline of {@code n} glow lines) round {@code c} in the plane of {@code a} and {@code b}. */
+	void circle(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final float width, final int n, final int color) {
+		Vector3f prev = null;
+		for (int i = 0; i <= n; i++) {
+			float t = Mth.TWO_PI * i / n;
+			Vector3f p = new Vector3f(a).mul(Mth.cos(t) * r).add(new Vector3f(b).mul(Mth.sin(t) * r)).add(c);
+			if (prev != null) {
+				this.bar(prev, p, width, width, color, color);
+			}
+			prev = p;
+		}
+	}
+
+	// ------------------------------------------------------------ paths
+
+	/** A trail's points with the ones closer than 0.2 blocks to the last kept dropped (a still holder leaves no zero-length parts). */
+	static java.util.List<Vector3f> path(final java.util.List<Vector3f> trail) {
+		java.util.List<Vector3f> points = new java.util.ArrayList<>();
+		points.add(new Vector3f());
+		for (Vector3f p : trail) {
+			if (p.distanceSquared(points.getLast()) > 0.04F) {
+				points.add(p);
+			}
+		}
+		return points;
+	}
+
+	/** The point {@code t} (0..1) of the way along a polyline up to point {@code last}. */
+	static Vector3f along(final java.util.List<Vector3f> points, final int last, final float t) {
+		float total = 0.0F;
+		for (int i = 0; i < last; i++) {
+			total += points.get(i).distance(points.get(i + 1));
+		}
+		float want = total * t;
+		for (int i = 0; i < last; i++) {
+			float d = points.get(i).distance(points.get(i + 1));
+			if (want <= d && d > 0) {
+				return new Vector3f(points.get(i)).lerp(points.get(i + 1), want / d);
+			}
+			want -= d;
+		}
+		return new Vector3f(points.get(last));
+	}
+
+	/** Length of a polyline up to point {@code last}. */
+	static float length(final java.util.List<Vector3f> points, final int last) {
+		float total = 0.0F;
+		for (int i = 0; i < last; i++) {
+			total += points.get(i).distance(points.get(i + 1));
+		}
+		return total;
+	}
+
 	// ------------------------------------------------------------ colour
 
 	static int lerp(final int a, final int b, final float t) {

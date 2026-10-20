@@ -156,6 +156,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkPointBlank(context, server, connection);
 			checkSkillLooks(context, server, connection);
 			checkReaperLooks(context, server, connection);
+			checkArcherLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -768,75 +769,158 @@ public class JobClientGameTest implements FabricClientGameTest {
 	}
 
 	/**
-	 * One drawn look of a Soul Reaper bankai skill: the weapon and skill slot, the looks the client must see after {@code ticks} ticks
-	 * (the first is photographed) and where the camera stands from what it looks at (caster facing north: {@code side} east,
-	 * {@code back} south).
+	 * One drawn look of a tier 4 skill: the weapon and skill slot, the looks the client must see after {@code ticks} ticks, the one
+	 * photographed ({@code focus}, the first by default; {@link SkillLook#NONE}: the caster), where the camera stands from what it looks at (caster facing north:
+	 * {@code side} east, {@code back} south), how far above the look's spot the camera aims ({@code lift}, for looks high in the sky)
+	 * and the screenshot's name ({@code look_<skill>} by default).
 	 */
-	private record ReaperLook(String weapon, int slot, List<SkillLook> looks, int ticks, double side, double up, double back) {
-		ReaperLook(final String weapon, final int slot, final SkillLook look, final int ticks, final double side, final double up, final double back) {
+	private record LookCase(
+		String weapon, int slot, List<SkillLook> looks, SkillLook focus, int ticks, double side, double up, double back, double lift, String shot
+	) {
+		LookCase(final String weapon, final int slot, final SkillLook look, final int ticks, final double side, final double up, final double back) {
 			this(weapon, slot, List.of(look), ticks, side, up, back);
+		}
+
+		LookCase(final String weapon, final int slot, final List<SkillLook> looks, final int ticks, final double side, final double up, final double back) {
+			this(weapon, slot, looks, looks.getFirst(), ticks, side, up, back, 0.0, "");
+		}
+
+		/** Aims {@code lift} blocks above the look's spot. */
+		LookCase lift(final double blocks) {
+			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, blocks, this.shot);
+		}
+
+		/** Photographs {@code look} (one of {@link #looks}). */
+		LookCase focus(final SkillLook look) {
+			return new LookCase(this.weapon, this.slot, this.looks, look, this.ticks, this.side, this.up, this.back, this.lift, this.shot);
+		}
+
+		/** Names the screenshot {@code look_<name>} (a skill photographed twice). */
+		LookCase shot(final String name) {
+			return new LookCase(this.weapon, this.slot, this.looks, this.focus, this.ticks, this.side, this.up, this.back, this.lift, name);
 		}
 	}
 
 	private static final String CAMERA = "job_camera";
 
 	/**
-	 * Every skill of the nine tier 4 Soul Reaper weapons draws its own look (0.5.36): cast each with a husk in front, check the client
-	 * sees the look, then freeze ticking and photograph it from an invisible armor stand (the caster stays where the skill left them).
-	 * Screenshots {@code look_<skill>}.
+	 * Every skill of the nine tier 4 Soul Reaper weapons draws its own look (0.5.36). Screenshots {@code look_<skill>}.
 	 */
 	private static void checkReaperLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
-		List<ReaperLook> cases = List.of(
-			new ReaperLook("tensa_zangetsu", 0, SkillLook.GETSUGA, 3, 6, 1.5, 3),
-			new ReaperLook("tensa_zangetsu", 1, SkillLook.FLASH_TRAIL, 6, 10, 3, 0),
-			new ReaperLook("tensa_zangetsu", 2, SkillLook.GETSUGA, 3, 2, 3, 6),
-			new ReaperLook("tensa_zangetsu", 3, SkillLook.REIATSU, 8, 2, 1, -5),
-			new ReaperLook("senbonzakura_kageyoshi", 0, SkillLook.PETAL_STORM, 8, 3, 5, 9),
-			new ReaperLook("senbonzakura_kageyoshi", 1, SkillLook.PETAL_SPHERE, 6, 4, 4, 10),
-			new ReaperLook("senbonzakura_kageyoshi", 2, SkillLook.SENKEI, 20, 4, 6, 13),
-			new ReaperLook("senbonzakura_kageyoshi", 3, SkillLook.HAKUTEIKEN, 3, 9, 3, 4),
-			new ReaperLook("daiguren_hyorinmaru", 0, SkillLook.ICE_FLOWER, 6, 4, 1.5, 3),
-			new ReaperLook("daiguren_hyorinmaru", 1, SkillLook.ICE_PRISON, 14, 3, 5, 9),
-			new ReaperLook("daiguren_hyorinmaru", 2, SkillLook.ICE_WINGS, 70, 3, 1, 6),
-			new ReaperLook("daiguren_hyorinmaru", 3, SkillLook.ICE_BLOOM, 40, 5, 6, 15),
-			new ReaperLook("ryujin_jakka", 0, SkillLook.FLAME_BURST, 5, 3, 5, 10),
-			new ReaperLook("ryujin_jakka", 1, SkillLook.FLAME_WALL, 15, 4, 5, 12),
-			new ReaperLook("ryujin_jakka", 2, SkillLook.TAIMATSU, 3, 4, 1, 2),
-			new ReaperLook("ryujin_jakka", 3, SkillLook.ZANKA, 5, 3, 7, 12),
-			new ReaperLook("kamishini_no_yari", 0, SkillLook.SPEAR, 2, 10, 3, 0),
-			new ReaperLook("kamishini_no_yari", 1, SkillLook.SPEAR, 4, 10, 3, 0),
-			new ReaperLook("kamishini_no_yari", 2, SkillLook.DUST, 8, 3, 6, 10),
-			new ReaperLook("kamishini_no_yari", 3, SkillLook.SPEAR_KILL, 5, 8, 3, 2),
-			new ReaperLook("kyoka_suigetsu", 0, SkillLook.MIRROR, 5, 3, 1, -5),
-			new ReaperLook("kyoka_suigetsu", 1, SkillLook.KUROHITSUGI, 20, 5, 5, 9),
-			new ReaperLook("kyoka_suigetsu", 2, SkillLook.MIRROR, 5, 5, 1.5, 3),
-			new ReaperLook("kyoka_suigetsu", 3, SkillLook.HOGYOKU, 6, 3, 4, 10),
-			new ReaperLook("karamatsu_shinju", 0, SkillLook.SLASH, 2, 3, 5, 7),
-			new ReaperLook("karamatsu_shinju", 1, SkillLook.CROSS_SLASH, 4, 2, 2, -8),
-			new ReaperLook("karamatsu_shinju", 2, SkillLook.ABYSS, 20, 3, 6, 9),
-			new ReaperLook("karamatsu_shinju", 3, SkillLook.BINDING, 10, 3, 1.5, 2),
-			new ReaperLook("true_zangetsu", 0, SkillLook.GETSUGA_DUAL, 2, 5, 1.5, 3),
-			new ReaperLook("true_zangetsu", 1, List.of(SkillLook.SLASH, SkillLook.GETSUGA_DUAL), 2, 3, 5, 8),
-			new ReaperLook("true_zangetsu", 2, SkillLook.FLASH_TRAIL, 3, 10, 3, 0),
-			new ReaperLook("true_zangetsu", 3, List.of(SkillLook.MUGETSU, SkillLook.MUGETSU_VOID), 8, 16, 6, 6),
-			new ReaperLook("soo_zabimaru", 0, SkillLook.BONE_FANGS, 7, 3, 5, 9),
-			new ReaperLook("soo_zabimaru", 1, SkillLook.BONE_SNAKE, 4, 7, 2.5, 2),
-			new ReaperLook("soo_zabimaru", 2, SkillLook.BONE_LASH, 3, 3, 6, 8),
-			new ReaperLook("soo_zabimaru", 3, SkillLook.BONE_CAGE, 10, 2, 2, -5)
+		List<LookCase> cases = List.of(
+			new LookCase("tensa_zangetsu", 0, SkillLook.GETSUGA, 3, 6, 1.5, 3),
+			new LookCase("tensa_zangetsu", 1, SkillLook.FLASH_TRAIL, 6, 10, 3, 0),
+			new LookCase("tensa_zangetsu", 2, SkillLook.GETSUGA, 3, 2, 3, 6),
+			new LookCase("tensa_zangetsu", 3, SkillLook.REIATSU, 8, 2, 1, -5),
+			new LookCase("senbonzakura_kageyoshi", 0, SkillLook.PETAL_STORM, 8, 3, 5, 9),
+			new LookCase("senbonzakura_kageyoshi", 1, SkillLook.PETAL_SPHERE, 6, 4, 4, 10),
+			new LookCase("senbonzakura_kageyoshi", 2, SkillLook.SENKEI, 20, 4, 6, 13),
+			new LookCase("senbonzakura_kageyoshi", 3, SkillLook.HAKUTEIKEN, 3, 9, 3, 4),
+			new LookCase("daiguren_hyorinmaru", 0, SkillLook.ICE_FLOWER, 6, 4, 1.5, 3),
+			new LookCase("daiguren_hyorinmaru", 1, SkillLook.ICE_PRISON, 14, 3, 5, 9),
+			new LookCase("daiguren_hyorinmaru", 2, SkillLook.ICE_WINGS, 70, 3, 1, 6),
+			new LookCase("daiguren_hyorinmaru", 3, SkillLook.ICE_BLOOM, 40, 5, 6, 15),
+			new LookCase("ryujin_jakka", 0, SkillLook.FLAME_BURST, 5, 3, 5, 10),
+			new LookCase("ryujin_jakka", 1, SkillLook.FLAME_WALL, 15, 4, 5, 12),
+			new LookCase("ryujin_jakka", 2, SkillLook.TAIMATSU, 3, 4, 1, 2),
+			new LookCase("ryujin_jakka", 3, SkillLook.ZANKA, 5, 3, 7, 12),
+			new LookCase("kamishini_no_yari", 0, SkillLook.SPEAR, 2, 10, 3, 0),
+			new LookCase("kamishini_no_yari", 1, SkillLook.SPEAR, 4, 10, 3, 0),
+			new LookCase("kamishini_no_yari", 2, SkillLook.DUST, 8, 3, 6, 10),
+			new LookCase("kamishini_no_yari", 3, SkillLook.SPEAR_KILL, 5, 8, 3, 2),
+			new LookCase("kyoka_suigetsu", 0, SkillLook.MIRROR, 5, 3, 1, -5),
+			new LookCase("kyoka_suigetsu", 1, SkillLook.KUROHITSUGI, 20, 5, 5, 9),
+			new LookCase("kyoka_suigetsu", 2, SkillLook.MIRROR, 5, 5, 1.5, 3),
+			new LookCase("kyoka_suigetsu", 3, SkillLook.HOGYOKU, 6, 3, 4, 10),
+			new LookCase("karamatsu_shinju", 0, SkillLook.SLASH, 2, 3, 5, 7),
+			new LookCase("karamatsu_shinju", 1, SkillLook.CROSS_SLASH, 4, 2, 2, -8),
+			new LookCase("karamatsu_shinju", 2, SkillLook.ABYSS, 20, 3, 6, 9),
+			new LookCase("karamatsu_shinju", 3, SkillLook.BINDING, 10, 3, 1.5, 2),
+			new LookCase("true_zangetsu", 0, SkillLook.GETSUGA_DUAL, 2, 5, 1.5, 3),
+			new LookCase("true_zangetsu", 1, List.of(SkillLook.SLASH, SkillLook.GETSUGA_DUAL), 2, 3, 5, 8),
+			new LookCase("true_zangetsu", 2, SkillLook.FLASH_TRAIL, 3, 10, 3, 0),
+			new LookCase("true_zangetsu", 3, List.of(SkillLook.MUGETSU, SkillLook.MUGETSU_VOID), 8, 16, 6, 6),
+			new LookCase("soo_zabimaru", 0, SkillLook.BONE_FANGS, 7, 3, 5, 9),
+			new LookCase("soo_zabimaru", 1, SkillLook.BONE_SNAKE, 4, 7, 2.5, 2),
+			new LookCase("soo_zabimaru", 2, SkillLook.BONE_LASH, 3, 3, 6, 8),
+			new LookCase("soo_zabimaru", 3, SkillLook.BONE_CAGE, 10, 2, 2, -5)
 		);
+		checkClassLooks(context, server, connection, JobClass.SHINIGAMI, cases, SkillLook.GETSUGA_DUAL, SkillLook.BONE_CAGE, "");
+	}
+
+	/**
+	 * Every skill of the nine tier 4 Archer weapons draws its own look (0.5.38): the Fate archers' arrows, gates, chains, suns and
+	 * moons. Screenshots {@code look_<skill>}, and Enuma Elish once more with improved transparency ({@code _fabulous}).
+	 */
+	private static void checkArcherLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("chiron_greatbow", 0, List.of(SkillLook.STAR_ARROW, SkillLook.ANTARES_MARK), 2, 6, 2, 6),
+			new LookCase("chiron_greatbow", 0, SkillLook.ANTARES_MARK, 8, 2, 1, 7).lift(2).shot("chiron_greatbow.antares_snipe_mark"),
+			new LookCase("chiron_greatbow", 1, SkillLook.PANKRATION, 2, 3, 2.5, 5),
+			new LookCase("chiron_greatbow", 2, SkillLook.ARROW_WARD, 8, 2, 1.5, -5),
+			new LookCase("chiron_greatbow", 3, SkillLook.GALLOP, 6, 10, 3, 0),
+			new LookCase("kanshou_bakuya_alter", 0, SkillLook.ULW_FIELD, 55, 5, 5, 16).lift(4),
+			new LookCase("kanshou_bakuya_alter", 1, List.of(SkillLook.GUN_KATA, SkillLook.TRACER), 2, 3, 2.5, 5),
+			new LookCase("kanshou_bakuya_alter", 2, SkillLook.COUNTER_GUARDIAN, 10, 3, 1.5, 4),
+			new LookCase("kanshou_bakuya_alter", 3, List.of(SkillLook.FLASH_TRAIL, SkillLook.TRACER), 6, 10, 3, 0),
+			new LookCase("apollo_bow", 0, SkillLook.SUN_BEAM, 4, 15, 4, 2),
+			new LookCase("apollo_bow", 1, SkillLook.HEEL_STRIKE, 7, 4, 2, 4),
+			new LookCase("apollo_bow", 2, SkillLook.PAEAN, 10, 3, 2.5, 7),
+			new LookCase("apollo_bow", 3, SkillLook.SUN_STEP, 3, 10, 3, 0),
+			new LookCase("artemis_bow", 0, SkillLook.MOON_ARROW, 3, 4, 1.5, 3),
+			new LookCase("artemis_bow", 1, SkillLook.CRESCENT_ARROW, 2, 2, 2.5, 5),
+			new LookCase("artemis_bow", 2, SkillLook.MOON_SIGIL, 10, 3, 4, 11).lift(1.5),
+			new LookCase("artemis_bow", 3, SkillLook.MOON_VEIL, 10, 2, 1.5, -5),
+			new LookCase("gandiva", 0, SkillLook.PASHUPATA_BOLT, 6, 4, 0, 17).lift(4.5),
+			new LookCase("gandiva", 1, SkillLook.FLAME_ARROW, 2, 4, 1.5, 3),
+			new LookCase("gandiva", 2, SkillLook.ENDOWED, 10, 2, 2.5, -6),
+			new LookCase("gandiva", 3, SkillLook.MANA_FLAME, 6, 10, 3, 0),
+			new LookCase("maanna", 0, SkillLook.VENUS_STAR, 5, 5, 0, 17).lift(4.5),
+			new LookCase("maanna", 0, SkillLook.VENUS_STAR, 12, 5, 4, 15).lift(1.5).shot("maanna.an_gal_ta_kigal_she_impact"),
+			new LookCase("maanna", 1, SkillLook.GEM, 2, 2, 1, 3),
+			new LookCase("maanna", 2, SkillLook.BEAUTY, 10, 3, 4, 9),
+			new LookCase("maanna", 3, SkillLook.VENUS_WINGS, 10, 3, 1, 6),
+			new LookCase("gate_of_babylon", 0, List.of(SkillLook.BABYLON_SKY, SkillLook.BABYLON_GATE, SkillLook.TREASURE), 40, 7, 1, 20).lift(5),
+			new LookCase("gate_of_babylon", 1, List.of(SkillLook.BABYLON_GATE, SkillLook.TREASURE), 7, 6, 1.5, -7).focus(SkillLook.NONE),
+			new LookCase("gate_of_babylon", 2, SkillLook.ENKIDU, 12, 7, 3, 1),
+			new LookCase("gate_of_babylon", 3, SkillLook.TREASURY_SHIELDS, 8, 2.5, 1.5, -5),
+			new LookCase("ea_and_merodach", 0, SkillLook.EA_CHARGE, 2, 3, 1, 3).shot("ea_and_merodach.enuma_elish_charge"),
+			new LookCase("ea_and_merodach", 0, SkillLook.ENUMA_ELISH, 17, 14, 6, 6),
+			new LookCase("ea_and_merodach", 1, List.of(SkillLook.SIN_WAVE, SkillLook.SLASH), 2, 2, 2, 5),
+			new LookCase("ea_and_merodach", 2, SkillLook.SHA_NAQBA, 10, 3, 3, 9).lift(2.5),
+			new LookCase("ea_and_merodach", 3, SkillLook.GOLDEN_RULE, 10, 2, 1.5, -5),
+			new LookCase("pashupata", 0, SkillLook.PASHUPATA_DISC, 5, 5, 0, 15).lift(3.5),
+			new LookCase("pashupata", 1, SkillLook.DISCUS, 2, 3, 2.5, 3),
+			new LookCase("pashupata", 2, SkillLook.FLAME_BURST, 5, 3, 5, 10),
+			new LookCase("pashupata", 3, SkillLook.ENDOWED, 10, 2, 2.5, -6)
+		);
+		checkClassLooks(context, server, connection, JobClass.ARCHER, cases, SkillLook.STAR_ARROW, SkillLook.PASHUPATA_DISC, "ea_and_merodach.enuma_elish");
+	}
+
+	/**
+	 * Casts each case's skill as a tier 4 {@code job} with a big husk in front, checks the client sees its looks, then freezes ticking
+	 * and photographs the look from an invisible armor stand (the caster stays where the skill left them), by night and by day; the
+	 * shot named {@code fabulous} is taken again with improved transparency (the Fabulous preset draws blended types through
+	 * order-independent transparency, which crashed on a type without OIT pipelines until 0.5.36). Fails when a look from {@code first}
+	 * to {@code last} is never shown.
+	 */
+	private static void checkClassLooks(
+		final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final JobClass job, final List<LookCase> cases,
+		final SkillLook first, final SkillLook last, final String fabulous
+	) {
 		server.runCommand("time set midnight");
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		Set<SkillLook> seen = new HashSet<>();
-		for (ReaperLook look : cases) {
+		for (LookCase look : cases) {
 			Skill skill = JobWeapons.def(look.weapon()).skills().get(look.slot());
 			server.runOnServer(s -> {
 				ServerPlayer player = connection.getServerPlayer();
 				ServerLevel level = player.level();
 				for (Entity e : level.getEntitiesOfClass(Entity.class, player.getBoundingBox().inflate(48),
-					e -> e instanceof SkillVfx || e instanceof SkillProjectile || e.entityTags().contains(TARGET))) {
+					e -> e instanceof SkillVfx || e instanceof SkillProjectile || e.entityTags().contains(TARGET) || e.entityTags().contains(Actions.SUMMON_TAG))) {
 					e.discard();
 				}
-				JobProgression.set(player, JobProgression.get(player).withJob(JobClass.SHINIGAMI, 4).withProgress(100, 0));
+				JobProgression.set(player, JobProgression.get(player).withJob(job, 4).withProgress(100, 0));
 				player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def(look.weapon()))));
 				JobStats.refresh(player);
 				player.removeAllEffects();
@@ -860,16 +944,25 @@ public class JobClientGameTest implements FabricClientGameTest {
 				seen.add(want);
 			}
 			server.runCommand("tick freeze");
-			SkillLook first = look.looks().getFirst();
-			Vec3 focus = context.computeOnClient(minecraft -> lookFocus(minecraft, first));
-			require(focus != null, "no " + first + " on the client after casting " + skill.id());
-			cameraShot(context, server, connection, focus, focus.add(look.side(), look.up(), look.back()), "look_" + skill.id());
+			Vec3 focus = context.computeOnClient(minecraft -> look.focus() == SkillLook.NONE ? minecraft.player.position().add(0, 1.2, 0) : lookFocus(minecraft, look.focus()));
+			require(focus != null, "no " + look.focus() + " on the client after casting " + skill.id());
+			Vec3 aim = focus.add(0, look.lift(), 0);
+			String name = "look_" + (look.shot().isEmpty() ? skill.id() : look.shot());
+			cameraShot(context, server, connection, aim, aim.add(look.side(), look.up(), look.back()), name);
+			if (name.equals("look_" + fabulous)) {
+				context.runOnClient(minecraft -> minecraft.options.improvedTransparency().set(true));
+				context.waitTicks(5);
+				cameraShot(context, server, connection, aim, aim.add(look.side(), look.up(), look.back()), name + "_fabulous");
+				context.runOnClient(minecraft -> minecraft.options.improvedTransparency().set(false));
+				context.waitTicks(5);
+			}
 			server.runCommand("tick unfreeze");
 		}
 		context.waitTicks(10);
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			for (Entity e : player.level().getEntitiesOfClass(Entity.class, player.getBoundingBox().inflate(48), e -> e instanceof SkillVfx || e instanceof SkillProjectile)) {
+			for (Entity e : player.level().getEntitiesOfClass(Entity.class, player.getBoundingBox().inflate(48),
+				e -> e instanceof SkillVfx || e instanceof SkillProjectile || e.entityTags().contains(Actions.SUMMON_TAG))) {
 				e.discard();
 			}
 			player.removeAllEffects();
@@ -879,11 +972,11 @@ public class JobClientGameTest implements FabricClientGameTest {
 		server.runCommand("kill @e[tag=" + TARGET + "]");
 		server.runCommand("time set noon");
 		for (SkillLook want : SkillLook.values()) {
-			if (want.ordinal() > SkillLook.RASENGAN_BURST.ordinal()) {
-				require(seen.contains(want), want + " is never shown by a Soul Reaper skill");
+			if (want.ordinal() >= first.ordinal() && want.ordinal() <= last.ordinal()) {
+				require(seen.contains(want), want + " is never shown by a tier 4 " + job + " skill");
 			}
 		}
-		MinecraftMode.LOGGER.info("[job] every tier 4 Soul Reaper skill draws its look on the client ({} looks)", seen.size());
+		MinecraftMode.LOGGER.info("[job] every tier 4 {} skill draws its look on the client ({} looks)", job, seen.size());
 	}
 
 	/** What the camera looks at for {@code look}: the middle of a beam or cone, a trail's middle, a projectile, else above its spot. */

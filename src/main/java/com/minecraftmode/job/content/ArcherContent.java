@@ -12,6 +12,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -138,70 +139,91 @@ public final class ArcherContent extends ClassContent {
 			skill("hunting_focus", "Hunting Focus", "사냥 집중", UTILITY, 20, 14, boost(CRIT_DAMAGE, 8, 40)));
 
 		// ---------------------------------------------------------------- tier 4: King of Heroes
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.38): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (glyph bolts) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("chiron_greatbow", 4, 70, GREATBOW, "Chiron's Greatbow", "케이론의 대궁",
 			art(0x6D4C41, 0x263238, 0xFF4500), fx(Fx.Kind.BOLT, 0xFF7043),
-			skill("antares_snipe", "Antares Snipe", "천갈일사", ULTIMATE, 45, 36, mark(24, 6, 40), shoot(ProjectileStyle.ARROW, 6.48).speed(5.0F).pierce(6)),
-			skill("pankration", "Pankration", "판크라티온", ATTACK, 10, 20, slash(4, 140, 1.8), stun(1.0), push(4, 1.6)),
-			skill("arrow_protection", "Protection from Arrows", "화살 회피의 가호", UTILITY, 22, 20, boost(CRIT_CHANCE, 6, 30), boost(DAMAGE, 6, 10)),
-			skill("centaur_gallop", "Centaur's Gallop", "켄타우로스의 질주", MOVEMENT, 10, 16, buff(SPEED, 6, 2), dash(12, 1.4)));
+			skill("antares_snipe", "Antares Snipe", "천갈일사", ULTIMATE, 45, 36, look(SkillLook.ANTARES_MARK, mark(24, 6, 40)).onTarget(24),
+				shoot(ProjectileStyle.ARROW, 6.48).speed(5.0F).pierce(6).look(SkillLook.STAR_ARROW)).withFx(Fx.Kind.SPARK),
+			skill("pankration", "Pankration", "판크라티온", ATTACK, 10, 20, look(SkillLook.PANKRATION, slash(4, 140, 1.8)).cone(4, 140), stun(1.0), push(4, 1.6)).withFx(Fx.Kind.SPARK),
+			skill("arrow_protection", "Protection from Arrows", "화살 회피의 가호", UTILITY, 22, 20, look(SkillLook.ARROW_WARD, boost(CRIT_CHANCE, 6, 30)),
+				boost(DAMAGE, 6, 10)),
+			skill("centaur_gallop", "Centaur's Gallop", "켄타우로스의 질주", MOVEMENT, 10, 16, buff(SPEED, 6, 2), look(SkillLook.GALLOP, dash(12, 1.4)).lasting(1.2)).withFx(Fx.Kind.SPARK));
 
 		weapon("kanshou_bakuya_alter", 4, 73, TWIN_BLADES, "Kanshou & Bakuya (Alter)", "간장·막야 (얼터)",
 			art(0x3A3A42, 0x151515, 0xE03030), fx(Fx.Kind.SPARK, 0xFF5A5A),
 			skill("unlimited_lost_works", "Unlimited Lost Works", "언리미티드 로스트 워크스", ULTIMATE, 48, 38,
-				shoot(ProjectileStyle.BULLET, 0.9).count(8).spread(40).interval(2), delay(0.8, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.45))),
-			skill("gun_kata", "Gun Kata", "건 카타", ATTACK, 8, 22, slash(4, 360, 1.19), shoot(ProjectileStyle.BULLET, 1.02).count(5).spread(60)),
-			skill("counter_guardian", "Counter Guardian", "카운터 가디언", DEFENSE, 22, 22, boost(CRIT_DAMAGE, 6, 50), shield(12, 8)),
-			skill("afterimage_shot", "Afterimage Shot", "잔상 사격", MOVEMENT, 10, 16, blink(10), delay(0.2, shoot(ProjectileStyle.BULLET, 1.5).count(3).spread(20))));
+				shoot(ProjectileStyle.BULLET, 0.9).count(8).spread(40).interval(2).look(SkillLook.TRACER),
+				delay(0.8, look(SkillLook.ULW_FIELD, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.45)).at(14).size(5).lasting(3))),
+			skill("gun_kata", "Gun Kata", "건 카타", ATTACK, 8, 22, look(SkillLook.GUN_KATA, slash(4, 360, 1.19)).size(4),
+				shoot(ProjectileStyle.BULLET, 1.02).count(5).spread(60).look(SkillLook.TRACER)),
+			skill("counter_guardian", "Counter Guardian", "카운터 가디언", DEFENSE, 22, 22, look(SkillLook.COUNTER_GUARDIAN, boost(CRIT_DAMAGE, 6, 50)), shield(12, 8)),
+			skill("afterimage_shot", "Afterimage Shot", "잔상 사격", MOVEMENT, 10, 16, look(SkillLook.FLASH_TRAIL, blink(10)),
+				delay(0.2, shoot(ProjectileStyle.BULLET, 1.5).count(3).spread(20).look(SkillLook.TRACER))));
 
 		weapon("apollo_bow", 4, 76, LONGBOW, "Bow of Apollo", "아폴론의 활",
 			art(0xFFD24A, 0xFFF3D6, 0xFF7A00), fx(Fx.Kind.SPARK, 0xFFC93C),
-			skill("hekatebolos", "Hekatebolos", "헤카테볼로스", ULTIMATE, 45, 38, beam(26, 7.6), burn(6), inflict(BLINDNESS, 3, 0)),
-			skill("achilles_heel", "Achilles' Heel", "아킬레스건", ATTACK, 14, 24, execute(24, 2.6, 40, 2.0)),
-			skill("paean", "Paean", "파이안", UTILITY, 26, 24, allyHeal(10, 25), allyBuff(10, REGENERATION, 8, 1), cleanse()),
-			skill("sunlit_step", "Sunlit Step", "햇살 걸음", MOVEMENT, 9, 16, blink(12), buff(SPEED, 6, 1)));
+			skill("hekatebolos", "Hekatebolos", "헤카테볼로스", ULTIMATE, 45, 38, look(SkillLook.SUN_BEAM, beam(26, 7.6)).beam(26), burn(6), inflict(BLINDNESS, 3, 0)),
+			skill("achilles_heel", "Achilles' Heel", "아킬레스건", ATTACK, 14, 24, look(SkillLook.HEEL_STRIKE, execute(24, 2.6, 40, 2.0)).onTarget(24)),
+			skill("paean", "Paean", "파이안", UTILITY, 26, 24, look(SkillLook.PAEAN, allyHeal(10, 25)).size(10), allyBuff(10, REGENERATION, 8, 1), cleanse()),
+			skill("sunlit_step", "Sunlit Step", "햇살 걸음", MOVEMENT, 9, 16, look(SkillLook.SUN_STEP, blink(12)), buff(SPEED, 6, 1)));
 
 		weapon("artemis_bow", 4, 79, SHORTBOW, "Bow of Artemis", "아르테미스의 활",
 			art(0xE6ECFF, 0xB8C2DC, 0x8FB2FF), fx(Fx.Kind.FEATHER, 0xC8D8FF),
 			skill("tri_star_amore_mio", "Tri-Star Amore Mio", "트라이스타 아모레 미오", ULTIMATE, 50, 38,
-				repeat(3, 8, shoot(ProjectileStyle.ARROW, 2.1).count(3).spread(15).homing()), inflict(VULNERABLE, 6, 1)),
-			skill("crescent_volley", "Crescent Volley", "초승달 연사", ATTACK, 8, 22, shoot(ProjectileStyle.ARROW, 1.5).count(5).spread(60).pierce(2)),
-			skill("hounds_of_the_moon", "Hounds of the Moon", "달의 사냥개", UTILITY, 28, 24, summon(Summon.WOLF, 3, 18), debuff(12, SLOWNESS, 5, 1)),
-			skill("moonlight_veil", "Moonlight Veil", "월광의 장막", UTILITY, 22, 20, stealth(4, 60), boost(CRIT_CHANCE, 6, 25)));
+				repeat(3, 8, shoot(ProjectileStyle.ARROW, 2.1).count(3).spread(15).homing().look(SkillLook.MOON_ARROW)), inflict(VULNERABLE, 6, 1)),
+			skill("crescent_volley", "Crescent Volley", "초승달 연사", ATTACK, 8, 22,
+				shoot(ProjectileStyle.ARROW, 1.5).count(5).spread(60).pierce(2).look(SkillLook.CRESCENT_ARROW)),
+			skill("hounds_of_the_moon", "Hounds of the Moon", "달의 사냥개", UTILITY, 28, 24, look(SkillLook.MOON_SIGIL, summon(Summon.WOLF, 3, 18)).size(6),
+				debuff(12, SLOWNESS, 5, 1)),
+			skill("moonlight_veil", "Moonlight Veil", "월광의 장막", UTILITY, 22, 20, look(SkillLook.MOON_VEIL, stealth(4, 60)).lasting(4), boost(CRIT_CHANCE, 6, 25)));
 
 		weapon("gandiva", 4, 83, GREATBOW, "Gandiva", "간디바",
 			art(0xF2F2F2, 0x1E2A44, 0x4AA8FF), fx(Fx.Kind.BOLT, 0x7FB8FF),
-			skill("pashupata", "Pashupata", "파괴신의 손짓", ULTIMATE, 55, 40, lightning(24, 6, 7.6), inflict(WITHER, 6, 1)),
-			skill("agni_gandiva", "Agni Gandiva", "아그니 간디바", ATTACK, 10, 24, shoot(ProjectileStyle.ARROW, 1.28).count(3).spread(12).explode(2.0F), burn(5)),
-			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, restoreMana(25), buff(MANA_FLOW, 12, 0), refresh(30)),
-			skill("flame_burst", "Mana Burst (Flame)", "마력방출(불꽃)", MOVEMENT, 10, 18, dash(10, 1.8), burn(3)));
+			skill("pashupata", "Pashupata", "파괴신의 손짓", ULTIMATE, 55, 40, look(SkillLook.PASHUPATA_BOLT, lightning(24, 6, 7.6)).at(24).size(6), inflict(WITHER, 6, 1)),
+			skill("agni_gandiva", "Agni Gandiva", "아그니 간디바", ATTACK, 10, 24,
+				shoot(ProjectileStyle.ARROW, 1.28).count(3).spread(12).explode(2.0F).look(SkillLook.FLAME_ARROW), burn(5)),
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, look(SkillLook.ENDOWED, restoreMana(25)), buff(MANA_FLOW, 12, 0), refresh(30)),
+			skill("flame_burst", "Mana Burst (Flame)", "마력방출(불꽃)", MOVEMENT, 10, 18, look(SkillLook.MANA_FLAME, dash(10, 1.8)).lasting(1.2), burn(3)));
 
 		weapon("maanna", 4, 87, LONGBOW, "Maanna", "마안나",
 			art(0xE8D27A, 0x1A1A2E, 0xD7263D), fx(Fx.Kind.COIN, 0xFFD700),
-			skill("an_gal_ta_kigal_she", "An Gal Ta Kigal Shè", "앙갈타 키갈슈", ULTIMATE, 50, 40, stun(1.5), strike(24, 6, 1, 7.98)),
-			skill("gem_shot", "Gem Shot", "보석 사격", ATTACK, 8, 22, shoot(ProjectileStyle.ORB, 1.66).count(5).spread(40).homing(), loot(15)),
-			skill("manifestation_of_beauty", "Manifestation of Beauty", "미의 현현", UTILITY, 24, 24, allyBoost(10, DAMAGE, 10, 20), debuff(10, WEAKNESS, 6, 1)),
-			skill("goddess_flight", "Goddess's Flight", "여신의 비행", MOVEMENT, 12, 18, blink(12), buff(SLOW_FALLING, 8, 0), buff(SPEED, 8, 1)));
+			skill("an_gal_ta_kigal_she", "An Gal Ta Kigal Shè", "앙갈타 키갈슈", ULTIMATE, 50, 40, stun(1.5),
+				look(SkillLook.VENUS_STAR, strike(24, 6, 1, 7.98)).at(24).size(6)),
+			skill("gem_shot", "Gem Shot", "보석 사격", ATTACK, 8, 22, shoot(ProjectileStyle.ORB, 1.66).count(5).spread(40).homing().look(SkillLook.GEM), loot(15)),
+			skill("manifestation_of_beauty", "Manifestation of Beauty", "미의 현현", UTILITY, 24, 24, look(SkillLook.BEAUTY, allyBoost(10, DAMAGE, 10, 20)).size(10),
+				debuff(10, WEAKNESS, 6, 1)),
+			skill("goddess_flight", "Goddess's Flight", "여신의 비행", MOVEMENT, 12, 18, look(SkillLook.VENUS_WINGS, blink(12)).lasting(4), buff(SLOW_FALLING, 8, 0),
+				buff(SPEED, 8, 1)));
 
 		weapon("gate_of_babylon", 4, 92, CROSSBOW, "Gate of Babylon", "왕의 재보",
 			art(0xFFD700, 0x5A0A0A, 0x40E0D0), fx(Fx.Kind.RUNE, 0xFFE066),
 			skill("full_open", "Gate of Babylon: Full Open", "왕의 재보: 전면 개방", ULTIMATE, 50, 38,
-				barrage(ProjectileStyle.BLADE, 24, 0.28), delay(1.5, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.11))),
-			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.3)),
-			skill("enkidu", "Enkidu: Chains of Heaven", "하늘의 사슬", UTILITY, 18, 26, pull(10, 1.8), debuff(10, STUN, 1.5, 0), debuff(10, VULNERABLE, 6, 1)),
-			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, shield(20, 10), boost(DAMAGE, 5, 25)));
+				barrage(ProjectileStyle.BLADE, 24, 0.28, SkillLook.BABYLON_GATE, SkillLook.TREASURE),
+				delay(1.5, look(SkillLook.BABYLON_SKY, rain(ProjectileStyle.BLADE, 20, 6, 16, 0.11, 0.0F, SkillLook.BABYLON_GATE, SkillLook.TREASURE)).at(20).size(6)
+					.lasting(2.2))),
+			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.3, SkillLook.BABYLON_GATE, SkillLook.TREASURE)),
+			skill("enkidu", "Enkidu: Chains of Heaven", "하늘의 사슬", UTILITY, 18, 26, look(SkillLook.ENKIDU, pull(10, 1.8)).size(10), debuff(10, STUN, 1.5, 0),
+				debuff(10, VULNERABLE, 6, 1)),
+			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, look(SkillLook.TREASURY_SHIELDS, shield(20, 10)).lasting(4),
+				boost(DAMAGE, 5, 25)));
 
 		weapon("ea_and_merodach", 4, 100, TWIN_BLADES, "Ea & Merodach", "에아 & 메로닥",
 			art(0x8B1010, 0xFFD700, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF3030),
-			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, pull(10, 1.4), delay(0.6, beam(32, 10.0)), inflict(VULNERABLE, 8, 2)),
-			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, slash(5, 200, 1.4), shoot(ProjectileStyle.WAVE, 1.3).pierce(6)),
-			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, debuff(16, GLOWING, 12, 0), mark(24, 12, 45), restoreMana(25)),
-			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", DEFENSE, 28, 26, boost(DAMAGE, 8, 20), buff(REGENERATION, 8, 1), heal(20)));
+			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, look(SkillLook.EA_CHARGE, pull(10, 1.4)),
+				delay(0.6, look(SkillLook.ENUMA_ELISH, beam(32, 10.0)).beam(32)), inflict(VULNERABLE, 8, 2)),
+			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, look(SkillLook.SLASH, slash(5, 200, 1.4)).cone(5, 200),
+				shoot(ProjectileStyle.WAVE, 1.3).pierce(6).look(SkillLook.SIN_WAVE)).withFx(Fx.Kind.SPARK),
+			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, look(SkillLook.SHA_NAQBA, debuff(16, GLOWING, 12, 0)).size(16),
+				mark(24, 12, 45), restoreMana(25)),
+			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", DEFENSE, 28, 26, look(SkillLook.GOLDEN_RULE, boost(DAMAGE, 8, 20)), buff(REGENERATION, 8, 1),
+				heal(20)));
 
 		weapon("pashupata", 4, 97, CHAKRAM, "Pashupata", "파슈파타",
 			art(0xE8F0FF, 0x1F2A5C, 0x4AD7FF), fx(Fx.Kind.BOLT, 0x9FE8FF),
-			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 50, 40, mark(20, 8, 30), strike(20, 5, 1, 6.5)),
-			skill("divine_discus", "Divine Discus", "신성한 원반", ATTACK, 7, 18, shoot(ProjectileStyle.BLADE, 1.7).count(3).spread(30).pierce(3)),
-			skill("mana_burst_flame", "Mana Burst (Flame)", "마력방출(불꽃)", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
-			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, heal(15), boost(DAMAGE, 8, 15)));
+			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 50, 40, mark(20, 8, 30), look(SkillLook.PASHUPATA_DISC, strike(20, 5, 1, 6.5)).at(20).size(5)),
+			skill("divine_discus", "Divine Discus", "신성한 원반", ATTACK, 7, 18, shoot(ProjectileStyle.BLADE, 1.7).count(3).spread(30).pierce(3).look(SkillLook.DISCUS)),
+			skill("mana_burst_flame", "Mana Burst (Flame)", "마력방출(불꽃)", ATTACK, 10, 20, burn(5), look(SkillLook.FLAME_BURST, nova(5, 2.2)).size(5)),
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, look(SkillLook.ENDOWED, heal(15)), boost(DAMAGE, 8, 15)));
 	}
 }

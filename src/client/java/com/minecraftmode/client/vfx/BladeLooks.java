@@ -27,13 +27,7 @@ final class BladeLooks {
 
 	/** Afterimages along the caster's path: a fading sheet of their height, ghost figures and speed lines. */
 	static void flashTrail(final State s, final PoseStack ps, final SubmitNodeCollector c) {
-		List<Vector3f> points = new java.util.ArrayList<>();
-		points.add(new Vector3f());
-		for (Vector3f p : s.trail) {
-			if (p.distanceSquared(points.getLast()) > 0.04F) {
-				points.add(p);
-			}
-		}
+		List<Vector3f> points = VfxOut.path(s.trail);
 		if (points.size() < 2) {
 			return;
 		}
@@ -87,7 +81,7 @@ final class BladeLooks {
 			}
 			// ghost figures where the caster passed
 			for (int g = 1; g <= 3; g++) {
-				Vector3f at = along(points, last, g / 4.0F);
+				Vector3f at = VfxOut.along(points, last, g / 4.0F);
 				float a = fade * (0.2F + 0.15F * g);
 				ghost(o, s, at, argb(a, tone), argb(a * 0.8F, VfxDraw.whiten(tone, 0.4F)));
 			}
@@ -105,23 +99,6 @@ final class BladeLooks {
 		Vector3f up = new Vector3f(s.camUp).mul(0.75F);
 		o.sprite(new Vector3f(feet).add(0, 0.85F, 0), right, up, 1.0F, body);
 		o.sprite(new Vector3f(feet).add(0, 1.65F, 0), s.camRight, s.camUp, 0.26F, head);
-	}
-
-	/** The point {@code t} (0..1) of the way along a polyline up to point {@code last}. */
-	private static Vector3f along(final List<Vector3f> points, final int last, final float t) {
-		float total = 0.0F;
-		for (int i = 0; i < last; i++) {
-			total += points.get(i).distance(points.get(i + 1));
-		}
-		float want = total * t;
-		for (int i = 0; i < last; i++) {
-			float d = points.get(i).distance(points.get(i + 1));
-			if (want <= d && d > 0) {
-				return new Vector3f(points.get(i)).lerp(points.get(i + 1), want / d);
-			}
-			want -= d;
-		}
-		return new Vector3f(points.get(last));
 	}
 
 	// ------------------------------------------------------------ slashes

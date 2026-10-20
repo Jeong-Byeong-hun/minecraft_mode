@@ -2,8 +2,8 @@ package com.minecraftmode.job.skill;
 
 /**
  * Drawn skill effects that particles cannot show (a crescent sword wave, a spinning sphere). The client draws them as geometry
- * ({@code client/vfx}): {@link #GETSUGA}, {@link #GETSUGA_DUAL} and {@link #TAIMATSU} are the shape of a {@link SkillProjectile}, the
- * others are {@link SkillVfx} entities that live {@link #ticks} ticks (or as long as {@link Actions.LookAction#lasting} says). Where
+ * ({@code client/vfx}): the ones without ticks ({@link #projectile}: {@link #GETSUGA}, {@link #TAIMATSU}, the archer's arrows) are the
+ * shape of a {@link SkillProjectile}, the others are {@link SkillVfx} entities that live {@link #ticks} ticks (or as long as {@link Actions.LookAction#lasting} says). Where
  * one appears (feet, aimed ground, a target, along a beam or a cone) is set by {@link Actions.LookAction}. Synced by ordinal: append
  * only.
  */
@@ -78,7 +78,83 @@ public enum SkillLook {
 	/** A segmented bone whip sweeping its arc (along a cone). */
 	BONE_LASH(10, 7.0F, Hold.FREE),
 	/** Baboon bone armor: great ribs rising round the caster. */
-	BONE_CAGE(50, 1.0F, Hold.FOLLOW);
+	BONE_CAGE(50, 1.0F, Hold.FOLLOW),
+
+	// ------------------------------------------------------------ Archer, King of Heroes (0.5.38)
+	/** Antares Snipe: an arrow of starlight, the red star Antares at its head and a tail of glinting stars (projectile). */
+	STAR_ARROW(0, 1.0F, Hold.FREE),
+	/** Antares Snipe's mark: the Scorpion's stars and their lines turning over the target, Antares burning red. */
+	ANTARES_MARK(60, 1.0F, Hold.FOLLOW),
+	/** Pankration: a palm strike's shock rolling out in front, the ground cracking under it (along a cone). */
+	PANKRATION(12, 4.0F, Hold.FREE),
+	/** Protection from Arrows: arrows of light circling the caster and a faint dome they turn on. */
+	ARROW_WARD(50, 1.6F, Hold.FOLLOW),
+	/** Centaur's Gallop: hoofprints of fire along the caster's path and wind streaking past. */
+	GALLOP(24, 1.0F, Hold.TRAIL),
+	/** A gunshot's tracer: a hot streak behind the bullet (projectile). */
+	TRACER(0, 1.0F, Hold.FREE),
+	/** Gun Kata: the black and white falchions whirling round the caster, muzzle flashes all round. */
+	GUN_KATA(12, 4.0F, Hold.FREE),
+	/** Unlimited Lost Works: a field of swords stuck in the ground, gears turning in a red sky over it. */
+	ULW_FIELD(60, 5.0F, Hold.FREE),
+	/** Counter Guardian: a tattered dark-red shroud and a red mantle of power round the caster. */
+	COUNTER_GUARDIAN(60, 1.0F, Hold.FOLLOW),
+	/** Hekatebolos: a sun disc behind the caster and a beam of sunlight shot from it (along a beam). */
+	SUN_BEAM(24, 26.0F, Hold.FREE),
+	/** Achilles' Heel: a golden reticle closing on the target and one pinpoint shaft of light into its heel. */
+	HEEL_STRIKE(18, 1.0F, Hold.FOLLOW),
+	/** Paean: golden notes of the hymn rising round the caster, rings of light washing out. */
+	PAEAN(40, 10.0F, Hold.FOLLOW),
+	/** Sunlit Step: a sunburst where the caster left and a streak of sunlight to where they are. */
+	SUN_STEP(16, 1.0F, Hold.TRAIL),
+	/** Tri-Star Amore Mio: a moonlit arrow trailing hearts and stars (projectile). */
+	MOON_ARROW(0, 1.0F, Hold.FREE),
+	/** Crescent Volley: a silver crescent moon riding each arrow (projectile). */
+	CRESCENT_ARROW(0, 1.0F, Hold.FREE),
+	/** Hounds of the Moon: a moon sigil on the ground, the full moon over it and crescents round its rim. */
+	MOON_SIGIL(50, 6.0F, Hold.FREE),
+	/** Moonlight Veil: a crescent moon over the caster and a shimmering silver veil falling round them. */
+	MOON_VEIL(60, 1.0F, Hold.FOLLOW),
+	/** Gandiva's Pashupata: the destroyer's third eye opening in the sky and a blue-white bolt thrown down from it. */
+	PASHUPATA_BOLT(24, 6.0F, Hold.FREE),
+	/** Agni Gandiva: an arrow wreathed in the fire god's flames (projectile). */
+	FLAME_ARROW(0, 1.0F, Hold.FREE),
+	/** Hero of the Endowed: a halo of blessing over the caster and motes of light raining round them. */
+	ENDOWED(40, 1.0F, Hold.FOLLOW),
+	/** Mana Burst (Flame): flames bursting off the caster's path. */
+	MANA_FLAME(24, 1.0F, Hold.TRAIL),
+	/** An Gal Ta Kigal She: Venus's eight-pointed star on the aimed ground, the great gem-star falling onto it and bursting. */
+	VENUS_STAR(30, 6.0F, Hold.FREE),
+	/** Gem Shot: a cut gemstone, glinting (projectile). */
+	GEM(0, 1.0F, Hold.FREE),
+	/** Manifestation of Beauty: Ishtar's star glowing on the ground round the caster, light rising. */
+	BEAUTY(40, 10.0F, Hold.FOLLOW),
+	/** Goddess's Flight: wings of golden light on the caster's back. */
+	VENUS_WINGS(80, 1.0F, Hold.FOLLOW),
+	/** One Gate of Babylon: a golden ripple in the air a treasure flies out of (facing along its reach). */
+	BABYLON_GATE(16, 1.0F, Hold.FREE),
+	/** A treasure of the Gate: a golden streak behind the flying weapon (projectile). */
+	TREASURE(0, 1.0F, Hold.FREE),
+	/** Full Open: the sky over the aimed spot filled with golden gates, blades showing in them. */
+	BABYLON_SKY(40, 6.0F, Hold.FREE),
+	/** Enkidu: golden chains shooting out of ripples round the caster and winding round every enemy near. */
+	ENKIDU(30, 10.0F, Hold.FOLLOW),
+	/** Shields of the Treasury: golden shields come out of gates and circle the caster. */
+	TREASURY_SHIELDS(80, 1.6F, Hold.FOLLOW),
+	/** Enuma Elish winding up: Ea raised, its three cylinders turning and red wind drawn into it. */
+	EA_CHARGE(14, 1.0F, Hold.FOLLOW),
+	/** Enuma Elish: a red-black spiral tearing through space, rings of red force round it (along a beam). */
+	ENUMA_ELISH(30, 32.0F, Hold.FREE),
+	/** Merodach, Original Sin: a crimson blade wave edged in gold (projectile). */
+	SIN_WAVE(0, 1.0F, Hold.FREE),
+	/** Sha Naqba Imuru: the all-seeing eye opening over the caster, its sight sweeping out in a ring. */
+	SHA_NAQBA(40, 16.0F, Hold.FOLLOW),
+	/** Golden Rule (Body): golden light rising off the caster, rings of gold round them. */
+	GOLDEN_RULE(60, 1.0F, Hold.FOLLOW),
+	/** Divine Discus: a spinning blue-white disc of light round the chakram (projectile). */
+	DISCUS(0, 1.0F, Hold.FREE),
+	/** Pashupata (chakram): the destroyer's sigil on the aimed ground and a great discus of light coming down onto it. */
+	PASHUPATA_DISC(26, 5.0F, Hold.FREE);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {
@@ -112,6 +188,11 @@ public enum SkillLook {
 
 	public Hold hold() {
 		return this.hold;
+	}
+
+	/** Drawn on a {@link SkillProjectile} ({@code shoot(...).look(...)}) rather than shown as a {@link SkillVfx}. */
+	public boolean projectile() {
+		return this != NONE && this.ticks == 0;
 	}
 
 	/** Held by its caster (or a target): anything but {@link Hold#FREE}. */

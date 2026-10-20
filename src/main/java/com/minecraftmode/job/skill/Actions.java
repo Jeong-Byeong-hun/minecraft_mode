@@ -833,6 +833,17 @@ public final class Actions {
 	}
 
 	public static SkillAction rain(final ProjectileStyle style, final double range, final double radius, final int count, final double mult, final float explode) {
+		return rain(style, range, radius, count, mult, explode, SkillLook.NONE, SkillLook.NONE);
+	}
+
+	/**
+	 * {@link #rain} with drawn effects: each projectile falls out of a {@code gate} look where it starts (facing down its fall) and is
+	 * drawn as {@code shot}. Visual only.
+	 */
+	public static SkillAction rain(
+		final ProjectileStyle style, final double range, final double radius, final int count, final double mult, final float explode, final SkillLook gate,
+		final SkillLook shot
+	) {
 		// an exploding one hits everyone around where it lands: an area hit
 		double m = explode > 0 ? mult * SkillContext.AREA_SCALE : mult;
 		MutableComponent text = Component.translatable(RAIN, num(range), num(radius), style(style), count, pct(m));
@@ -851,7 +862,10 @@ public final class Actions {
 					Vec3 ground = rainTarget(ctx, center, r);
 					Vec3 from = sky(ctx, ground);
 					Vec3 dir = ground.subtract(from).normalize();
-					spawn(ctx, style, from, dir, RAIN_SPEED, m, 0, explode, false, null, style == ProjectileStyle.BLADE);
+					if (gate != SkillLook.NONE) {
+						SkillVfx.spawn(ctx, gate, from, dir, gate.size(), 0.0F, gate.ticks(), null);
+					}
+					spawn(ctx, style, from, dir, RAIN_SPEED, m, 0, explode, false, null, style == ProjectileStyle.BLADE, null, shot);
 				});
 			}
 			sound(ctx, SoundEvents.EVOKER_PREPARE_ATTACK, 0.8F, 1.2F);
@@ -891,6 +905,14 @@ public final class Actions {
 
 	/** Projectiles launched from glowing portals behind the caster toward the crosshair. */
 	public static SkillAction barrage(final ProjectileStyle style, final int count, final double mult) {
+		return barrage(style, count, mult, SkillLook.NONE, SkillLook.NONE);
+	}
+
+	/**
+	 * {@link #barrage} with drawn effects: each projectile comes out of a {@code gate} look ({@link SkillLook#BABYLON_GATE}, facing where
+	 * it flies) and is drawn as {@code shot}. Visual only: the same projectiles from the same places.
+	 */
+	public static SkillAction barrage(final ProjectileStyle style, final int count, final double mult, final SkillLook gate, final SkillLook shot) {
 		return attack(ctx -> {
 			for (int i = 0; i < count; i++) {
 				SkillScheduler.schedule(1 + i * 2, () -> {
@@ -903,9 +925,13 @@ public final class Actions {
 					double lateral = (p.getRandom().nextDouble() - 0.5) * 5.0;
 					Vec3 from = SkillContext.openPoint(p, p.getEyePosition().add(back).add(side.scale(lateral)).add(0, 0.5 + p.getRandom().nextDouble() * 1.8, 0));
 					Vec3 dir = lob(from, ctx.aimPoint(32.0), BARRAGE_SPEED, style.gravity());
-					ctx.fx.still(ctx.level, Fx.Kind.RUNE, from);
+					if (gate == SkillLook.NONE) {
+						ctx.fx.still(ctx.level, Fx.Kind.RUNE, from);
+					} else {
+						SkillVfx.spawn(ctx, gate, from, dir, gate.size(), 0.0F, gate.ticks(), null);
+					}
 					ctx.fx.burst(ctx.level, Fx.Kind.SPARK, from, 4, 0.2, 0.02);
-					spawn(ctx, style, from, dir, BARRAGE_SPEED, mult, 0, 0.0F, false, null, style == ProjectileStyle.BLADE);
+					spawn(ctx, style, from, dir, BARRAGE_SPEED, mult, 0, 0.0F, false, null, style == ProjectileStyle.BLADE, null, shot);
 				});
 			}
 			sound(ctx, SoundEvents.ILLUSIONER_CAST_SPELL, 0.8F, 1.4F);

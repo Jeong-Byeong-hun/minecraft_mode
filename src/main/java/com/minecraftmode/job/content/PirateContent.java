@@ -180,7 +180,7 @@ public final class PirateContent extends ClassContent {
 			art(0xE8E3D3, 0xD81B60, 0xFFC107), fx(Fx.Kind.PETAL, 0xFF8FC7),
 			skill("ikoku_sovereignty", "Ikoku Sovereignty", "위국", ULTIMATE, 50, 40,
 				look(SkillLook.IKOKU_SWING, shoot(ProjectileStyle.WAVE, 6.72).pierce(12).look(SkillLook.IKOKU_WAVE)).cone(6, 140), push(6, 2.0)),
-			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), look(SkillLook.SOUL_POCUS, nova(6, 1.8)).size(6), inflict(WEAKNESS, 6, 1))
+			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), look(SkillLook.SOUL_POCUS, nova(6, 1.8)).size(6).quiet(), inflict(WEAKNESS, 6, 1))
 				.withFx(Fx.Kind.SPARK),
 			skill("zeus_raitei", "Zeus: Raitei", "제우스: 뇌정", ATTACK, 10, 22, look(SkillLook.ZEUS, lightning(18, 4, 2.6)).at(18).size(4), stun(0.8)).withFx(Fx.Kind.SPARK),
 			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, look(SkillLook.CROQUEMBOUCHE, heal(25)), boost(DAMAGE, 10, 30),
@@ -201,13 +201,13 @@ public final class PirateContent extends ClassContent {
 			skill("bajrang_gun", "Gum-Gum Bajrang Gun", "고무고무 바즈랑 건", ULTIMATE, 50, 40, look(SkillLook.BAJRANG_GUN, strike(20, 6, 1, 8.1)).at(20).size(6), stun(1.5)),
 			skill("red_hawk", "Gum-Gum Red Hawk", "고무고무 레드 호크", ATTACK, 9, 22, look(SkillLook.RED_HAWK, beam(10, 2.6)).beam(10), burn(5)),
 			skill("jet_gatling", "Gum-Gum Jet Gatling", "고무고무 제트 개틀링", ATTACK, 10, 24, buff(SPEED, 6, 1),
-				look(SkillLook.JET_GATLING, repeat(5, 3, slash(4, 100, 0.6))).cone(4, 100).lasting(1.0)),
+				look(SkillLook.JET_GATLING, repeat(5, 3, look(SkillLook.NONE, slash(4, 100, 0.6)).quiet())).cone(4, 100).lasting(1.0)),
 			skill("drums_of_liberation", "Drums of Liberation", "해방의 드럼", UTILITY, 24, 20, cleanse(), buff(JUMP_BOOST, 10, 2),
 				look(SkillLook.LIBERATION_DRUMS, boost(CRIT_DAMAGE, 6, 50))));
 
 		weapon("pirate_kings_sabre", 4, 100, CUTLASS, "Pirate King's Sabre", "해적왕의 검",
 			art(0xF2F2F2, 0x8B0000, 0xFFD700), fx(Fx.Kind.BOLT, 0xD01E2E),
-			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, look(SkillLook.KAMUSARI, slash(6, 180, 4.0)).cone(6, 180),
+			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, look(SkillLook.KAMUSARI, slash(6, 180, 4.0)).cone(6, 180).quiet(),
 				shoot(ProjectileStyle.WAVE, 5.0).pierce(15).look(SkillLook.KAMUSARI_WAVE), stun(1.0)).withFx(Fx.Kind.SPARK),
 			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, look(SkillLook.HAKI_CLASH, nova(6, 3.4)).size(8), push(8, 3.0)).withFx(Fx.Kind.SPARK),
 			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), look(SkillLook.WILL_OF_D, heal(20)), boost(DAMAGE, 6, 25)),

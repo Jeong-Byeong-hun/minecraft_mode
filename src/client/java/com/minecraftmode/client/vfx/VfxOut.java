@@ -607,7 +607,9 @@ final class VfxOut {
 
 	/**
 	 * A cartoon fist about {@code size} blocks across round {@code c}: knuckles towards {@code punch}, the back of the hand towards
-	 * {@code back}, a wrist behind; ellipsoids shaded {@code lit} to {@code dark}. {@code fine} false: fewer faces (a crowd of afterimages).
+	 * {@code back}, a wrist and cuff behind; shaded {@code lit} to {@code dark}. The four fingers are folded in two rows (the knuckle bumps on
+	 * top, the middle joints making the flat front) with the fingertips tucked under, the thumb laid across the front, and dark creases
+	 * between the fingers so the shape reads at any size. {@code fine} false: fewer faces, no tips or creases (a crowd of afterimages).
 	 */
 	void fist(final Vector3fc c, final Vector3fc punch, final Vector3fc back, final float size, final int lit, final int dark, final boolean fine) {
 		Vector3f f = new Vector3f(punch).normalize();
@@ -618,27 +620,71 @@ final class VfxOut {
 		u.normalize();
 		Vector3f s = new Vector3f(f).cross(u).normalize();
 		int la = fine ? 6 : 4;
-		int lo = fine ? 10 : 6;
+		int lo = fine ? 10 : 7;
 		float k = size * 0.5F;
-		// the back of the hand
-		this.ellipsoid(c, new Vector3f(s).mul(0.92F * k), new Vector3f(u).mul(0.72F * k), new Vector3f(f).mul(0.78F * k), la, lo, lit, dark);
-		// four fingers curled into the palm: the knuckles in a row across the front, the curled tips under them
+		// the back of the hand, flattish
+		this.ellipsoid(fistPoint(c, s, u, f, k, 0.0F, 0.12F, -0.1F), new Vector3f(s).mul(0.84F * k), new Vector3f(u).mul(0.48F * k), new Vector3f(f).mul(0.66F * k),
+			la, lo, lit, dark);
 		for (int i = 0; i < 4; i++) {
-			float x = (i - 1.5F) * 0.44F * k;
-			Vector3f knuckle = new Vector3f(s).mul(x).add(new Vector3f(f).mul(0.68F * k)).add(new Vector3f(u).mul(0.16F * k)).add(c);
-			this.ellipsoid(knuckle, new Vector3f(s).mul(0.24F * k), new Vector3f(u).mul(0.3F * k), new Vector3f(f).mul(0.3F * k), la, lo, lit, dark);
+			float x = (i - 1.5F) * 0.44F;
+			// the knuckle bumps along the top front edge
+			this.ellipsoid(fistPoint(c, s, u, f, k, x, 0.42F, 0.62F), new Vector3f(s).mul(0.21F * k), new Vector3f(u).mul(0.25F * k), new Vector3f(f).mul(0.3F * k), la,
+				lo, lit, dark);
+			// the middle joints making the flat front of the fist
+			this.ellipsoid(fistPoint(c, s, u, f, k, x, 0.02F, 0.86F), new Vector3f(s).mul(0.2F * k), new Vector3f(u).mul(0.28F * k), new Vector3f(f).mul(0.2F * k), la,
+				lo, lit, dark);
 			if (fine) {
-				Vector3f curl = new Vector3f(s).mul(x).add(new Vector3f(f).mul(0.56F * k)).add(new Vector3f(u).mul(-0.4F * k)).add(c);
-				this.ellipsoid(curl, new Vector3f(s).mul(0.22F * k), new Vector3f(u).mul(0.2F * k), new Vector3f(f).mul(0.26F * k), la - 1, lo, lit, dark);
+				// the fingertips tucked in under
+				this.ellipsoid(fistPoint(c, s, u, f, k, x, -0.4F, 0.6F), new Vector3f(s).mul(0.19F * k), new Vector3f(u).mul(0.17F * k), new Vector3f(f).mul(0.24F * k),
+					la - 1, lo, lit, dark);
 			}
 		}
-		// the thumb folded across the front of the fingers
-		Vector3f thumb = new Vector3f(s).mul(-0.3F * k).add(new Vector3f(f).mul(0.5F * k)).add(new Vector3f(u).mul(-0.62F * k)).add(c);
-		this.ellipsoid(thumb, new Vector3f(s).mul(0.5F * k), new Vector3f(u).mul(0.2F * k), new Vector3f(f).mul(0.22F * k), la, lo, lit, dark);
-		// the wrist
-		this.ellipsoid(new Vector3f(f).mul(-0.85F * k).add(c), new Vector3f(s).mul(0.6F * k), new Vector3f(u).mul(0.5F * k), new Vector3f(f).mul(0.5F * k), la, lo,
-			lit, dark);
+		// the thumb: its root on the side, laid across the front of the lower finger joints
+		this.ellipsoid(fistPoint(c, s, u, f, k, -0.82F, -0.28F, 0.35F), new Vector3f(s).mul(0.26F * k), new Vector3f(u).mul(0.24F * k), new Vector3f(f).mul(0.34F * k),
+			la, lo, lit, dark);
+		this.ellipsoid(fistPoint(c, s, u, f, k, -0.28F, -0.26F, 1.0F), new Vector3f(s).mul(0.48F * k), new Vector3f(u).mul(0.16F * k), new Vector3f(f).mul(0.17F * k),
+			la, lo, lit, dark);
+		// the wrist and a cuff round it
+		this.ellipsoid(fistPoint(c, s, u, f, k, 0.0F, 0.0F, -0.85F), new Vector3f(s).mul(0.56F * k), new Vector3f(u).mul(0.46F * k), new Vector3f(f).mul(0.5F * k), la,
+			lo, lit, dark);
+		if (!fine || this.glow) {
+			return;
+		}
+		int crease = lerp(dark, dark & 0xFF000000 | 0x101018, 0.6F);
+		java.util.List<Vector3f> cuff = new java.util.ArrayList<>();
+		for (int i = 0; i <= 14; i++) {
+			float a = Mth.TWO_PI * i / 14;
+			cuff.add(new Vector3f(s).mul(Mth.cos(a) * 0.6F * k).add(new Vector3f(u).mul(Mth.sin(a) * 0.5F * k)).add(new Vector3f(f).mul(-0.62F * k)).add(c));
+		}
+		this.tube(cuff, 0.07F * k, 0.07F * k, 5, lerp(lit, dark, 0.25F), dark);
+		// creases between the fingers, over the knuckles, down the front and under
+		float w = 0.022F * k;
+		for (int g = 0; g < 3; g++) {
+			float x = (g - 1) * 0.44F;
+			Vector3f a = fistPoint(c, s, u, f, k, x, 0.64F, 0.55F);
+			Vector3f b = fistPoint(c, s, u, f, k, x, 0.3F, 1.07F);
+			Vector3f d = fistPoint(c, s, u, f, k, x, -0.25F, 1.08F);
+			Vector3f e = fistPoint(c, s, u, f, k, x, -0.58F, 0.72F);
+			this.bar(a, b, w, w, crease, crease);
+			this.bar(b, d, w, w, crease, crease);
+			this.bar(d, e, w, w, crease, crease);
+		}
+		// the fold between the knuckles and the middle joints, across the front
+		this.bar(fistPoint(c, s, u, f, k, -0.88F, 0.3F, 1.0F), fistPoint(c, s, u, f, k, 0.88F, 0.3F, 1.0F), w, w, crease, crease);
+		// the fingers' lines running back over the back of the hand, and the thumb's fold along the bottom front and up its side
+		for (int g = 0; g < 3; g++) {
+			float x = (g - 1) * 0.44F;
+			this.bar(fistPoint(c, s, u, f, k, x, 0.66F, 0.5F), fistPoint(c, s, u, f, k, x * 0.85F, 0.62F, -0.05F), w * 0.8F, w * 0.4F, crease, crease & 0xFFFFFF);
+		}
+		this.bar(fistPoint(c, s, u, f, k, -0.86F, -0.1F, 1.0F), fistPoint(c, s, u, f, k, 0.24F, -0.1F, 1.12F), w, w, crease, crease);
+		this.bar(fistPoint(c, s, u, f, k, -1.0F, -0.08F, 0.75F), fistPoint(c, s, u, f, k, -1.04F, -0.2F, 0.1F), w, w, crease, crease);
 	}
+
+	/** A point {@code x} across, {@code y} up and {@code z} forward (in half-sizes {@code k}) of a {@link #fist} round {@code c}. */
+	private static Vector3f fistPoint(final Vector3fc c, final Vector3f s, final Vector3f u, final Vector3f f, final float k, final float x, final float y, final float z) {
+		return new Vector3f(s).mul(x * k).add(new Vector3f(u).mul(y * k)).add(new Vector3f(f).mul(z * k)).add(c);
+	}
+
 
 	/** A filled disc of {@code r} round {@code c} in the plane of {@code a} and {@code b}, one solid colour ({@link #sprite} fades to its rim). */
 	void plate(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int n, final int color) {

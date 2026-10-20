@@ -8,6 +8,7 @@ import static com.minecraftmode.client.vfx.VfxOut.hash;
 import com.minecraftmode.client.vfx.SkillProjectileRenderer.State;
 import com.minecraftmode.job.skill.SkillLook;
 import com.mojang.blaze3d.vertex.PoseStack;
+import java.util.List;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.util.Mth;
 import org.joml.Vector3f;
@@ -341,21 +342,22 @@ final class PirateShots {
 		int seed = s.seed * 31 + (int)(time / 2);
 		java.util.List<java.util.List<Vector3f>> bolts = new java.util.ArrayList<>();
 		Vector3f across = new Vector3f(f).cross(axis).normalize();
-		for (int i = 0; i < 5; i++) {
+		for (int i = 0; i < 3; i++) {
 			float ang = (hash(seed + i * 3) - 0.5F) * 2.2F;
 			Vector3f from = new Vector3f(axis).mul(radius * 0.5F - radius * Mth.cos(ang)).add(new Vector3f(across).mul(radius * Mth.sin(ang))).add(0, 0.1F, 0);
 			Vector3f d = BladeLooks.shardDir(seed, i);
 			Vector3f to = new Vector3f(d).mul(1.0F + hash(seed + i) * 1.2F).add(from).add(new Vector3f(f).mul(-0.6F));
-			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.35F, 5));
+			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.25F, 8));
 		}
 		shade(ps, c, o -> {
 			for (java.util.List<Vector3f> bolt : bolts) {
-				o.polyline(bolt, 0.06F, argb(0.95F, HAKI));
+				o.polyline(bolt, 0.016F, argb(0.97F, HAKI));
 			}
 		});
 		glow(ps, c, o -> {
 			for (java.util.List<Vector3f> bolt : bolts) {
-				o.glowPolyline(bolt, 0.2F, argb(0.5F, CRIMSON));
+				o.glowPolyline(bolt, 0.055F, argb(0.85F, CRIMSON));
+				o.glowPolyline(bolt, 0.14F, argb(0.18F, CRIMSON));
 			}
 		});
 	}
@@ -383,7 +385,11 @@ final class PirateShots {
 		});
 	}
 
-	/** Armament Round: a bullet coated glossy black in Armament Haki, a crimson sheen round it and a dark streak behind. */
+	/**
+	 * Armament Round: a bullet coated in Busoshoku Haki, glossy black (a pointed slug, dark on the shade buffer so it shows by day), a sharp
+	 * white highlight along its top, a thin crimson-violet rim round it and a dark streak behind; the light is kept small so the black
+	 * stays dominant.
+	 */
 	private static void hakiShot(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		Vector3f f = new Vector3f(s.forward);
 		Vector3f back = new Vector3f(f).negate();
@@ -391,28 +397,33 @@ final class PirateShots {
 		float time = s.ageInTicks;
 		Vector3f side = VfxOut.across(f);
 		Vector3f up = new Vector3f(side).cross(f).normalize();
+		Vector3f body = new Vector3f(back).mul(0.1F);
+		Vector3f nose = new Vector3f(f).mul(0.55F);
 		shade(ps, c, o -> {
-			o.ellipsoid(new Vector3f(back).mul(0.05F), new Vector3f(side).mul(0.34F), new Vector3f(up).mul(0.34F), new Vector3f(f).mul(0.7F), 5, 8, argb(0.97F, 0x4A3448),
-				argb(0.98F, 0x050208));
-			o.bar(new Vector3f(back).mul(0.4F), new Vector3f(back).mul(tail), 0.18F, 0.02F, argb(0.7F, HAKI), argb(0.0F, HAKI));
+			o.ellipsoid(body, new Vector3f(side).mul(0.3F), new Vector3f(up).mul(0.3F), new Vector3f(f).mul(0.5F), 6, 12, argb(0.99F, 0x34343E), argb(0.99F, 0x010102));
+			o.tube(List.of(new Vector3f(f).mul(0.15F), new Vector3f(f).mul(0.4F), nose), 0.27F, 0.02F, 10, argb(0.99F, 0x2C2C36), argb(0.99F, 0x010102));
+			o.bar(new Vector3f(back).mul(0.5F), new Vector3f(back).mul(tail), 0.16F, 0.02F, argb(0.75F, HAKI), argb(0.0F, HAKI));
 		});
 		glow(ps, c, o -> {
-			o.sprite(new Vector3f(), s.camRight, s.camUp, 1.0F, argb(0.22F, CRIMSON));
-			o.glowLine(new Vector3f(f).mul(0.5F), new Vector3f(back).mul(tail), 0.38F, argb(0.5F, CRIMSON), argb(0.0F, CRIMSON));
-			// the sheen running along the coat
-			for (int k = 0; k < 3; k++) {
-				float a = time * 0.5F + k * Mth.TWO_PI / 3;
-				Vector3f off = new Vector3f(side).mul(Mth.cos(a) * 0.27F).add(new Vector3f(up).mul(Mth.sin(a) * 0.27F));
-				o.bar(new Vector3f(f).mul(0.25F).add(off), new Vector3f(back).mul(0.35F).add(off), 0.012F, 0.012F, argb(0.8F, 0xFF6A7A), argb(0.0F, CRIMSON));
-			}
-			for (int i = 0; i < 4; i++) {
-				float d = 0.4F + 0.45F * i;
-				if (d > tail) {
+			// the specular highlight: a crisp white streak on the top of the coat and a hot point at its front
+			// just outside the coat on the side towards the viewer (the glow is depth tested)
+		Vector3f top = new Vector3f(up).mul(0.16F).add(new Vector3f(s.camRight).cross(s.camUp).normalize(0.36F));
+			o.bar(new Vector3f(back).mul(0.3F).add(top), new Vector3f(f).mul(0.32F).add(top), 0.035F, 0.015F, argb(1.0F, 0xFFFFFF),
+				argb(0.6F, 0xFFFFFF));
+			o.sprite(new Vector3f(f).mul(0.05F).add(top), s.camRight, s.camUp, 0.13F, argb(1.0F, 0xFFFFFF));
+			o.sprite(new Vector3f(f).mul(0.05F).add(top), s.camRight, s.camUp, 0.05F, argb(1.0F, 0xFFFFFF));
+			// a thin rim of crimson-violet round the coat
+			o.circle(body, side, up, 0.32F, 0.012F, 20, argb(0.85F, 0xC0306A));
+			o.glowLine(new Vector3f(back).mul(0.5F), new Vector3f(back).mul(tail), 0.08F, argb(0.45F, CRIMSON), argb(0.0F, CRIMSON));
+			// the haki crackling off it now and then
+			for (int i = 0; i < 3; i++) {
+				float d = 0.5F + 0.5F * i;
+				if (d > tail || hash(s.seed + (int)time * 3 + i) < 0.5F) {
 					continue;
 				}
 				Vector3f dir = BladeLooks.shardDir(s.seed + (int)time, i);
-				Vector3f at = new Vector3f(back).mul(d);
-				o.bar(at, new Vector3f(dir).mul(0.2F).add(at), 0.02F, 0.006F, argb(0.9F, 0xFF5A6A), argb(0.0F, CRIMSON));
+				Vector3f at = new Vector3f(back).mul(d).add(new Vector3f(dir).mul(0.25F));
+				o.bar(at, new Vector3f(dir).mul(0.18F).add(at), 0.01F, 0.004F, argb(0.9F, 0xE0407A), argb(0.0F, CRIMSON));
 			}
 		});
 	}

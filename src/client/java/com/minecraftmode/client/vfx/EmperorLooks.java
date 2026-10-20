@@ -320,8 +320,9 @@ final class EmperorLooks {
 	}
 
 	/**
-	 * Soul Pocus: "life or death?" A pale soul is drawn out of every enemy near, stretching out of its body on a pink thread, then flies
-	 * wailing into the caster's raised hand; a pink ring rolls out over the ground as far as it reaches.
+	 * Soul Pocus: "life or death?" Pale souls are pulled out of every enemy near, three a body: each a little ghost (a round head with dark
+	 * eyes and a wailing mouth, a wavering tail streaming back to the body it left) that flies along a pink thread into the caster's raised
+	 * hand; a pink ring rolls out over the ground as far as it reaches.
 	 */
 	private static void soulPocus(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -330,53 +331,69 @@ final class EmperorLooks {
 		Vector3f ahead = WitchLooks.ahead(s);
 		Vector3f right = VfxOut.across(ahead);
 		Vector3f hand = new Vector3f(ahead).mul(s.selfView ? 0.8F : 0.45F).add(new Vector3f(right).mul(0.35F)).add(0, s.selfView ? 1.35F : 1.9F, 0);
-		List<Vector3f> from = targetsOr(s, 4, s.size * 0.7F, 1.0F);
-		Vector3f toward = new Vector3f(s.camRight).cross(s.camUp).normalize(0.03F);
-		List<Vector3f> souls = new ArrayList<>();
+		List<Vector3f> from = targetsOr(s, 3, s.size * 0.7F, 1.0F);
+		Vector3f toward = new Vector3f(s.camRight).cross(s.camUp).normalize();
+		List<Vector3f> heads = new ArrayList<>();
+		List<List<Vector3f>> tails = new ArrayList<>();
 		List<Vector3f> origins = new ArrayList<>();
 		for (int j = 0; j < from.size(); j++) {
-			float q = ease(p, 0.2F + 0.04F * j, 0.75F + 0.04F * j);
-			Vector3f src = from.get(j);
-			Vector3f pulled = new Vector3f(src).add(0, 0.6F * ease(p, 0.0F, 0.2F), 0);
-			Vector3f at = new Vector3f(pulled).lerp(hand, q * q).add(0, 1.2F * Mth.sin(q * Mth.PI), 0);
-			souls.add(q < 1.0F ? at : null);
-			origins.add(src);
-		}
-		shade(ps, c, o -> {
-			for (Vector3f at : souls) {
-				if (at == null) {
+			for (int k = 0; k < 3; k++) {
+				float start = 0.12F + 0.12F * k + 0.03F * j;
+				float q = ease(p, start, start + 0.45F);
+				if (q >= 1.0F) {
 					continue;
 				}
-				// the soul's dark eyes and wailing mouth, towards the viewer
-				for (int t = -1; t <= 1; t += 2) {
-					o.plate(new Vector3f(s.camRight).mul(t * 0.09F).add(at).add(new Vector3f(s.camUp).mul(0.05F)).add(toward), s.camRight, s.camUp, 0.05F, 6,
-						argb(0.9F * fade, 0x2A1A30));
+				Vector3f src = from.get(j);
+				// pulled up out of the body first, then flying on an arc into the hand
+				float out = ease(p, start - 0.1F, start);
+				Vector3f side = new Vector3f(right).mul((k - 1) * 0.5F);
+				Vector3f pulled = new Vector3f(src).add(side).add(0, 0.7F * out, 0);
+				Vector3f head = new Vector3f(pulled).lerp(hand, q * q).add(0, 1.3F * Mth.sin(q * Mth.PI), 0);
+				Vector3f back = new Vector3f(src).sub(head);
+				if (back.lengthSquared() < 1.0E-4F) {
+					back.set(0, -1, 0);
 				}
-				o.plate(new Vector3f(s.camUp).mul(-0.1F).add(at).add(toward), s.camRight, s.camUp, 0.045F, 6, argb(0.9F * fade, 0x2A1A30));
+				back.normalize();
+				Vector3f wave = VfxOut.across(back);
+				List<Vector3f> tail = new ArrayList<>();
+				for (int i = 0; i <= 7; i++) {
+					float t = i / 7.0F;
+					float sway = 0.18F * t * Mth.sin(time * 0.7F + t * 5.0F + j * 2 + k);
+					tail.add(new Vector3f(back).mul(t * 1.3F * Math.max(0.3F, out)).add(head).add(new Vector3f(wave).mul(sway)));
+				}
+				heads.add(head);
+				tails.add(tail);
+				origins.add(src);
+			}
+		}
+		shade(ps, c, o -> {
+			for (int i = 0; i < heads.size(); i++) {
+				Vector3f head = heads.get(i);
+				o.tube(tails.get(i), 0.27F, 0.02F, 6, argb(0.7F * fade, SOUL), argb(0.7F * fade, 0xB8A8D8));
+				o.ellipsoid(head, new Vector3f(0.3F, 0, 0), new Vector3f(0, 0.33F, 0), new Vector3f(0, 0, 0.3F), 6, 10, argb(0.88F * fade, 0xFFFFFF),
+					argb(0.88F * fade, 0xC8B8E8));
+				// the face, on the side towards the viewer: two dark eyes and a long wailing mouth
+				Vector3f face = new Vector3f(toward).mul(0.31F).add(head);
+				for (int t = -1; t <= 1; t += 2) {
+					o.plate(new Vector3f(s.camRight).mul(t * 0.11F).add(face).add(new Vector3f(s.camUp).mul(0.07F)), s.camRight, s.camUp, 0.065F, 8,
+						argb(0.95F * fade, 0x24142C));
+				}
+				o.ellipsoid(new Vector3f(s.camUp).mul(-0.12F).add(face), new Vector3f(s.camRight).mul(0.05F), new Vector3f(s.camUp).mul(0.09F),
+					new Vector3f(toward).mul(0.01F), 3, 8, argb(0.95F * fade, 0x24142C), argb(0.95F * fade, 0x24142C));
 			}
 		});
 		glow(ps, c, o -> {
-			for (int j = 0; j < souls.size(); j++) {
-				Vector3f at = souls.get(j);
-				Vector3f src = origins.get(j);
-				if (at == null) {
-					continue;
-				}
+			for (int i = 0; i < heads.size(); i++) {
+				Vector3f head = heads.get(i);
 				// the thread it is drawn out on
-				o.glowLine(src, at, 0.12F, argb(0.5F * fade, PINK), argb(0.7F * fade, PINK_PALE));
-				o.sprite(at, s.camRight, s.camUp, 0.6F, argb(0.9F * fade, SOUL));
-				o.sprite(at, s.camRight, s.camUp, 1.1F, argb(0.35F * fade, PINK));
-				Vector3f trail = new Vector3f(src).sub(at);
-				if (trail.lengthSquared() > 1.0E-4F) {
-					trail.normalize();
-					for (int q = 1; q <= 3; q++) {
-						float wav = 0.12F * Mth.sin(time * 0.8F + q * 1.5F + j);
-						Vector3f tp = new Vector3f(trail).mul(0.25F * q).add(at).add(new Vector3f(VfxOut.across(trail)).mul(wav));
-						o.sprite(tp, s.camRight, s.camUp, 0.32F - 0.07F * q, argb(0.7F * fade * (1.0F - q / 4.0F), SOUL));
-					}
+				o.glowLine(origins.get(i), head, 0.07F, argb(0.35F * fade, PINK), argb(0.55F * fade, PINK_PALE));
+				o.sprite(head, s.camRight, s.camUp, 0.75F, argb(0.22F * fade, PINK));
+				List<Vector3f> tail = tails.get(i);
+				for (int k = 0; k + 1 < tail.size(); k++) {
+					o.glowLine(tail.get(k), tail.get(k + 1), 0.2F * (1.0F - k / 8.0F), argb(0.25F * fade, PINK_PALE), argb(0.2F * fade, PINK_PALE));
 				}
 			}
-			o.sprite(hand, s.camRight, s.camUp, 0.5F + 0.3F * ease(p, 0.5F, 0.8F), argb(0.6F * fade, PINK));
+			o.sprite(hand, s.camRight, s.camUp, 0.45F + 0.25F * ease(p, 0.5F, 0.8F), argb(0.5F * fade, PINK));
 			o.circle(hand, s.camRight, s.camUp, 0.35F, 0.025F, 14, argb(0.8F * fade, PINK_PALE));
 			float q = ease(p, 0.0F, 0.5F);
 			o.ring(new Vector3f(0, 0.15F, 0), s.size * q - 0.4F, s.size * q, argb(0.6F * (1.0F - q * 0.7F) * fade, PINK));

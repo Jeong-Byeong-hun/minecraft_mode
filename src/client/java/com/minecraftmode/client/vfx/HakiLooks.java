@@ -33,8 +33,6 @@ final class HakiLooks {
 	private static final int GOLD = 0xFFD24A;
 	private static final int GOLD_PALE = 0xFFF2B0;
 	private static final int STRAW = 0xE8C060;
-	/** How many of Jet Gatling's fists get the finer shape (the rest are blurred afterimages). */
-	private static final int FINE_FISTS = 6;
 
 	static void submit(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		switch (s.look) {
@@ -209,8 +207,9 @@ final class HakiLooks {
 	}
 
 	/**
-	 * Gum-Gum Jet Gatling: a storm of fists hammering forward faster than the eye, each a white afterimage on a streak of an arm, sparks
-	 * where they land and steam puffing off the caster.
+	 * Gum-Gum Jet Gatling: a storm of punches faster than the eye. Each white fist (knuckles, folded fingers, thumb, cuff) shoots out on a
+	 * stretching rubber arm from one shoulder or the other, a fainter afterimage of it trailing back along the arm, speed lines behind and
+	 * a spark where it lands.
 	 */
 	private static void jetGatling(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float age = s.age();
@@ -218,49 +217,57 @@ final class HakiLooks {
 		float half = Math.max(30.0F, s.arg) * Mth.DEG_TO_RAD / 2;
 		float r = s.size;
 		Vector3f f = new Vector3f(s.forward);
+		Vector3f side = VfxOut.across(f);
+		Vector3f up = new Vector3f(side).cross(f).normalize();
 		float fade = 1.0F - ease(p, 0.75F, 1.0F);
 		float on = ease(age, 0.0F, 2.0F) * fade;
-		int count = 10;
+		int count = 7;
 		Vector3f[] fists = new Vector3f[count];
+		Vector3f[] echoes = new Vector3f[count];
 		Vector3f[] dirs = new Vector3f[count];
+		Vector3f[] shoulders = new Vector3f[count];
 		float[] ext = new float[count];
-		Vector3f start = new Vector3f(f).mul(0.5F).add(0, 0.1F, 0);
 		for (int i = 0; i < count; i++) {
-			float a = (hash(s.seed + i * 7) - 0.5F) * 2 * half * 0.8F;
+			float a = (hash(s.seed + i * 7) - 0.5F) * 2 * half * 0.9F;
 			Vector3f d = new Vector3f(f).rotateY(-a);
-			d.y += (hash(s.seed * 3 + i) - 0.5F) * 0.5F;
+			d.y += (hash(s.seed * 3 + i) - 0.5F) * 0.6F;
 			d.normalize();
 			float phase = ((age + hash(i * 11) * 3.0F) / 3.0F) % 1.0F;
 			ext[i] = Mth.sin(phase * Mth.PI);
 			dirs[i] = d;
-			fists[i] = new Vector3f(d).mul(0.6F + (r - 0.6F) * ext[i]).add(start);
+			shoulders[i] = new Vector3f(side).mul(i % 2 == 0 ? 0.35F : -0.35F).add(new Vector3f(f).mul(0.3F)).add(0, 0.15F, 0);
+			fists[i] = new Vector3f(d).mul(0.9F + (r - 0.9F) * ext[i]).add(shoulders[i]);
+			echoes[i] = new Vector3f(d).mul(0.9F + (r - 0.9F) * ext[i] * 0.55F).add(shoulders[i]);
 		}
-		Vector3f up = VfxOut.across(f).cross(f).normalize();
+		int skin = argb(0.97F * on, 0xFFF8F4);
+		int skinDark = argb(0.97F * on, 0x7A6E88);
 		shade(ps, c, o -> {
 			for (int i = 0; i < count; i++) {
-				o.fist(fists[i], dirs[i], up, 0.9F, argb(0.95F * on, 0xFFF8F4), argb(0.95F * on, 0x5A5068), i < FINE_FISTS);
-			}
-			for (int i = 0; i < 5; i++) {
-				float q = (age * 0.06F + hash(s.seed + i)) % 1.0F;
-				Vector3f at = new Vector3f(VfxOut.across(f)).mul((hash(i * 3) - 0.5F) * 1.2F).add(0, 0.3F + 1.2F * q, 0).add(new Vector3f(f).mul(-0.3F));
-				o.sprite(at, s.camRight, s.camUp, 0.4F + 0.5F * q, argb(0.3F * fade * (1.0F - q), 0xFFE0E8));
+				Vector3f wrist = new Vector3f(dirs[i]).mul(-0.45F).add(fists[i]);
+				if (wrist.distanceSquared(shoulders[i]) > 0.04F) {
+					o.tube(List.of(shoulders[i], new Vector3f(shoulders[i]).lerp(wrist, 0.5F), wrist), 0.08F, 0.12F, 6, skin, skinDark);
+				}
+				o.fist(fists[i], dirs[i], up, 0.95F, skin, skinDark, true);
+				if (ext[i] > 0.35F) {
+					o.fist(echoes[i], dirs[i], up, 0.85F, argb(0.3F * on, 0xFFF8F4), argb(0.3F * on, 0x7A6E88), false);
+				}
 			}
 		});
 		glow(ps, c, o -> {
 			for (int i = 0; i < count; i++) {
-				o.glowLine(start, fists[i], 0.1F, argb(0.1F * on, 0xFFFFFF), argb(0.3F * on, 0xFFFFFF));
-				// speed lines behind each fist
-				for (int k = 0; k < 2; k++) {
-					Vector3f off = new Vector3f(VfxOut.across(dirs[i])).mul((k - 0.5F) * 0.35F);
-					o.glowLine(new Vector3f(fists[i]).add(off), new Vector3f(fists[i]).add(off).sub(new Vector3f(dirs[i]).mul(1.0F + ext[i])), 0.05F,
-						argb(0.6F * on, 0xFFFFFF), argb(0.0F, 0xFFFFFF));
+				// speed lines streaming back off each fist
+				for (int k = 0; k < 3; k++) {
+					Vector3f off = new Vector3f(VfxOut.across(dirs[i])).mul((k - 1) * 0.3F).add(new Vector3f(up).mul((k % 2) * 0.2F - 0.1F));
+					o.glowLine(new Vector3f(fists[i]).add(off).sub(new Vector3f(dirs[i]).mul(0.5F)),
+						new Vector3f(fists[i]).add(off).sub(new Vector3f(dirs[i]).mul(1.4F + 1.2F * ext[i])), 0.035F, argb(0.7F * on, 0xFFFFFF), argb(0.0F, 0xFFFFFF));
 				}
 				if (ext[i] > 0.9F) {
-					o.star(new Vector3f(dirs[i]).mul(0.3F).add(fists[i]), s.camRight, s.camUp, 0.5F, 6, 0.3F, i + age, argb(0.9F * on, SUN), argb(0.0F, 0xFFFFFF));
+					o.star(new Vector3f(dirs[i]).mul(0.55F).add(fists[i]), s.camRight, s.camUp, 0.45F, 6, 0.3F, i + age, argb(0.9F * on, SUN), argb(0.0F, 0xFFFFFF));
 				}
 			}
 		});
 	}
+
 
 	/**
 	 * Drums of Liberation: the heartbeat of the Sun God, "dum, dum, du-dum": each beat throws a ring of white cloud out from the caster's
@@ -374,14 +381,14 @@ final class HakiLooks {
 		}
 		List<List<Vector3f>> bolts = new ArrayList<>();
 		int seed = s.seed * 17 + (int)(s.ageInTicks / 2);
-		for (int i = 0; i < 7; i++) {
+		for (int i = 0; i < 4; i++) {
 			int at = Math.min(n, (int)(hash(seed + i) * n * swing));
 			Vector3f from = new Vector3f(outer[at]);
 			Vector3f d = BladeLooks.shardDir(seed, i);
 			d.y = -Math.abs(d.y) - 0.3F;
 			Vector3f to = new Vector3f(d).mul(1.5F + 1.5F * hash(i * 3)).add(from);
 			to.y = Math.max(to.y, -1.1F);
-			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.35F, 6));
+			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.28F, 9));
 		}
 		shade(ps, c, o -> {
 			for (int i = 0; i < n; i++) {
@@ -390,7 +397,7 @@ final class HakiLooks {
 				o.quad(inner[i], outer[i], outer[i + 1], inner[i + 1], argb(0.0F, HAKI), argb(0.9F * al, HAKI), argb(0.9F * al, HAKI), argb(0.0F, HAKI));
 			}
 			for (List<Vector3f> b : bolts) {
-				o.polyline(b, 0.07F, argb(0.95F * fade, HAKI));
+				o.polyline(b, 0.018F, argb(0.97F * fade, HAKI));
 			}
 		});
 		glow(ps, c, o -> {
@@ -402,7 +409,8 @@ final class HakiLooks {
 				o.glowLine(inner[i], inner[i + 1], 0.25F, argb(0.4F * al, CRIMSON), argb(0.4F * al, CRIMSON));
 			}
 			for (List<Vector3f> b : bolts) {
-				o.glowPolyline(b, 0.24F, argb(0.5F * fade, CRIMSON));
+				o.glowPolyline(b, 0.06F, argb(0.85F * fade, CRIMSON));
+				o.glowPolyline(b, 0.16F, argb(0.18F * fade, CRIMSON));
 			}
 			float flash = 1.0F - ease(age, 0.0F, 5.0F);
 			o.sprite(new Vector3f(f).mul(1.0F), s.camRight, s.camUp, 1.5F * flash, argb(0.6F * flash, CRIMSON));

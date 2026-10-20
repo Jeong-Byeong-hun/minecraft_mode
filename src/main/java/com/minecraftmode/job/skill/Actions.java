@@ -1573,6 +1573,7 @@ public final class Actions {
 		private double range;
 		private double arc;
 		private double seconds = -1.0;
+		private boolean quiet;
 
 		LookAction(final SkillLook look, final SkillAction action) {
 			this.look = look;
@@ -1614,6 +1615,15 @@ public final class Actions {
 			return this;
 		}
 
+		/**
+		 * The wrapped step's fixed sprites (a slash's blade arc, a nova's big ring) come as the skill's own small sprite instead
+		 * ({@link Fx#quietly}), so they do not lay blocky pixel art over the drawing. Visual only.
+		 */
+		public LookAction quiet() {
+			this.quiet = true;
+			return this;
+		}
+
 		/** Shown this long (a zone's duration) instead of the look's own ticks. */
 		public LookAction lasting(final double seconds) {
 			this.seconds = seconds;
@@ -1623,7 +1633,11 @@ public final class Actions {
 		@Override
 		public void run(final SkillContext ctx) {
 			this.show(ctx);
-			this.action.run(ctx);
+			if (this.quiet) {
+				Fx.quietly(() -> this.action.run(ctx));
+			} else {
+				this.action.run(ctx);
+			}
 		}
 
 		private void show(final SkillContext ctx) {

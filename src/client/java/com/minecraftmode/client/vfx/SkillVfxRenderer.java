@@ -16,20 +16,25 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
+import org.joml.Vector4f;
 
 /**
  * Draws {@link SkillVfx} looks. Rasengan: a white-hot core in a blue sphere wound with spinning spiral bands and two tilted orbit rings,
  * held at the caster's right hand (in first person low right of the view). Its burst: the same spiral sphere swelling out to the hit
  * radius while it fades, a flash at the middle and a shock ring running along the ground. The Soul Reaper bankai looks are drawn by
- * {@link BladeLooks}, {@link NatureLooks} and {@link SpiritLooks}.
+ * {@link BladeLooks}, {@link NatureLooks} and {@link SpiritLooks}; the archer's (King of Heroes) by {@link HeavenLooks}, {@link WarLooks}
+ * and {@link KingLooks}, and their projectiles by {@link ArrowLooks}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
 	private static final float HELD_RADIUS = 0.42F;
+	/** Enkidu binds at most this many enemies (its chains are many links each). */
+	private static final int MAX_TARGETS = 8;
 
 	public SkillVfxRenderer(final EntityRendererProvider.Context context) {
 		super(context);
@@ -72,6 +77,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		state.bodyYaw = entity.getYRot();
 		state.selfView = false;
 		state.trail.clear();
+		state.targetWidths.clear();
 		Entity anchor = entity.anchor();
 		Vec3 origin = new Vec3(state.x, state.y, state.z);
 		if (anchor != null) {
@@ -100,6 +106,25 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 				default -> {
 				}
 			}
+		}
+		state.targets.clear();
+		if (state.look == SkillLook.ENKIDU) {
+			enemies(entity, state, origin.add(state.offset), partialTicks);
+		}
+	}
+
+	/**
+	 * The enemies a look reaches for (Enkidu's chains): monsters within its size round where it is drawn, nearest first, at most
+	 * {@link #MAX_TARGETS}; their feet relative to the drawing, with height and width.
+	 */
+	private static void enemies(final SkillVfx entity, final State state, final Vec3 at, final float partialTicks) {
+		List<LivingEntity> near = entity.level().getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(state.size),
+			e -> e instanceof Enemy && e.isAlive() && !e.isInvisible());
+		near.sort(java.util.Comparator.comparingDouble(e -> e.position().distanceToSqr(at)));
+		for (LivingEntity e : near.subList(0, Math.min(MAX_TARGETS, near.size()))) {
+			Vec3 feet = e.getPosition(partialTicks).subtract(at);
+			state.targets.add(new Vector4f((float)feet.x, (float)feet.y, (float)feet.z, e.getBbHeight()));
+			state.targetWidths.add(e.getBbWidth());
 		}
 	}
 
@@ -140,6 +165,10 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case MUGETSU_VOID -> SpiritLooks.mugetsuVoid(state, poseStack, collector);
 			case BONE_FANGS -> SpiritLooks.boneFangs(state, poseStack, collector);
 			case BONE_CAGE -> SpiritLooks.boneCage(state, poseStack, collector);
+			case ANTARES_MARK, PANKRATION, ARROW_WARD, GALLOP, SUN_BEAM, HEEL_STRIKE, PAEAN, SUN_STEP, MOON_SIGIL, MOON_VEIL -> HeavenLooks.submit(state, poseStack, collector);
+			case GUN_KATA, ULW_FIELD, COUNTER_GUARDIAN, PASHUPATA_BOLT, PASHUPATA_DISC, ENDOWED, MANA_FLAME -> WarLooks.submit(state, poseStack, collector);
+			case BABYLON_GATE, BABYLON_SKY, ENKIDU, TREASURY_SHIELDS, EA_CHARGE, ENUMA_ELISH, SHA_NAQBA, GOLDEN_RULE, VENUS_STAR, BEAUTY, VENUS_WINGS ->
+				KingLooks.submit(state, poseStack, collector);
 			default -> {
 			}
 		}
@@ -245,6 +274,9 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		boolean selfView;
 		/** A trail's points from its start (0, 0, 0) to the holder now. */
 		final List<Vector3f> trail = new ArrayList<>();
+		/** Enemies the look reaches for: feet relative to the drawing (x, y, z) and height (w). */
+		final List<Vector4f> targets = new ArrayList<>();
+		final List<Float> targetWidths = new ArrayList<>();
 		final Vector3f camRight = new Vector3f(1.0F, 0.0F, 0.0F);
 		final Vector3f camUp = new Vector3f(0.0F, 1.0F, 0.0F);
 

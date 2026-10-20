@@ -36,7 +36,12 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 	@Override
 	protected AABB getBoundingBoxForCulling(final SkillProjectile entity, final float partialTicks) {
 		AABB box = super.getBoundingBoxForCulling(entity, partialTicks);
-		return entity.look() == SkillLook.NONE ? box : box.inflate(2.5);
+		SkillLook look = entity.look();
+		if (look == SkillLook.NONE) {
+			return box;
+		}
+		// the archer's arrows trail light several blocks behind them
+		return box.inflate(ArrowLooks.reach(look));
 	}
 
 	@Override
@@ -59,15 +64,20 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		int seed = entity.getId() * 0x9E3779B9;
 		s.tilt = (0.3F + (seed >>> 8 & 0xFF) / 255.0F * 0.5F) * ((seed & 1) == 0 ? 1 : -1);
 		s.mirror = (seed & 2) == 0;
+		s.seed = entity.getId();
+		s.speed = (float)entity.getDeltaMovement().length();
 	}
 
 	@Override
 	public void submit(final ThrownItemRenderState state, final PoseStack poseStack, final SubmitNodeCollector submitNodeCollector, final CameraRenderState camera) {
 		State s = (State)state;
+		s.camRight.set(1.0F, 0.0F, 0.0F).rotate(camera.orientation);
+		s.camUp.set(0.0F, 1.0F, 0.0F).rotate(camera.orientation);
 		switch (s.look) {
 			case GETSUGA -> submitGetsuga(s, poseStack, submitNodeCollector, false);
 			case GETSUGA_DUAL -> submitGetsuga(s, poseStack, submitNodeCollector, true);
 			case TAIMATSU -> submitTaimatsu(s, poseStack, submitNodeCollector, camera);
+			case STAR_ARROW, TRACER, MOON_ARROW, CRESCENT_ARROW, FLAME_ARROW, GEM, TREASURE, SIN_WAVE, DISCUS -> ArrowLooks.submit(s, poseStack, submitNodeCollector);
 			default -> {
 			}
 		}
@@ -163,7 +173,7 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 	 * The glowing layers of one crescent: a glow inside and outside its edges, the body ({@code body} of its full glow; a dark body is
 	 * shaded by {@link #body} on top) and a hot rim line on the outer edge.
 	 */
-	private static void crescent(
+	static void crescent(
 		final PoseStack.Pose pose, final VertexConsumer buffer, final Vector3f f, final Vector3f axis, final Vector3f shift, final float radius,
 		final float thickness, final int glow, final int rim, final float alpha, final float time, final float body
 	) {
@@ -196,7 +206,15 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 	}
 
 	/** A dark body between the edges (the translucent type, darkening what is behind). */
-	private static void body(final PoseStack.Pose pose, final VertexConsumer buffer, final Vector3f f, final Vector3f axis, final float radius, final float thickness, final float time) {
+	static void body(final PoseStack.Pose pose, final VertexConsumer buffer, final Vector3f f, final Vector3f axis, final float radius, final float thickness, final float time) {
+		body(pose, buffer, f, axis, radius, thickness, time, 0x12060A);
+	}
+
+	/** {@link #body} in {@code rgb}. */
+	static void body(
+		final PoseStack.Pose pose, final VertexConsumer buffer, final Vector3f f, final Vector3f axis, final float radius, final float thickness, final float time,
+		final int rgb
+	) {
 		Vector3f shift = new Vector3f();
 		Vector3f a = new Vector3f();
 		Vector3f b = new Vector3f();
@@ -207,8 +225,8 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 			float t1 = -HALF_ARC + 2 * HALF_ARC * (i + 1) / STEPS;
 			float w0 = width(thickness, t0);
 			float w1 = width(thickness, t1);
-			int c0 = VfxDraw.argb(0.8F * taper(t0) * shimmer(time, t0), 0x12060A);
-			int c1 = VfxDraw.argb(0.8F * taper(t1) * shimmer(time, t1), 0x12060A);
+			int c0 = VfxDraw.argb(0.8F * taper(t0) * shimmer(time, t0), rgb);
+			int c1 = VfxDraw.argb(0.8F * taper(t1) * shimmer(time, t1), rgb);
 			at(f, axis, shift, radius, t0, radius - w0, a);
 			at(f, axis, shift, radius, t0, radius - 0.04F, b);
 			at(f, axis, shift, radius, t1, radius - 0.04F, c);
@@ -249,5 +267,10 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		float tilt;
 		boolean mirror;
 		final Vector3f forward = new Vector3f(0.0F, 0.0F, 1.0F);
+		final Vector3f camRight = new Vector3f(1.0F, 0.0F, 0.0F);
+		final Vector3f camUp = new Vector3f(0.0F, 1.0F, 0.0F);
+		int seed;
+		/** Blocks a tick. */
+		float speed;
 	}
 }

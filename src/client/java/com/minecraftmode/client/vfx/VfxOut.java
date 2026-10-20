@@ -475,6 +475,489 @@ final class VfxOut {
 		this.bar(at, new Vector3f(at).add(0, r * 0.25F, 0), r * 0.12F, r * 0.08F, heart, heart);
 	}
 
+	// ------------------------------------------------------------ bodies (the pirates' fists, tentacles, ships and flags)
+
+	/** Where shaded bodies are lit from: above and a little to one side. */
+	private static final Vector3fc LIGHT = new Vector3f(0.4F, 0.85F, 0.35F).normalize();
+
+	/** {@code lit} where a surface faces the light, {@code dark} where it faces away (bodies that look round without a lit shader). */
+	static int shadeBy(final Vector3fc normal, final int lit, final int dark) {
+		return lerp(dark, lit, 0.5F + 0.5F * normal.dot(LIGHT));
+	}
+
+	/**
+	 * An ellipsoid round {@code c} with half-axes {@code ax}, {@code ay} (to its poles) and {@code az}, {@code lats} x {@code lons} faces,
+	 * shaded {@code lit} to {@code dark} ({@link #shadeBy}): fists, cream puffs, clouds, an octopus's head.
+	 */
+	void ellipsoid(final Vector3fc c, final Vector3fc ax, final Vector3fc ay, final Vector3fc az, final int lats, final int lons, final int lit, final int dark) {
+		Vector3f nx = new Vector3f(ax).normalize();
+		Vector3f ny = new Vector3f(ay).normalize();
+		Vector3f nz = new Vector3f(az).normalize();
+		Vector3f[] row = null;
+		int[] rowColor = null;
+		for (int i = 0; i <= lats; i++) {
+			float lat = -Mth.HALF_PI + Mth.PI * i / lats;
+			Vector3f[] next = new Vector3f[lons + 1];
+			int[] nextColor = new int[lons + 1];
+			for (int j = 0; j <= lons; j++) {
+				float lon = Mth.TWO_PI * j / lons;
+				float x = Mth.cos(lat) * Mth.cos(lon);
+				float y = Mth.sin(lat);
+				float z = Mth.cos(lat) * Mth.sin(lon);
+				next[j] = new Vector3f(ax).mul(x).add(new Vector3f(ay).mul(y)).add(new Vector3f(az).mul(z)).add(c);
+				Vector3f n = new Vector3f(nx).mul(x).add(new Vector3f(ny).mul(y)).add(new Vector3f(nz).mul(z));
+				nextColor[j] = shadeBy(n.lengthSquared() < 1.0E-6F ? ny : n.normalize(), lit, dark);
+			}
+			if (row != null) {
+				for (int j = 0; j < lons; j++) {
+					this.quad(row[j], row[j + 1], next[j + 1], next[j], rowColor[j], rowColor[j + 1], nextColor[j + 1], nextColor[j]);
+				}
+			}
+			row = next;
+			rowColor = nextColor;
+		}
+	}
+
+	/**
+	 * A tube along {@code points} ({@code sides} faces round), {@code r0} thick at the first point tapering to {@code r1} at the last,
+	 * shaded {@code lit} to {@code dark}; its frame is carried along the curve so it never twists where the curve stands straight up.
+	 */
+	void tube(final java.util.List<Vector3f> points, final float r0, final float r1, final int sides, final int lit, final int dark) {
+		int n = points.size();
+		if (n < 2) {
+			return;
+		}
+		Vector3f[] us = new Vector3f[n];
+		Vector3f[] vs = new Vector3f[n];
+		Vector3f last = new Vector3f(0, 1, 0);
+		for (int i = 0; i < n; i++) {
+			Vector3f d = new Vector3f(points.get(Math.min(n - 1, i + 1))).sub(points.get(Math.max(0, i - 1)));
+			if (d.lengthSquared() < 1.0E-8F) {
+				d.set(last);
+			}
+			d.normalize();
+			last.set(d);
+			Vector3f u = i == 0 ? across(d) : new Vector3f(us[i - 1]).sub(new Vector3f(d).mul(us[i - 1].dot(d)));
+			if (u.lengthSquared() < 1.0E-6F) {
+				u = across(d);
+			}
+			us[i] = u.normalize();
+			vs[i] = new Vector3f(d).cross(us[i]).normalize();
+		}
+		for (int i = 0; i < n - 1; i++) {
+			float ra = Mth.lerp((float)i / (n - 1), r0, r1);
+			float rb = Mth.lerp((float)(i + 1) / (n - 1), r0, r1);
+			for (int k = 0; k < sides; k++) {
+				float a0 = Mth.TWO_PI * k / sides;
+				float a1 = Mth.TWO_PI * (k + 1) / sides;
+				Vector3f da0 = new Vector3f(us[i]).mul(Mth.cos(a0)).add(new Vector3f(vs[i]).mul(Mth.sin(a0)));
+				Vector3f da1 = new Vector3f(us[i]).mul(Mth.cos(a1)).add(new Vector3f(vs[i]).mul(Mth.sin(a1)));
+				Vector3f db0 = new Vector3f(us[i + 1]).mul(Mth.cos(a0)).add(new Vector3f(vs[i + 1]).mul(Mth.sin(a0)));
+				Vector3f db1 = new Vector3f(us[i + 1]).mul(Mth.cos(a1)).add(new Vector3f(vs[i + 1]).mul(Mth.sin(a1)));
+				this.quad(new Vector3f(da0).mul(ra).add(points.get(i)), new Vector3f(da1).mul(ra).add(points.get(i)), new Vector3f(db1).mul(rb).add(points.get(i + 1)),
+					new Vector3f(db0).mul(rb).add(points.get(i + 1)), shadeBy(da0, lit, dark), shadeBy(da1, lit, dark), shadeBy(db1, lit, dark), shadeBy(db0, lit, dark));
+			}
+		}
+	}
+
+	/**
+	 * Points along a tentacle from {@code base} rising along {@code up} for {@code length}, bending towards {@code side} by {@code bend}
+	 * (radians along its whole length), swaying with {@code phase} and curling over at the tip by {@code curl} (radians more at the tip):
+	 * {@code steps} + 1 points.
+	 */
+	static java.util.List<Vector3f> tentacle(final Vector3fc base, final Vector3fc up, final Vector3fc side, final float length, final float bend, final float curl,
+		final float phase, final int steps) {
+		java.util.List<Vector3f> points = new java.util.ArrayList<>(steps + 1);
+		Vector3f u = new Vector3f(up).normalize();
+		Vector3f s = new Vector3f(side).normalize();
+		Vector3f p = new Vector3f(base);
+		points.add(new Vector3f(p));
+		float step = length / steps;
+		for (int i = 1; i <= steps; i++) {
+			float t = (float)i / steps;
+			float a = bend * t + curl * t * t * t + 0.35F * Mth.sin(phase + t * 4.0F) * t;
+			p.add(new Vector3f(u).mul(Mth.cos(a) * step)).add(new Vector3f(s).mul(Mth.sin(a) * step));
+			points.add(new Vector3f(p));
+		}
+		return points;
+	}
+
+	/** Suckers along the inner side of a tentacle ({@link #tentacle} points bending towards {@code side}): pale rings shrinking to the tip. */
+	void suckers(final java.util.List<Vector3f> points, final Vector3fc side, final float r0, final float r1, final int color) {
+		int n = points.size();
+		for (int i = 1; i < n - 1; i++) {
+			float t = (float)i / (n - 1);
+			Vector3f d = new Vector3f(points.get(i + 1)).sub(points.get(i - 1));
+			if (d.lengthSquared() < 1.0E-8F) {
+				continue;
+			}
+			d.normalize();
+			Vector3f in = new Vector3f(side).sub(new Vector3f(d).mul(d.dot(side)));
+			if (in.lengthSquared() < 1.0E-6F) {
+				continue;
+			}
+			in.normalize();
+			float r = Mth.lerp(t, r0, r1);
+			Vector3f at = new Vector3f(in).mul(r * 1.02F).add(points.get(i));
+			Vector3f a = new Vector3f(d);
+			Vector3f b = new Vector3f(in).cross(d).normalize();
+			this.circle(at, a, b, r * 0.45F, r * 0.08F + 0.01F, 8, color);
+		}
+	}
+
+	/**
+	 * A cartoon fist about {@code size} blocks across round {@code c}: knuckles towards {@code punch}, the back of the hand towards
+	 * {@code back}, a wrist behind; ellipsoids shaded {@code lit} to {@code dark}. {@code fine} false: fewer faces (a crowd of afterimages).
+	 */
+	void fist(final Vector3fc c, final Vector3fc punch, final Vector3fc back, final float size, final int lit, final int dark, final boolean fine) {
+		Vector3f f = new Vector3f(punch).normalize();
+		Vector3f u = new Vector3f(back).sub(new Vector3f(f).mul(f.dot(back)));
+		if (u.lengthSquared() < 1.0E-6F) {
+			u = new Vector3f(f).cross(across(f));
+		}
+		u.normalize();
+		Vector3f s = new Vector3f(f).cross(u).normalize();
+		int la = fine ? 6 : 4;
+		int lo = fine ? 10 : 6;
+		float k = size * 0.5F;
+		// the back of the hand
+		this.ellipsoid(c, new Vector3f(s).mul(0.92F * k), new Vector3f(u).mul(0.72F * k), new Vector3f(f).mul(0.78F * k), la, lo, lit, dark);
+		// four fingers curled into the palm: the knuckles in a row across the front, the curled tips under them
+		for (int i = 0; i < 4; i++) {
+			float x = (i - 1.5F) * 0.44F * k;
+			Vector3f knuckle = new Vector3f(s).mul(x).add(new Vector3f(f).mul(0.68F * k)).add(new Vector3f(u).mul(0.16F * k)).add(c);
+			this.ellipsoid(knuckle, new Vector3f(s).mul(0.24F * k), new Vector3f(u).mul(0.3F * k), new Vector3f(f).mul(0.3F * k), la, lo, lit, dark);
+			if (fine) {
+				Vector3f curl = new Vector3f(s).mul(x).add(new Vector3f(f).mul(0.56F * k)).add(new Vector3f(u).mul(-0.4F * k)).add(c);
+				this.ellipsoid(curl, new Vector3f(s).mul(0.22F * k), new Vector3f(u).mul(0.2F * k), new Vector3f(f).mul(0.26F * k), la - 1, lo, lit, dark);
+			}
+		}
+		// the thumb folded across the front of the fingers
+		Vector3f thumb = new Vector3f(s).mul(-0.3F * k).add(new Vector3f(f).mul(0.5F * k)).add(new Vector3f(u).mul(-0.62F * k)).add(c);
+		this.ellipsoid(thumb, new Vector3f(s).mul(0.5F * k), new Vector3f(u).mul(0.2F * k), new Vector3f(f).mul(0.22F * k), la, lo, lit, dark);
+		// the wrist
+		this.ellipsoid(new Vector3f(f).mul(-0.85F * k).add(c), new Vector3f(s).mul(0.6F * k), new Vector3f(u).mul(0.5F * k), new Vector3f(f).mul(0.5F * k), la, lo,
+			lit, dark);
+	}
+
+	/** A filled disc of {@code r} round {@code c} in the plane of {@code a} and {@code b}, one solid colour ({@link #sprite} fades to its rim). */
+	void plate(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int n, final int color) {
+		Vector3f prev = null;
+		for (int i = 0; i <= n; i++) {
+			float t = Mth.TWO_PI * i / n;
+			Vector3f p = new Vector3f(a).mul(Mth.cos(t) * r).add(new Vector3f(b).mul(Mth.sin(t) * r)).add(c);
+			if (prev != null) {
+				this.tri(c, prev, p, color, color, color);
+			}
+			prev = p;
+		}
+	}
+
+	/** Jolly Roger styles: crossed bones; Whitebeard's (a crescent moustache, a cross behind); the Pirate King's (bones and a curled moustache). */
+	static final int PLAIN = 0;
+	static final int WHITEBEARD = 1;
+	static final int ROGER = 2;
+
+	/**
+	 * A Jolly Roger in the plane of {@code a} (across) and {@code b} (up), {@code r} from its middle to the top of the skull: bones (or
+	 * Whitebeard's cross) behind a skull in {@code bone}, its eyes, nose and teeth in {@code dark} laid on both faces, and the moustache of
+	 * {@code style}. Drawn flat; on the glow buffer {@code dark} adds nothing, so draw it on the shade buffer and light it separately.
+	 */
+	void jollyRoger(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final int style, final int bone, final int dark) {
+		Vector3f n = new Vector3f(a).cross(b).normalize(0.015F + r * 0.01F);
+		if (style == WHITEBEARD) {
+			this.bar(at(c, a, b, r, 0.0F, -1.05F), at(c, a, b, r, 0.0F, 1.0F), r * 0.13F, r * 0.13F, bone, bone);
+			this.bar(at(c, a, b, r, -1.05F, 0.05F), at(c, a, b, r, 1.05F, 0.05F), r * 0.13F, r * 0.13F, bone, bone);
+		} else {
+			for (int k = -1; k <= 1; k += 2) {
+				Vector3f p0 = at(c, a, b, r, -0.88F * k, -0.95F);
+				Vector3f p1 = at(c, a, b, r, 0.88F * k, 0.3F);
+				this.bar(p0, p1, r * 0.08F, r * 0.08F, bone, bone);
+				for (Vector3f end : new Vector3f[] {p0, p1}) {
+					Vector3f d = new Vector3f(p1).sub(p0).normalize();
+					Vector3f side = new Vector3f(n).cross(d).normalize(r * 0.09F);
+					this.plate(new Vector3f(end).add(side), a, b, r * 0.11F, 8, bone);
+					this.plate(new Vector3f(end).sub(side), a, b, r * 0.11F, 8, bone);
+				}
+			}
+		}
+		// the skull: cranium and jaw
+		this.plate(at(c, a, b, r, 0.0F, 0.15F), a, b, r * 0.56F, 16, bone);
+		Vector3f j0 = at(c, a, b, r, -0.33F, -0.18F);
+		Vector3f j1 = at(c, a, b, r, 0.33F, -0.18F);
+		Vector3f j2 = at(c, a, b, r, 0.25F, -0.52F);
+		Vector3f j3 = at(c, a, b, r, -0.25F, -0.52F);
+		this.quad(j0, j1, j2, j3, bone);
+		// moustaches go over the jaw, in bone with a dark edge
+		if (style == WHITEBEARD) {
+			this.crescentMoustache(c, a, b, r, n, bone, dark, false);
+		} else if (style == ROGER) {
+			this.crescentMoustache(c, a, b, r, n, bone, dark, true);
+		}
+		for (int side = -1; side <= 1; side += 2) {
+			Vector3f off = new Vector3f(n).mul(side);
+			this.plate(at(c, a, b, r, -0.21F, 0.1F).add(off), a, b, r * 0.15F, 10, dark);
+			this.plate(at(c, a, b, r, 0.21F, 0.1F).add(off), a, b, r * 0.15F, 10, dark);
+			this.tri(at(c, a, b, r, 0.0F, -0.06F).add(off), at(c, a, b, r, -0.07F, -0.2F).add(off), at(c, a, b, r, 0.07F, -0.2F).add(off), dark, dark, dark);
+			if (style == PLAIN) {
+				for (int t = -1; t <= 1; t++) {
+					this.bar(at(c, a, b, r, t * 0.12F, -0.33F).add(off), at(c, a, b, r, t * 0.12F, -0.5F).add(off), r * 0.018F, r * 0.018F, dark, dark);
+				}
+			}
+		}
+	}
+
+	/** A point {@code x}, {@code y} (in units of {@code r}) on the plane of {@code a} and {@code b} round {@code c}. */
+	private static Vector3f at(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final float x, final float y) {
+		return new Vector3f(a).mul(x * r).add(new Vector3f(b).mul(y * r)).add(c);
+	}
+
+	/** Whitebeard's crescent moustache under the nose, horns up; {@code curled} rolls the ends into curls (the Pirate King's). */
+	private void crescentMoustache(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final Vector3f n, final int bone, final int dark,
+		final boolean curled) {
+		int steps = 12;
+		Vector3f prevIn = null;
+		Vector3f prevOut = null;
+		float wide = curled ? 0.5F : 0.78F;
+		for (int i = 0; i <= steps; i++) {
+			float t = (float)i / steps * 2 - 1;
+			float x = t * wide;
+			float y = -0.27F + 0.32F * t * t;
+			float thick = 0.12F * (1.0F - t * t * 0.85F);
+			Vector3f inner = at(c, a, b, r, x, y + thick * 0.5F);
+			Vector3f outer = at(c, a, b, r, x, y - thick * 0.5F);
+			for (int side = -1; side <= 1; side += 2) {
+				Vector3f off = new Vector3f(n).mul(side * 1.6F);
+				if (prevIn != null) {
+					this.quad(new Vector3f(prevIn).add(off), new Vector3f(inner).add(off), new Vector3f(outer).add(off), new Vector3f(prevOut).add(off), bone);
+					this.bar(new Vector3f(prevOut).add(off).add(new Vector3f(n).mul(side * 0.3F)), new Vector3f(outer).add(off).add(new Vector3f(n).mul(side * 0.3F)),
+						r * 0.012F, r * 0.012F, dark, dark);
+				}
+			}
+			prevIn = inner;
+			prevOut = outer;
+		}
+		if (curled) {
+			// the ends rolled up into small curls
+			for (int k = -1; k <= 1; k += 2) {
+				Vector3f prev = null;
+				for (int i = 0; i <= 10; i++) {
+					float q = i / 10.0F;
+					float ang = -Mth.HALF_PI * k + q * Mth.TWO_PI * 0.85F * k;
+					float rr = 0.13F * (1.0F - 0.6F * q);
+					Vector3f p = at(c, a, b, r, k * (wide + 0.02F) + Mth.cos(ang) * rr * k * -1.0F, 0.05F + 0.13F + Mth.sin(ang) * rr);
+					if (prev != null) {
+						for (int side = -1; side <= 1; side += 2) {
+							Vector3f off = new Vector3f(n).mul(side * 1.6F);
+							this.bar(new Vector3f(prev).add(off), new Vector3f(p).add(off), r * 0.04F * (1.0F - 0.5F * q), r * 0.04F * (1.0F - 0.5F * q), bone, bone);
+						}
+					}
+					prev = p;
+				}
+			}
+		}
+	}
+
+	/**
+	 * A galleon whose deck is centred on {@code c}, bow towards {@code fwd} (pitched as it is): {@code length} long, {@code beam} wide, its
+	 * hull {@code depth} deep under the deck, {@code masts} masts (1 to 3, from the stern) up to {@code mast} high, sails filled by
+	 * {@code billow}. On the shade buffer the hull ({@code hull} lit to {@code hullDark}) and the sails ({@code sail}) are filled; on the
+	 * glow buffer the same ship is drawn as lit lines (rails, keel, ribs, masts, yards, sail edges), so a ghost ship is all outline.
+	 */
+	void galleon(final Vector3fc c, final Vector3fc fwd, final float length, final float beam, final float depth, final int masts, final float mast,
+		final float billow, final int hull, final int hullDark, final int sail) {
+		Vector3f f = new Vector3f(fwd).normalize();
+		Vector3f s = across(f);
+		Vector3f up = new Vector3f(s).cross(f).normalize();
+		int stations = 10;
+		Vector3f[][] gun = new Vector3f[2][stations + 1];
+		Vector3f[][] rail = new Vector3f[2][stations + 1];
+		Vector3f[][] bilge = new Vector3f[2][stations + 1];
+		Vector3f[][] keel = new Vector3f[2][stations + 1];
+		for (int i = 0; i <= stations; i++) {
+			float t = -1.0F + 2.0F * i / stations;
+			float x = t * length / 2;
+			float w = beam / 2 * (t > 0 ? Math.max(0.0F, 1.0F - t * t) : 1.0F - 0.22F * t * t);
+			float sheer = depth * 0.35F * t * t + (t < -0.55F ? depth * 0.55F : 0.0F);
+			float k = t > 0.7F ? 1.0F - (t - 0.7F) / 0.3F * 0.75F : 1.0F;
+			for (int side = 0; side < 2; side++) {
+				float sg = side == 0 ? 1.0F : -1.0F;
+				gun[side][i] = local(c, f, s, up, x, sg * w, sheer);
+				rail[side][i] = local(c, f, s, up, x, sg * w * 0.97F, sheer + depth * 0.42F);
+				bilge[side][i] = local(c, f, s, up, x * 0.98F, sg * w * 0.82F, -depth * 0.55F * k);
+				keel[side][i] = local(c, f, s, up, x * 0.95F, sg * w * 0.18F, -depth * k);
+			}
+		}
+		int hullMid = lerp(hullDark, hull, 0.55F);
+		for (int side = 0; side < 2; side++) {
+			for (int i = 0; i < stations; i++) {
+				if (this.glow) {
+					this.bar(gun[side][i], gun[side][i + 1], 0.035F, 0.035F, hull, hull);
+					this.bar(rail[side][i], rail[side][i + 1], 0.03F, 0.03F, hull, hull);
+					this.bar(keel[side][i], keel[side][i + 1], 0.025F, 0.025F, hullDark, hullDark);
+					if (i % 2 == 0) {
+						this.bar(rail[side][i], gun[side][i], 0.02F, 0.02F, hull, hull);
+						this.bar(gun[side][i], bilge[side][i], 0.02F, 0.02F, hullMid, hullMid);
+						this.bar(bilge[side][i], keel[side][i], 0.02F, 0.02F, hullDark, hullDark);
+					}
+				} else {
+					this.quad(rail[side][i], rail[side][i + 1], gun[side][i + 1], gun[side][i], hullMid);
+					this.quad(gun[side][i], gun[side][i + 1], bilge[side][i + 1], bilge[side][i], hull, hull, hullMid, hullMid);
+					this.quad(bilge[side][i], bilge[side][i + 1], keel[side][i + 1], keel[side][i], hullMid, hullMid, hullDark, hullDark);
+				}
+			}
+		}
+		if (!this.glow) {
+			// the keel's bottom and the transom across the stern
+			for (int i = 0; i < stations; i++) {
+				this.quad(keel[0][i], keel[0][i + 1], keel[1][i + 1], keel[1][i], hullDark);
+			}
+			this.quad(rail[0][0], rail[1][0], gun[1][0], gun[0][0], hullMid);
+			this.quad(gun[0][0], gun[1][0], bilge[1][0], bilge[0][0], hullMid);
+			this.quad(bilge[0][0], bilge[1][0], keel[1][0], keel[0][0], hullDark);
+		} else {
+			this.bar(rail[0][0], rail[1][0], 0.03F, 0.03F, hull, hull);
+			this.bar(gun[0][0], gun[1][0], 0.03F, 0.03F, hull, hull);
+		}
+		// the bowsprit
+		Vector3f bow = gun[0][stations];
+		this.bar(bow, new Vector3f(f).mul(length * 0.28F).add(new Vector3f(up).mul(length * 0.12F)).add(bow), 0.05F, 0.03F, hull, hull);
+		// masts, yards and sails
+		float[] spots = masts >= 3 ? new float[] {0.38F, -0.08F, -0.5F} : masts == 2 ? new float[] {-0.1F, -0.55F} : new float[] {-0.15F};
+		float[] heights = masts >= 3 ? new float[] {0.82F, 1.0F, 0.72F} : masts == 2 ? new float[] {1.0F, 0.75F} : new float[] {1.0F};
+		for (int m = 0; m < spots.length; m++) {
+			float x = spots[m] * length / 2;
+			float h = mast * heights[m];
+			Vector3f foot = local(c, f, s, up, x, 0.0F, 0.0F);
+			Vector3f top = local(c, f, s, up, x, 0.0F, h);
+			this.bar(foot, top, 0.07F, 0.045F, hull, hull);
+			for (int y = 0; y < 2; y++) {
+				float y0 = h * (y == 0 ? 0.3F : 0.66F);
+				float y1 = h * (y == 0 ? 0.62F : 0.92F);
+				float w0 = beam * (y == 0 ? 0.95F : 0.7F);
+				float w1 = beam * (y == 0 ? 0.75F : 0.5F);
+				this.bar(local(c, f, s, up, x, -w1, y1), local(c, f, s, up, x, w1, y1), 0.03F, 0.03F, hull, hull);
+				this.sail(c, f, s, up, x, y0, y1, w0, w1, billow * (1.0F - 0.3F * y), sail);
+			}
+			// the pennant at the top
+			Vector3f pole = new Vector3f(top);
+			this.tri(pole, local(c, f, s, up, x - length * 0.12F, 0.0F, h - 0.12F), local(c, f, s, up, x, 0.0F, h - 0.25F), sail, sail & 0x00FFFFFF | 0x40000000, sail);
+		}
+	}
+
+	/** A point {@code x} along, {@code y} across and {@code z} up a ship's frame. */
+	private static Vector3f local(final Vector3fc c, final Vector3fc f, final Vector3fc s, final Vector3fc up, final float x, final float y, final float z) {
+		return new Vector3f(f).mul(x).add(new Vector3f(s).mul(y)).add(new Vector3f(up).mul(z)).add(c);
+	}
+
+	/** One square sail from {@code y0} (its foot, {@code w0} half wide) to {@code y1} up, bellied out forward by {@code billow}. */
+	private void sail(final Vector3fc c, final Vector3fc f, final Vector3fc s, final Vector3fc up, final float x, final float y0, final float y1, final float w0,
+		final float w1, final float billow, final int color) {
+		int n = 4;
+		Vector3f[][] p = new Vector3f[n + 1][n + 1];
+		for (int i = 0; i <= n; i++) {
+			float u = (float)i / n;
+			for (int j = 0; j <= n; j++) {
+				float v = (float)j / n;
+				float w = Mth.lerp(v, w0, w1);
+				float bulge = billow * Mth.sin(u * Mth.PI) * (0.4F + 0.6F * Mth.sin(v * Mth.PI));
+				p[i][j] = local(c, f, s, up, x + bulge, (u * 2 - 1) * w, Mth.lerp(v, y0, y1));
+			}
+		}
+		if (this.glow) {
+			for (int i = 0; i < n; i++) {
+				this.bar(p[i][0], p[i + 1][0], 0.025F, 0.025F, color, color);
+				this.bar(p[i][n], p[i + 1][n], 0.025F, 0.025F, color, color);
+				this.bar(p[0][i], p[0][i + 1], 0.025F, 0.025F, color, color);
+				this.bar(p[n][i], p[n][i + 1], 0.025F, 0.025F, color, color);
+				this.bar(p[n / 2][i], p[n / 2][i + 1], 0.015F, 0.015F, color, color);
+			}
+		} else {
+			for (int i = 0; i < n; i++) {
+				for (int j = 0; j < n; j++) {
+					int k = lerp(color, color & 0xFF000000 | 0x9A9080, 0.25F * (1.0F - Mth.sin((i + 0.5F) / n * Mth.PI)));
+					this.quad(p[i][j], p[i + 1][j], p[i + 1][j + 1], p[i][j + 1], k);
+				}
+			}
+		}
+	}
+
+	/** Where gun port {@code k} of {@code ports} on one side of a {@link #galleon} sits ({@code side} 1 starboard, -1 port), just under the rail. */
+	static Vector3f gunPort(final Vector3fc c, final Vector3fc fwd, final float length, final float beam, final float depth, final int k, final int ports,
+		final int side) {
+		Vector3f f = new Vector3f(fwd).normalize();
+		Vector3f s = across(f);
+		Vector3f up = new Vector3f(s).cross(f).normalize();
+		float t = -0.45F + 0.85F * (k + 0.5F) / ports;
+		float w = beam / 2 * (t > 0 ? Math.max(0.0F, 1.0F - t * t) : 1.0F - 0.22F * t * t);
+		return local(c, f, s, up, t * length / 2, side * (w + 0.05F), depth * 0.35F * t * t - depth * 0.12F);
+	}
+
+	/**
+	 * A bird of light at {@code c} flying along {@code dir} (its back towards {@code up}): a slim body and head, a forked tail and two
+	 * wings {@code size} long beating with {@code flap} (-1 down to 1 up).
+	 */
+	void bird(final Vector3fc c, final Vector3fc dir, final Vector3fc up, final float size, final float flap, final int body, final int wing) {
+		Vector3f f = new Vector3f(dir).normalize();
+		Vector3f u = new Vector3f(up).sub(new Vector3f(f).mul(f.dot(up)));
+		if (u.lengthSquared() < 1.0E-6F) {
+			u = new Vector3f(f).cross(across(f));
+		}
+		u.normalize();
+		Vector3f s = new Vector3f(f).cross(u).normalize();
+		this.diamond(c, f, s, size * 0.9F, size * 0.22F, body, body);
+		this.diamond(new Vector3f(c).add(new Vector3f(f).mul(size * 0.45F)), f, s, size * 0.25F, size * 0.16F, body, body);
+		for (int k = -1; k <= 1; k += 2) {
+			// the tail's two prongs
+			Vector3f tail = new Vector3f(f).mul(-size * 0.42F).add(c);
+			this.tri(tail, new Vector3f(f).mul(-size * 0.85F).add(new Vector3f(s).mul(k * size * 0.22F)).add(c), new Vector3f(f).mul(-size * 0.62F).add(c), body,
+				body & 0xFFFFFF, body);
+			// each wing in two parts, the outer one bending further with the beat
+			Vector3f root = new Vector3f(f).mul(size * 0.08F).add(c);
+			Vector3f rootBack = new Vector3f(f).mul(-size * 0.2F).add(c);
+			float a = flap * 0.7F;
+			Vector3f elbow = new Vector3f(s).mul(k * size * 0.55F * Mth.cos(a)).add(new Vector3f(u).mul(size * 0.55F * Mth.sin(a))).add(c);
+			float b = flap * 1.1F;
+			Vector3f tip = new Vector3f(s).mul(k * size * 0.6F * Mth.cos(b)).add(new Vector3f(u).mul(size * 0.6F * Mth.sin(b))).add(elbow)
+				.add(new Vector3f(f).mul(-size * 0.25F));
+			this.quad(root, elbow, new Vector3f(elbow).add(new Vector3f(f).mul(-size * 0.35F)), rootBack, wing, wing, wing, wing);
+			this.tri(elbow, tip, new Vector3f(elbow).add(new Vector3f(f).mul(-size * 0.35F)), wing, wing & 0xFFFFFF | 0x30000000, wing);
+		}
+	}
+
+	/** The kinks of a jagged bolt from {@code from} to {@code to} ({@link #bolt}'s shape), so one bolt can be drawn on both buffers. */
+	static java.util.List<Vector3f> zigzag(final Vector3fc from, final Vector3fc to, final int seed, final float jag, final int steps) {
+		Vector3f d = new Vector3f(to).sub(from);
+		Vector3f u = across(d.lengthSquared() < 1.0E-6F ? new Vector3f(0, 1, 0) : new Vector3f(d).normalize());
+		Vector3f v = new Vector3f(d).cross(u).normalize();
+		java.util.List<Vector3f> points = new java.util.ArrayList<>(steps + 1);
+		points.add(new Vector3f(from));
+		for (int i = 1; i <= steps; i++) {
+			float t = (float)i / steps;
+			Vector3f next = new Vector3f(d).mul(t).add(from);
+			if (i < steps) {
+				float k = jag * Mth.sin(t * Mth.PI);
+				next.add(new Vector3f(u).mul((hash(seed * 17 + i) - 0.5F) * 2 * k)).add(new Vector3f(v).mul((hash(seed * 29 + i) - 0.5F) * 2 * k));
+			}
+			points.add(next);
+		}
+		return points;
+	}
+
+	/** A polyline of bars {@code width} thick ({@link #zigzag}'s bolts on the shade buffer: black lightning). */
+	void polyline(final java.util.List<Vector3f> points, final float width, final int color) {
+		for (int i = 0; i + 1 < points.size(); i++) {
+			this.bar(points.get(i), points.get(i + 1), width, width, color, color);
+		}
+	}
+
+	/** A polyline of glow lines {@code width} wide ({@link #zigzag}'s bolts lit). */
+	void glowPolyline(final java.util.List<Vector3f> points, final float width, final int color) {
+		for (int i = 0; i + 1 < points.size(); i++) {
+			this.glowLine(points.get(i), points.get(i + 1), width, color, color);
+		}
+	}
+
 	// ------------------------------------------------------------ paths
 
 	/** A trail's points with the ones closer than 0.2 blocks to the last kept dropped (a still holder leaves no zero-length parts). */

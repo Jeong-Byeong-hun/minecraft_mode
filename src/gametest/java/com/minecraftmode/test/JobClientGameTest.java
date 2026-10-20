@@ -158,6 +158,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkReaperLooks(context, server, connection);
 			checkArcherLooks(context, server, connection);
 			checkMageLooks(context, server, connection);
+			checkPirateLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -951,6 +952,63 @@ public class JobClientGameTest implements FabricClientGameTest {
 			new LookCase("rule_breaker", 3, SkillLook.TERRITORY, 10, 4, 6, 14)
 		);
 		checkClassLooks(context, server, connection, JobClass.MAGE, cases, SkillLook.HECATIC_SKY, SkillLook.TEN_RINGS, "megumin_staff.explosion");
+	}
+
+	/**
+	 * Every skill of the nine tier 4 Pirate weapons draws its own look (0.5.40): the Corsair's battleship and octopus, Drake's ghost fleet,
+	 * Anne and Mary, the kraken, Big Mom's homies, Whitebeard's quake, Gear 5's giant fist and the Pirate King's haki. Screenshots
+	 * {@code look_<skill>}, and Bajrang Gun once more with improved transparency ({@code _fabulous}).
+	 */
+	private static void checkPirateLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("battleship_cannon", 0, SkillLook.CANNON_SHOT, 2, 3, 1, 3).husk(12).shot("battleship_cannon.battleship_shot"),
+			new LookCase("battleship_cannon", 0, List.of(SkillLook.BATTLESHIP, SkillLook.CANNON_BLAST), 16, 7, 3, 7).lift(1.5),
+			new LookCase("battleship_cannon", 1, SkillLook.OCTOPUS, 14, 4, 3, 6),
+			new LookCase("battleship_cannon", 2, SkillLook.AIR_STRIKE, 16, 7, 4, 11).lift(3.5),
+			new LookCase("battleship_cannon", 3, SkillLook.BULLSEYE, 10, 3, 1.5, 4),
+			new LookCase("el_draque", 0, List.of(SkillLook.WILD_HUNT, SkillLook.GHOST_CANNON, SkillLook.CANNON_SHOT), 12, 6, 3, -10).lift(2),
+			new LookCase("el_draque", 0, SkillLook.GOLDEN_HIND, 34, 12, 4, 6).lift(4).shot("el_draque.golden_hind"),
+			new LookCase("el_draque", 1, SkillLook.COIN_SHOT, 2, 3, 1, 3),
+			new LookCase("el_draque", 2, SkillLook.STORM_VOYAGE, 12, 3.5, 2, 5).lift(0.3),
+			new LookCase("el_draque", 3, SkillLook.STAR_WAKE, 8, 10, 3, 0),
+			new LookCase("bonny_read_musket", 0, SkillLook.FREE_BIRD, 8, 4, 1.5, 3),
+			new LookCase("bonny_read_musket", 0, SkillLook.BIRD_SHOT, 12, 3, 1, 3).husk(22).shot("bonny_read_musket.caribbean_free_bird_shot"),
+			new LookCase("bonny_read_musket", 1, SkillLook.CUTLASS_ARC, 3, 3, 2.5, 5),
+			new LookCase("bonny_read_musket", 2, SkillLook.MUSKET_SHOT, 2, 3, 1, 3).husk(12),
+			new LookCase("bonny_read_musket", 2, SkillLook.CANNON_BLAST, 6, 4, 2, 6).shot("bonny_read_musket.annes_powder_shot_blast"),
+			new LookCase("bonny_read_musket", 3, SkillLook.TWIN_BIRDS, 10, 3, 1.5, -5),
+			new LookCase("dutchman_harpoon", 0, SkillLook.KRAKEN, 30, 5, 5, 14).lift(2),
+			new LookCase("dutchman_harpoon", 0, SkillLook.KRAKEN_SLAM, 46, 10, 4, 6).lift(3).shot("dutchman_harpoon.release_the_kraken_slam"),
+			new LookCase("dutchman_harpoon", 1, SkillLook.TENTACLE_LASH, 4, 3, 3, 5),
+			new LookCase("dutchman_harpoon", 2, SkillLook.DAVY_JONES, 12, 2, 2.5, -7).lift(2),
+			new LookCase("dutchman_harpoon", 3, SkillLook.DEEP_RISE, 5, 10, 3, 0),
+			new LookCase("napoleon_rapier", 0, SkillLook.IKOKU_SWING, 3, 8, 3, 9).lift(1),
+			new LookCase("napoleon_rapier", 0, SkillLook.IKOKU_WAVE, 7, 7, 2, 4).shot("napoleon_rapier.ikoku_sovereignty_wave"),
+			new LookCase("napoleon_rapier", 1, SkillLook.SOUL_POCUS, 10, 3.5, 1.5, 3).husk(3.5),
+			new LookCase("napoleon_rapier", 2, SkillLook.ZEUS, 4, 5, 1, 14).lift(4),
+			new LookCase("napoleon_rapier", 3, SkillLook.CROQUEMBOUCHE, 18, 3, 1.5, -5).lift(0.5),
+			new LookCase("moby_dick_anchor", 0, SkillLook.QUAKE, 4, 4, 2, 6).shot("moby_dick_anchor.island_shaker_crack"),
+			new LookCase("moby_dick_anchor", 0, SkillLook.QUAKE, 12, 6, 4, 12).lift(1),
+			new LookCase("moby_dick_anchor", 1, SkillLook.TSUNAMI, 3, 5, 2, 5),
+			new LookCase("moby_dick_anchor", 2, SkillLook.ANCHOR_DROP, 10, 9, 3, 8).lift(2).husk(16),
+			new LookCase("moby_dick_anchor", 2, SkillLook.ANCHOR_DROP, 44, 6, 3, 6).lift(1).husk(16).shot("moby_dick_anchor.anchor_drop_land"),
+			new LookCase("moby_dick_anchor", 3, SkillLook.MY_SONS, 12, 3, 2, -8).lift(2),
+			new LookCase("nika_knuckles", 0, SkillLook.BAJRANG_GUN, 6, 15, 5, 3).lift(4),
+			new LookCase("nika_knuckles", 0, SkillLook.BAJRANG_GUN, 11, 13, 4, -6).lift(2).shot("nika_knuckles.bajrang_gun_impact"),
+			new LookCase("nika_knuckles", 1, SkillLook.RED_HAWK, 4, 7, 1.5, 2),
+			new LookCase("nika_knuckles", 2, SkillLook.JET_GATLING, 6, 3.5, 1.5, 3),
+			new LookCase("nika_knuckles", 3, SkillLook.LIBERATION_DRUMS, 12, 3, 1.5, -5),
+			new LookCase("pirate_kings_sabre", 0, SkillLook.KAMUSARI, 3, 4, 2.5, 6),
+			new LookCase("pirate_kings_sabre", 0, SkillLook.KAMUSARI_WAVE, 4, 4, 1.5, 4).shot("pirate_kings_sabre.divine_departure_wave"),
+			new LookCase("pirate_kings_sabre", 1, SkillLook.HAKI_CLASH, 4, 6, 3, 9).lift(1.5),
+			new LookCase("pirate_kings_sabre", 2, SkillLook.WILL_OF_D, 14, 1.8, 0.8, -3).lift(1.2),
+			new LookCase("pirate_kings_sabre", 3, SkillLook.PIRATE_ERA, 24, -3, 1.5, -6).lift(3),
+			new LookCase("thunderclap_blunderbuss", 0, List.of(SkillLook.BROADSIDE, SkillLook.THUNDER_FLASH, SkillLook.THUNDER_SHOT), 15, 5, 5, 16).lift(3),
+			new LookCase("thunderclap_blunderbuss", 1, SkillLook.BUCKSHOT, 3, 4, 2, 5),
+			new LookCase("thunderclap_blunderbuss", 2, SkillLook.HAKI_SHOT, 2, 3, 0.8, 1).husk(16),
+			new LookCase("thunderclap_blunderbuss", 3, SkillLook.RECOIL, 4, 9, 3, 1)
+		);
+		checkClassLooks(context, server, connection, JobClass.PIRATE, cases, SkillLook.BATTLESHIP, SkillLook.RECOIL, "nika_knuckles.bajrang_gun");
 	}
 
 	/**

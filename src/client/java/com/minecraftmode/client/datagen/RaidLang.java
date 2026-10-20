@@ -161,6 +161,18 @@ final class RaidLang {
 		b.add(p + "failed", ko ? "%s 토벌 실패. 모두 전투에서 이탈했습니다." : "The raid on %s failed: nobody is left fighting.");
 		b.add(p + "returning", ko ? "%s초 뒤 귀환 (일시정지 메뉴의 '귀환': 바로 귀환)" : "Returning in %ss (\"Return home\" in the pause menu to go now)");
 		b.add(p + "victory", ko ? "%s 토벌 성공! 보상이 지급되었습니다. %s초 뒤 귀환합니다." : "%s is defeated! Rewards handed out. Returning in %s seconds.");
+		b.add(p + "mvp", ko ? "★ MVP: %s (기여도 %s%%)" : "★ MVP: %s (%s%% of the contribution)");
+
+		String r = "screen.minecraft_mode.raid_report.";
+		b.add(r + "title", ko ? "전투 결과" : "Fight Report");
+		b.add(r + "time", ko ? "%s · 전투 시간 %s" : "%s · fight time %s");
+		b.add(r + "total", ko ? "총 피해 %s · 초당 %s" : "Total %s · %s/s");
+		b.add(r + "percent", ko ? "피해 %s%%" : "%s%% dmg");
+		b.add(r + "dps", ko ? "초당 %s" : "%s/s");
+		b.add(r + "help", ko ? "MVP: 피해+지원 기여도 1위 (2인 이상)"
+			: "MVP: top contribution, damage + support (2+ players)");
+		b.add(r + "loot", ko ? "전리품 분배 ▶" : "Loot ▶");
+		b.add(r + "open", ko ? "전투 결과" : "Fight report");
 	}
 
 	private static void party(final TranslationBuilder b, final boolean ko) {

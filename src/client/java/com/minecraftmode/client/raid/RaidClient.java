@@ -6,6 +6,7 @@ import com.minecraftmode.network.LootActionPayload;
 import com.minecraftmode.network.LootStatePayload;
 import com.minecraftmode.network.OpenRaidPayload;
 import com.minecraftmode.network.PartySyncPayload;
+import com.minecraftmode.network.RaidReportPayload;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.List;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -21,7 +22,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Client side of parties, raids and loot: keeps the last synced party and loot session, opens the
  * raid screen (marshal) and the loot screen (when a session starts, or with the loot key L), and
- * draws the party HUD.
+ * draws the party HUD. A raid victory opens the fight report first ({@link RaidReportScreen}); the loot screen waits behind it.
  */
 public final class RaidClient {
 	public static final KeyMapping LOOT = KeyMappingHelper.registerKeyMapping(
@@ -32,6 +33,7 @@ public final class RaidClient {
 	private static String invitedBy = "";
 	private static @Nullable LootStatePayload loot;
 	private static @Nullable OpenRaidPayload raidInfo;
+	private static @Nullable RaidReportPayload report;
 
 	public static void init() {
 		ClientPlayNetworking.registerGlobalReceiver(OpenRaidPayload.TYPE, (payload, context) -> context.client().execute(() -> {
@@ -59,8 +61,14 @@ public final class RaidClient {
 				return;
 			}
 			loot = payload;
-			if (payload.open() && !(minecraft.gui.screen() instanceof LootScreen)) {
+			if (payload.open() && !(minecraft.gui.screen() instanceof LootScreen) && !(minecraft.gui.screen() instanceof RaidReportScreen)) {
 				minecraft.gui.setScreen(new LootScreen());
+			}
+		}));
+		ClientPlayNetworking.registerGlobalReceiver(RaidReportPayload.TYPE, (payload, context) -> context.client().execute(() -> {
+			report = payload;
+			if (payload.open()) {
+				context.client().gui.setScreen(new RaidReportScreen(payload));
 			}
 		}));
 		// a last sync from the old server can still be queued when DISCONNECT clears, so a new
@@ -81,6 +89,12 @@ public final class RaidClient {
 		invitedBy = "";
 		loot = null;
 		raidInfo = null;
+		report = null;
+	}
+
+	/** The last raid victory's fight report. */
+	public static @Nullable RaidReportPayload report() {
+		return report;
 	}
 
 	public static List<PartySyncPayload.Member> party() {

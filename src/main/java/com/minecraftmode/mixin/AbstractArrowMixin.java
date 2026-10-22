@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -30,7 +31,12 @@ public abstract class AbstractArrowMixin {
 	/** The arrows of one basic shot or skill fan hit each enemy once; the others fly on past it to the monsters around ({@code BasicAttacks.Fan}). */
 	@Inject(method = "canHitEntity", at = @At("HEAD"), cancellable = true)
 	private void minecraftMode$oneArrowPerEnemy(final Entity entity, final CallbackInfoReturnable<Boolean> cir) {
-		if (CombatHooks.fanTaken((AbstractArrow)(Object)this, entity)) {
+		AbstractArrow self = (AbstractArrow)(Object)this;
+		if (CombatHooks.fanTaken(self, entity)) {
+			cir.setReturnValue(false);
+		}
+		// a player's arrows fly through their own and their party's summons and pets (the damage would be refused anyway)
+		if (!self.level().isClientSide() && self.getOwner() instanceof Player owner && CombatHooks.spares(owner, entity)) {
 			cir.setReturnValue(false);
 		}
 	}

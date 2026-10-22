@@ -142,6 +142,12 @@ public class JobClientGameTest implements FabricClientGameTest {
 			server.runCommand("gamemode survival @p");
 			server.runCommand("tp @p 0.5 -60 0.5 180 0");
 			context.waitTicks(5);
+			// -PjobChecks=summons: only the summon check, while working on summons
+			if ("summons".equals(System.getProperty("minecraft_mode.job.only"))) {
+				SummonChecks.run(context, server, connection);
+				WorldClose.prepare(context, server);
+				return;
+			}
 
 			checkProgression(context, server, connection);
 			checkSkillKey(context, server, connection);
@@ -172,6 +178,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkProjectileImmunities(context, server, connection);
 			checkLockedAim(context, server, connection);
 			castEverySkill(context, server, connection);
+			SummonChecks.run(context, server, connection);
 			WorldClose.prepare(context, server);
 		}
 	}

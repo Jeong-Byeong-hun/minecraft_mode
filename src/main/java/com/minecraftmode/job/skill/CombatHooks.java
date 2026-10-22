@@ -169,6 +169,10 @@ public final class CombatHooks {
 		current = kind;
 		try {
 			target.damageCooldownTime = 0;
+			// the caster's summons and tamed wolves go after what their skills hit, as after a swing
+			if (target != attacker) {
+				attacker.setLastHurtMob(target);
+			}
 			return target.hurtServer(attacker.level(), source, amount);
 		} finally {
 			current = previous;
@@ -196,14 +200,7 @@ public final class CombatHooks {
 		if (!(entity instanceof LivingEntity living) || !living.isAlive() || living == caster || living.isSpectator() || living instanceof ArmorStand && !(living instanceof TrainingDummy)) {
 			return false;
 		}
-		if (living instanceof PetEntity || living instanceof MountEntity) {
-			return false;
-		}
-		if (living instanceof OwnableEntity ownable && ownable.getOwner() == caster) {
-			return false;
-		}
-		UUID summoner = Actions.summoner(living);
-		if (summoner != null && (summoner.equals(caster.getUUID()) || Parties.together(caster.getUUID(), summoner))) {
+		if (spares(caster, living)) {
 			return false;
 		}
 		if (living.isAlliedTo(caster) || CityServices.blocksPvp(living, caster)) {
@@ -213,6 +210,36 @@ public final class CombatHooks {
 			return false;
 		}
 		return !(living instanceof Player player) || caster.canHarmPlayer(player);
+	}
+
+	/**
+	 * What no hit of {@code attacker} ever lands on, whatever made it (swings, vanilla and class arrows, skills): their own or a party
+	 * member's skill summons, companions, and animals they or a party member tamed. Until 0.5.46 only skills spared them, so a
+	 * caster's own arrows and swings, and a party member's, killed the summons.
+	 */
+	public static boolean spares(final Player attacker, final Entity victim) {
+		if (victim instanceof PetEntity || victim instanceof MountEntity) {
+			return true;
+		}
+		UUID summoner = Actions.summoner(victim);
+		if (summoner != null && (summoner.equals(attacker.getUUID()) || Parties.together(attacker.getUUID(), summoner))) {
+			return true;
+		}
+		return victim instanceof OwnableEntity ownable && ownable.getOwner() instanceof Player owner
+			&& (owner == attacker || Parties.together(attacker.getUUID(), owner.getUUID()));
+	}
+
+	/** A skill summon's hit on its caster, a party member of theirs, or anything the caster {@link #spares}. */
+	private static boolean friendlySummonHit(final ServerLevel level, final Entity attacker, final LivingEntity victim) {
+		UUID summoner = Actions.summoner(attacker);
+		if (summoner == null) {
+			return false;
+		}
+		if (victim.getUUID().equals(summoner) || victim instanceof Player player && Parties.together(summoner, player.getUUID())) {
+			return true;
+		}
+		ServerPlayer caster = summonOwner(level, attacker);
+		return caster != null && spares(caster, victim);
 	}
 
 	// ------------------------------------------------------------------ damage adjustment
@@ -238,6 +265,11 @@ public final class CombatHooks {
 		// class arrows land every time like the other shots and skills (CombatHooks.deal); vanilla's damage cooldown would bounce
 		// every arrow of a volley after the first one off the same target, and any arrow right after someone else's hit
 		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
+			victim.damageCooldownTime = 0;
+		}
+		// skill summons land every hit too: three wolves and two golems on one monster bounced off each other's damage cooldown, and
+		// half to three quarters of their hits were lost
+		if (kind == null && Actions.summoner(source.getEntity()) != null && !victim.isInvulnerableTo(level, source)) {
 			victim.damageCooldownTime = 0;
 		}
 		if (arrowDamage != null || skillArrow != null) {
@@ -461,6 +493,12 @@ public final class CombatHooks {
 
 	private static boolean allowDamage(final LivingEntity victim, final DamageSource source, final float amount) {
 		if (source.getEntity() != null && CityServices.blocksPvp(victim, source.getEntity())) {
+			return false;
+		}
+		if (source.getEntity() instanceof Player attacker && attacker != victim && spares(attacker, victim)) {
+			return false;
+		}
+		if (source.getEntity() != null && victim.level() instanceof ServerLevel level && friendlySummonHit(level, source.getEntity(), victim)) {
 			return false;
 		}
 		if (victim instanceof ServerPlayer guarded && Engage.guarded(guarded) && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)

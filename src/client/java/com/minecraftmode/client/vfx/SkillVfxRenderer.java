@@ -32,7 +32,9 @@ import org.joml.Vector4f;
  * {@link ArcaneLooks} and {@link FairyLooks}, their projectiles by {@link MageBolts}; the pirate's (Pirate King) by {@link NavyLooks},
  * {@link GhostSeaLooks}, {@link EmperorLooks} and {@link HakiLooks}, their projectiles by {@link PirateShots}; the warrior's (King of Knights) by
  * {@link PendragonLooks}, {@link LanceLooks}, {@link KnightLooks}, {@link CamelotLooks} and {@link OrochiLooks}, their projectiles by {@link KnightShots};
- * the rogue's (Shadow Monarch) by {@link VenomLooks}, {@link AntLooks}, {@link ShinobiLooks}, {@link UchihaLooks} and {@link MonarchLooks}, their projectiles by {@link RogueShots}.
+ * the rogue's (Shadow Monarch) by {@link VenomLooks}, {@link AntLooks}, {@link ShinobiLooks}, {@link UchihaLooks} and {@link MonarchLooks}, their projectiles by {@link RogueShots};
+ * the hunter's (Triple-Star Hunter) by {@link KilluaLooks}, {@link KurtaLooks}, {@link GonLooks}, {@link TroupeLooks}, {@link DragonLooks}, {@link ZoldyckLooks},
+ * {@link ChimeraLooks} and {@link GuanyinLooks}, their projectiles by {@link HunterShots}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
@@ -68,10 +70,14 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case GOLDEN_HIND, BAJRANG_GUN -> Math.max(10.0, entity.arg() + 4.0);
 			// Madara's wall of fire rolls out from the caster to the aimed spot
 			case DESTROYER_FLAME -> entity.arg() + 2.0;
+			// the Hundred-Type Guanyin stands behind the caster, well back from the aimed spot; the great dragon circles over its rain
+			case ZERO_HAND -> entity.arg() + 6.0;
+			case DRAGON_DIVE -> 4.0;
 			default -> 0.0;
 		};
 		double up = switch (entity.look()) {
 			case FAIRY_LAW, RHONGOMYNIAD -> 28.0;
+			case ZERO_HAND, KING_ROSE -> 14.0;
 			case EXPLOSION -> 22.0;
 			case BAJRANG_GUN, GOLDEN_HIND, HAKI_CLASH -> 16.0;
 			default -> 10.0;
@@ -131,7 +137,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		}
 		state.targets.clear();
 		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH || state.look == SkillLook.SOUL_POCUS || state.look == SkillLook.RED_CHAIN
-			|| state.look == SkillLook.PURPLE_CHAIN) {
+			|| state.look == SkillLook.PURPLE_CHAIN || state.look == SkillLook.NARUKAMI || state.look == SkillLook.STEAL_CHAIN || state.look == SkillLook.SEAL_CHAIN) {
 			enemies(entity, state, origin.add(state.offset), partialTicks);
 		}
 	}
@@ -215,6 +221,14 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case SUSANOO_ITACHI, TOTSUKA, BLACK_FLAMES, TSUKUYOMI, CROW_CLONE, UCHIHA_RETURN, DESTROYER_FLAME, GUNBAI_SWEEP, GUNBAI_LEAP ->
 				UchihaLooks.submit(state, poseStack, collector);
 			case MONARCH_DOMAIN, RULERS_AUTHORITY, REAPER_CHAIN, ABYSSAL_GUARD, ARISE, DRAGON_FEAR, SHADOW_EXCHANGE -> MonarchLooks.submit(state, poseStack, collector);
+			case GODSPEED_STEP, GODSPEED_AURA, THUNDERBOLT, NARUKAMI -> KilluaLooks.submit(state, poseStack, collector);
+			case JUDGMENT_CHAIN, STEAL_CHAIN, CHAIN_JAIL, SCARLET_EYES -> KurtaLooks.submit(state, poseStack, collector);
+			case GON_RAGE, JAJANKEN_ROCK, LONG_SCISSORS, GON_ROCK, ROCK_BLAST -> GonLooks.submit(state, poseStack, collector);
+			case SUN_MOON, SEAL_CHAIN, FUN_CLOTH, BANDIT_BOOK, PAGE_GATE -> TroupeLooks.submit(state, poseStack, collector);
+			case DRAGON_BURST, DRAGON_LANCE, ZENO_AURA, DRAGON_DIVE -> DragonLooks.submit(state, poseStack, collector);
+			case ORB_BURST, SILVA_PRESENCE, ASSASSIN_HAND, NEEDLE_RAIN, NEEDLE_DISGUISE, NEEDLE_PUPPET -> ZoldyckLooks.submit(state, poseStack, collector);
+			case TAIL_PIERCE, PHOTON, KINGS_AURA, KING_ROSE -> ChimeraLooks.submit(state, poseStack, collector);
+			case NETERO_PRAYER, GUANYIN_SWEEP, PALM_SLAM, ZERO_HAND, ZERO_BEAM -> GuanyinLooks.submit(state, poseStack, collector);
 			default -> {
 			}
 		}

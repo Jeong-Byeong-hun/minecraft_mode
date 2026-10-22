@@ -1295,6 +1295,157 @@ final class VfxOut {
 		}
 	}
 
+	// ------------------------------------------------------------ the hunter's: aura dragons, open palms, needles
+
+	/**
+	 * A dragon of aura (Zeno's Dragon Head) along {@code spine}, head first: a glowing body {@code r} thick tapering to the tail with a bright
+	 * core and a ridge of spines along its back, and at the first point the head, {@code r} * 2.8 long: horned, whiskered, its jaws open by
+	 * {@code open} (0..1) over fangs, {@code eye} burning in it; {@code time} sways the whiskers. Faces are lit fills and edges, for the glow
+	 * buffer.
+	 */
+	void auraDragon(final java.util.List<Vector3f> spine, final float r, final float open, final float time, final int body, final int pale, final int eye) {
+		int n = spine.size();
+		if (n < 2) {
+			return;
+		}
+		int edge = body & 0xFFFFFF;
+		for (int i = 0; i + 1 < n; i++) {
+			float t0 = (float)i / (n - 1);
+			float t1 = (float)(i + 1) / (n - 1);
+			float w0 = r * (1.0F - 0.8F * t0);
+			float w1 = r * (1.0F - 0.8F * t1);
+			this.glowLine(spine.get(i), spine.get(i + 1), (w0 + w1) * 0.6F, lerp(body, edge, t0 * 0.6F), lerp(body, edge, t1 * 0.6F));
+			this.bar(spine.get(i), spine.get(i + 1), w0 * 0.22F, w1 * 0.22F, lerp(pale, edge, t0 * 0.7F), lerp(pale, edge, t1 * 0.7F));
+			if (i % 2 == 1 && i + 1 < n - 1) {
+				// a spine on its back, swept towards the tail
+				Vector3f d = new Vector3f(spine.get(i + 1)).sub(spine.get(i));
+				if (d.lengthSquared() > 1.0E-6F) {
+					d.normalize();
+					Vector3f up = new Vector3f(UP).sub(new Vector3f(d).mul(d.y));
+					if (up.lengthSquared() < 1.0E-4F) {
+						up = across(d);
+					}
+					up.normalize();
+					Vector3f base = new Vector3f(up).mul(w0 * 0.55F).add(spine.get(i));
+					this.blade(base, new Vector3f(up).mul(w0 * 1.25F).add(new Vector3f(d).mul(w0 * 0.9F)).add(spine.get(i)), d, w0 * 0.22F, lerp(body, pale, 0.3F), edge);
+				}
+			}
+		}
+		Vector3f p = new Vector3f(spine.get(0));
+		Vector3f f = new Vector3f(spine.get(0)).sub(spine.get(1));
+		if (f.lengthSquared() < 1.0E-8F) {
+			return;
+		}
+		f.normalize();
+		Vector3f u = new Vector3f(UP).sub(new Vector3f(f).mul(f.y));
+		if (u.lengthSquared() < 1.0E-4F) {
+			u = across(f);
+		}
+		u.normalize();
+		Vector3f s = new Vector3f(f).cross(u).normalize();
+		float len = r * 2.8F;
+		Vector3f crown = head(p, f, u, s, r, 0.0F, 0.75F, -0.1F);
+		Vector3f nose = head(p, f, u, s, r, 0.0F, 0.2F, len / r);
+		Vector3f chin = head(p, f, u, s, r, 0.0F, -0.3F - 1.1F * open, len / r * 0.85F);
+		int fill = lerp(body, pale, 0.15F);
+		for (int k = -1; k <= 1; k += 2) {
+			Vector3f brow = head(p, f, u, s, r, k * 0.6F, 0.6F, 0.6F);
+			Vector3f cheek = head(p, f, u, s, r, k * 0.75F, 0.05F, 0.15F);
+			Vector3f corner = head(p, f, u, s, r, k * 0.5F, -0.12F, 0.4F);
+			Vector3f nostril = head(p, f, u, s, r, k * 0.32F, 0.32F, len / r * 0.9F);
+			Vector3f jaw = head(p, f, u, s, r, k * 0.5F, -0.4F, 0.1F);
+			// the skull and the upper jaw, then the lower jaw hanging open
+			this.tri(crown, brow, nose, fill, fill, fill);
+			this.tri(brow, cheek, nose, fill, fill, fill);
+			this.tri(cheek, corner, nose, fill, edge, fill);
+			this.tri(corner, jaw, chin, fill, fill, fill);
+			this.glowLine(brow, nostril, r * 0.12F, pale, pale);
+			this.glowLine(corner, nose, r * 0.1F, pale, pale);
+			this.glowLine(jaw, chin, r * 0.1F, pale, pale);
+			// fangs down from the upper jaw and up from the lower
+			for (int j = 0; j < 2; j++) {
+				float at = 0.55F + 0.3F * j;
+				Vector3f top = new Vector3f(corner).lerp(nose, at);
+				this.blade(top, new Vector3f(top).add(new Vector3f(u).mul(-r * (0.35F + 0.25F * open))), f, r * 0.07F, pale, pale);
+				Vector3f low = new Vector3f(jaw).lerp(chin, at);
+				this.blade(low, new Vector3f(low).add(new Vector3f(u).mul(r * 0.3F)), f, r * 0.06F, pale, pale);
+			}
+			// the horns swept back and the mane behind the head
+			Vector3f root = head(p, f, u, s, r, k * 0.4F, 0.7F, 0.05F);
+			Vector3f bend = head(p, f, u, s, r, k * 0.7F, 1.35F, -0.9F);
+			Vector3f hornTip = head(p, f, u, s, r, k * 0.85F, 1.6F, -2.0F);
+			this.glowLine(root, bend, r * 0.16F, pale, pale);
+			this.glowLine(bend, hornTip, r * 0.12F, pale, edge);
+			this.bar(root, bend, r * 0.05F, r * 0.04F, pale, pale);
+			this.bar(bend, hornTip, r * 0.04F, r * 0.01F, pale, pale);
+			for (int j = 0; j < 3; j++) {
+				Vector3f m0 = head(p, f, u, s, r, k * (0.45F + 0.1F * j), 0.3F - 0.35F * j, -0.3F);
+				Vector3f m1 = head(p, f, u, s, r, k * (1.1F + 0.3F * j), 0.6F - 0.5F * j, -1.5F - 0.3F * j);
+				this.blade(m0, m1, s, r * 0.18F, fill, edge);
+			}
+			// the long whiskers flowing back from the snout
+			java.util.List<Vector3f> whisker = new java.util.ArrayList<>();
+			for (int j = 0; j <= 6; j++) {
+				float t = j / 6.0F;
+				float wave = Mth.sin(time * 0.25F + t * 4.0F + k) * 0.35F * t;
+				whisker.add(head(p, f, u, s, r, k * (0.35F + 1.4F * t), 0.25F + wave, len / r * 0.85F - 3.6F * t));
+			}
+			this.glowPolyline(whisker, r * 0.07F, pale);
+			Vector3f eyeAt = head(p, f, u, s, r, k * 0.48F, 0.5F, 0.75F);
+			this.glowLine(new Vector3f(eyeAt).add(new Vector3f(f).mul(-r * 0.12F)), new Vector3f(eyeAt).add(new Vector3f(f).mul(r * 0.16F)), r * 0.12F, eye, eye);
+		}
+		this.glowLine(crown, nose, r * 0.14F, pale, pale);
+	}
+
+	/** A point {@code x} across, {@code y} up and {@code z} forward (in units of {@code r}) of an {@link #auraDragon}'s head at {@code p}. */
+	private static Vector3f head(final Vector3fc p, final Vector3fc f, final Vector3fc u, final Vector3fc s, final float r, final float x, final float y, final float z) {
+		return new Vector3f(s).mul(x * r).add(new Vector3f(u).mul(y * r)).add(new Vector3f(f).mul(z * r)).add(p);
+	}
+
+	/**
+	 * An open hand {@code size} long from the wrist to the middle fingertip, its palm at {@code c} facing {@code face}, the fingers pointing
+	 * along {@code fingers}: a flat palm, four fingers held together and the thumb spread a little, a wrist behind; shaded {@code lit} to
+	 * {@code dark} (Netero's Guanyin palms).
+	 */
+	void palm(final Vector3fc c, final Vector3fc face, final Vector3fc fingers, final float size, final int lit, final int dark) {
+		Vector3f n = new Vector3f(face).normalize();
+		Vector3f f = new Vector3f(fingers).sub(new Vector3f(n).mul(n.dot(fingers)));
+		if (f.lengthSquared() < 1.0E-6F) {
+			f = across(n);
+		}
+		f.normalize();
+		Vector3f s = new Vector3f(n).cross(f).normalize();
+		float l = size;
+		this.ellipsoid(new Vector3f(f).mul(-0.08F * l).add(c), new Vector3f(s).mul(0.21F * l), new Vector3f(n).mul(0.07F * l), new Vector3f(f).mul(0.24F * l), 4, 10,
+			lit, dark);
+		float[] xs = {-0.15F, -0.05F, 0.05F, 0.15F};
+		float[] lens = {0.29F, 0.37F, 0.35F, 0.27F};
+		for (int i = 0; i < 4; i++) {
+			Vector3f knuckle = new Vector3f(f).mul(0.12F * l).add(new Vector3f(s).mul(xs[i] * l)).add(c);
+			Vector3f mid = new Vector3f(f).mul((0.12F + lens[i] * 0.55F) * l).add(new Vector3f(s).mul(xs[i] * 1.05F * l)).add(c);
+			Vector3f tip = new Vector3f(f).mul((0.12F + lens[i]) * l).add(new Vector3f(s).mul(xs[i] * 1.1F * l)).add(new Vector3f(n).mul(0.03F * l)).add(c);
+			this.tube(java.util.List.of(knuckle, mid, tip), 0.05F * l, 0.038F * l, 6, lit, dark);
+		}
+		Vector3f thumbRoot = new Vector3f(f).mul(-0.12F * l).add(new Vector3f(s).mul(-0.2F * l)).add(c);
+		Vector3f thumbMid = new Vector3f(f).mul(0.02F * l).add(new Vector3f(s).mul(-0.33F * l)).add(new Vector3f(n).mul(0.03F * l)).add(c);
+		Vector3f thumbTip = new Vector3f(f).mul(0.14F * l).add(new Vector3f(s).mul(-0.4F * l)).add(new Vector3f(n).mul(0.05F * l)).add(c);
+		this.tube(java.util.List.of(thumbRoot, thumbMid, thumbTip), 0.065F * l, 0.045F * l, 6, lit, dark);
+		this.tube(java.util.List.of(new Vector3f(f).mul(-0.3F * l).add(c), new Vector3f(f).mul(-0.55F * l).add(c)), 0.13F * l, 0.12F * l, 12, lit, dark);
+	}
+
+	/** One of Illumi's needles from its round {@code head} to the point at {@code tip}: a long thin pin and a ball {@code r} round on it. */
+	void pin(final Vector3fc head, final Vector3fc tip, final float r, final int steel, final int ball) {
+		this.bar(head, tip, r * 0.28F, r * 0.06F, steel, steel);
+		Vector3f d = new Vector3f(tip).sub(head);
+		if (d.lengthSquared() < 1.0E-8F) {
+			return;
+		}
+		d.normalize();
+		Vector3f a = across(d);
+		Vector3f b = new Vector3f(d).cross(a).normalize();
+		this.ellipsoid(head, new Vector3f(a).mul(r), new Vector3f(d).mul(r), new Vector3f(b).mul(r), 4, 8, ball, lerp(ball, steel, 0.6F));
+	}
+
 	// ------------------------------------------------------------ paths
 
 	/** A trail's points with the ones closer than 0.2 blocks to the last kept dropped (a still holder leaves no zero-length parts). */

@@ -11,6 +11,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -134,67 +135,99 @@ public final class HunterContent extends ClassContent {
 			skill("auto_pilot", "Auto-Pilot", "오토 파일럿", ATTACK, 12, 20, boost(DAMAGE, 6, 20), dash(8, 1.8)));
 
 		// ---------------------------------------------------------------- tier 4: Triple-Star Hunter
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.43): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (runes, rings, orbs) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("godspeed", 4, 70, CLAW, "Godspeed", "신속",
 			art(0xE8F4FF, 0xD8E8FF, 0x3AA0FF), fx(Fx.Kind.BOLT, 0x8AD0FF),
-			skill("speed_of_lightning", "Speed of Lightning", "전광석화", MOVEMENT, 8, 18, shadowstep(12, 2.2), buff(SPEED, 4, 2)),
-			skill("whirlwind", "Whirlwind", "질풍신뢰", UTILITY, 20, 22, boost(CRIT_DAMAGE, 6, 100), boost(CRIT_CHANCE, 6, 15)),
-			skill("thunderbolt", "Thunderbolt", "낙뢰", ATTACK, 12, 26, lightning(16, 3, 2.6), stun(1.2)),
-			skill("narukami", "Narukami", "나루카미", ULTIMATE, 50, 45, chain(14, 6, 3.4), lightning(14, 4, 3.0)));
+			skill("speed_of_lightning", "Speed of Lightning", "전광석화", MOVEMENT, 8, 18, look(SkillLook.GODSPEED_STEP, shadowstep(12, 2.2)).lasting(0.9).quiet(),
+				buff(SPEED, 4, 2)),
+			skill("whirlwind", "Whirlwind", "질풍신뢰", UTILITY, 20, 22, look(SkillLook.GODSPEED_AURA, boost(CRIT_DAMAGE, 6, 100)).lasting(6).quiet(),
+				boost(CRIT_CHANCE, 6, 15)),
+			skill("thunderbolt", "Thunderbolt", "낙뢰", ATTACK, 12, 26, look(SkillLook.THUNDERBOLT, lightning(16, 3, 2.6)).at(16).size(3).quiet(), stun(1.2)),
+			skill("narukami", "Narukami", "나루카미", ULTIMATE, 50, 45, look(SkillLook.NARUKAMI, chain(14, 6, 3.4)).size(14).unscaled(),
+				look(SkillLook.THUNDERBOLT, lightning(14, 4, 3.0)).at(14).size(4).quiet()));
 
 		weapon("emperor_time", 4, 75, KUSARIGAMA, "Emperor Time", "엠퍼러 타임",
 			art(0xF0F0F8, 0x8A1A1A, 0xFF2A2A), fx(Fx.Kind.SPARK, 0xFF4A4A),
-			skill("judgment_chain", "Judgment Chain", "저지먼트 체인", ATTACK, 14, 24, beam(14, 3.0), inflict(VULNERABLE, 8, 1), stun(1.5)),
-			skill("steal_chain", "Steal Chain", "스틸 체인", UTILITY, 18, 20, debuff(8, WEAKNESS, 8, 2), restoreMana(20)),
-			skill("chain_jail_kai", "Chain Jail", "체인 제일", ATTACK, 16, 26, zone(4, 3, 1.0).at(12).pull(1.0), stun(2.5)),
-			skill("scarlet_eyes", "Scarlet Eyes", "붉은 눈", ULTIMATE, 60, 40, empower(10, 100, 15), buff(SPEED, 15, 1), refresh(50)));
+			skill("judgment_chain", "Judgment Chain", "저지먼트 체인", ATTACK, 14, 24, look(SkillLook.JUDGMENT_CHAIN, beam(14, 3.0)).beam(14).quiet(),
+				inflict(VULNERABLE, 8, 1), stun(1.5)),
+			skill("steal_chain", "Steal Chain", "스틸 체인", UTILITY, 18, 20, look(SkillLook.STEAL_CHAIN, debuff(8, WEAKNESS, 8, 2)).size(8).quiet(), restoreMana(20)),
+			skill("chain_jail_kai", "Chain Jail", "체인 제일", ATTACK, 16, 26, look(SkillLook.CHAIN_JAIL, zone(4, 3, 1.0).at(12).pull(1.0)).at(12).size(4).lasting(3)
+				.quiet(), stun(2.5)),
+			skill("scarlet_eyes", "Scarlet Eyes", "붉은 눈", ULTIMATE, 60, 40, look(SkillLook.SCARLET_EYES, empower(10, 100, 15)).lasting(4).quiet(),
+				buff(SPEED, 15, 1), refresh(50)));
 
 		weapon("adult_gon", 4, 78, KNUCKLE, "Adult Gon", "어른 곤",
 			art(0x2A6A2A, 0xE8E0D0, 0xF5D040), fx(Fx.Kind.ORB, 0xFFE070),
-			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, boost(DAMAGE, 10, 40), lifestealFor(10, 10)),
-			skill("first_comes_rock", "First Comes Rock", "처음에는 주먹", ATTACK, 10, 26, leap(6, 4, 2.8), launch(4, 1.0)),
-			skill("long_scissors", "Long Scissors", "긴 가위", ATTACK, 12, 26, beam(18, 2.6)),
-			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝나도 좋아", ULTIMATE, 75, 60, delay(1.0, nova(7, 13.2)), stun(2.0)));
+			skill("bonds_rage", "Rage of the Bond", "분노의 서약", UTILITY, 22, 20, look(SkillLook.GON_RAGE, boost(DAMAGE, 10, 40)).lasting(4).quiet(),
+				lifestealFor(10, 10)).withFx(Fx.Kind.SPARK),
+			skill("first_comes_rock", "First Comes Rock", "처음에는 주먹", ATTACK, 10, 26, look(SkillLook.JAJANKEN_ROCK, leap(6, 4, 2.8)).size(4).lasting(2.2),
+				look(SkillLook.NONE, launch(4, 1.0)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("long_scissors", "Long Scissors", "긴 가위", ATTACK, 12, 26, look(SkillLook.LONG_SCISSORS, beam(18, 2.6)).beam(18).quiet()).withFx(Fx.Kind.SPARK),
+			skill("thats_all_i_need", "This Is All I Need", "이것으로 끝나도 좋아", ULTIMATE, 75, 60,
+				look(SkillLook.GON_ROCK, delay(1.0, look(SkillLook.ROCK_BLAST, nova(7, 13.2)).size(7).quiet())).size(7).lasting(1.2), stun(2.0)).withFx(Fx.Kind.SPARK));
 
 		weapon("skill_hunter", 4, 82, GRIMOIRE, "Skill Hunter", "도적의 극의",
 			art(0x3A2A1A, 0x1A1A1A, 0xC8A040), fx(Fx.Kind.RUNE, 0xE0C080),
-			skill("sun_and_moon", "Sun and Moon", "한 쌍의 파괴자", ATTACK, 12, 24, mark(18, 8, 40), delay(1.5, chain(14, 4, 2.2))),
-			skill("indoor_fish", "Indoor Fish", "밀실유어", ATTACK, 14, 24, shoot(ProjectileStyle.ORB, 1.6).count(3).spread(30).homing(), inflict(BLEEDING, 6, 1)),
-			skill("fun_fun_cloth", "Fun Fun Cloth", "불가사의하고 편리한 보자기", DEFENSE, 20, 22, shield(16, 8), stealth(2, 30)),
-			skill("bandits_secret", "Bandit's Secret", "도적의 비법", ULTIMATE, 55, 50, barrage(ProjectileStyle.ORB, 14, 0.6), restoreMana(30)));
+			skill("sun_and_moon", "Sun and Moon", "한 쌍의 파괴자", ATTACK, 12, 24, look(SkillLook.SUN_MOON, mark(18, 8, 40)).onTarget(18).lasting(2.0).quiet(),
+				delay(1.5, look(SkillLook.SEAL_CHAIN, chain(14, 4, 2.2)).size(14).unscaled())).withFx(Fx.Kind.SPARK),
+			skill("indoor_fish", "Indoor Fish", "밀실유어", ATTACK, 14, 24,
+				shoot(ProjectileStyle.ORB, 1.6).count(3).spread(30).homing().look(SkillLook.INDOOR_FISH), inflict(BLEEDING, 6, 1)).withFx(Fx.Kind.SPARK),
+			skill("fun_fun_cloth", "Fun Fun Cloth", "불가사의하고 편리한 보자기", DEFENSE, 20, 22, look(SkillLook.FUN_CLOTH, shield(16, 8)).quiet(),
+				look(SkillLook.NONE, stealth(2, 30)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("bandits_secret", "Bandit's Secret", "도적의 비법", ULTIMATE, 55, 50,
+				look(SkillLook.BANDIT_BOOK, barrage(ProjectileStyle.ORB, 14, 0.6, SkillLook.PAGE_GATE, SkillLook.STOLEN_SKILL)).lasting(1.6), restoreMana(30))
+				.withFx(Fx.Kind.SPARK));
 
 		weapon("zeno_dragon", 4, 85, SCEPTER, "Zeno's Dragon Head", "제노의 드래곤 헤드",
 			art(0xE8E0C0, 0x5A3A2A, 0x4AC8FF), fx(Fx.Kind.ORB, 0x8AE0FF),
-			skill("dragon_head", "Dragon Head", "드래곤 헤드", ATTACK, 12, 26, shoot(ProjectileStyle.WAVE, 2.4).pierce(10).explode(2.5F)),
-			skill("dragon_lance", "Dragon Lance", "드래곤 랜스", ATTACK, 14, 26, beam(20, 2.6), stun(1.0)),
-			skill("zoldyck_patience", "Zoldyck Patience", "조르딕가의 인내", UTILITY, 20, 18, boost(DAMAGE, 6, 25), boost(CRIT_CHANCE, 6, 20)),
-			skill("dragon_dive", "Dragon Dive", "드래곤 다이브", ULTIMATE, 60, 50, rain(ProjectileStyle.ORB, 24, 7, 30, 0.35, 1.5F)));
+			skill("dragon_head", "Dragon Head", "드래곤 헤드", ATTACK, 12, 26, shoot(ProjectileStyle.WAVE, 2.4).pierce(10).explode(2.5F).look(SkillLook.DRAGON_HEAD)
+				.onImpact(lookWhereItBursts(SkillLook.DRAGON_BURST, 2.5))),
+			skill("dragon_lance", "Dragon Lance", "드래곤 랜스", ATTACK, 14, 26, look(SkillLook.DRAGON_LANCE, beam(20, 2.6)).beam(20).quiet(), stun(1.0))
+				.withFx(Fx.Kind.SPARK),
+			skill("zoldyck_patience", "Zoldyck Patience", "조르딕가의 인내", UTILITY, 20, 18, look(SkillLook.ZENO_AURA, boost(DAMAGE, 6, 25)).lasting(3).quiet(),
+				boost(CRIT_CHANCE, 6, 20)).withFx(Fx.Kind.SPARK),
+			skill("dragon_dive", "Dragon Dive", "드래곤 다이브", ULTIMATE, 60, 50,
+				look(SkillLook.DRAGON_DIVE, rain(ProjectileStyle.ORB, 24, 7, 30, 0.35, 1.5F, SkillLook.NONE, SkillLook.DIVE_DRAGON)).at(24).size(7).lasting(3.5).quiet()));
 
 		weapon("silva_orbs", 4, 88, ORB, "Silva's Nen Orbs", "실버의 넨구",
 			art(0xE8E8F0, 0x5A5A6A, 0xF5862B), fx(Fx.Kind.ORB, 0xFFB060),
-			skill("aura_orb", "Aura Orb", "아우라 구", ATTACK, 8, 20, shoot(ProjectileStyle.ORB, 2.2).explode(3.0F)),
-			skill("orb_volley", "Orb Volley", "넨구 연사", ATTACK, 14, 26, shoot(ProjectileStyle.ORB, 1.19).count(6).spread(40).explode(1.5F)),
-			skill("head_of_the_family", "Head of the Family", "가주의 위엄", UTILITY, 20, 18, debuff(10, SLOWNESS, 5, 2), taunt(10), boost(DAMAGE, 5, 20)),
-			skill("assassins_judgment", "Assassin's Judgment", "암살가의 심판", ULTIMATE, 55, 45, execute(8, 4.0, 40, 3.0), shoot(ProjectileStyle.ORB, 3.0).count(3).spread(25).explode(3.0F)));
+			skill("aura_orb", "Aura Orb", "아우라 구", ATTACK, 8, 20, shoot(ProjectileStyle.ORB, 2.2).explode(3.0F).look(SkillLook.SILVA_ORB)
+				.onImpact(lookWhereItBursts(SkillLook.ORB_BURST, 3.0))),
+			skill("orb_volley", "Orb Volley", "넨구 연사", ATTACK, 14, 26, shoot(ProjectileStyle.ORB, 1.19).count(6).spread(40).explode(1.5F).look(SkillLook.SILVA_ORB)
+				.onImpact(lookWhereItBursts(SkillLook.ORB_BURST, 1.5))),
+			skill("head_of_the_family", "Head of the Family", "가주의 위엄", UTILITY, 20, 18, look(SkillLook.SILVA_PRESENCE, debuff(10, SLOWNESS, 5, 2)).size(10).quiet(),
+				look(SkillLook.NONE, taunt(10)).quiet(), boost(DAMAGE, 5, 20)).withFx(Fx.Kind.SPARK),
+			skill("assassins_judgment", "Assassin's Judgment", "암살가의 심판", ULTIMATE, 55, 45, look(SkillLook.ASSASSIN_HAND, execute(8, 4.0, 40, 3.0)).onTarget(8).quiet(),
+				shoot(ProjectileStyle.ORB, 3.0).count(3).spread(25).explode(3.0F).look(SkillLook.SILVA_ORB).onImpact(lookWhereItBursts(SkillLook.ORB_BURST, 3.0))));
 
 		weapon("meruem_tail", 4, 92, SPEAR, "Meruem's Tail", "메르엠의 꼬리",
 			art(0x6A8A3A, 0x2A3A1A, 0xC8F070), fx(Fx.Kind.SLASH, 0xC8F070),
-			skill("tail_pierce", "Tail Pierce", "꼬리 관통", ATTACK, 8, 22, beam(10, 2.38)),
-			skill("photon", "Photon", "광자", ATTACK, 14, 28, nova(6, 2.6), inflict(VULNERABLE, 6, 1)),
-			skill("kings_aura", "King's Aura", "왕의 아우라", UTILITY, 24, 22, debuff(12, WEAKNESS, 6, 2), debuff(12, SLOWNESS, 6, 1), lifestealFor(6, 15)),
-			skill("king_of_ants", "King of the Chimera Ants", "키메라 앤트의 왕", ULTIMATE, 70, 55, boost(DAMAGE, 15, 40), boost(CRIT_CHANCE, 15, 30), heal(50), nova(7, 5.4)));
+			skill("tail_pierce", "Tail Pierce", "꼬리 관통", ATTACK, 8, 22, look(SkillLook.TAIL_PIERCE, beam(10, 2.38)).beam(10).quiet()).withFx(Fx.Kind.SPARK),
+			skill("photon", "Photon", "광자", ATTACK, 14, 28, look(SkillLook.PHOTON, nova(6, 2.6)).size(6).quiet(), inflict(VULNERABLE, 6, 1)).withFx(Fx.Kind.SPARK),
+			skill("kings_aura", "King's Aura", "왕의 아우라", UTILITY, 24, 22, look(SkillLook.KINGS_AURA, debuff(12, WEAKNESS, 6, 2)).size(12).quiet(),
+				look(SkillLook.NONE, debuff(12, SLOWNESS, 6, 1)).quiet(), lifestealFor(6, 15)).withFx(Fx.Kind.SPARK),
+			skill("king_of_ants", "King of the Chimera Ants", "키메라 앤트의 왕", ULTIMATE, 70, 55, boost(DAMAGE, 15, 40), boost(CRIT_CHANCE, 15, 30), heal(50),
+				look(SkillLook.KING_ROSE, nova(7, 5.4)).size(7).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("hundred_type_guanyin", 4, 100, KNUCKLE, "Hundred-Type Guanyin Bodhisattva", "백식관음",
 			art(0xF0D890, 0xE8E0D0, 0xFFE070), fx(Fx.Kind.RING, 0xFFE070),
-			skill("prayer", "Prayer", "기도", DEFENSE, 14, 20, boost(DAMAGE, 3, 30), restoreMana(15), heal(10)),
-			skill("third_hand", "Third Hand", "삼내장", ATTACK, 10, 26, slash(8, 200, 3.0), launch(6, 1.0)),
-			skill("ninety_ninth_hand", "Ninety-Ninth Hand", "구십구장", ATTACK, 18, 34, repeat(6, 4, nova(7, 0.9)), stun(1.5)),
-			skill("zero_hand", "Zero Hand", "제로", ULTIMATE, 90, 60, zone(9, 3, 3.0).at(6), beam(30, 6.0)));
+			skill("prayer", "Prayer", "기도", DEFENSE, 14, 20, look(SkillLook.NETERO_PRAYER, boost(DAMAGE, 3, 30)).lasting(2.5).quiet(), restoreMana(15), heal(10))
+				.withFx(Fx.Kind.SPARK),
+			skill("third_hand", "Third Hand", "삼내장", ATTACK, 10, 26, look(SkillLook.GUANYIN_SWEEP, slash(8, 200, 3.0)).cone(8, 200).quiet(),
+				look(SkillLook.NONE, launch(6, 1.0)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("ninety_ninth_hand", "Ninety-Ninth Hand", "구십구장", ATTACK, 18, 34, repeat(6, 4, look(SkillLook.PALM_SLAM, nova(7, 0.9)).size(7).quiet()), stun(1.5))
+				.withFx(Fx.Kind.SPARK),
+			skill("zero_hand", "Zero Hand", "제로", ULTIMATE, 90, 60, look(SkillLook.ZERO_HAND, zone(9, 3, 3.0).at(6)).at(6).size(9).lasting(3).quiet(),
+				look(SkillLook.ZERO_BEAM, beam(30, 6.0)).beam(30).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("illumi_needles", 4, 84, NEEDLE, "Illumi's Needles", "이르미의 침",
 			art(0xE6E6F0, 0x1A1426, 0x9A4AFF), fx(Fx.Kind.SPARK, 0xB98CFF),
-			skill("thousand_needles", "Thousand Needles", "천침", ULTIMATE, 50, 40, rain(ProjectileStyle.KNIFE, 16, 6, 10, 0.55)),
-			skill("needle_throw", "Needle Throw", "침 투척", ATTACK, 6, 16, shoot(ProjectileStyle.KNIFE, 1.4).count(3).spread(20).pierce(2)),
-			skill("needle_disguise", "Needle Disguise", "침 변장", UTILITY, 24, 16, stealth(4, 60)),
-			skill("zoldyck_assassination", "Zoldyck Assassination", "조르딕가의 암살술", ATTACK, 10, 20, execute(5, 2.0, 30, 2.0)));
+			skill("thousand_needles", "Thousand Needles", "천침", ULTIMATE, 50, 40,
+				look(SkillLook.NEEDLE_RAIN, rain(ProjectileStyle.KNIFE, 16, 6, 10, 0.55, 0.0F, SkillLook.NONE, SkillLook.NEN_NEEDLE)).at(16).size(6).lasting(2.5).quiet()),
+			skill("needle_throw", "Needle Throw", "침 투척", ATTACK, 6, 16, shoot(ProjectileStyle.KNIFE, 1.4).count(3).spread(20).pierce(2).look(SkillLook.NEN_NEEDLE)),
+			skill("needle_disguise", "Needle Disguise", "침 변장", UTILITY, 24, 16, look(SkillLook.NEEDLE_DISGUISE, stealth(4, 60)).quiet()),
+			skill("zoldyck_assassination", "Zoldyck Assassination", "조르딕가의 암살술", ATTACK, 10, 20,
+				look(SkillLook.NEEDLE_PUPPET, execute(5, 2.0, 30, 2.0)).onTarget(5).quiet()));
 	}
 }

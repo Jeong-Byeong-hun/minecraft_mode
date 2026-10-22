@@ -496,7 +496,95 @@ public enum SkillLook {
 	/** Gunbai Sweep: the war fan swept along its arc, a gust of wind in front of it (along a cone). */
 	GUNBAI_SWEEP(10, 6.0F, Hold.FREE),
 	/** Gunbai Leap: the war fan raised over the leaping caster and slammed down where they land. */
-	GUNBAI_LEAP(44, 4.0F, Hold.TRAIL);
+	GUNBAI_LEAP(44, 4.0F, Hold.TRAIL),
+
+	// ------------------------------------------------------------ Hunter, Triple-Star Hunter (0.5.43)
+	/** Speed of Lightning: Killua's Godspeed, a streak of blue-white lightning and his afterimages from where he stood to behind the target. */
+	GODSPEED_STEP(16, 1.0F, Hold.TRAIL),
+	/** Whirlwind: Godspeed's electricity crackling over the caster's body, sparks leaping to the ground. */
+	GODSPEED_AURA(120, 1.0F, Hold.FOLLOW),
+	/** Thunderbolt: Killua's lightning coming down on the aimed spot, as wide as it hits, arcs racing over the ground to its edge. */
+	THUNDERBOLT(18, 3.0F, Hold.FREE),
+	/** Narukami: lightning thrown from Killua's hand leaping from enemy to enemy. */
+	NARUKAMI(14, 14.0F, Hold.FOLLOW),
+	/** Judgment Chain: Kurapika's little-finger chain shooting out along the beam, its blade tip closing round the heart of what it hits (along a beam). */
+	JUDGMENT_CHAIN(24, 14.0F, Hold.FREE),
+	/** Steal Chain: chains with needle tips lashing out of the caster's hand into every enemy in reach. */
+	STEAL_CHAIN(30, 8.0F, Hold.FOLLOW),
+	/** Chain Jail: chains rising round the aimed spot and binding everything inside into a cage. */
+	CHAIN_JAIL(60, 4.0F, Hold.FREE),
+	/** Scarlet Eyes: the Kurta clan's scarlet eyes burning over the caster, the five chains of the right hand turning round them. */
+	SCARLET_EYES(80, 1.0F, Hold.FOLLOW),
+	/** Rage of the Bond: Adult Gon's towering black aura, his long hair streaming up in it. */
+	GON_RAGE(80, 1.0F, Hold.FOLLOW),
+	/** First Comes Rock: a fist of yellow aura charged in the air and the crash where the caster lands. */
+	JAJANKEN_ROCK(44, 4.0F, Hold.TRAIL),
+	/** Long Scissors: a blade of aura grown from two fingers far along the beam (along a beam). */
+	LONG_SCISSORS(16, 18.0F, Hold.FREE),
+	/** This Is All I Need: Adult Gon's giant fist of aura gathering over him, then slammed down. */
+	GON_ROCK(24, 1.0F, Hold.FOLLOW),
+	/** This Is All I Need: the blast of the giant fist, as wide as it hits. */
+	ROCK_BLAST(26, 7.0F, Hold.FREE),
+	/** Sun and Moon: Chrollo's sun and moon seals stamped on the target, closing in until they meet. */
+	SUN_MOON(40, 1.0F, Hold.FOLLOW),
+	/** Sun and Moon: the seals' blasts leaping from enemy to enemy. */
+	SEAL_CHAIN(16, 14.0F, Hold.FOLLOW),
+	/** Indoor Fish: a ghostly flesh-eating fish of Nen swimming through the air (projectile). */
+	INDOOR_FISH(0, 1.0F, Hold.FREE),
+	/** Fun Fun Cloth: a great patterned cloth wrapping round the caster and folding them away. */
+	FUN_CLOTH(36, 1.0F, Hold.FOLLOW),
+	/** Bandit's Secret: the Skill Hunter book floating open in the caster's hand, its pages turning. */
+	BANDIT_BOOK(40, 1.0F, Hold.FOLLOW),
+	/** Bandit's Secret: a page torn from the book where each stolen ability flies out. */
+	PAGE_GATE(14, 1.0F, Hold.FREE),
+	/** Bandit's Secret: a stolen ability, a page-bound orb of Nen (projectile). */
+	STOLEN_SKILL(0, 1.0F, Hold.FREE),
+	/** Dragon Head: Zeno's dragon of aura, jaws open, its body streaming behind (projectile). */
+	DRAGON_HEAD(0, 1.0F, Hold.FREE),
+	/** Where a Dragon Head bursts: the dragon's aura breaking out as wide as it hits. */
+	DRAGON_BURST(18, 2.5F, Hold.FREE),
+	/** Dragon Lance: a long aura dragon shot straight along the beam (along a beam). */
+	DRAGON_LANCE(22, 20.0F, Hold.FREE),
+	/** Zoldyck Patience: a small aura dragon coiled round the caster. */
+	ZENO_AURA(60, 1.0F, Hold.FOLLOW),
+	/** Dragon Dive: the great dragon over the aimed ground scattering into dragons, the circle they fall on. */
+	DRAGON_DIVE(70, 7.0F, Hold.FREE),
+	/** Dragon Dive: one of the aura dragons diving down (projectile). */
+	DIVE_DRAGON(0, 1.0F, Hold.FREE),
+	/** Silva's Nen orb: a dense sphere of aura (projectile). */
+	SILVA_ORB(0, 1.0F, Hold.FREE),
+	/** Where a Nen orb bursts, as wide as it hits. */
+	ORB_BURST(16, 3.0F, Hold.FREE),
+	/** Head of the Family: the patriarch's crushing presence rolling out round the caster, his eyes over it. */
+	SILVA_PRESENCE(40, 10.0F, Hold.FOLLOW),
+	/** Assassin's Judgment: a Zoldyck hand sharpened into claws cutting through the target. */
+	ASSASSIN_HAND(20, 1.0F, Hold.FOLLOW),
+	/** Tail Pierce: Meruem's segmented tail lunging out, its spear tip leading (along a beam). */
+	TAIL_PIERCE(14, 10.0F, Hold.FREE),
+	/** Photon: rotating flashes of light bursting out round the caster as wide as they hit. */
+	PHOTON(18, 6.0F, Hold.FREE),
+	/** King's Aura: the Chimera Ant king's aura rolling out round the caster, his shadow rising behind. */
+	KINGS_AURA(50, 12.0F, Hold.FOLLOW),
+	/** King of the Chimera Ants: a rose of fire blooming out as wide as it hits, its cloud rising. */
+	KING_ROSE(50, 7.0F, Hold.FREE),
+	/** Prayer: Netero's hands pressed together, the Bodhisattva's halo glowing behind. */
+	NETERO_PRAYER(50, 1.0F, Hold.FOLLOW),
+	/** Third Hand: the Bodhisattva's giant golden palm swept along its arc (along a cone). */
+	GUANYIN_SWEEP(12, 8.0F, Hold.FREE),
+	/** Ninety-Ninth Hand: giant golden palms slamming down round the caster, as wide as each blow. */
+	PALM_SLAM(10, 7.0F, Hold.FREE),
+	/** Zero Hand: the golden Hundred-Type Guanyin rising behind the caster, its hands closing on the aimed ground. */
+	ZERO_HAND(60, 9.0F, Hold.FREE),
+	/** Zero Hand: the beam of golden aura (along a beam). */
+	ZERO_BEAM(24, 30.0F, Hold.FREE),
+	/** Thousand Needles: Illumi's needles falling on the aimed ground and Nen threads drawn over it. */
+	NEEDLE_RAIN(50, 6.0F, Hold.FREE),
+	/** One of Illumi's needles, a round head on a long dark pin (projectile). */
+	NEN_NEEDLE(0, 1.0F, Hold.FREE),
+	/** Needle Disguise: needles driven into the caster's head, the face twisting into another. */
+	NEEDLE_DISGUISE(36, 1.0F, Hold.FOLLOW),
+	/** Zoldyck Assassination: a needle driven into the target and Nen threads pulling it like a puppet. */
+	NEEDLE_PUPPET(30, 1.0F, Hold.FOLLOW);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

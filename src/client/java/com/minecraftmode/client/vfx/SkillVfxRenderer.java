@@ -31,12 +31,13 @@ import org.joml.Vector4f;
  * and {@link KingLooks}, and their projectiles by {@link ArrowLooks}; the mage's (Grand Caster) by {@link WitchLooks}, {@link EastLooks},
  * {@link ArcaneLooks} and {@link FairyLooks}, their projectiles by {@link MageBolts}; the pirate's (Pirate King) by {@link NavyLooks},
  * {@link GhostSeaLooks}, {@link EmperorLooks} and {@link HakiLooks}, their projectiles by {@link PirateShots}; the warrior's (King of Knights) by
- * {@link PendragonLooks}, {@link LanceLooks}, {@link KnightLooks}, {@link CamelotLooks} and {@link OrochiLooks}, their projectiles by {@link KnightShots}.
+ * {@link PendragonLooks}, {@link LanceLooks}, {@link KnightLooks}, {@link CamelotLooks} and {@link OrochiLooks}, their projectiles by {@link KnightShots};
+ * the rogue's (Shadow Monarch) by {@link VenomLooks}, {@link AntLooks}, {@link ShinobiLooks}, {@link UchihaLooks} and {@link MonarchLooks}, their projectiles by {@link RogueShots}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
 	private static final float HELD_RADIUS = 0.42F;
-	/** Enkidu binds (Drain Touch and Soul Pocus drain, Red Lightning strikes) at most this many enemies (its chains are many links each). */
+	/** Enkidu binds (Drain Touch and Soul Pocus drain, Red and Purple Lightning strike) at most this many enemies (its chains are many links each). */
 	private static final int MAX_TARGETS = 8;
 
 	public SkillVfxRenderer(final EntityRendererProvider.Context context) {
@@ -65,6 +66,8 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case WILD_HUNT, AIR_STRIKE -> 10.0;
 			case BATTLESHIP, KRAKEN_SLAM -> 5.0;
 			case GOLDEN_HIND, BAJRANG_GUN -> Math.max(10.0, entity.arg() + 4.0);
+			// Madara's wall of fire rolls out from the caster to the aimed spot
+			case DESTROYER_FLAME -> entity.arg() + 2.0;
 			default -> 0.0;
 		};
 		double up = switch (entity.look()) {
@@ -127,7 +130,8 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			}
 		}
 		state.targets.clear();
-		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH || state.look == SkillLook.SOUL_POCUS || state.look == SkillLook.RED_CHAIN) {
+		if (state.look == SkillLook.ENKIDU || state.look == SkillLook.DRAIN_TOUCH || state.look == SkillLook.SOUL_POCUS || state.look == SkillLook.RED_CHAIN
+			|| state.look == SkillLook.PURPLE_CHAIN) {
 			enemies(entity, state, origin.add(state.offset), partialTicks);
 		}
 	}
@@ -205,6 +209,12 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 				KnightLooks.submit(state, poseStack, collector);
 			case GALATINE_SUN, SUNLIGHT, SOLAR_FLARE, NOON_ARC, CAMELOT, SNOW_BULWARK, ROUND_TABLE, SHIELD_CHARGE -> CamelotLooks.submit(state, poseStack, collector);
 			case MURAKUMO, GRASS_CUTTER, WIND_STEP -> OrochiLooks.submit(state, poseStack, collector);
+			case SERPENT_LAIR, VENOM_BITE, VENOM_MIST, SPRINT_TRAIL, KNIGHTS_BANE, MUTILATION, KILLING_INTENT, RIPOSTE -> VenomLooks.submit(state, poseStack, collector);
+			case ANT_DASH, ANT_FRENZY, DEVOUR, STOLEN_HEALING, WING_BURST -> AntLooks.submit(state, poseStack, collector);
+			case YELLOW_FLASH, HIRAISHIN, SPACE_TIME_BARRIER, KAMUI_VORTEX, PURPLE_CHAIN, KAMUI_WARP, KAMUI_RAIKIRI -> ShinobiLooks.submit(state, poseStack, collector);
+			case SUSANOO_ITACHI, TOTSUKA, BLACK_FLAMES, TSUKUYOMI, CROW_CLONE, UCHIHA_RETURN, DESTROYER_FLAME, GUNBAI_SWEEP, GUNBAI_LEAP ->
+				UchihaLooks.submit(state, poseStack, collector);
+			case MONARCH_DOMAIN, RULERS_AUTHORITY, REAPER_CHAIN, ABYSSAL_GUARD, ARISE, DRAGON_FEAR, SHADOW_EXCHANGE -> MonarchLooks.submit(state, poseStack, collector);
 			default -> {
 			}
 		}

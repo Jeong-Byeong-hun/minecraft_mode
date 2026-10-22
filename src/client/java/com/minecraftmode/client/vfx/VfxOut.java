@@ -1004,6 +1004,297 @@ final class VfxOut {
 		}
 	}
 
+	// ------------------------------------------------------------ the rogue's: Sharingan eyes, kunai, the gunbai, shadow soldiers, insect wings
+
+	/** {@link #eye} patterns: the three tomoe, Itachi's Mangekyo, Kakashi's (Kamui) Mangekyo. */
+	static final int SHARINGAN = 0;
+	static final int ITACHI = 1;
+	static final int KAKASHI = 2;
+
+	/**
+	 * A Sharingan of radius {@code r} round {@code c} in the plane of {@code a} and {@code b} (unit vectors), turned by {@code spin}: the iris
+	 * {@code iris} (deeper at the pupil) under the {@code pattern} in {@code ink}, laid out in small polar cells of one colour each (blended
+	 * where an edge crosses them) so nothing lies over anything else (translucent quads sort by their middles). For the shade buffer.
+	 */
+	void eye(final Vector3fc c, final Vector3fc a, final Vector3fc b, final float r, final float spin, final int pattern, final int iris, final int ink) {
+		int rings = r > 1.0F ? 22 : r > 0.4F ? 16 : 10;
+		int sectors = r > 1.0F ? 96 : r > 0.4F ? 72 : 44;
+		int deep = lerp(iris, iris & 0xFF000000 | 0x3A0008, 0.55F);
+		Vector3f[][] grid = new Vector3f[rings + 1][sectors + 1];
+		for (int i = 0; i <= rings; i++) {
+			float rr = r * i / rings;
+			for (int j = 0; j <= sectors; j++) {
+				float t = Mth.TWO_PI * j / sectors;
+				grid[i][j] = new Vector3f(a).mul(Mth.cos(t) * rr).add(new Vector3f(b).mul(Mth.sin(t) * rr)).add(c);
+			}
+		}
+		float dr = 1.0F / rings;
+		float dt = Mth.TWO_PI / sectors;
+		for (int i = 0; i < rings; i++) {
+			for (int j = 0; j < sectors; j++) {
+				float r0 = i * dr;
+				float t0 = j * dt;
+				int hits = 0;
+				for (int k = 0; k < 5; k++) {
+					float fr = k == 4 ? 0.5F : k % 2 == 0 ? 0.25F : 0.75F;
+					float ft = k == 4 ? 0.5F : k < 2 ? 0.25F : 0.75F;
+					if (inked(pattern, r0 + fr * dr, t0 + ft * dt - spin)) {
+						hits++;
+					}
+				}
+				int base = lerp(deep, iris, r0 + dr * 0.5F);
+				int color = lerp(base, ink, hits / 5.0F);
+				this.quad(grid[i][j], grid[i + 1][j], grid[i + 1][j + 1], grid[i][j + 1], color);
+			}
+		}
+	}
+
+	/** Whether the point {@code rho} (0 middle .. 1 rim) out at angle {@code theta} of a Sharingan lies in its black pattern. */
+	private static boolean inked(final int pattern, final float rho, final float theta) {
+		if (rho > 0.95F) {
+			return true;
+		}
+		switch (pattern) {
+			case ITACHI -> {
+				// a small pupil, a black ring round it and three curved blades sweeping out to points at the rim
+				if (rho < 0.11F || rho > 0.27F && rho < 0.35F) {
+					return true;
+				}
+				if (rho < 0.3F || rho > 0.9F) {
+					return false;
+				}
+				float k = (rho - 0.3F) / 0.6F;
+				float w = 0.62F * (1.0F - k) * (1.0F - k) + 0.03F;
+				for (int i = 0; i < 3; i++) {
+					if (Math.abs(wrap(theta - (Mth.TWO_PI * i / 3 + 1.5F * k))) < w) {
+						return true;
+					}
+				}
+				return false;
+			}
+			case KAKASHI -> {
+				// a pupil and three curved scythe blades wound into a pinwheel
+				if (rho < 0.13F) {
+					return true;
+				}
+				if (rho > 0.9F) {
+					return false;
+				}
+				float k = (rho - 0.1F) / 0.8F;
+				float w = 0.48F * Mth.sin(Mth.PI * Math.min(1.0F, k * 1.15F)) + 0.04F;
+				for (int i = 0; i < 3; i++) {
+					float mid = Mth.TWO_PI * i / 3 + 2.6F * k;
+					float d = wrap(theta - mid);
+					// the blade's trailing edge is hollowed into a crescent
+					if (d > -w && d < w * (0.25F + 0.75F * k)) {
+						return true;
+					}
+				}
+				return false;
+			}
+			default -> {
+				// three tomoe on a thin ring round the pupil, their tails trailing behind
+				if (rho < 0.17F || Math.abs(rho - 0.58F) < 0.016F) {
+					return true;
+				}
+				for (int i = 0; i < 3; i++) {
+					float head = Mth.TWO_PI * i / 3;
+					float x = rho * Mth.cos(theta) - 0.58F * Mth.cos(head);
+					float y = rho * Mth.sin(theta) - 0.58F * Mth.sin(head);
+					if (x * x + y * y < 0.135F * 0.135F) {
+						return true;
+					}
+					float back = wrap(head - theta);
+					if (back > 0.0F && back < 0.6F) {
+						float q = back / 0.6F;
+						if (Math.abs(rho - (0.58F + 0.1F * q)) < 0.12F * (1.0F - q)) {
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		}
+	}
+
+	/** {@code angle} brought into -pi..pi. */
+	static float wrap(final float angle) {
+		float a = angle % Mth.TWO_PI;
+		if (a > Mth.PI) {
+			a -= Mth.TWO_PI;
+		} else if (a < -Mth.PI) {
+			a += Mth.TWO_PI;
+		}
+		return a;
+	}
+
+	/**
+	 * Minato's Flying Thunder God kunai from {@code tail} (the ring of its pommel) to {@code tip}, flat in the plane of {@code side}: a long
+	 * middle blade, a shorter prong swept forward on each side of it, a wrapped grip and the ring; {@code steel} the metal, {@code grip} the
+	 * wrapping.
+	 */
+	void kunai(final Vector3fc tail, final Vector3fc tip, final Vector3fc side, final int steel, final int grip) {
+		Vector3f d = new Vector3f(tip).sub(tail);
+		float len = d.length();
+		if (len < 1.0E-4F) {
+			return;
+		}
+		d.div(len);
+		Vector3f s = new Vector3f(side).sub(new Vector3f(d).mul(d.dot(side)));
+		if (s.lengthSquared() < 1.0E-6F) {
+			s = across(d);
+		}
+		s.normalize();
+		Vector3f guard = new Vector3f(d).mul(len * 0.42F).add(tail);
+		this.blade(guard, tip, s, len * 0.085F, steel, steel);
+		for (int k = -1; k <= 1; k += 2) {
+			Vector3f root = new Vector3f(d).mul(len * 0.45F).add(new Vector3f(s).mul(k * len * 0.05F)).add(tail);
+			Vector3f prong = new Vector3f(d).mul(len * 0.74F).add(new Vector3f(s).mul(k * len * 0.19F)).add(tail);
+			this.blade(root, prong, s, len * 0.04F, steel, steel);
+		}
+		this.bar(new Vector3f(d).mul(len * 0.11F).add(tail), guard, len * 0.035F, len * 0.035F, grip, grip);
+		Vector3f n = new Vector3f(d).cross(s).normalize();
+		this.circle(new Vector3f(d).mul(len * 0.06F).add(tail), d, n, len * 0.055F, len * 0.012F, 10, steel);
+	}
+
+	/**
+	 * Madara's gunbai: a round war fan {@code r} across round {@code c}, its face towards {@code normal} and its top towards {@code up}: the
+	 * upper part red and the lower white (the Uchiha crest's colours) in wedges that never overlap, a dark rim, and the handle running down
+	 * {@code r} long from it. Faded by {@code alpha}. For the shade buffer.
+	 */
+	void gunbai(final Vector3fc c, final Vector3fc normal, final Vector3fc up, final float r, final float alpha) {
+		Vector3f n = new Vector3f(normal).normalize();
+		Vector3f u = new Vector3f(up).sub(new Vector3f(n).mul(n.dot(up)));
+		if (u.lengthSquared() < 1.0E-6F) {
+			u = new Vector3f(n).cross(across(n));
+		}
+		u.normalize();
+		Vector3f s = new Vector3f(n).cross(u).normalize();
+		int red = argb(0.96F * alpha, 0xB0241C);
+		int white = argb(0.96F * alpha, 0xEDE6DA);
+		int rim = argb(0.96F * alpha, 0x1A1210);
+		int segs = 28;
+		Vector3f prev = null;
+		Vector3f prevOut = null;
+		for (int i = 0; i <= segs; i++) {
+			float t = Mth.TWO_PI * i / segs;
+			// a little taller than wide, like the real fan
+			Vector3f p = new Vector3f(s).mul(Mth.cos(t) * r).add(new Vector3f(u).mul(Mth.sin(t) * r * 1.12F)).add(c);
+			Vector3f out = new Vector3f(s).mul(Mth.cos(t) * r * 1.09F).add(new Vector3f(u).mul(Mth.sin(t) * r * 1.21F)).add(c);
+			if (prev != null) {
+				float mid = Mth.sin(t - Mth.PI / segs);
+				this.tri(c, prev, p, mid > -0.3F ? red : white, mid > -0.3F ? red : white, mid > -0.3F ? red : white);
+				this.quad(prev, prevOut, out, p, rim);
+			}
+			prev = p;
+			prevOut = out;
+		}
+		Vector3f bottom = new Vector3f(u).mul(-r * 1.2F).add(c);
+		this.bar(bottom, new Vector3f(u).mul(-r * 2.2F).add(c), r * 0.08F, r * 0.07F, argb(0.96F * alpha, 0x3A2416), argb(0.96F * alpha, 0x22140C));
+	}
+
+	/**
+	 * One of the Shadow Monarch's soldiers, {@code h} tall, standing at {@code foot} facing {@code ahead}: legs, an armoured body with
+	 * pauldrons, a helmed head with a crest, a sword held down in the right hand and, {@code shield}, a kite shield on the left arm; shaded
+	 * {@code lit} to {@code dark}. Its eyes are at {@link #soldierEye}.
+	 */
+	void shadowSoldier(final Vector3fc foot, final Vector3fc ahead, final float h, final boolean shield, final int lit, final int dark) {
+		Vector3f f = new Vector3f(ahead.x(), 0, ahead.z());
+		if (f.lengthSquared() < 1.0E-6F) {
+			f.set(0, 0, 1);
+		}
+		f.normalize();
+		Vector3f s = new Vector3f(f).cross(0, 1, 0).normalize();
+		for (int k = -1; k <= 1; k += 2) {
+			Vector3f hip = point(foot, s, f, h, k * 0.09F, 0.48F, 0.0F);
+			Vector3f knee = point(foot, s, f, h, k * 0.1F, 0.25F, 0.03F);
+			Vector3f sole = point(foot, s, f, h, k * 0.11F, 0.0F, 0.0F);
+			this.tube(java.util.List.of(hip, knee, sole), h * 0.07F, h * 0.05F, 6, lit, dark);
+			// the pauldrons and the arms hanging from them
+			Vector3f shoulder = point(foot, s, f, h, k * 0.21F, 0.82F, 0.0F);
+			this.ellipsoid(shoulder, new Vector3f(s).mul(h * 0.09F), new Vector3f(0, h * 0.06F, 0), new Vector3f(f).mul(h * 0.08F), 4, 8, lit, dark);
+			Vector3f elbow = point(foot, s, f, h, k * 0.25F, 0.65F, 0.02F);
+			Vector3f hand = point(foot, s, f, h, k * 0.25F, 0.5F, 0.08F);
+			this.tube(java.util.List.of(shoulder, elbow, hand), h * 0.05F, h * 0.04F, 6, lit, dark);
+		}
+		this.ellipsoid(point(foot, s, f, h, 0.0F, 0.67F, 0.0F), new Vector3f(s).mul(h * 0.17F), new Vector3f(0, h * 0.2F, 0), new Vector3f(f).mul(h * 0.1F), 5, 10, lit,
+			dark);
+		Vector3f head = point(foot, s, f, h, 0.0F, 0.94F, 0.0F);
+		this.ellipsoid(head, new Vector3f(s).mul(h * 0.075F), new Vector3f(0, h * 0.09F, 0), new Vector3f(f).mul(h * 0.085F), 5, 8, lit, dark);
+		// the helmet's crest swept back
+		this.blade(point(foot, s, f, h, 0.0F, 1.0F, 0.03F), point(foot, s, f, h, 0.0F, 1.08F, -0.16F), f, h * 0.03F, lit, dark);
+		// the sword, point down by the right foot
+		Vector3f grip = point(foot, s, f, h, 0.26F, 0.5F, 0.1F);
+		this.blade(grip, point(foot, s, f, h, 0.3F, 0.05F, 0.2F), f, h * 0.035F, lit, dark);
+		this.bar(point(foot, s, f, h, 0.2F, 0.52F, 0.1F), point(foot, s, f, h, 0.32F, 0.52F, 0.1F), h * 0.012F, h * 0.012F, dark, dark);
+		if (shield) {
+			Vector3f c = point(foot, s, f, h, -0.3F, 0.6F, 0.12F);
+			Vector3f up = new Vector3f(0, 1, 0);
+			Vector3f top = new Vector3f(up).mul(h * 0.2F).add(c);
+			Vector3f low = new Vector3f(up).mul(-h * 0.26F).add(c);
+			Vector3f left = new Vector3f(s).mul(-h * 0.13F).add(new Vector3f(up).mul(h * 0.1F)).add(c);
+			Vector3f right = new Vector3f(s).mul(h * 0.13F).add(new Vector3f(up).mul(h * 0.1F)).add(c);
+			int face = lerp(dark, lit, 0.35F);
+			this.quad(top, right, low, left, face, face, dark, face);
+		}
+	}
+
+	/** Where the {@code side} (-1 or 1) eye of a {@link #shadowSoldier} is. */
+	static Vector3f soldierEye(final Vector3fc foot, final Vector3fc ahead, final float h, final int side) {
+		Vector3f f = new Vector3f(ahead.x(), 0, ahead.z());
+		if (f.lengthSquared() < 1.0E-6F) {
+			f.set(0, 0, 1);
+		}
+		f.normalize();
+		Vector3f s = new Vector3f(f).cross(0, 1, 0).normalize();
+		return point(foot, s, f, h, side * 0.03F, 0.955F, 0.08F);
+	}
+
+	private static Vector3f point(final Vector3fc foot, final Vector3f s, final Vector3f f, final float h, final float x, final float y, final float z) {
+		return new Vector3f(s).mul(x * h).add(new Vector3f(f).mul(z * h)).add(0, y * h, 0).add(foot);
+	}
+
+	/**
+	 * An insect's wing from {@code root} out along {@code out}, {@code length} long and {@code width} at its widest, in the plane of
+	 * {@code out} and {@code back} (the side its trailing edge bulges to): a long rounded membrane in {@code membrane}, and, {@code vein} not
+	 * clear, its veins (a leading edge and three branching lines) in that colour.
+	 */
+	void insectWing(final Vector3fc root, final Vector3fc out, final Vector3fc back, final float length, final float width, final int membrane, final int vein) {
+		Vector3f d = new Vector3f(out).normalize();
+		Vector3f b = new Vector3f(back).sub(new Vector3f(d).mul(d.dot(back)));
+		if (b.lengthSquared() < 1.0E-6F) {
+			b = across(d);
+		}
+		b.normalize();
+		int n = 10;
+		Vector3f[] lead = new Vector3f[n + 1];
+		Vector3f[] trail = new Vector3f[n + 1];
+		for (int i = 0; i <= n; i++) {
+			float t = (float)i / n;
+			float w = width * Mth.sin(Mth.PI * Math.min(1.0F, (float)Math.pow(t, 0.7F)));
+			Vector3f m = new Vector3f(d).mul(length * t).add(root);
+			lead[i] = new Vector3f(b).mul(-w * 0.18F).add(m);
+			trail[i] = new Vector3f(b).mul(w * 0.82F).add(m);
+		}
+		if ((membrane >>> 24) > 0) {
+			for (int i = 0; i < n; i++) {
+				this.quad(lead[i], lead[i + 1], trail[i + 1], trail[i], membrane);
+			}
+		}
+		if ((vein >>> 24) == 0) {
+			return;
+		}
+		float vw = Math.max(0.008F, width * 0.035F);
+		for (int i = 0; i < n; i++) {
+			this.bar(lead[i], lead[i + 1], vw, vw, vein, vein);
+		}
+		for (int k = 1; k <= 3; k++) {
+			int from = 1 + k;
+			int to = Math.min(n, from + 4 + k);
+			this.bar(lead[from], new Vector3f(trail[to]).lerp(lead[to], 0.15F), vw * 0.7F, vw * 0.5F, vein, vein);
+		}
+	}
+
 	// ------------------------------------------------------------ paths
 
 	/** A trail's points with the ones closer than 0.2 blocks to the last kept dropped (a still holder leaves no zero-length parts). */

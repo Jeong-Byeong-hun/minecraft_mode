@@ -160,6 +160,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkMageLooks(context, server, connection);
 			checkPirateLooks(context, server, connection);
 			checkWarriorLooks(context, server, connection);
+			checkRogueLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -1068,6 +1069,62 @@ public class JobClientGameTest implements FabricClientGameTest {
 			new LookCase("round_table_shield", 3, SkillLook.SHIELD_CHARGE, 4, 9, 3, 1)
 		);
 		checkClassLooks(context, server, connection, JobClass.WARRIOR, cases, SkillLook.EXCALIBUR, SkillLook.SHIELD_CHARGE, "excalibur.promised_victory");
+	}
+
+	/**
+	 * Every skill of the nine tier 4 Rogue weapons draws its own look (0.5.42): Kasaka, the Knight Killer, Beru, the Shadow Monarch's chain
+	 * sickle and Kamish's Wrath (Solo Leveling), Minato's kunai, Itachi's Totsuka Blade, Kakashi's Kamui and Madara's gunbai (Naruto).
+	 * Screenshots {@code look_<skill>}, Itachi's Susanoo once more with improved transparency ({@code _fabulous}).
+	 */
+	private static void checkRogueLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("kasaka_venom_fang", 0, SkillLook.SERPENT_LAIR, 12, 9, 6, 12).lift(1.5),
+			new LookCase("kasaka_venom_fang", 1, SkillLook.VENOM_BITE, 4, 3, 1, 4),
+			new LookCase("kasaka_venom_fang", 2, SkillLook.VENOM_MIST, 12, 6, 5, 8),
+			new LookCase("kasaka_venom_fang", 3, SkillLook.SPRINT_TRAIL, 8, 4, 1.5, 3),
+			new LookCase("knight_killer", 0, SkillLook.KNIGHTS_BANE, 4, 3, 1, 5),
+			new LookCase("knight_killer", 1, SkillLook.MUTILATION, 2, 3, 2.5, 4).husk(3),
+			new LookCase("knight_killer", 2, SkillLook.KILLING_INTENT, 12, 8, 5, -9),
+			new LookCase("knight_killer", 3, SkillLook.RIPOSTE, 10, 1.5, 0.5, -3.5),
+			new LookCase("beru_talons", 0, SkillLook.ANT_DASH, 5, 9, 3, 1),
+			new LookCase("beru_talons", 0, SkillLook.ANT_FRENZY, 10, 6, 5, 7).shot("beru_talons.ant_king_rampage_frenzy"),
+			new LookCase("beru_talons", 1, SkillLook.DEVOUR, 4, 3, 1.2, 4).husk(4),
+			new LookCase("beru_talons", 2, SkillLook.STOLEN_HEALING, 16, 9, 8, 12),
+			new LookCase("beru_talons", 3, SkillLook.WING_BURST, 8, 5, 1, 4).focus(SkillLook.NONE),
+			new LookCase("beru_talons", 3, SkillLook.WING_BURST, 32, 6, 5, 8).shot("beru_talons.wing_burst_land"),
+			new LookCase("hiraishin_kunai", 0, List.of(SkillLook.YELLOW_FLASH, SkillLook.RASENGAN), 7, 4, 1.5, 5),
+			new LookCase("hiraishin_kunai", 0, SkillLook.RASENGAN_BURST, 23, 5, 3, 6).shot("hiraishin_kunai.yellow_flash_rasengan"),
+			new LookCase("hiraishin_kunai", 1, SkillLook.FORMULA_KUNAI, 2, 2, 0.6, 2).husk(14),
+			new LookCase("hiraishin_kunai", 2, SkillLook.HIRAISHIN, 4, 9, 3, 1),
+			new LookCase("hiraishin_kunai", 3, SkillLook.SPACE_TIME_BARRIER, 12, 3, 1.5, -4.5),
+			new LookCase("totsuka_blade", 0, List.of(SkillLook.SUSANOO_ITACHI, SkillLook.TOTSUKA), 10, 7, 3, -10).lift(2),
+			new LookCase("totsuka_blade", 0, SkillLook.TOTSUKA, 6, 7, 2, 2).shot("totsuka_blade.susanoo_totsuka"),
+			new LookCase("totsuka_blade", 1, SkillLook.BLACK_FLAMES, 14, 5, 4, 7),
+			new LookCase("totsuka_blade", 2, SkillLook.TSUKUYOMI, 10, 5, 1.5, 3),
+			new LookCase("totsuka_blade", 3, SkillLook.CROW_CLONE, 14, 4, 1.5, 5),
+			new LookCase("monarch_chain_sickle", 0, SkillLook.MONARCH_DOMAIN, 30, 10, 8, 12),
+			new LookCase("monarch_chain_sickle", 1, SkillLook.RULERS_AUTHORITY, 6, 9, 6, 10).lift(6).shot("monarch_chain_sickle.rulers_authority_lift"),
+			new LookCase("monarch_chain_sickle", 1, SkillLook.RULERS_AUTHORITY, 12, 8, 5, 9),
+			new LookCase("monarch_chain_sickle", 2, SkillLook.REAPER_CHAIN, 2, 3, 9, 7),
+			new LookCase("monarch_chain_sickle", 3, SkillLook.ABYSSAL_GUARD, 16, 4, 2, -6),
+			new LookCase("kamui_shuriken", 0, SkillLook.KAMUI_SHURIKEN, 2, 3, 1.5, 3).husk(14),
+			new LookCase("kamui_shuriken", 0, SkillLook.KAMUI_VORTEX, 6, 6, 2, 8).shot("kamui_shuriken.susanoo_kamui_shuriken_vortex"),
+			new LookCase("kamui_shuriken", 1, SkillLook.PURPLE_CHAIN, 3, 6, 2, 1).focus(SkillLook.NONE).husk(5),
+			new LookCase("kamui_shuriken", 2, SkillLook.KAMUI_WARP, 12, 4, 1, 5),
+			new LookCase("kamui_shuriken", 3, SkillLook.KAMUI_RAIKIRI, 4, 8, 4, 2),
+			new LookCase("kamish_wrath", 0, SkillLook.ARISE, 30, 9, 5, 11).lift(1),
+			new LookCase("kamish_wrath", 1, SkillLook.DRAGON_FEAR, 12, 7, 3, -10).lift(2),
+			new LookCase("kamish_wrath", 2, SkillLook.DRAGON_FANG, 2, 2, 0.8, 2).husk(14),
+			new LookCase("kamish_wrath", 3, SkillLook.SHADOW_EXCHANGE, 6, 9, 4, 1),
+			new LookCase("madara_gunbai", 0, SkillLook.UCHIHA_RETURN, 12, 3, 1, -4.5).shot("madara_gunbai.uchiha_return_raise"),
+			new LookCase("madara_gunbai", 0, SkillLook.UCHIHA_RETURN, 22, 8, 6, 10),
+			new LookCase("madara_gunbai", 1, SkillLook.DESTROYER_FLAME, 4, 7, 4, 4).shot("madara_gunbai.great_fire_annihilation_wave"),
+			new LookCase("madara_gunbai", 1, SkillLook.DESTROYER_FLAME, 12, 7, 5, 9),
+			new LookCase("madara_gunbai", 2, SkillLook.GUNBAI_SWEEP, 3, 4, 3.5, 5),
+			new LookCase("madara_gunbai", 3, SkillLook.GUNBAI_LEAP, 8, 5, 1.5, 4).focus(SkillLook.NONE),
+			new LookCase("madara_gunbai", 3, SkillLook.GUNBAI_LEAP, 30, 6, 5, 8).shot("madara_gunbai.gunbai_leap_land")
+		);
+		checkClassLooks(context, server, connection, JobClass.ROGUE, cases, SkillLook.SERPENT_LAIR, SkillLook.GUNBAI_LEAP, "totsuka_blade.susanoo");
 	}
 
 	/**

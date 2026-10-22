@@ -57,8 +57,43 @@ public final class AccessoryArtist {
 		return k.render(Tones.of(ORB_METAL), Tones.of(CORD), Tones.of(ORB_GEM));
 	}
 
-	/** Seal colours of the tier 1 and tier 2 inheritance tickets. */
-	private static final int[] TICKET_SEAL = {0x4FC86A, 0x3A8AE0};
+	/**
+	 * One of Sukuna's fingers: a withered, dark finger lying across the icon, creased at the knuckles, a black nail at the tip and a
+	 * paper seal wrapped round its base.
+	 */
+	public static BufferedImage finger() {
+		Canvas k = new Canvas();
+		// three pixels thick along the diagonal: lit on the upper left, shaded on the lower right, knuckles a little wider and creased
+		for (int t = 0; t <= 9; t++) {
+			int x = 3 + t;
+			int y = 12 - t;
+			boolean knuckle = t == 3 || t == 6;
+			k.put(x - 1, y, 'L');
+			k.put(x, y - 1, 'H');
+			k.put(x, y, knuckle ? 'D' : 'M');
+			k.put(x + 1, y, knuckle ? 'O' : 'M');
+			k.put(x, y + 1, 'D');
+			k.put(x + 1, y + 1, 'D');
+			if (knuckle) {
+				k.put(x + 2, y, 'D');
+				k.put(x - 1, y - 1, 'L');
+			}
+		}
+		// the black nail at the tip
+		k.put(13, 2, '2');
+		k.put(14, 2, '3');
+		k.put(13, 1, '3');
+		k.put(14, 1, '2');
+		// a paper seal wrapped round the base
+		k.rect(1, 12, 4, 14, 'l');
+		k.line(1, 13, 4, 13, 'd');
+		k.put(2, 15, 'm');
+		k.outline();
+		return k.render(Tones.of(PAPER), Tones.of(0x9A6A66), Tones.of(0x2A1418));
+	}
+
+	/** Seal colours of the tier 1, 2 and 3 inheritance tickets (the last one Sukuna's red). */
+	private static final int[] TICKET_SEAL = {0x4FC86A, 0x3A8AE0, 0xC0182A};
 
 	/**
 	 * An inheritance ticket: a cream ticket with notched sides and a perforation, the tier's coloured seal on the stub and one gold mark

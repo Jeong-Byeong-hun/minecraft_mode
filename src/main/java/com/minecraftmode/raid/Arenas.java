@@ -103,6 +103,7 @@ public final class Arenas {
 			case FOREST_GROVE -> forestGrove(level, center, random);
 			case DESERT_TOMB -> desertTomb(level, center, random);
 			case SKY_SHRINE -> skyShrine(level, center, random);
+			case MALEVOLENT_SHRINE -> malevolentShrine(level, center, random);
 		}
 	}
 
@@ -327,6 +328,32 @@ public final class Arenas {
 					set(level, x, c.getY() + y, z - 1, Blocks.CUT_SANDSTONE.defaultBlockState());
 				}
 			}
+		}
+	}
+
+	/**
+	 * Pools of blood on the floor and heaps of bones and skulls along the rim (the shrine itself rises only with Sukuna's domain, as
+	 * an entity).
+	 */
+	private static void malevolentShrine(final ServerLevel level, final BlockPos c, final RandomSource random) {
+		for (int i = 0; i < 9; i++) {
+			double a = random.nextDouble() * Math.PI * 2;
+			double r = 4 + random.nextDouble() * (RADIUS - 8);
+			BlockPos at = c.offset((int)Math.round(Math.cos(a) * r), 0, (int)Math.round(Math.sin(a) * r));
+			double size = 1.5 + random.nextDouble() * 2.0;
+			forDisc(at, size, (x, z) -> set(level, x, c.getY() - 1, z,
+				(random.nextFloat() < 0.7F ? Blocks.NETHER_WART_BLOCK : Blocks.RED_NETHER_BRICKS).defaultBlockState()));
+		}
+		for (int i = 0; i < 14; i++) {
+			double a = Math.PI * 2 * i / 14 + random.nextDouble() * 0.2;
+			int r = RADIUS - 2;
+			int x = c.getX() + (int)Math.round(Math.cos(a) * r);
+			int z = c.getZ() + (int)Math.round(Math.sin(a) * r);
+			int h = 1 + random.nextInt(2);
+			for (int y = 0; y < h; y++) {
+				set(level, x, c.getY() + y, z, Blocks.BONE_BLOCK.defaultBlockState());
+			}
+			set(level, x, c.getY() + h, z, (random.nextBoolean() ? Blocks.SKELETON_SKULL : Blocks.BONE_BLOCK).defaultBlockState());
 		}
 	}
 

@@ -42,4 +42,9 @@ public interface AnimatedCreature {
 	default float tilt(final float partialTicks) {
 		return 0.0F;
 	}
+
+	/** How far a turning part of the model has turned, in radians (Mahoraga's wheel). */
+	default float wheel(final float partialTicks) {
+		return 0.0F;
+	}
 }

@@ -54,7 +54,9 @@ public final class BodyPlan {
 		SHIN,
 		/** Twitches now and then; index 0 right, 1 left. */
 		EAR,
-		EXTRA
+		EXTRA,
+		/** Turns around its pivot by {@link com.minecraftmode.entity.AnimatedCreature#wheel} (Mahoraga's wheel of adaptation). */
+		WHEEL
 	}
 
 	/** How a companion rests while its owner stands still. */
@@ -74,6 +76,30 @@ public final class BodyPlan {
 
 		public int uvHeight() {
 			return this.d + this.h;
+		}
+	}
+
+	/**
+	 * A rectangle painted over a part's skin after the palette pass (tattoos, painted mouths, teeth, extra eyes), in the part's own
+	 * units on one face direction: front/back take (x, y), left/right (z, y), top/bottom (x, z); {@link #SIDES} paints a band
+	 * from {@code v0} to {@code v1} in y around all four sides. Every box of the part with that face gets it, so it survives
+	 * bevelling. Ink keeps the light of the pixel under it; glowing marks keep their color and go to the emissive layer.
+	 */
+	public record Mark(int face, float u0, float v0, float u1, float v1, int rgb, boolean glow) {
+		public static final int SIDES = -1;
+		public static final int TOP = 0;
+		public static final int BOTTOM = 1;
+		public static final int RIGHT = 2;
+		public static final int FRONT = 3;
+		public static final int LEFT = 4;
+		public static final int BACK = 5;
+
+		public boolean on(final int f) {
+			return this.face == f || (this.face == SIDES && f != TOP && f != BOTTOM);
+		}
+
+		public boolean covers(final float u, final float v) {
+			return (this.face == SIDES || u >= this.u0 && u < this.u1) && v >= this.v0 && v < this.v1;
 		}
 	}
 
@@ -97,6 +123,7 @@ public final class BodyPlan {
 		/** Eyes painted on the front of the first box: 0 none. */
 		public int eyes;
 		public int eyeColor = 0xFFE040;
+		public final List<Mark> marks = new ArrayList<>();
 
 		Part(final String name, final @Nullable String parent, final Role role, final int index, final float px, final float py, final float pz, final String skin) {
 			this.name = name;
@@ -107,6 +134,24 @@ public final class BodyPlan {
 			this.py = py;
 			this.pz = pz;
 			this.skin = skin;
+		}
+
+		/** Paints ink from (u0, v0) to (u1, v1) on {@code face} (a {@link Mark} constant). */
+		public Part mark(final int face, final float u0, final float v0, final float u1, final float v1, final int rgb) {
+			this.marks.add(new Mark(face, u0, v0, u1, v1, rgb, false));
+			return this;
+		}
+
+		/** Like {@link #mark}, glowing. */
+		public Part glowMark(final int face, final float u0, final float v0, final float u1, final float v1, final int rgb) {
+			this.marks.add(new Mark(face, u0, v0, u1, v1, rgb, true));
+			return this;
+		}
+
+		/** A band of ink around all four sides from y0 to y1. */
+		public Part band(final float y0, final float y1, final int rgb) {
+			this.marks.add(new Mark(Mark.SIDES, 0, y0, 0, y1, rgb, false));
+			return this;
 		}
 	}
 

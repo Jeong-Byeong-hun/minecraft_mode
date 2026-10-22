@@ -39,7 +39,7 @@ final class AccessoryLang {
 			? "장인 브록의 강화대에서 레이드 장신구를 강화합니다 (최대 +" + AccessoryEnhance.MAX + "). 영웅·악몽 레이드 클리어 보상."
 			: "Enhances raid accessories at Artisan Brokk's bench (up to +" + AccessoryEnhance.MAX + "). From Heroic and Nightmare raid clears.");
 		b.add(t + "inherit", ko ? "%s: 대장장이에서 %s티어 장신구로 계승 (강화·옵션 유지)" : "%s: inherit into a tier %s accessory at the blacksmith (enhancement and options kept)");
-		for (int tier = 1; tier <= 2; tier++) {
+		for (int tier = 1; tier < Accessories.PEAK_TIER; tier++) {
 			Item ticket = Accessories.inheritTicket(tier);
 			b.add(ticket, ko ? tier + "티어 장신구 계승권" : "Tier " + tier + " Accessory Inheritance Ticket");
 			b.add(ticket.getDescriptionId() + ".tooltip", ko

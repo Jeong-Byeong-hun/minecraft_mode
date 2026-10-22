@@ -40,7 +40,7 @@ public enum BagKind {
 	/** Enhancement and crafting materials (the enhancement bench and the crafting stations read them from the bags too). */
 	private static boolean material(final ItemStack stack) {
 		return stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.AWAKENING_CRYSTAL) || stack.is(ModItems.TITAN_SHARD)
-			|| stack.is(ModItems.ACCESSORY_ORB) || stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2);
+			|| stack.is(ModItems.ACCESSORY_ORB) || stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3);
 	}
 
 	private final String id;
@@ -76,7 +76,7 @@ public enum BagKind {
 	public static boolean reserved(final ItemStack stack) {
 		return stack.is(ModTags.COINS) || stack.is(ModItems.ESSENCE) || stack.is(ModItems.CONDENSED_ESSENCE) || stack.is(ModItems.EVOLUTION_ETHER)
 			|| stack.is(ModItems.DUNGEON_KEYSTONE) || stack.getItem() instanceof QuestTokenItem || stack.is(Items.TOTEM_OF_UNDYING)
-			|| stack.is(ItemTags.ARROWS);
+			|| stack.is(ItemTags.ARROWS) || stack.is(ModItems.SUKUNA_FINGER);
 	}
 
 	public static boolean isGear(final ItemStack stack) {

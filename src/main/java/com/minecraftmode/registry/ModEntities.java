@@ -6,6 +6,8 @@ import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.entity.MineRaider;
 import com.minecraftmode.entity.MythrilGolem;
 import com.minecraftmode.entity.TrainingDummy;
+import com.minecraftmode.entity.boss.Mahoraga;
+import com.minecraftmode.entity.boss.MalevolentShrine;
 import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.raid.RaidBosses;
@@ -51,6 +53,35 @@ public final class ModEntities {
 			.clientTrackingRange(10)
 			.notInPeaceful()
 			.build(MYTHRIL_GOLEM_KEY)
+	);
+
+	public static final ResourceKey<EntityType<?>> MAHORAGA_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("mahoraga"));
+
+	/** Sukuna's shikigami, called in his raid (never saved: the raid instance owns it). */
+	public static final EntityType<Mahoraga> MAHORAGA = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		MAHORAGA_KEY,
+		EntityType.Builder.<Mahoraga>of(Mahoraga::new, MobCategory.MONSTER)
+			.sized(1.8F, 4.3F)
+			.fireImmune()
+			.clientTrackingRange(16)
+			.noSave()
+			.build(MAHORAGA_KEY)
+	);
+
+	public static final ResourceKey<EntityType<?>> MALEVOLENT_SHRINE_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("malevolent_shrine"));
+
+	/** The shrine of Sukuna's domain: scenery while the domain is open. */
+	public static final EntityType<MalevolentShrine> MALEVOLENT_SHRINE = Registry.register(
+		BuiltInRegistries.ENTITY_TYPE,
+		MALEVOLENT_SHRINE_KEY,
+		EntityType.Builder.<MalevolentShrine>of(MalevolentShrine::new, MobCategory.MISC)
+			// about the model's size, so it is not culled while in view (it cannot be hit and shoves nobody)
+			.sized(12.0F, 14.0F)
+			.fireImmune()
+			.clientTrackingRange(16)
+			.noSave()
+			.build(MALEVOLENT_SHRINE_KEY)
 	);
 
 	public static final ResourceKey<EntityType<?>> TRAINING_DUMMY_KEY = ResourceKey.create(Registries.ENTITY_TYPE, MinecraftMode.id("training_dummy"));
@@ -150,6 +181,8 @@ public final class ModEntities {
 		FabricDefaultAttributeRegistry.register(CITY_NPC, CityNpc.createAttributes());
 		FabricDefaultAttributeRegistry.register(CLASS_TRAINER, ClassTrainer.createAttributes());
 		FabricDefaultAttributeRegistry.register(MYTHRIL_GOLEM, MythrilGolem.createAttributes());
+		FabricDefaultAttributeRegistry.register(MAHORAGA, Mahoraga.createAttributes());
+		FabricDefaultAttributeRegistry.register(MALEVOLENT_SHRINE, MalevolentShrine.createAttributes());
 		FabricDefaultAttributeRegistry.register(TRAINING_DUMMY, ArmorStand.createAttributes());
 		FabricDefaultAttributeRegistry.register(TRAINING_DUMMY_BOSS, ArmorStand.createAttributes());
 		SpawnPlacements.register(MYTHRIL_GOLEM, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, MythrilGolem::checkMythrilGolemSpawnRules);

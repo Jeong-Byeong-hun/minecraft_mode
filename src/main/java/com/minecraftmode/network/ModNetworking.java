@@ -78,6 +78,7 @@ public final class ModNetworking {
 		PayloadTypeRegistry.serverboundPlay().register(SellAllPayload.TYPE, SellAllPayload.CODEC);
 		PayloadTypeRegistry.serverboundPlay().register(GuideBookPayload.TYPE, GuideBookPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(TargetHealthPayload.TYPE, TargetHealthPayload.CODEC);
+		PayloadTypeRegistry.clientboundPlay().register(DomainPayload.TYPE, DomainPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(DamageNumberPayload.TYPE, DamageNumberPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(OpenLandPayload.TYPE, OpenLandPayload.CODEC);
 		PayloadTypeRegistry.clientboundPlay().register(LandBordersPayload.TYPE, LandBordersPayload.CODEC);

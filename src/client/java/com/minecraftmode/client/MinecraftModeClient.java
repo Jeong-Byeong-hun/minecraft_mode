@@ -7,6 +7,7 @@ import com.minecraftmode.client.accessory.AccessoryTooltips;
 import com.minecraftmode.client.companion.CompanionClient;
 import com.minecraftmode.client.craft.CraftScreen;
 import com.minecraftmode.client.creature.CreaturePlans;
+import com.minecraftmode.client.domain.DomainClient;
 import com.minecraftmode.client.creature.CreatureRenderer;
 import com.minecraftmode.client.dungeon.DungeonClient;
 import com.minecraftmode.client.endgame.EndgameClient;
@@ -91,6 +92,8 @@ public class MinecraftModeClient implements ClientModInitializer {
 		for (BossDef def : RaidBosses.all()) {
 			creature(RaidBosses.type(def), def.id());
 		}
+		creature(ModEntities.MAHORAGA, "mahoraga");
+		creature(ModEntities.MALEVOLENT_SHRINE, "malevolent_shrine");
 		CompanionClient.init();
 		MapClient.init();
 		LairClient.init();
@@ -156,6 +159,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		SellAllButtons.init();
 		EnhanceVisuals.init();
 		TargetHealthHud.init();
+		DomainClient.init();
 		TrashButton.init();
 		AccessoryButton.init();
 		ClientSettings.init();

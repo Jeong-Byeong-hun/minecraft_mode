@@ -78,6 +78,7 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.FISHMONGER_SHOP);
 					output.accept(ModItems.GUILD_SHOP);
 					output.accept(ModItems.BUILDER_SHOP);
+					output.accept(ModItems.RELIC_SHOP);
 					output.accept(ModItems.MINE_RAIDER_SPAWN_EGG);
 					output.accept(ModItems.MYTHRIL_GOLEM_SPAWN_EGG);
 					output.accept(ModItems.RETURN_SCROLL);
@@ -129,6 +130,8 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.ACCESSORY_ORB);
 					output.accept(ModItems.ACCESSORY_INHERIT_1);
 					output.accept(ModItems.ACCESSORY_INHERIT_2);
+					output.accept(ModItems.ACCESSORY_INHERIT_3);
+					output.accept(ModItems.SUKUNA_FINGER);
 					output.accept(ModItems.TITAN_SHARD);
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));

@@ -21,6 +21,8 @@ public class CreatureRenderState extends LivingEntityRenderState {
 	/** Bank into turns and nose up or down in flight, in degrees. */
 	public float roll;
 	public float tilt;
+	/** Turn of {@link BodyPlan.Role#WHEEL} parts, in radians. */
+	public float wheel;
 	/** 1 the moment the creature is hit, easing to 0 over its hurt time: a flinch. */
 	public float hurt;
 }

@@ -10,6 +10,7 @@ import com.minecraftmode.job.Paragon;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.raid.RaidDifficulty;
+import com.minecraftmode.raid.Raids;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.NamedLairs;
@@ -163,6 +164,17 @@ public final class Achievements {
 			s -> s.records().invasions());
 		add("story_done", "story", "Hero of Stormhold", "스톰홀드의 영웅", "Finish the main story.", "메인 스토리를 완료하세요.", Story.chapters().size(), 150,
 			"Hero of Stormhold", "스톰홀드의 영웅", s -> Story.data(s.player()).chapter());
+		add("sukuna_fingers", "raid", "King of Curses", "저주의 왕", "Earn 20 of Sukuna's fingers from his raid.", "스쿠나 레이드에서 스쿠나의 손가락을 20개 얻으세요.", 20, 200,
+			"King of Curses", "저주의 왕", s -> fingersEarned(s.records()));
+	}
+
+	/** Sukuna's fingers earned so far, counted from his rewarded clears (1, 2, 3 by difficulty). */
+	private static int fingersEarned(final PlayerRecords records) {
+		int n = 0;
+		for (RaidDifficulty difficulty : RaidDifficulty.values()) {
+			n += records.raidClears(PlayerRecords.raidKey(RaidBosses.SUKUNA.id(), difficulty.id())) * Raids.fingers(difficulty);
+		}
+		return n;
 	}
 
 	private static int bestProfession(final Player player) {

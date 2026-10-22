@@ -145,6 +145,21 @@ public final class Story {
 			"마침내 공허가 모습을 드러냈소. 공허룡 에테릭스요. 왕국에서 가장 용감한 이들을 모아 악몽 난이도에서 끝장내시오. 스톰홀드가 그대를 노래할 것이오.",
 			"Defeat Aethryx on Nightmare", "악몽 난이도 에테릭스 처치", 1, p -> Progress.get(p).raidClears(PlayerRecords.raidKey("aethryx", "nightmare")),
 			p -> companion(p, true, "baby_dragon"), "Baby Dragon charm (coins if owned)", "아기 용 부적(이미 있으면 동전)");
+		// past the Void, past the level cap: the King of Curses
+		chapter("king_of_curses", "The King of Curses", "저주의 왕",
+			"With the Void gone, something older stirs in its place: Ryomen Sukuna, the four-armed curse, has opened his shrine. The marshal will send only those who ended the Void on Nightmare.",
+			"공허가 사라진 자리에서 더 오래된 것이 깨어났소. 네 팔의 저주, 료멘 스쿠나가 사찰을 열었소. 사령관은 악몽 난이도에서 공허를 끝낸 이들만 보낼 것이오.",
+			"Defeat Ryomen Sukuna", "료멘 스쿠나 처치", 1, Story::sukunaClears,
+			p -> List.of(new ItemStack(ModItems.AWAKENING_CRYSTAL, 5)), "5 awakening crystals", "각성의 결정 5개");
+	}
+
+	/** Sukuna cleared on any difficulty. */
+	private static int sukunaClears(final Player player) {
+		int total = 0;
+		for (String difficulty : new String[] {"normal", "heroic", "nightmare"}) {
+			total += Progress.get(player).raidClears(PlayerRecords.raidKey("sukuna", difficulty));
+		}
+		return total;
 	}
 
 	/** Raids cleared on Heroic or Nightmare, any boss. */

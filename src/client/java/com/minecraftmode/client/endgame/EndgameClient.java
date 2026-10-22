@@ -49,7 +49,7 @@ public final class EndgameClient {
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> auction = null));
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
 			if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP) || stack.is(ModItems.ACCESSORY_ORB)
-				|| stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2)) {
+				|| stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3) || stack.is(ModItems.SUKUNA_FINGER)) {
 				lines.add(1, Component.translatable(stack.getItem().getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
 			}
 			if (stack.has(ModDataComponents.BOUND)) {

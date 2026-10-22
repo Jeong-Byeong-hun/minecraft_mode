@@ -50,6 +50,7 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.createTrivialBlock(ModBlocks.FARMER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.FISHMONGER_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.BUILDER_SHOP, TexturedModel.COLUMN);
+		generators.createTrivialBlock(ModBlocks.RELIC_SHOP, TexturedModel.COLUMN);
 		generators.createTrivialBlock(ModBlocks.GUILD_SHOP, TexturedModel.COLUMN);
 		// engraving_table_top / _side / _bottom
 		generators.createTrivialBlock(ModBlocks.ENGRAVING_TABLE, TexturedModel.CUBE_BOTTOM_TOP);
@@ -102,7 +103,8 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAND_DEED, ModelTemplates.FLAT_ITEM);
 		for (Item item : new Item[] {
-			ModItems.AWAKENING_CRYSTAL, ModItems.ACCESSORY_ORB, ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2, ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
+			ModItems.AWAKENING_CRYSTAL, ModItems.ACCESSORY_ORB, ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2, ModItems.ACCESSORY_INHERIT_3, ModItems.SUKUNA_FINGER,
+			ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
 			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);

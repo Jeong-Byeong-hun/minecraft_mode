@@ -18,7 +18,9 @@ public enum ShopType {
 	/** Fish, on the residence square: the grocer's lines, under the grocer's market pressure. */
 	FISHMONGER("fishmonger", "grocer"),
 	/** Building blocks, at the homestead plains and the residence square: fixed prices that buying never raises ({@link #fixedPrices}). */
-	BUILDER("builder");
+	BUILDER("builder"),
+	/** Sukuna's relic exchange beside the raid gate: his accessories and the tier 4 ticket for his fingers, at fixed prices. */
+	CURSED_RELICS("cursed_relics");
 
 	private final String id;
 	private final String market;
@@ -44,9 +46,12 @@ public enum ShopType {
 		return this.market;
 	}
 
-	/** No market pressure: builders buy blocks by the thousand, and a price that climbed with every stack would punish building. */
+	/**
+	 * No market pressure: builders buy blocks by the thousand, and a price that climbed with every stack would punish building; the
+	 * relic exchange is a fixed bad-luck protection.
+	 */
 	public boolean fixedPrices() {
-		return this == BUILDER;
+		return this == BUILDER || this == CURSED_RELICS;
 	}
 
 	public String titleKey() {

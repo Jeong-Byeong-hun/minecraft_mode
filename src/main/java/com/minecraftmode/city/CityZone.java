@@ -162,7 +162,9 @@ public final class CityZone {
 		/** Also the crafting tables: one stands beside every ender chest ({@link CityFixtures#CRAFTING_TABLES}). */
 		ENDER_CHESTS("screen.minecraft_mode.guide.ender_chests", 0, 17, 0x208070),
 		/** Outside the walls, on the homestead plains' travel circle. */
-		BUILDER_SHOP("block.minecraft_mode.builder_shop", Homestead.SHOP_X, Homestead.SHOP_Z, 0xC87850);
+		BUILDER_SHOP("block.minecraft_mode.builder_shop", Homestead.SHOP_X, Homestead.SHOP_Z, 0xC87850),
+		/** Sukuna's fingers buy his accessories here, by the raid gate. */
+		RELIC_SHOP("block.minecraft_mode.relic_shop", CityFixtures.RELIC_SHOP.getX(), CityFixtures.RELIC_SHOP.getZ(), 0xB0182A);
 
 		public final String nameKey;
 		public final int x;

@@ -9,8 +9,10 @@ import com.minecraftmode.entity.boss.Kraken;
 import com.minecraftmode.entity.boss.Malachar;
 import com.minecraftmode.entity.boss.Nefrekhet;
 import com.minecraftmode.entity.boss.Raijin;
+import com.minecraftmode.entity.boss.Sukuna;
 import com.minecraftmode.entity.boss.Verdessa;
 import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.job.JobProgression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -27,7 +29,7 @@ import net.minecraft.world.entity.MobCategory;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The nine raid bosses, weakest first. Each is fought in its own themed arena of the raid dimension
+ * The ten raid bosses, weakest first (Sukuna past the level cap). Each is fought in its own themed arena of the raid dimension
  * by a party; its level range is both the gear it drops and the level needed to enter.
  *
  * <p>Damage (0.5.7): a player of the boss's level in that level's class set loses about 15% of their health to its biggest
@@ -77,6 +79,11 @@ public final class RaidBosses {
 		"The dragon at the end of the world, coiled around the last islands of the void. Its wings blot out the stars - until it calls them down.",
 		"세계의 끝, 공허의 마지막 섬들을 휘감은 용. 날개로 별을 가리다가, 이윽고 별을 떨어뜨린다.",
 		90, 100, 9000, 52, 16, 0.32, 4.0F, 3.0F, ArenaTheme.VOID_ISLES, BossBarColor.PURPLE, List.of(0.75F, 0.5F, 0.25F)), Aethryx::new);
+	/** The first boss past the level cap: Lv 100 only, for paragons. */
+	public static final BossDef SUKUNA = add(new BossDef("sukuna", "Ryomen Sukuna", "료멘 스쿠나", "the King of Curses", "저주의 왕",
+		"The four-armed curse of a thousand years, with a second mouth in his belly. His slashes cannot be seen, his shrine needs no walls, and his shikigami learns to survive anything.",
+		"천 년을 이어 온 네 팔의 저주, 배에도 입이 하나 더 있다. 그의 참격은 보이지 않고, 그의 사찰에는 벽이 없으며, 그의 식신은 무엇에든 적응한다.",
+		100, 100, 24000, 56, 18, 0.32, 1.5F, 3.7F, ArenaTheme.MALEVOLENT_SHRINE, BossBarColor.RED, List.of(0.75F, 0.45F, 0.2F)), Sukuna::new);
 
 
 	private static <T extends RaidBoss> BossDef add(final BossDef def, final EntityType.EntityFactory<T> factory) {
@@ -128,6 +135,11 @@ public final class RaidBosses {
 
 	public static int index(final BossDef def) {
 		return DEFS.indexOf(def);
+	}
+
+	/** A raid past the level cap (Sukuna): richer rewards, his fingers, half the gear lots ({@code Raids}). */
+	public static boolean pastCap(final BossDef def) {
+		return def.lo() >= JobProgression.MAX_LEVEL;
 	}
 
 	/**

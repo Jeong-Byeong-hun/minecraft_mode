@@ -34,7 +34,7 @@ import org.joml.Vector4f;
  * {@link PendragonLooks}, {@link LanceLooks}, {@link KnightLooks}, {@link CamelotLooks} and {@link OrochiLooks}, their projectiles by {@link KnightShots};
  * the rogue's (Shadow Monarch) by {@link VenomLooks}, {@link AntLooks}, {@link ShinobiLooks}, {@link UchihaLooks} and {@link MonarchLooks}, their projectiles by {@link RogueShots};
  * the hunter's (Triple-Star Hunter) by {@link KilluaLooks}, {@link KurtaLooks}, {@link GonLooks}, {@link TroupeLooks}, {@link DragonLooks}, {@link ZoldyckLooks},
- * {@link ChimeraLooks} and {@link GuanyinLooks}, their projectiles by {@link HunterShots}.
+ * {@link ChimeraLooks} and {@link GuanyinLooks}, their projectiles by {@link HunterShots}; Ryomen Sukuna's raid by {@link CurseLooks}.
  */
 public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.State> {
 	/** The held sphere's radius, in blocks. */
@@ -229,6 +229,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case ORB_BURST, SILVA_PRESENCE, ASSASSIN_HAND, NEEDLE_RAIN, NEEDLE_DISGUISE, NEEDLE_PUPPET -> ZoldyckLooks.submit(state, poseStack, collector);
 			case TAIL_PIERCE, PHOTON, KINGS_AURA, KING_ROSE -> ChimeraLooks.submit(state, poseStack, collector);
 			case NETERO_PRAYER, GUANYIN_SWEEP, PALM_SLAM, ZERO_HAND, ZERO_BEAM -> GuanyinLooks.submit(state, poseStack, collector);
+			case DISMANTLE, CLEAVE_CUTS, BLACK_FLASH, SPIDERWEB, FUGA_BOW, FUGA_FLIGHT, FUGA_BLAST, WORLD_SLASH, DOMAIN_CUT -> CurseLooks.submit(state, poseStack, collector);
 			case ALLY_RING -> submitAllyRing(state, poseStack, collector);
 			case LANDING_RING -> submitLandingRing(state, poseStack, collector);
 			default -> {

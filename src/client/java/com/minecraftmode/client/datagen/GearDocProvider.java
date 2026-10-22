@@ -314,14 +314,14 @@ public class GearDocProvider implements DataProvider {
 	private void accessories(final StringBuilder md) {
 		md.append("\n## 장신구 (레이드 전용)\n\n");
 		md.append("- 방어구와 따로 **장신구 칸 ").append(Accessories.SLOTS).append("개**(목걸이·귀걸이·반지·팔찌·부적)에 하나씩 찹니다. 인벤토리 오른쪽의 \"보석\" 버튼(\"버림\" 위)이나 캐릭터 창(I)의 \"장신구\" 버튼으로 엽니다. 캐릭터마다 따로이고 죽어도 남습니다.\n");
-		md.append("- **레이드에서만** 나옵니다(상점·소굴·던전·네임드는 주지 않음). 레이드 보스마다 자기 세트(5부위)가 있고 세트는 3티어로 나뉩니다: ");
-		for (int tier = 1; tier <= Accessories.TOP_TIER; tier++) {
+		md.append("- **레이드에서만** 나옵니다(상점·소굴·던전·네임드는 주지 않음). 레이드 보스마다 자기 세트(5부위)가 있고 세트는 4티어로 나뉩니다(4티어는 레벨 상한 너머의 보스 전용): ");
+		for (int tier = 1; tier <= Accessories.PEAK_TIER; tier++) {
 			final int t = tier;
 			md.append(tier > 1 ? " · " : "").append(tier).append("티어 ").append(Accessories.sets().stream().filter(set -> set.tier() == t).map(set -> set.boss().ko())
 				.collect(Collectors.joining("·")));
 		}
 		md.append(".\n");
-		md.append("- 보스를 잡으면 **보상을 받는 파티원마다 한 번씩** 확률을 굴려, 나온 장신구를 분배 품목(경매·주사위)에 넣습니다. **노말**은 그 보스의 세트가, **영웅·악몽**은 어느 보스든 **3티어 세트만** 나옵니다(1·2티어 보스는 3티어 세트 중 무작위, 3티어 보스는 자기 세트). 확률은 보스가 강할수록, 난이도가 높을수록 올라 영웅 베르데사가 노말 에테릭스보다 잘 나옵니다(아래 표).\n");
+		md.append("- 보스를 잡으면 **보상을 받는 파티원마다 한 번씩** 확률을 굴려, 나온 장신구를 분배 품목(경매·주사위)에 넣습니다. **노말**은 그 보스의 세트가, **영웅·악몽**은 1~3티어 보스라면 **3티어 세트만** 나옵니다(1·2티어 보스는 3티어 세트 중 무작위, 3·4티어 보스는 자기 세트). 확률은 보스가 강할수록, 난이도가 높을수록 올라 영웅 베르데사가 노말 에테릭스보다 잘 나옵니다(아래 표).\n");
 		md.append("- 직업 제한은 없고 **세트 보스의 레벨**(레이드 입장 레벨)이 되어야 찰 수 있습니다. 부위마다 고정 기본 옵션 1줄 + 추가 옵션이 노말 1줄 · 영웅 2줄 · 악몽 3줄(수치는 방어구 추가 옵션처럼 레벨 최대치의 60–100%). 같은 세트를 2·3·5부위 차면 세트 효과가 붙습니다.\n");
 		md.append("- **추가 옵션 재설정**: 대장장이 진화대의 \"추가 옵션\" 탭에서 방어구처럼 다시 굴립니다(응축 정수 ").append(GearUpgrades.REROLL_CONDENSED)
 			.append("개 + 레벨대 가격의 1/4 코인). 줄 수는 그대로이고, 새 옵션은 따로 보관되어 ✔로 적용하거나 ✖로 기존 옵션을 유지합니다.\n");
@@ -332,12 +332,12 @@ public class GearDocProvider implements DataProvider {
 			.append("%가 붙습니다. 실패해도 단계는 내려가지 않고 장인의 기운(+").append(Enhancement.PITY_STEP).append("%p)이 쌓입니다. 세트 효과는 강화로 오르지 않습니다.\n");
 		md.append("- 장신구 강화 구슬은 **영웅·악몽 클리어 보상**입니다(보상을 받는 파티원마다 영웅 ").append(Accessories.orbs(RaidDifficulty.HEROIC)).append("개 · 악몽 ")
 			.append(Accessories.orbs(RaidDifficulty.NIGHTMARE)).append("개). 재료 가방에 들어갑니다.\n");
-		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**을 보상을 받는 파티원마다 한 번씩 굴려 분배 품목(경매·주사위)에 넣습니다(");
+		md.append("- **계승**: 2티어 보스는 **1티어 계승권**, 3티어 보스는 **2티어 계승권**, 스쿠나는 **3티어 계승권**(4티어 스쿠나 세트로)을 보상을 받는 파티원마다 한 번씩 굴려 분배 품목(경매·주사위)에 넣습니다(");
 		for (RaidDifficulty difficulty : RaidDifficulty.values()) {
 			md.append(difficulty.ordinal() > 0 ? " · " : "").append(this.ko(difficulty.nameKey())).append(' ')
 				.append(ClassDocProvider.num(Math.round(Accessories.ticketChance(difficulty) * 100))).append('%');
 		}
-		md.append("; 경매 시작가는 다음 티어 첫 레벨대의 무기 가격). 대장장이 진화대에 1·2티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
+		md.append("; 경매 시작가는 다음 티어 첫 레벨대의 무기 가격). 대장장이 진화대에 1~3티어 장신구를 넣으면 진화 탭에 다음 티어 세트들의 같은 부위가 나오고, 계승권 1장 + 코인(그 레벨대 무기 가격의 절반)으로 고른 장신구로 바뀝니다. ")
 			.append("강화 단계·장인의 기운과 추가 옵션(같은 능력치, 새 레벨 최대치에 대한 비율 그대로)이 이어집니다. 재료 가방에 들어갑니다.\n");
 		md.append("- 직업 비교 표(CLASSES.md)에는 넣지 않습니다(추가 옵션·각인처럼 뽑기 장비).\n\n");
 		md.append("| 부위 | 기본 옵션 (Lv 50 기준) | 추가 옵션 풀 (Lv 100 최대치) |\n|---|---|---|\n");
@@ -551,7 +551,14 @@ public class GearDocProvider implements DataProvider {
 				.append(d.enhanceMax == 0 ? "-" : "+" + d.enhanceMin + "~+" + d.enhanceMax).append(" | ").append(Accessories.orbs(d) == 0 ? "-" : String.valueOf(Accessories.orbs(d))).append(" |\n");
 		}
 		md.append("\n- 영웅은 그 보스의 일반, 악몽은 영웅을 클리어해야 열립니다(파티원 모두).\n");
-		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스의 분배 품목으로 확률로 나옵니다.\n");
+		md.append("- **장신구**: 노말은 그 보스의 세트, 영웅·악몽은 3티어 세트만 보상을 받는 파티원마다 확률로 분배 품목에 들어갑니다(확률표·강화·계승: GEAR.md \"장신구\"). 장신구 구슬은 보상을 받는 파티원마다, 계승권은 2·3티어 보스와 스쿠나의 분배 품목으로 확률로 나옵니다.\n");
+		md.append("- **레벨 상한 너머 (스쿠나)**: Lv 100, 악몽 에테릭스를 깬 사람만 들어갑니다. 진화의 에테르·강화석·클리어 경험치가 ")
+			.append(ClassDocProvider.num(Raids.PAST_CAP_SHARE)).append("배, 보호 주문서 확률 +").append(Math.round(Raids.PAST_CAP_SCROLL * 100))
+			.append("%p, 장신구 구슬 +1(일반에서도 1개), 장비 분배 품목은 절반(Lv 100 장비라서)이지만 강화 수치가 +").append(Raids.PAST_CAP_ENHANCE[0]).append("~+")
+			.append(Raids.PAST_CAP_ENHANCE[1]).append(" 더 높습니다. 보상을 받는 파티원마다 **스쿠나의 손가락**(귀속)을 일반 ").append(Raids.fingers(RaidDifficulty.NORMAL))
+			.append("개 · 영웅 ").append(Raids.fingers(RaidDifficulty.HEROIC)).append("개 · 악몽 ").append(Raids.fingers(RaidDifficulty.NIGHTMARE))
+			.append("개 받고, 레이드 입구 옆 **저주 유물 교환소**에서 스쿠나 장신구 한 부위(손가락 ").append(ShopOffers.RELIC_PIECE_FINGERS)
+			.append("개)나 4티어 계승권(").append(ShopOffers.RELIC_TICKET_FINGERS).append("개)으로 바꿉니다. 손가락을 20개 얻으면 칭호 「저주의 왕」.\n");
 		md.append("- **보상 귀속**: 보스·난이도마다 레이드 주기(현실 3일)에 한 번. 이미 받은 사람은 입장료 없이 **연습**으로 함께 들어가고 보상과 분배에서 빠집니다.\n");
 		md.append("- **클리어 기록**: 보스·난이도별 최단 시간 상위 ").append(RaidRecordsData.KEEP).append(" 파티를 월드에 저장합니다(토벌 사령관 창의 기록 보기).\n\n");
 		md.append("### 변형 (영웅·악몽, 주기마다 ").append(RaidAffix.PER_CYCLE).append("개)\n\n| 변형 | 효과 |\n|---|---|\n");

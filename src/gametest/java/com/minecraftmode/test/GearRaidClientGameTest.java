@@ -17,10 +17,15 @@ import com.minecraftmode.client.raid.LootScreen;
 import com.minecraftmode.client.raid.RaidClient;
 import com.minecraftmode.client.raid.RaidReportScreen;
 import com.minecraftmode.client.raid.RaidScreen;
+import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.domain.Domains;
+import com.minecraftmode.entity.boss.Mahoraga;
 import com.minecraftmode.entity.boss.RaidBoss;
+import com.minecraftmode.entity.boss.Sukuna;
 import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.combat.Telegraph;
 import com.minecraftmode.entity.named.NamedDef;
@@ -93,10 +98,15 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.Item;
+import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
@@ -129,6 +139,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			checkUpgrade(server, connection);
 			checkNamed(context, server, connection);
 			checkBossPatterns(context, server, connection);
+			checkSukuna(context, server, connection);
 			checkRaidFlow(context, server, connection);
 			checkAccessories(context, server, connection);
 			checkDeathInRaid(context, server, connection);
@@ -149,7 +160,8 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			require(pieces.equals(List.of(2, 3, 4)), set.id() + " should have 2/3/4 piece bonuses, got " + pieces);
 		}
 		require(NamedMobs.all().size() >= 20, "expected at least 20 named monsters, got " + NamedMobs.all().size());
-		require(RaidBosses.all().size() == 9, "expected 9 raid bosses");
+		require(RaidBosses.all().size() == 10, "expected 10 raid bosses");
+		require(RaidBosses.all().getLast() == RaidBosses.SUKUNA && RaidBosses.SUKUNA.lo() == 100, "Sukuna is the raid past the level cap");
 		int lastLo = 0;
 		java.util.Set<com.minecraftmode.raid.ArenaTheme> arenas = new java.util.HashSet<>();
 		for (BossDef def : RaidBosses.all()) {
@@ -176,6 +188,12 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			require(slot.pool().size() >= 10, slot + " accessories roll from only " + slot.pool().size() + " options");
 		}
 		checkAccessoryDrops();
+		// Sukuna's relic exchange: every piece of his set and the tier 4 ticket, for fingers; his bound fingers still pay there
+		List<ShopOffers.Trade> relics = ShopOffers.trades(ShopType.CURSED_RELICS);
+		require(relics.size() == Accessories.SLOTS + 1 && relics.stream().allMatch(t -> t.cost().asItem() == ModItems.SUKUNA_FINGER) && ShopType.CURSED_RELICS.fixedPrices(),
+			"the relic exchange should sell " + (Accessories.SLOTS + 1) + " things for fingers, got " + relics.size());
+		require(Raids.fingers(RaidDifficulty.NORMAL) == 1 && Raids.fingers(RaidDifficulty.NIGHTMARE) == 3 && RaidBosses.pastCap(RaidBosses.SUKUNA)
+			&& !RaidBosses.pastCap(RaidBosses.AETHRYX), "fingers 1/2/3 by difficulty, only Sukuna past the cap");
 		// every bracket offers one weapon (some classes have none at Lv 100) and one armor piece per class
 		for (JobClass job : JobClass.PLAYABLE) {
 			for (int bracket = 10; bracket <= 100; bracket += 10) {
@@ -235,12 +253,12 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			keys.addAll(List.of("container.minecraft_mode.accessories", "tooltip.minecraft_mode.accessory.source", "screen.minecraft_mode.character.source.accessory",
 				"tooltip.minecraft_mode.accessory.tier", "tooltip.minecraft_mode.accessory.enhanced", ModItems.ACCESSORY_ORB.getDescriptionId(),
 				ModItems.ACCESSORY_ORB.getDescriptionId() + ".tooltip", "screen.minecraft_mode.upgrade.accessory", "screen.minecraft_mode.codex.source.raid_top"));
-			for (String id : List.of("accessory_orb", "accessory_inherit_1", "accessory_inherit_2")) {
+			for (String id : List.of("accessory_orb", "accessory_inherit_1", "accessory_inherit_2", "accessory_inherit_3", "sukuna_finger")) {
 				if (resources.getResource(MinecraftMode.id("items/" + id + ".json")).isEmpty() || resources.getResource(MinecraftMode.id("textures/item/" + id + ".png")).isEmpty()) {
 					missing.add("model/texture " + id);
 				}
 			}
-			for (Item ticket : List.of(ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2)) {
+			for (Item ticket : List.of(ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2, ModItems.ACCESSORY_INHERIT_3, ModItems.SUKUNA_FINGER)) {
 				keys.add(ticket.getDescriptionId());
 				keys.add(ticket.getDescriptionId() + ".tooltip");
 			}
@@ -465,7 +483,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			List<String> spells = server.computeOnServer(s -> connection.getServerPlayer().level()
 				.getEntitiesOfClass(RaidBoss.class, connection.getServerPlayer().getBoundingBox().inflate(40), b -> b.isAlive() && b.def() == def).getFirst().spellIds());
 			boolean caster = def == RaidBosses.IGNIS || def == RaidBosses.MALACHAR || def == RaidBosses.AETHRYX || def == RaidBosses.VERDESSA || def == RaidBosses.NEFREKHET
-				|| def == RaidBosses.RAIJIN;
+				|| def == RaidBosses.RAIJIN || def == RaidBosses.SUKUNA;
 			require(caster == !spells.isEmpty() && spells.size() < ids.size(), def.id() + " spells " + spells + " of " + ids);
 			for (String id : ids) {
 				boolean ran = server.computeOnServer(s -> {
@@ -485,6 +503,189 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		server.runCommand("effect clear @p");
 		boolean alive = server.computeOnServer(s -> connection.getServerPlayer().isAlive());
 		require(alive, "the player should survive the pattern test");
+	}
+
+	/**
+	 * Sukuna's own rules: Mahoraga guards him and adapts (the wheel turns, the adapted kind of hit does less), the Reverse Cursed
+	 * Technique breaks under enough damage, and the domain's sure hit spares only those in a Simple Domain.
+	 */
+	private static void checkSukuna(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// item stacks need a world: bound fingers pay at the relic exchange, other bound items pay nowhere
+		boolean pays = server.computeOnServer(s -> {
+			ItemStack bound = new ItemStack(ModItems.SUKUNA_FINGER, 20);
+			bound.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			ItemStack boundOrb = new ItemStack(ModItems.ACCESSORY_ORB, 20);
+			boundOrb.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			return new ItemCost(ModItems.SUKUNA_FINGER, ShopOffers.RELIC_PIECE_FINGERS).test(bound) && !new ItemCost(ModItems.ACCESSORY_ORB, 1).test(boundOrb);
+		});
+		require(pays, "bound fingers pay at the relic exchange, other bound items pay nowhere");
+		server.runCommand("tp @p 0.5 -60 0.5 180 0");
+		server.runCommand("gamemode survival @p");
+		// both fight on (their adaptation and heal run in their AI step): the player shrugs off what is not raid damage
+		server.runCommand("effect give @p resistance 999999 4 true");
+		server.runCommand("effect give @p regeneration 999999 4 true");
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Sukuna boss = (Sukuna)RaidBosses.type(RaidBosses.SUKUNA).create(player.level(), EntitySpawnReason.COMMAND);
+			boss.snapTo(0.5, -60, -12.5, 0.0F, 0.0F);
+			boss.configure(1, null);
+			player.level().addFreshEntity(boss);
+			boss.runMechanic("sukuna_mahoraga", player);
+		});
+		context.waitTicks(40);
+		String guard = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			Sukuna boss = sukuna(player);
+			Mahoraga m = boss.mahoraga();
+			if (m == null || !boss.mahoragaUp()) {
+				return "Mahoraga should rise";
+			}
+			float before = boss.getHealth();
+			boss.hurtServer(level, level.damageSources().playerAttack(player), 500.0F);
+			if (boss.getHealth() < before) {
+				return "Sukuna should take no damage while Mahoraga stands";
+			}
+			m.setInvulnerableTime(0);
+			float a = m.getHealth();
+			m.hurtServer(level, level.damageSources().playerAttack(player), 400.0F);
+			m.setHealth(a);
+			return "";
+		});
+		require(guard.isEmpty(), guard);
+		// strikes for a whole analysis: the wheel turns once, toward strikes, and strikes do less afterwards (a hit in the same tick as
+		// the last one bounces off the hurt cooldown)
+		context.waitTicks(20);
+		float fresh = server.computeOnServer(s -> strike(connection.getServerPlayer()));
+		require(fresh > 0.0F, "a plain strike should hurt Mahoraga");
+		context.waitTicks(20);
+		for (int t = 0; t < Mahoraga.ADAPT_TICKS + 20; t += 20) {
+			server.runOnServer(s -> strike(connection.getServerPlayer()));
+			context.waitTicks(20);
+		}
+		String adapted = server.computeOnServer(s -> {
+			Mahoraga m = sukuna(connection.getServerPlayer()).mahoraga();
+			if (m == null || m.turns() < 1 || m.adaptations("strike") < 1) {
+				return "Mahoraga should adapt to strikes, turns " + (m == null ? -1 : m.turns());
+			}
+			float now = strike(connection.getServerPlayer());
+			return now < fresh * 0.8F ? "" : "an adapted strike should do less: " + now + " vs " + fresh;
+		});
+		require(adapted.isEmpty(), adapted);
+		context.takeScreenshot("sukuna_mahoraga");
+		String down = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Sukuna boss = sukuna(player);
+			boss.mahoraga().kill(player.level());
+			return boss.mahoragaUp() ? "Mahoraga should be gone" : "";
+		});
+		require(down.isEmpty(), down);
+		// the heal breaks under enough damage, and he still has the other one
+		String reverse = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			ServerLevel level = player.level();
+			Sukuna boss = sukuna(player);
+			boss.setHealth(boss.getMaxHealth() * 0.5F);
+			if (!boss.runReverse() || !boss.reversing()) {
+				return "the Reverse Cursed Technique should start";
+			}
+			boss.setInvulnerableTime(0);
+			boss.hurtServer(level, level.damageSources().playerAttack(player), boss.divisor() * boss.getMaxHealth() * 0.1F);
+			return "";
+		});
+		require(reverse.isEmpty(), reverse);
+		context.waitTicks(3);
+		String broken = server.computeOnServer(s -> {
+			Sukuna boss = sukuna(connection.getServerPlayer());
+			return !boss.reversing() && boss.healsLeft() == 1 && boss.getHealth() < boss.getMaxHealth() * 0.45F ? ""
+				: "the heal should break: reversing " + boss.reversing() + ", health " + boss.getHealth();
+		});
+		require(broken.isEmpty(), broken);
+		// the domain: inside a Simple Domain nothing lands, outside the sure hit does (regeneration would hide it). His patterns stop
+		// first and the ones under way land (a Cleave knocked the player out of the circle); the domain runs on the scheduler anyway
+		server.runOnServer(s -> sukuna(connection.getServerPlayer()).setNoAi(true));
+		context.waitTicks(80);
+		server.runCommand("effect clear @p regeneration");
+		Vec3[] spots = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			Sukuna boss = sukuna(player);
+			boss.runMechanic("sukuna_domain", player);
+			List<Domains.Domain> open = Domains.active();
+			return open.isEmpty() ? null : new Vec3[] {open.getLast().center(), boss.mechanicSpots().getFirst()};
+		});
+		require(spots != null, "the Malevolent Shrine should open a domain");
+		Vec3 center = spots[0];
+		Vec3 shelter = spots[1];
+		List<Vec3> shelters = server.computeOnServer(s -> sukuna(connection.getServerPlayer()).mechanicSpots());
+		require(shelter.subtract(center).horizontalDistance() < Sukuna.DOMAIN_RADIUS, "Simple Domains stand inside the domain");
+		// exposed: inside the edge but clear of every circle; escaped: past the edge
+		Vec3 exposed = null;
+		// past the shrine (13 blocks wide), inside the edge
+		for (int r = 10; r < (int)Sukuna.DOMAIN_RADIUS - 2 && exposed == null; r++) {
+			for (int k = 0; k < 16 && exposed == null; k++) {
+				Vec3 p = center.add(Math.cos(k * Math.PI / 8) * r, 0, Math.sin(k * Math.PI / 8) * r);
+				if (shelters.stream().allMatch(q -> q.subtract(p).horizontalDistance() > Sukuna.SIMPLE_DOMAIN_RADIUS + 1)) {
+					exposed = p;
+				}
+			}
+		}
+		require(exposed != null, "there should be open ground in the domain");
+		final Vec3 in = exposed;
+		final Vec3 out = center.add(in.subtract(center).multiply(1, 0, 1).normalize().scale(Sukuna.DOMAIN_RADIUS + 3));
+		float yaw = (float)Math.toDegrees(Math.atan2(-(center.x - shelter.x), center.z - shelter.z));
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			player.teleportTo(player.level(), shelter.x, shelter.y, shelter.z, Set.of(), yaw, -15.0F, true);
+			player.setHealth(player.getMaxHealth());
+		});
+		context.waitTicks(60);
+		String inside = server.computeOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			float health = player.getHealth() / player.getMaxHealth();
+			var last = player.getLastDamageSource();
+			return health > 0.99F ? "" : "a Simple Domain should keep the sure hit off, health " + health + ", hit by " + (last == null ? "?" : last.getMsgId())
+				+ ", " + player.position().subtract(shelter).horizontalDistance() + " from the circle";
+		});
+		require(inside.isEmpty(), inside);
+		float outYaw = (float)Math.toDegrees(Math.atan2(-(center.x - out.x), center.z - out.z));
+		server.runOnServer(s -> connection.getServerPlayer().teleportTo(connection.getServerPlayer().level(), out.x, out.y, out.z, Set.of(), outYaw, -20.0F, true));
+		context.waitTicks(25);
+		float escaped = server.computeOnServer(s -> connection.getServerPlayer().getHealth() / connection.getServerPlayer().getMaxHealth());
+		require(escaped > 0.99F, "past the domain's edge the sure hit should not reach, health " + escaped);
+		// from past the edge (the title has faded by now): the shrine and the red edge, the world outside as it was
+		context.takeScreenshot("sukuna_domain_outside");
+		float inYaw = (float)Math.toDegrees(Math.atan2(-(center.x - in.x), center.z - in.z));
+		server.runOnServer(s -> connection.getServerPlayer().teleportTo(connection.getServerPlayer().level(), in.x, in.y, in.z, Set.of(), inYaw, -20.0F, true));
+		context.waitTicks(25);
+		// inside: the darkened world, the blood-red fog, the name and "sure hit"
+		context.takeScreenshot("sukuna_domain_inside");
+		float exposedHealth = server.computeOnServer(s -> connection.getServerPlayer().getHealth() / connection.getServerPlayer().getMaxHealth());
+		require(exposedHealth < 0.99F, "in the domain outside a Simple Domain the sure hit should land, health " + exposedHealth);
+		server.runOnServer(s -> connection.getServerPlayer().teleportTo(out.x, out.y, out.z));
+		context.waitTicks(10);
+		server.runOnServer(s -> connection.getServerPlayer().setHealth(connection.getServerPlayer().getMaxHealth()));
+		context.waitTicks(90);
+		boolean closed = server.computeOnServer(s -> Domains.active().isEmpty());
+		require(closed, "the domain should close with the mechanic");
+		server.runCommand("kill @e[type=!player]");
+		server.runCommand("tp @p 0.5 -60 0.5 180 0");
+		context.waitTicks(10);
+	}
+
+
+	private static Sukuna sukuna(final ServerPlayer player) {
+		return player.level().getEntitiesOfClass(Sukuna.class, player.getBoundingBox().inflate(60), Sukuna::isAlive).getFirst();
+	}
+
+	/** A plain strike on Sukuna's Mahoraga; returns the health it took off (the health is put back). */
+	private static float strike(final ServerPlayer player) {
+		Mahoraga m = sukuna(player).mahoraga();
+		m.setInvulnerableTime(0);
+		float before = m.getHealth();
+		m.hurtServer(player.level(), player.level().damageSources().playerAttack(player), 300.0F);
+		float taken = before - m.getHealth();
+		m.setHealth(before);
+		return taken;
 	}
 
 	// ------------------------------------------------------------------ raids
@@ -663,18 +864,28 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			require(sets.get(i).tier() == 1 + i / 3, sets.get(i).id() + " should be tier " + (1 + i / 3) + ", is " + sets.get(i).tier());
 			BossDef boss = sets.get(i).boss();
 			float normal = Accessories.dropChance(boss, RaidDifficulty.NORMAL);
-			require(Math.abs(normal - new float[] {0.15F, 0.08F, 0.015F}[sets.get(i).tier() - 1]) < 1.0E-4F, boss.id() + " Normal drop chance " + normal);
+			require(Math.abs(normal - new float[] {0.15F, 0.08F, 0.015F, 0.03F}[sets.get(i).tier() - 1]) < 1.0E-4F, boss.id() + " Normal drop chance " + normal);
 			require(Accessories.dropSets(boss, RaidDifficulty.NORMAL).equals(List.of(sets.get(i))), boss.id() + " drops its own set on Normal");
 			for (RaidDifficulty difficulty : List.of(RaidDifficulty.HEROIC, RaidDifficulty.NIGHTMARE)) {
 				List<AccessorySet> from = Accessories.dropSets(boss, difficulty);
+				if (sets.get(i).tier() == Accessories.PEAK_TIER) {
+					require(from.equals(List.of(sets.get(i))), boss.id() + " drops only its own peak set on " + difficulty + ": " + from);
+					continue;
+				}
 				require(!from.isEmpty() && from.stream().allMatch(set -> set.tier() == Accessories.TOP_TIER), boss.id() + " drops only tier 3 on " + difficulty + ": " + from);
 				require(sets.get(i).tier() != Accessories.TOP_TIER || from.equals(List.of(sets.get(i))), boss.id() + " keeps its own tier 3 set on " + difficulty);
 			}
 		}
+		// the peak set (Sukuna) rises with the difficulty and leaves the ladder's chances alone
+		require(Accessories.dropChance(RaidBosses.SUKUNA, RaidDifficulty.HEROIC) > Accessories.dropChance(RaidBosses.SUKUNA, RaidDifficulty.NORMAL)
+			&& Accessories.dropChance(RaidBosses.SUKUNA, RaidDifficulty.NIGHTMARE) > Accessories.dropChance(RaidBosses.SUKUNA, RaidDifficulty.HEROIC),
+			"Sukuna's set drops more often on harder difficulties");
+		require(Math.abs(Accessories.dropChance(RaidBosses.AETHRYX, RaidDifficulty.NIGHTMARE) - 0.09F) < 1.0E-4F
+			&& Math.abs(Accessories.dropChance(RaidBosses.VERDESSA, RaidDifficulty.HEROIC) - 0.025F) < 1.0E-4F, "a peak boss must not move the ladder's chances");
 		// the tier 3 ladder: Normal Raijin..Aethryx < Heroic Verdessa < ... < Heroic Aethryx < Nightmare Verdessa < ... < Nightmare Aethryx
 		float last = Accessories.dropChance(RaidBosses.AETHRYX, RaidDifficulty.NORMAL);
 		for (RaidDifficulty difficulty : List.of(RaidDifficulty.HEROIC, RaidDifficulty.NIGHTMARE)) {
-			for (AccessorySet set : sets) {
+			for (AccessorySet set : sets.stream().filter(set -> set.tier() <= Accessories.TOP_TIER).toList()) {
 				float chance = Accessories.dropChance(set.boss(), difficulty);
 				require(chance > last, difficulty + " " + set.boss().id() + " (" + chance + ") should drop more often than the step before (" + last + ")");
 				last = chance;
@@ -684,14 +895,17 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			"accessory orbs: none on Normal, 1 on Heroic, 2 on Nightmare");
 		// inheritance tickets: tier 2 bosses give the tier 1 ticket, tier 3 bosses the tier 2 one, more often on harder difficulties
 		require(Accessories.ticketDrop(RaidBosses.VERDESSA) == null && Accessories.ticketDrop(RaidBosses.NEFREKHET) == ModItems.ACCESSORY_INHERIT_1
-			&& Accessories.ticketDrop(RaidBosses.AETHRYX) == ModItems.ACCESSORY_INHERIT_2, "inheritance tickets by boss tier");
+			&& Accessories.ticketDrop(RaidBosses.AETHRYX) == ModItems.ACCESSORY_INHERIT_2 && Accessories.ticketDrop(RaidBosses.SUKUNA) == ModItems.ACCESSORY_INHERIT_3,
+			"inheritance tickets by boss tier");
 		require(Accessories.ticketChance(RaidDifficulty.NORMAL) > 0 && Accessories.ticketChance(RaidDifficulty.HEROIC) > Accessories.ticketChance(RaidDifficulty.NORMAL)
 			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) > Accessories.ticketChance(RaidDifficulty.HEROIC)
 			&& Accessories.ticketChance(RaidDifficulty.NIGHTMARE) <= 0.10F, "ticket chances rise with difficulty and stay at 10% or less");
 		for (AccessorySet set : sets) {
 			for (AccessorySlot slot : AccessorySlot.values()) {
 				List<AccessoryDef> next = Accessories.inheritTargets(Accessories.def(set, slot));
-				require(set.tier() == Accessories.TOP_TIER ? next.isEmpty() : next.size() == 3 && next.stream().allMatch(t -> t.set().tier() == set.tier() + 1 && t.slot() == slot),
+				// tier 1 and 2 into the three sets above, tier 3 into the peak set (Sukuna), the peak set nowhere
+				int expected = set.tier() == Accessories.PEAK_TIER ? 0 : set.tier() == Accessories.TOP_TIER ? 1 : 3;
+				require(next.size() == expected && next.stream().allMatch(t -> t.set().tier() == set.tier() + 1 && t.slot() == slot),
 					set.id() + " " + slot + " inherits into " + next.stream().map(AccessoryDef::id).toList());
 			}
 		}
@@ -1245,6 +1459,94 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("raid_" + def.id());
 			clearBoss(server, slot);
 		}
+		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5");
+		context.waitTicks(10);
+		sukunaPatternShots(context, server, connection);
+	}
+
+	/**
+	 * Every pattern of Sukuna's in his arena, photographed (HUD hidden) when its drawn look ({@code client/vfx/CurseLooks}) shows best:
+	 * {@code sukuna_<pattern>[_<n>]}, then the domain from where the party arrives. He stands still (no AI) and aims at an armor stand
+	 * off to one side between him and the camera, so the cuts cross the picture.
+	 */
+	private static void sukunaPatternShots(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		final int slot = 60;
+		stageBoss(server, connection, RaidBosses.SUKUNA, slot);
+		context.waitTicks(20);
+		connection.waitForChunksRender();
+		context.runOnClient(minecraft -> {
+			if (!minecraft.gui.hud.isHidden()) {
+				minecraft.gui.hud.toggle();
+			}
+		});
+		Vec3 home = server.computeOnServer(s -> {
+			ServerLevel level = RaidDimension.level(s);
+			Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+			Vec3 b = boss.position();
+			Vec3 toCam = connection.getServerPlayer().position().subtract(b).multiply(1, 0, 1).normalize();
+			Vec3 side = new Vec3(-toCam.z, 0, toCam.x);
+			ArmorStand stand = EntityTypes.ARMOR_STAND.create(level, EntitySpawnReason.COMMAND);
+			Vec3 at = b.add(toCam.scale(8)).add(side.scale(5));
+			stand.snapTo(at.x, b.y, at.z, 0.0F, 0.0F);
+			stand.addTag("sukuna_target");
+			level.addFreshEntity(stand);
+			// the camera a dozen blocks off, to the other side, a little above, looking between him and the stand
+			Vec3 cam = b.add(toCam.scale(11)).add(side.scale(-6)).add(0, 4, 0);
+			Vec3 look = b.add(at).scale(0.5).add(0, 1.5, 0).subtract(cam);
+			float yaw = (float)Math.toDegrees(Math.atan2(-look.x, look.z));
+			float pitch = (float)-Math.toDegrees(Math.atan2(look.y, look.horizontalDistance()));
+			ServerPlayer player = connection.getServerPlayer();
+			player.teleportTo(level, cam.x, cam.y, cam.z, Set.of(), yaw, pitch, true);
+			player.getAbilities().flying = true;
+			player.onUpdateAbilities();
+			return b;
+		});
+		// pattern -> ticks after it starts to take each picture (cuts land at 20-30, Fuga's bow, arrow and blast, the chant and the cut)
+		Map<String, int[]> shots = new LinkedHashMap<>();
+		shots.put("dismantle", new int[] {27});
+		shots.put("cleave", new int[] {24});
+		shots.put("black_flash", new int[] {28});
+		shots.put("spiderweb", new int[] {22, 32});
+		shots.put("dismantle_storm", new int[] {36});
+		shots.put("kamutoke", new int[] {33});
+		shots.put("fuga", new int[] {26, 45, 56});
+		shots.put("world_slash", new int[] {40, 62});
+		for (Map.Entry<String, int[]> shot : shots.entrySet()) {
+			server.runOnServer(s -> {
+				ServerLevel level = RaidDimension.level(s);
+				Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+				boss.teleportTo(home.x, home.y, home.z);
+				LivingEntity target = level.getEntitiesOfClass(ArmorStand.class, boss.getBoundingBox().inflate(40), a -> a.entityTags().contains("sukuna_target")).getFirst();
+				boss.getLookControl().setLookAt(target);
+				boss.runPattern(shot.getKey(), target);
+			});
+			int waited = 0;
+			int[] at = shot.getValue();
+			for (int i = 0; i < at.length; i++) {
+				context.waitTicks(at[i] - waited);
+				waited = at[i];
+				context.takeScreenshot("sukuna_" + shot.getKey() + (at.length > 1 ? "_" + (i + 1) : ""));
+			}
+			// let it play out before the next one
+			context.waitTicks(Math.max(10, 110 - waited));
+		}
+		server.runOnServer(s -> {
+			ServerLevel level = RaidDimension.level(s);
+			Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+			boss.teleportTo(home.x, home.y, home.z);
+			boss.runMechanic("sukuna_domain", connection.getServerPlayer());
+		});
+		context.waitTicks(80);
+		context.takeScreenshot("sukuna_domain_arena");
+		context.waitTicks(130);
+		context.runOnClient(minecraft -> {
+			if (minecraft.gui.hud.isHidden()) {
+				minecraft.gui.hud.toggle();
+			}
+		});
+		server.runOnServer(s -> RaidDimension.level(s).getEntitiesOfClass(ArmorStand.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60),
+			a -> a.entityTags().contains("sukuna_target")).forEach(net.minecraft.world.entity.Entity::discard));
+		clearBoss(server, slot);
 		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5");
 		context.waitTicks(10);
 	}

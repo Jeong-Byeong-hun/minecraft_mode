@@ -1,5 +1,8 @@
 package com.minecraftmode.economy;
 
+import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.accessory.AccessorySet;
+import com.minecraftmode.accessory.AccessorySlot;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.ConsumableDef;
 import com.minecraftmode.consumable.Consumables;
@@ -16,6 +19,7 @@ import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.loot.Coins;
 import com.minecraftmode.loot.GearIndex;
 import com.minecraftmode.loot.GearShop;
+import com.minecraftmode.raid.RaidBosses;
 import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -311,6 +315,7 @@ public final class ShopOffers {
 				buy(ModItems.COPPER_COIN, 2, Items.WHEAT_SEEDS, 16)
 			), Crops.trades()).flatMap(List::stream).toList();
 			case BUILDER -> builder();
+			case CURSED_RELICS -> relics();
 			case FISHMONGER -> Stream.of(List.of(
 				sell(Items.COD, 12, ModItems.COPPER_COIN, 1),
 				sell(Items.SALMON, 12, ModItems.COPPER_COIN, 1),
@@ -454,6 +459,26 @@ public final class ShopOffers {
 			list.add(buy(ModItems.SILVER_COIN, 4, fine, 64));
 		}
 		return List.copyOf(list);
+	}
+
+	/** Fingers Sukuna's relic exchange asks for one of his accessories, and for the tier 4 inheritance ticket. */
+	public static final int RELIC_PIECE_FINGERS = 15;
+	public static final int RELIC_TICKET_FINGERS = 10;
+
+	/**
+	 * Sukuna's relic exchange: every piece of his set (options roll when it first sits in an inventory) and the ticket that inherits
+	 * a tier 3 piece into it, for his fingers. The bad-luck protection of a raid whose pieces rarely drop.
+	 */
+	private static List<Trade> relics() {
+		List<Trade> list = new ArrayList<>();
+		AccessorySet set = Accessories.setOf(RaidBosses.SUKUNA);
+		if (set != null) {
+			for (AccessorySlot slot : AccessorySlot.values()) {
+				list.add(buy(ModItems.SUKUNA_FINGER, RELIC_PIECE_FINGERS, Accessories.item(Accessories.def(set, slot)), 1));
+			}
+		}
+		list.add(buy(ModItems.SUKUNA_FINGER, RELIC_TICKET_FINGERS, ModItems.ACCESSORY_INHERIT_3, 1));
+		return list;
 	}
 
 	private static Trade sell(final ItemLike goods, final int goodsCount, final ItemLike coin, final int coinCount) {

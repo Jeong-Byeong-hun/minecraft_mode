@@ -107,8 +107,60 @@ public final class CreaturePainter {
 				}
 			}
 		}
+		for (PlacedBox p : plan.pack()) {
+			if (!p.part().marks.isEmpty()) {
+				marks(p, plan.skin(p.part()), tex, glow);
+			}
+		}
 		eyeJobs.forEach(Runnable::run);
 		return new Painted(tex, glow);
+	}
+
+	/** Paints the part's {@link BodyPlan.Mark}s on this box: ink keeps the light already painted under it, glowing marks stay exact. */
+	private static void marks(final PlacedBox p, final Skin skin, final BufferedImage tex, final BufferedImage glow) {
+		BodyPlan.Box b = p.box();
+		int[][] faces = faces(p);
+		float baseLum = luminance(skin.base());
+		for (int f = 0; f < 6; f++) {
+			int[] face = faces[f];
+			for (int y = 0; y < face[3]; y++) {
+				for (int x = 0; x < face[2]; x++) {
+					int px = face[0] + x;
+					int py = face[1] + y;
+					if (px >= tex.getWidth() || py >= tex.getHeight()) {
+						continue;
+					}
+					// the pixel's centre in the part's own units, the same unwrap as WorldBox.surface
+					float u = switch (f) {
+						case RIGHT -> b.z() + b.d() - (x + 0.5F);
+						case LEFT -> b.z() + x + 0.5F;
+						case BACK -> b.x() + b.w() - (x + 0.5F);
+						default -> b.x() + x + 0.5F;
+					};
+					float v = switch (f) {
+						case TOP -> b.z() + b.d() - (y + 0.5F);
+						case BOTTOM -> b.z() + y + 0.5F;
+						default -> b.y() + y + 0.5F;
+					};
+					for (BodyPlan.Mark m : p.part().marks) {
+						if (!m.on(f) || !m.covers(u, v)) {
+							continue;
+						}
+						if (m.glow()) {
+							tex.setRGB(px, py, 0xFF000000 | m.rgb());
+							glow.setRGB(px, py, 0xFF000000 | m.rgb());
+						} else {
+							float shade = Math.max(0.6F, Math.min(1.3F, luminance(tex.getRGB(px, py) & 0xFFFFFF) / Math.max(0.05F, baseLum)));
+							tex.setRGB(px, py, 0xFF000000 | scale(m.rgb(), shade));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private static float luminance(final int rgb) {
+		return (0.299F * ((rgb >> 16) & 0xFF) + 0.587F * ((rgb >> 8) & 0xFF) + 0.114F * (rgb & 0xFF)) / 255.0F;
 	}
 
 	/** Light of one pixel within its box: the face's direction, a per-box falloff and a soft bevel. */

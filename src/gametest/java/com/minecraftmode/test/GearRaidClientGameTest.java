@@ -98,6 +98,9 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.Item;
@@ -189,12 +192,6 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		List<ShopOffers.Trade> relics = ShopOffers.trades(ShopType.CURSED_RELICS);
 		require(relics.size() == Accessories.SLOTS + 1 && relics.stream().allMatch(t -> t.cost().asItem() == ModItems.SUKUNA_FINGER) && ShopType.CURSED_RELICS.fixedPrices(),
 			"the relic exchange should sell " + (Accessories.SLOTS + 1) + " things for fingers, got " + relics.size());
-		ItemStack bound = new ItemStack(ModItems.SUKUNA_FINGER, 20);
-		bound.set(ModDataComponents.BOUND, Unit.INSTANCE);
-		ItemStack boundOrb = new ItemStack(ModItems.ACCESSORY_ORB, 20);
-		boundOrb.set(ModDataComponents.BOUND, Unit.INSTANCE);
-		require(new ItemCost(ModItems.SUKUNA_FINGER, ShopOffers.RELIC_PIECE_FINGERS).test(bound) && !new ItemCost(ModItems.ACCESSORY_ORB, 1).test(boundOrb),
-			"bound fingers pay at the relic exchange, other bound items pay nowhere");
 		require(Raids.fingers(RaidDifficulty.NORMAL) == 1 && Raids.fingers(RaidDifficulty.NIGHTMARE) == 3 && RaidBosses.pastCap(RaidBosses.SUKUNA)
 			&& !RaidBosses.pastCap(RaidBosses.AETHRYX), "fingers 1/2/3 by difficulty, only Sukuna past the cap");
 		// every bracket offers one weapon (some classes have none at Lv 100) and one armor piece per class
@@ -513,6 +510,15 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 	 * Technique breaks under enough damage, and the domain's sure hit spares only those in a Simple Domain.
 	 */
 	private static void checkSukuna(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		// item stacks need a world: bound fingers pay at the relic exchange, other bound items pay nowhere
+		boolean pays = server.computeOnServer(s -> {
+			ItemStack bound = new ItemStack(ModItems.SUKUNA_FINGER, 20);
+			bound.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			ItemStack boundOrb = new ItemStack(ModItems.ACCESSORY_ORB, 20);
+			boundOrb.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			return new ItemCost(ModItems.SUKUNA_FINGER, ShopOffers.RELIC_PIECE_FINGERS).test(bound) && !new ItemCost(ModItems.ACCESSORY_ORB, 1).test(boundOrb);
+		});
+		require(pays, "bound fingers pay at the relic exchange, other bound items pay nowhere");
 		server.runCommand("tp @p 0.5 -60 0.5 180 0");
 		server.runCommand("gamemode survival @p");
 		// both fight on (their adaptation and heal run in their AI step): the player shrugs off what is not raid damage
@@ -1453,6 +1459,94 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("raid_" + def.id());
 			clearBoss(server, slot);
 		}
+		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5");
+		context.waitTicks(10);
+		sukunaPatternShots(context, server, connection);
+	}
+
+	/**
+	 * Every pattern of Sukuna's in his arena, photographed (HUD hidden) when its drawn look ({@code client/vfx/CurseLooks}) shows best:
+	 * {@code sukuna_<pattern>[_<n>]}, then the domain from where the party arrives. He stands still (no AI) and aims at an armor stand
+	 * off to one side between him and the camera, so the cuts cross the picture.
+	 */
+	private static void sukunaPatternShots(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		final int slot = 60;
+		stageBoss(server, connection, RaidBosses.SUKUNA, slot);
+		context.waitTicks(20);
+		connection.waitForChunksRender();
+		context.runOnClient(minecraft -> {
+			if (!minecraft.gui.hud.isHidden()) {
+				minecraft.gui.hud.toggle();
+			}
+		});
+		Vec3 home = server.computeOnServer(s -> {
+			ServerLevel level = RaidDimension.level(s);
+			Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+			Vec3 b = boss.position();
+			Vec3 toCam = connection.getServerPlayer().position().subtract(b).multiply(1, 0, 1).normalize();
+			Vec3 side = new Vec3(-toCam.z, 0, toCam.x);
+			ArmorStand stand = EntityTypes.ARMOR_STAND.create(level, EntitySpawnReason.COMMAND);
+			Vec3 at = b.add(toCam.scale(8)).add(side.scale(5));
+			stand.snapTo(at.x, b.y, at.z, 0.0F, 0.0F);
+			stand.addTag("sukuna_target");
+			level.addFreshEntity(stand);
+			// the camera a dozen blocks off, to the other side, a little above, looking between him and the stand
+			Vec3 cam = b.add(toCam.scale(11)).add(side.scale(-6)).add(0, 4, 0);
+			Vec3 look = b.add(at).scale(0.5).add(0, 1.5, 0).subtract(cam);
+			float yaw = (float)Math.toDegrees(Math.atan2(-look.x, look.z));
+			float pitch = (float)-Math.toDegrees(Math.atan2(look.y, look.horizontalDistance()));
+			ServerPlayer player = connection.getServerPlayer();
+			player.teleportTo(level, cam.x, cam.y, cam.z, Set.of(), yaw, pitch, true);
+			player.getAbilities().flying = true;
+			player.onUpdateAbilities();
+			return b;
+		});
+		// pattern -> ticks after it starts to take each picture (cuts land at 20-30, Fuga's bow, arrow and blast, the chant and the cut)
+		Map<String, int[]> shots = new LinkedHashMap<>();
+		shots.put("dismantle", new int[] {27});
+		shots.put("cleave", new int[] {24});
+		shots.put("black_flash", new int[] {28});
+		shots.put("spiderweb", new int[] {22, 32});
+		shots.put("dismantle_storm", new int[] {36});
+		shots.put("kamutoke", new int[] {33});
+		shots.put("fuga", new int[] {26, 45, 56});
+		shots.put("world_slash", new int[] {40, 62});
+		for (Map.Entry<String, int[]> shot : shots.entrySet()) {
+			server.runOnServer(s -> {
+				ServerLevel level = RaidDimension.level(s);
+				Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+				boss.teleportTo(home.x, home.y, home.z);
+				LivingEntity target = level.getEntitiesOfClass(ArmorStand.class, boss.getBoundingBox().inflate(40), a -> a.entityTags().contains("sukuna_target")).getFirst();
+				boss.getLookControl().setLookAt(target);
+				boss.runPattern(shot.getKey(), target);
+			});
+			int waited = 0;
+			int[] at = shot.getValue();
+			for (int i = 0; i < at.length; i++) {
+				context.waitTicks(at[i] - waited);
+				waited = at[i];
+				context.takeScreenshot("sukuna_" + shot.getKey() + (at.length > 1 ? "_" + (i + 1) : ""));
+			}
+			// let it play out before the next one
+			context.waitTicks(Math.max(10, 110 - waited));
+		}
+		server.runOnServer(s -> {
+			ServerLevel level = RaidDimension.level(s);
+			Sukuna boss = level.getEntitiesOfClass(Sukuna.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60)).getFirst();
+			boss.teleportTo(home.x, home.y, home.z);
+			boss.runMechanic("sukuna_domain", connection.getServerPlayer());
+		});
+		context.waitTicks(80);
+		context.takeScreenshot("sukuna_domain_arena");
+		context.waitTicks(130);
+		context.runOnClient(minecraft -> {
+			if (minecraft.gui.hud.isHidden()) {
+				minecraft.gui.hud.toggle();
+			}
+		});
+		server.runOnServer(s -> RaidDimension.level(s).getEntitiesOfClass(ArmorStand.class, new net.minecraft.world.phys.AABB(slot * 1024 - 60, 0, -60, slot * 1024 + 60, 200, 60),
+			a -> a.entityTags().contains("sukuna_target")).forEach(net.minecraft.world.entity.Entity::discard));
+		clearBoss(server, slot);
 		server.runCommand("execute in minecraft:overworld run tp @p 0.5 -60 0.5");
 		context.waitTicks(10);
 	}

@@ -55,21 +55,30 @@ public class SkillVfx extends Entity {
 	public static void spawn(
 		final SkillContext ctx, final SkillLook look, final Vec3 at, final Vec3 reach, final float size, final float arg, final int ticks, final @Nullable Entity holder
 	) {
+		spawn(ctx.level, ctx.caster, look, at, reach, size, arg, ticks, ctx.fx.color(), holder);
+	}
+
+	/**
+	 * As {@link #spawn(SkillContext, SkillLook, Vec3, Vec3, float, float, int, Entity)} for a look shown by anything, not only a skill:
+	 * {@code source} gives its facing (a raid boss's patterns), {@code color} its tint.
+	 */
+	public static void spawn(final ServerLevel level, final Entity source, final SkillLook look, final Vec3 at, final Vec3 reach, final float size, final float arg,
+		final int ticks, final int color, final @Nullable Entity holder) {
 		if (look == SkillLook.NONE || ticks <= 0) {
 			return;
 		}
-		SkillVfx vfx = new SkillVfx(ModEntities.SKILL_VFX, ctx.level);
+		SkillVfx vfx = new SkillVfx(ModEntities.SKILL_VFX, level);
 		vfx.setPos(at.x, at.y, at.z);
-		vfx.setYRot(ctx.caster.getYRot());
-		vfx.setXRot(ctx.caster.getXRot());
+		vfx.setYRot(source.getYRot());
+		vfx.setXRot(source.getXRot());
 		vfx.entityData.set(DATA_LOOK, look.ordinal());
-		vfx.entityData.set(DATA_COLOR, ctx.fx.color());
+		vfx.entityData.set(DATA_COLOR, color);
 		vfx.entityData.set(DATA_SIZE, size);
 		vfx.entityData.set(DATA_TICKS, ticks);
 		vfx.entityData.set(DATA_REACH, new Vector3f((float)reach.x, (float)reach.y, (float)reach.z));
 		vfx.entityData.set(DATA_ARG, arg);
 		vfx.entityData.set(DATA_ANCHOR, look.anchored() && holder != null ? holder.getId() : -1);
-		ctx.level.addFreshEntity(vfx);
+		level.addFreshEntity(vfx);
 	}
 
 	public SkillLook look() {

@@ -10,6 +10,8 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.skill.Actions;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
+import com.minecraftmode.job.skill.SkillVfx;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -163,7 +165,8 @@ public class Mahoraga extends CreatureMob {
 				return;
 			}
 			Attacks.hitAll(this, Attacks.inCone(level, origin, yaw, 7.5, 70), Attacks.damage(this, 1.6F), null);
-			new Fx(Fx.Kind.SLASH, WHITE).arc(level, this.position().add(0, 2.0, 0), yaw, 5.0, 140);
+			// the Sword of Extermination's sweep, drawn as the skills' blade arc (client/vfx/BladeLooks), white
+			SkillVfx.spawn(level, this, SkillLook.SLASH, this.position(), Vec3.directionFromRotation(0.0F, yaw).scale(7.5), 7.5F, 140.0F, SkillLook.SLASH.ticks(), WHITE, null);
 		});
 	}
 

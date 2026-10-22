@@ -4,9 +4,10 @@ import com.minecraftmode.domain.DomainStyle;
 import com.minecraftmode.domain.Domains;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.combat.Attacks;
-import com.minecraftmode.entity.combat.MobProjectile;
 import com.minecraftmode.entity.combat.Telegraph;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
+import com.minecraftmode.job.skill.SkillVfx;
 import com.minecraftmode.raid.Arenas;
 import com.minecraftmode.raid.RaidDamage;
 import com.minecraftmode.registry.ModEntities;
@@ -20,13 +21,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -45,9 +45,7 @@ import org.jspecify.annotations.Nullable;
  * twice a fight at most, that enough damage breaks.
  */
 public class Sukuna extends RaidBoss {
-	private static final int SLASH = 0xF2F2FA;
 	private static final int BLOOD = 0xC0182A;
-	private static final int FLAME = 0xFF8A20;
 	private static final int SIMPLE_DOMAIN = 0x40A0FF;
 	/** Dismantle's reach, and what is left of it there. */
 	static final double DISMANTLE_REACH = 24.0;
@@ -163,9 +161,15 @@ public class Sukuna extends RaidBoss {
 				float share = falloff <= 0 ? 1.0F : (float)Math.max(DISMANTLE_FLOOR, 1.0 - (1.0 - DISMANTLE_FLOOR) * d / falloff);
 				Attacks.hit(this, e, this.dmg(power) * share, magic);
 			}
-			new Fx(Fx.Kind.SLASH, SLASH).line(level, from.add(0, 1.2, 0), to.add(0, 1.2, 0), 0.7);
+			this.look(level, SkillLook.DISMANTLE, from, to.subtract(from), (float)width, 0.0F, SkillLook.DISMANTLE.ticks(), null);
 			this.sound(level, from.lerp(to, 0.5), SoundEvents.PLAYER_ATTACK_SWEEP, 1.5F, 1.6F);
 		});
+	}
+
+	/** Shows a drawn look of his ({@code client/vfx/CurseLooks}) at {@code at}, pointing along {@code reach}, held by {@code holder} if it follows one. */
+	private void look(final ServerLevel level, final SkillLook look, final Vec3 at, final Vec3 reach, final float size, final float arg, final int ticks,
+		final @Nullable Entity holder) {
+		SkillVfx.spawn(level, this, look, at, reach, size, arg, ticks, BLOOD, holder);
 	}
 
 	/** Dismantle: three unseen slashes fanned at the target, weaker the further they fly. */
@@ -193,9 +197,7 @@ public class Sukuna extends RaidBoss {
 			for (LivingEntity e : Attacks.inCone(level, origin, yaw, 6.5, 60)) {
 				RaidDamage.portion(level, e, this, share);
 			}
-			Fx cut = new Fx(Fx.Kind.SLASH, BLOOD);
-			cut.arc(level, this.position().add(0, 2.4, 0), yaw, 4.5, 120);
-			cut.arc(level, this.position().add(0, 1.4, 0), yaw, 4.0, 120);
+			this.look(level, SkillLook.CLEAVE_CUTS, origin, Vec3.directionFromRotation(0.0F, yaw).scale(6.5), 6.5F, 120.0F, SkillLook.CLEAVE_CUTS.ticks(), null);
 			this.sound(level, SoundEvents.PLAYER_ATTACK_STRONG, 2.0F, 0.6F);
 		});
 	}
@@ -209,10 +211,7 @@ public class Sukuna extends RaidBoss {
 		Telegraph.line(level, from, at, 2.0, 22, Telegraph.RED, () -> {
 		});
 		this.circle(level, at, 2.8, 26, Telegraph.RED, 2.2F, e -> Attacks.knock(e, at, 1.8, 0.6), () -> {
-			Vec3 c = at.add(0, 1.2, 0);
-			new Fx(Fx.Kind.BOLT, 0x101014).burst(level, c, 24, 1.5, 0.4);
-			new Fx(Fx.Kind.BOLT, BLOOD).burst(level, c, 16, 1.2, 0.3);
-			level.sendParticles(ParticleTypes.SONIC_BOOM, c.x, c.y, c.z, 1, 0, 0, 0, 0);
+			this.look(level, SkillLook.BLACK_FLASH, at, Vec3.ZERO, 2.8F, 0.0F, SkillLook.BLACK_FLASH.ticks(), null);
 			this.sound(level, at, SoundEvents.LIGHTNING_BOLT_IMPACT, 2.5F, 0.6F);
 			this.sound(level, at, SoundEvents.GENERIC_EXPLODE.value(), 1.5F, 1.3F);
 		});
@@ -232,6 +231,8 @@ public class Sukuna extends RaidBoss {
 			Vec3 to = at.add(Vec3.directionFromRotation(0.0F, turn + k * 45.0F).scale(14));
 			this.slash(level, at, to, 1.2, 30, 1.2F, 0);
 		}
+		// the cracks crawl out along the same spokes until the cut lands
+		this.look(level, SkillLook.SPIDERWEB, at, Vec3.directionFromRotation(0.0F, turn), 14.0F, 30.0F, SkillLook.SPIDERWEB.ticks(), null);
 		this.donut(level, at, 6.5, 8.5, 30, Telegraph.RED, 1.4F, null);
 		this.sound(level, SoundEvents.DEEPSLATE_BREAK, 2.5F, 0.5F);
 	}
@@ -277,23 +278,21 @@ public class Sukuna extends RaidBoss {
 		Vec3 at = this.ground(target.position());
 		this.title(level, Component.translatable("raid.minecraft_mode.sukuna.fuga").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD), Component.empty());
 		this.sound(level, SoundEvents.FIRECHARGE_USE, 2.0F, 0.5F);
-		this.during(40, 2, () -> {
+		// the bow of flame between his hands, the arrow on it, aimed where it will land
+		this.look(level, SkillLook.FUGA_BOW, this.position(), reach(this.position(), at, 1.0).subtract(this.position()), 1.0F, this.getBbHeight(),
+			SkillLook.FUGA_BOW.ticks(), this);
+		this.during(40, 4, () -> {
 			Vec3 hands = this.position().add(0, this.getBbHeight() * 0.55, 0).add(this.getLookAngle().scale(1.2));
-			new Fx(Fx.Kind.SPARK, FLAME).burst(level, hands, 6, 0.6, 0.05);
-			level.sendParticles(ParticleTypes.FLAME, hands.x, hands.y, hands.z, 4, 0.5, 0.2, 0.5, 0.01);
+			level.sendParticles(ParticleTypes.FLAME, hands.x, hands.y, hands.z, 3, 0.5, 0.2, 0.5, 0.01);
 		});
 		this.after(40, () -> {
-			Vec3 eye = this.position().add(0, this.getBbHeight() * 0.55, 0);
-			Vec3 dir = at.add(0, 0.5, 0).subtract(eye);
-			MobProjectile arrow = MobProjectile.of(this, new ItemStack(Items.FIRE_CHARGE), Fx.Kind.SPARK, FLAME, 0.0F, 0.0F).visual()
-				.launch(eye, dir, (float)(dir.length() / 10.0));
-			arrow.maxAge(12);
-			level.addFreshEntity(arrow);
+			Vec3 eye = this.position().add(0, this.getBbHeight() * 0.58, 0);
+			this.look(level, SkillLook.FUGA_FLIGHT, eye, at.add(0, 0.5, 0).subtract(eye), 1.0F, 0.0F, SkillLook.FUGA_FLIGHT.ticks(), null);
 			this.sound(level, SoundEvents.BLAZE_SHOOT, 2.5F, 0.6F);
 		});
 		this.circle(level, at, 8.0, 50, Telegraph.ORANGE, 2.4F, e -> e.igniteForSeconds(5.0F), () -> {
 			this.boom(level, at, 8.0);
-			level.sendParticles(ParticleTypes.FLAME, at.x, at.y + 0.5, at.z, 120, 4.0, 1.0, 4.0, 0.1);
+			this.look(level, SkillLook.FUGA_BLAST, at, Vec3.ZERO, 8.0F, 0.0F, SkillLook.FUGA_BLAST.ticks(), null);
 			// the crater burns on
 			final boolean magic = this.casting();
 			this.during(100, 10, () -> {
@@ -314,6 +313,8 @@ public class Sukuna extends RaidBoss {
 		Vec3 a = from.subtract(dir.scale(Arenas.RADIUS * 2));
 		Vec3 b = from.add(dir.scale(Arenas.RADIUS * 2));
 		float share = WORLD_SLASH_SHARE * this.difficulty().damage;
+		// the crack in space along the line while he chants, the cut through it when it lands
+		this.look(level, SkillLook.WORLD_SLASH, a, b.subtract(a), 3.0F, 60.0F, SkillLook.WORLD_SLASH.ticks(), null);
 		Telegraph.line(level, a, b, 3.0, 60, Telegraph.RED, () -> {
 			if (!this.alive()) {
 				return;
@@ -322,8 +323,6 @@ public class Sukuna extends RaidBoss {
 			for (LivingEntity e : Attacks.inLine(level, a, b, 3.0, 6.0)) {
 				RaidDamage.portion(level, e, this, share);
 			}
-			new Fx(Fx.Kind.SLASH, SLASH).line(level, a.add(0, 1.0, 0), b.add(0, 1.0, 0), 0.4);
-			new Fx(Fx.Kind.SPARK, 0xFFFFFF).line(level, a.add(0, 2.2, 0), b.add(0, 2.2, 0), 0.6);
 			this.sound(level, SoundEvents.TRIDENT_THUNDER.value(), 3.0F, 0.6F);
 			this.sound(level, SoundEvents.WITHER_BREAK_BLOCK, 2.0F, 0.6F);
 		});
@@ -455,12 +454,17 @@ public class Sukuna extends RaidBoss {
 
 	/** The domain's sure hit: everyone inside {@code domain} and outside {@code safe} is cut; slashes fly all over it. */
 	private void sureHit(final ServerLevel level, final Domains.Domain domain, final List<Vec3> safe) {
-		Fx cut = new Fx(Fx.Kind.SLASH, SLASH);
 		Fx blood = new Fx(Fx.Kind.SLASH, BLOOD);
-		for (int i = 0; i < 16; i++) {
+		// cuts flash all over the domain, whoever stands there or not
+		for (int i = 0; i < 8; i++) {
 			double r = this.random.nextDouble() * DOMAIN_RADIUS;
 			double a = this.random.nextDouble() * Math.PI * 2;
-			(i % 3 == 0 ? blood : cut).burst(level, domain.center().add(Math.cos(a) * r, 0.5 + this.random.nextDouble() * 3, Math.sin(a) * r), 2, 0.8, 0.15);
+			Vec3 at = domain.center().add(Math.cos(a) * r, this.random.nextDouble() * 2, Math.sin(a) * r);
+			if (i < 5) {
+				this.look(level, SkillLook.DOMAIN_CUT, at, Vec3.ZERO, 1.0F, 0.0F, SkillLook.DOMAIN_CUT.ticks(), null);
+			} else {
+				blood.burst(level, at.add(0, 1.0, 0), 2, 0.8, 0.15);
+			}
 		}
 		float share = DOMAIN_SHARE * this.difficulty().damage;
 		for (ServerPlayer p : this.fighters(level)) {
@@ -475,8 +479,8 @@ public class Sukuna extends RaidBoss {
 			}
 			if (!sheltered) {
 				RaidDamage.portion(level, p, this, share);
-				// around them, not in front of their own eyes
-				cut.burst(level, p.position().add(0, 0.4, 0), 3, 1.4, 0.15);
+				// cuts round them, never across their own eyes
+				this.look(level, SkillLook.DOMAIN_CUT, p.position(), Vec3.ZERO, 1.0F, 0.0F, SkillLook.DOMAIN_CUT.ticks(), null);
 				blood.burst(level, p.position().add(0, 0.3, 0), 2, 1.2, 0.1);
 			}
 		}

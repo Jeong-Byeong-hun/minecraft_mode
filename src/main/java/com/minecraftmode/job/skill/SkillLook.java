@@ -590,7 +590,27 @@ public enum SkillLook {
 	/** A faint ring round the caster as wide as the allies a step reaches (allyBoost, allyHeal) where the skill's own look shows something else. */
 	ALLY_RING(30, 6.0F, Hold.FOLLOW),
 	/** A shock ring running out round where a leaping caster comes down, as wide as the slam ({@link Actions#leap}): nothing until it lands. */
-	LANDING_RING(50, 3.0F, Hold.TRAIL);
+	LANDING_RING(50, 3.0F, Hold.TRAIL),
+
+	// ------------------------------------------------------------ Ryomen Sukuna's raid (0.5.45, shown by the boss: SkillVfx.spawn(level, source, ...))
+	/** Dismantle: an unseen cut showing for an instant as a hair-thin white line along its length, a red scar left on the ground (along a beam). */
+	DISMANTLE(10, 1.4F, Hold.FREE),
+	/** Cleave: a flurry of thin cuts criss-crossing in front of him (along a cone; arg = the arc). */
+	CLEAVE_CUTS(10, 6.5F, Hold.FREE),
+	/** Black Flash: black lightning with a red glow bursting from the blow, as wide as it hits. */
+	BLACK_FLASH(16, 2.8F, Hold.FREE),
+	/** Spiderweb: cracks crawling out over the floor in spokes and rings until the cut lands (arg = ticks until then; reach = the first spoke). */
+	SPIDERWEB(50, 14.0F, Hold.FREE),
+	/** Fuga: a bow of flame drawn between his hands, an arrow of fire nocked on it (held by Sukuna; arg = his height). */
+	FUGA_BOW(42, 1.0F, Hold.FOLLOW),
+	/** Fuga: the flaming arrow flying to where it lands (along a beam). */
+	FUGA_FLIGHT(10, 1.0F, Hold.FREE),
+	/** Fuga: the blast of fire as wide as it hits, then the crater burning on. */
+	FUGA_BLAST(100, 8.0F, Hold.FREE),
+	/** The World-Cutting Slash: a crack in space flickering along the line while he chants, then one white cut through it all (along a beam; arg = ticks until the cut). */
+	WORLD_SLASH(76, 3.0F, Hold.FREE),
+	/** The domain's sure hit: a few thin cuts flashing round someone it reaches. */
+	DOMAIN_CUT(6, 1.0F, Hold.FREE);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

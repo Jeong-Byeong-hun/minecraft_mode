@@ -10,6 +10,7 @@ import static net.minecraft.world.effect.MobEffects.*;
 
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.skill.Fx;
+import com.minecraftmode.job.skill.SkillLook;
 import com.minecraftmode.job.weapon.ProjectileStyle;
 
 /**
@@ -130,67 +131,98 @@ public final class WarriorContent extends ClassContent {
 			skill("spartan_charge", "Spartan Charge", "스파르타의 돌격", ATTACK, 13, 22, dash(8, 1.8), nova(4, 1.4)));
 
 		// ---------------------------------------------------------------- tier 4: King of Knights
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.41): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (slashes, rings, orbs) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("excalibur", 4, 70, LONGSWORD, "Excalibur", "엑스칼리버",
 			art(0xF0F4FF, 0x1F3A93, 0xFFD700), fx(Fx.Kind.SLASH, 0xFFE680),
-			skill("promised_victory", "Sword of Promised Victory", "약속된 승리의 검", ULTIMATE, 45, 40, beam(24, 9.0)),
-			skill("strike_air", "Strike Air", "스트라이크 에어", ATTACK, 16, 18, push(5, 2.0), shoot(ProjectileStyle.WAVE, 2.0).pierce(10)),
-			skill("mana_burst", "Mana Burst", "마력방출", MOVEMENT, 10, 16, dash(8, 1.6)),
-			skill("avalon_guard", "Avalon's Protection", "아발론의 가호", DEFENSE, 30, 25, boost(DAMAGE, 6, 30), heal(25)));
+			skill("promised_victory", "Sword of Promised Victory", "약속된 승리의 검", ULTIMATE, 45, 40, look(SkillLook.EXCALIBUR, beam(24, 9.0)).beam(24))
+				.withFx(Fx.Kind.SPARK),
+			skill("strike_air", "Strike Air", "스트라이크 에어", ATTACK, 16, 18, look(SkillLook.AIR_RELEASE, push(5, 2.0)).size(5).quiet(),
+				shoot(ProjectileStyle.WAVE, 2.0).pierce(10).look(SkillLook.STRIKE_AIR)).withFx(Fx.Kind.SPARK),
+			skill("mana_burst", "Mana Burst", "마력방출", MOVEMENT, 10, 16, look(SkillLook.MANA_BURST, dash(8, 1.6)).lasting(1.0)).withFx(Fx.Kind.SPARK, 0x8FC8FF),
+			skill("avalon_guard", "Avalon's Protection", "아발론의 가호", DEFENSE, 30, 25, look(SkillLook.AVALON_SHEATH, boost(DAMAGE, 6, 30)).quiet(),
+				look(SkillLook.NONE, heal(25)).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("excalibur_morgan", 4, 74, GREATSWORD, "Excalibur Morgan", "엑스칼리버 모르간",
 			art(0x2B2B33, 0x111111, 0xC0102E), fx(Fx.Kind.SMOKE, 0xB0102E),
-			skill("vortigern", "Vortigern", "보티건", ULTIMATE, 45, 40, inflict(WITHER, 6, 1), beam(22, 7.6)),
-			skill("dark_mana_burst", "Dark Mana Burst", "흑마력 방출", ATTACK, 10, 20, nova(5, 2.2), push(5, 1.5)),
-			skill("tyrants_charge", "Tyrant's Charge", "폭군의 돌진", MOVEMENT, 12, 16, stun(1.0), dash(9, 2.0)),
-			skill("black_armor", "Black Armor", "흑기사의 갑주", UTILITY, 25, 24, boost(CRIT_DAMAGE, 6, 60), boost(DAMAGE, 6, 20)));
+			skill("vortigern", "Vortigern", "보티건", ULTIMATE, 45, 40, inflict(WITHER, 6, 1), look(SkillLook.VORTIGERN, beam(22, 7.6)).beam(22)).withFx(Fx.Kind.SPARK),
+			skill("dark_mana_burst", "Dark Mana Burst", "흑마력 방출", ATTACK, 10, 20, look(SkillLook.DARK_BURST, nova(5, 2.2)).size(5).quiet(), push(5, 1.5))
+				.withFx(Fx.Kind.SPARK),
+			skill("tyrants_charge", "Tyrant's Charge", "폭군의 돌진", MOVEMENT, 12, 16, stun(1.0), look(SkillLook.TYRANT_TRAIL, dash(9, 2.0)).lasting(1.0))
+				.withFx(Fx.Kind.SPARK),
+			skill("black_armor", "Black Armor", "흑기사의 갑주", UTILITY, 25, 24, look(SkillLook.BLACK_ARMOR, boost(CRIT_DAMAGE, 6, 60)).quiet(),
+				boost(DAMAGE, 6, 20)).withFx(Fx.Kind.SPARK));
 
 		weapon("rhongomyniad", 4, 78, SPEAR, "Rhongomyniad", "롱고미니아드",
 			art(0xEAF2FF, 0xD4AF37, 0x00BFFF), fx(Fx.Kind.BOLT, 0xBFEFFF),
-			skill("pillar_of_light", "Pillar of Light", "땅끝의 탑", ULTIMATE, 50, 40, lightning(20, 5, 3.5), strike(20, 4, 3, 1.8)),
-			skill("storm_thrust", "Storm Thrust", "폭풍 찌르기", ATTACK, 7, 18, beam(12, 2.04)),
-			skill("lion_kings_charge", "Lion King's Charge", "사자왕의 돌격", MOVEMENT, 12, 18, dash(10, 1.8)),
-			skill("holy_lance_ward", "Holy Lance Ward", "성창의 가호", DEFENSE, 24, 22, allyBoost(8, DAMAGE, 8, 20), allyHeal(8, 20)));
+			skill("pillar_of_light", "Pillar of Light", "땅끝의 탑", ULTIMATE, 50, 40, look(SkillLook.RHONGOMYNIAD, lightning(20, 5, 3.5)).at(20).size(5).lasting(2.5),
+				look(SkillLook.NONE, strike(20, 4, 3, 1.8)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("storm_thrust", "Storm Thrust", "폭풍 찌르기", ATTACK, 7, 18, look(SkillLook.STORM_LANCE, beam(12, 2.04)).beam(12)).withFx(Fx.Kind.SPARK),
+			skill("lion_kings_charge", "Lion King's Charge", "사자왕의 돌격", MOVEMENT, 12, 18, look(SkillLook.LION_CHARGE, dash(10, 1.8)).lasting(1.0))
+				.withFx(Fx.Kind.SPARK),
+			skill("holy_lance_ward", "Holy Lance Ward", "성창의 가호", DEFENSE, 24, 22, look(SkillLook.LANCE_WARD, allyBoost(8, DAMAGE, 8, 20)).size(8).unscaled().quiet(),
+				look(SkillLook.NONE, allyHeal(8, 20)).quiet())
+				.withFx(Fx.Kind.SPARK));
 
 		weapon("arondight", 4, 82, LONGSWORD, "Arondight", "아론다이트",
 			art(0xBFC9D9, 0x16213E, 0x4169E1), fx(Fx.Kind.SLASH, 0x7FA7FF),
-			skill("overload", "Arondight Overload", "박쇄전단・과중호광", ULTIMATE, 40, 36, lifesteal(10), repeat(5, 4, slash(5, 200, 1.4))),
-			skill("knight_of_the_lake", "Knight of the Lake", "호수의 기사", UTILITY, 20, 20, boost(CRIT_CHANCE, 6, 20), buff(SPEED, 6, 1)),
-			skill("lake_slash", "Lake Slash", "호수 베기", ATTACK, 7, 18, shoot(ProjectileStyle.WAVE, 1.65).count(3).spread(30).pierce(4)),
-			skill("unblemished", "Unblemished", "무결", UTILITY, 26, 18, cleanse(), heal(20), buff(REGENERATION, 6, 1)));
+			skill("overload", "Arondight Overload", "박쇄전단・과중호광", ULTIMATE, 40, 36, lifesteal(10),
+				look(SkillLook.OVERLOAD_AURA, repeat(5, 4, look(SkillLook.ARONDIGHT_ARC, slash(5, 200, 1.4)).cone(5, 200).quiet())).lasting(1.4))
+				.withFx(Fx.Kind.SPARK, 0x7FA7FF),
+			skill("knight_of_the_lake", "Knight of the Lake", "호수의 기사", UTILITY, 20, 20, look(SkillLook.LAKE_KNIGHT, boost(CRIT_CHANCE, 6, 20)), buff(SPEED, 6, 1))
+				.withFx(Fx.Kind.SPARK),
+			skill("lake_slash", "Lake Slash", "호수 베기", ATTACK, 7, 18, shoot(ProjectileStyle.WAVE, 1.65).count(3).spread(30).pierce(4).look(SkillLook.LAKE_WAVE)),
+			skill("unblemished", "Unblemished", "무결", UTILITY, 26, 18, cleanse(), look(SkillLook.UNBLEMISHED, heal(20)), buff(REGENERATION, 6, 1)).withFx(Fx.Kind.SPARK));
 
 		weapon("clarent", 4, 86, GREATSWORD, "Clarent", "클라렌트",
 			art(0xD9D9D9, 0x8B0000, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF4040),
-			skill("blood_arthur", "Clarent Blood Arthur", "클라렌트 블러드 아서", ULTIMATE, 45, 40, lightning(16, 5, 3.9), beam(18, 3.9)),
-			skill("red_lightning", "Red Lightning", "붉은 번개", ATTACK, 9, 20, chain(12, 5, 1.8)),
-			skill("rebels_charge", "Rebel's Charge", "반역의 돌진", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)),
-			skill("secret_of_pedigree", "Secret of Pedigree", "부정을 숨기는 투구", UTILITY, 25, 20, stealth(4, 80), buff(SPEED, 4, 2)));
+			skill("blood_arthur", "Clarent Blood Arthur", "클라렌트 블러드 아서", ULTIMATE, 45, 40, look(SkillLook.RED_BOLT, lightning(16, 5, 3.9)).at(16).size(5),
+				look(SkillLook.BLOOD_ARTHUR, beam(18, 3.9)).beam(18)).withFx(Fx.Kind.SPARK),
+			skill("red_lightning", "Red Lightning", "붉은 번개", ATTACK, 9, 20, look(SkillLook.RED_CHAIN, chain(12, 5, 1.8)).size(12)),
+			skill("rebels_charge", "Rebel's Charge", "반역의 돌진", MOVEMENT, 11, 16, stun(1.0), look(SkillLook.REBEL_TRAIL, dash(9, 1.8)).lasting(1.0))
+				.withFx(Fx.Kind.SPARK),
+			skill("secret_of_pedigree", "Secret of Pedigree", "부정을 숨기는 투구", UTILITY, 25, 20, look(SkillLook.PEDIGREE_HELM, stealth(4, 80)), buff(SPEED, 4, 2))
+				.withFx(Fx.Kind.SPARK));
 
 		weapon("galatine", 4, 90, LONGSWORD, "Galatine", "갈라틴",
 			art(0xFFF2CC, 0x8B5A2B, 0xFF8C00), fx(Fx.Kind.ORB, 0xFFB347),
-			skill("excalibur_galatine", "Excalibur Galatine", "전륜하는 승리의 검", ULTIMATE, 45, 40, burn(6), strike(16, 5, 1, 8.1)),
-			skill("sunlight_blessing", "Sunlight Blessing", "태양의 축복", UTILITY, 28, 22, allyBoost(10, DAMAGE, 12, 20), allyBuff(10, REGENERATION, 6, 0)),
-			skill("solar_flare", "Solar Flare", "태양 폭발", ATTACK, 10, 20, burn(5), nova(5, 2.2)),
-			skill("noon_strike", "Noon Strike", "정오의 일격", ATTACK, 7, 16, slash(5, 150, 2.04)));
+			skill("excalibur_galatine", "Excalibur Galatine", "전륜하는 승리의 검", ULTIMATE, 45, 40, burn(6),
+				look(SkillLook.GALATINE_SUN, strike(16, 5, 1, 8.1)).at(16).size(5).quiet())
+				.withFx(Fx.Kind.SPARK),
+			skill("sunlight_blessing", "Sunlight Blessing", "태양의 축복", UTILITY, 28, 22, look(SkillLook.SUNLIGHT, allyBoost(10, DAMAGE, 12, 20)).size(10).unscaled().quiet(),
+				look(SkillLook.NONE, allyBuff(10, REGENERATION, 6, 0)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("solar_flare", "Solar Flare", "태양 폭발", ATTACK, 10, 20, burn(5), look(SkillLook.SOLAR_FLARE, nova(5, 2.2)).size(5).quiet()).withFx(Fx.Kind.SPARK),
+			skill("noon_strike", "Noon Strike", "정오의 일격", ATTACK, 7, 16, look(SkillLook.NOON_ARC, slash(5, 150, 2.04)).cone(5, 150).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("ascalon", 4, 95, SPEAR, "Ascalon", "아스칼론",
 			art(0xE6E6E6, 0x4B3621, 0x2ECC71), fx(Fx.Kind.RING, 0x7DFFB0),
-			skill("abyssus_draconis", "Abyssus Draconis", "그대는 용이니라", ULTIMATE, 50, 40, mark(20, 10, 60), beam(16, 6.3)),
-			skill("dragonbane_thrust", "Dragonbane Thrust", "용살 찌르기", ATTACK, 7, 18, inflict(VULNERABLE, 6, 1), beam(10, 2.08)),
-			skill("martyrs_shield", "Martyr's Shield", "순교자의 방패", DEFENSE, 26, 24, shield(16, 10), taunt(10)),
-			skill("saints_ward", "Saint's Ward", "성자의 수호", UTILITY, 30, 26, allyHeal(10, 30), cleanse()));
+			skill("abyssus_draconis", "Abyssus Draconis", "그대는 용이니라", ULTIMATE, 50, 40, look(SkillLook.DRACONIS_SEAL, mark(20, 10, 60)).onTarget(20).quiet(),
+				look(SkillLook.HOLY_LANCE, beam(16, 6.3)).beam(16)).withFx(Fx.Kind.SPARK),
+			skill("dragonbane_thrust", "Dragonbane Thrust", "용살 찌르기", ATTACK, 7, 18, inflict(VULNERABLE, 6, 1), look(SkillLook.DRAGONBANE, beam(10, 2.08)).beam(10))
+				.withFx(Fx.Kind.SPARK),
+			skill("martyrs_shield", "Martyr's Shield", "순교자의 방패", DEFENSE, 26, 24, look(SkillLook.NONE, shield(16, 10)).quiet(),
+				look(SkillLook.MARTYR_SHIELD, taunt(10)).size(10).quiet()).withFx(Fx.Kind.SPARK),
+			skill("saints_ward", "Saint's Ward", "성자의 수호", UTILITY, 30, 26, look(SkillLook.SAINT_WARD, allyHeal(10, 30)).size(10).unscaled().quiet(),
+				cleanse()).withFx(Fx.Kind.SPARK));
 
 		weapon("kusanagi", 4, 100, KATANA, "Kusanagi no Tsurugi", "쿠사나기노츠루기",
 			art(0xF5F5F5, 0x0B3D2E, 0x40E0D0), fx(Fx.Kind.PETAL, 0x9EFFE6),
-			skill("ame_no_murakumo", "Ame-no-Murakumo", "아메노무라쿠모", ULTIMATE, 50, 40, pull(8, 1.0), repeat(4, 6, nova(6, 2.0))),
-			skill("grass_cutter", "Grass Cutter", "풀베기", ATTACK, 6, 16, slash(6, 300, 1.8)),
-			skill("wind_step", "Wind Step", "풍보", MOVEMENT, 8, 12, dash(10, 1.2)),
-			skill("eight_headed_bane", "Eight-Headed Bane", "야마타의 화근", ATTACK, 16, 24, shoot(ProjectileStyle.WAVE, 1.4).count(8).spread(315).pierce(3)));
+			skill("ame_no_murakumo", "Ame-no-Murakumo", "아메노무라쿠모", ULTIMATE, 50, 40, look(SkillLook.MURAKUMO, pull(8, 1.0)).size(6).lasting(1.7).quiet(),
+				repeat(4, 6, look(SkillLook.NONE, nova(6, 2.0)).quiet())).withFx(Fx.Kind.SPARK),
+			skill("grass_cutter", "Grass Cutter", "풀베기", ATTACK, 6, 16, look(SkillLook.GRASS_CUTTER, slash(6, 300, 1.8)).cone(6, 300).quiet()).withFx(Fx.Kind.SPARK),
+			skill("wind_step", "Wind Step", "풍보", MOVEMENT, 8, 12, look(SkillLook.WIND_STEP, dash(10, 1.2)).lasting(1.0)).withFx(Fx.Kind.SPARK),
+			skill("eight_headed_bane", "Eight-Headed Bane", "야마타의 화근", ATTACK, 16, 24,
+				shoot(ProjectileStyle.WAVE, 1.4).count(8).spread(315).pierce(3).look(SkillLook.SERPENT)));
 
 		weapon("round_table_shield", 4, 84, GREATSHIELD, "Round Table Shield", "원탁의 대방패",
 			art(0xDCE3EE, 0x3B4A6B, 0x9FD4FF), fx(Fx.Kind.RING, 0xBFE4FF),
-			skill("lord_camelot", "Lord Camelot", "로드 카멜롯", ULTIMATE, 50, 40, shield(20, 10), allyBoost(12, DAMAGE, 12, 20), nova(6, 5.5)),
-			skill("snowflake_bulwark", "Bulwark of Snowflakes", "눈꽃의 벽", DEFENSE, 24, 20, allyHeal(8, 15), shield(10, 8)),
-			skill("round_table_bash", "Round Table Bash", "원탁 강타", ATTACK, 7, 18, slash(5, 160, 2.5)),
-			skill("camelot_charge", "Camelot Charge", "카멜롯 돌격", MOVEMENT, 11, 16, stun(1.0), dash(9, 1.8)));
+			skill("lord_camelot", "Lord Camelot", "로드 카멜롯", ULTIMATE, 50, 40, look(SkillLook.CAMELOT, shield(20, 10)).size(6).lasting(3).quiet(),
+				look(SkillLook.NONE, allyBoost(12, DAMAGE, 12, 20)).quiet(), look(SkillLook.NONE, nova(6, 5.5)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("snowflake_bulwark", "Bulwark of Snowflakes", "눈꽃의 벽", DEFENSE, 24, 20, look(SkillLook.SNOW_BULWARK, allyHeal(8, 15)).size(8).unscaled().quiet(),
+				look(SkillLook.NONE, shield(10, 8)).quiet())
+				.withFx(Fx.Kind.SPARK),
+			skill("round_table_bash", "Round Table Bash", "원탁 강타", ATTACK, 7, 18, look(SkillLook.ROUND_TABLE, slash(5, 160, 2.5)).cone(5, 160).quiet()).withFx(Fx.Kind.SPARK),
+			skill("camelot_charge", "Camelot Charge", "카멜롯 돌격", MOVEMENT, 11, 16, stun(1.0), look(SkillLook.SHIELD_CHARGE, dash(9, 1.8)).lasting(1.0))
+				.withFx(Fx.Kind.SPARK));
 	}
 }

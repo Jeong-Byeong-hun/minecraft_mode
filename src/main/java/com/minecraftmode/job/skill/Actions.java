@@ -1574,6 +1574,7 @@ public final class Actions {
 		private double arc;
 		private double seconds = -1.0;
 		private boolean quiet;
+		private boolean unscaled;
 
 		LookAction(final SkillLook look, final SkillAction action) {
 			this.look = look;
@@ -1624,6 +1625,15 @@ public final class Actions {
 			return this;
 		}
 
+		/**
+		 * The size as given, not grown by the Expansion engraving: for looks sized to a radius the engraving does not reach (the allies an
+		 * {@link #allyBoost} or {@link #allyHeal} covers).
+		 */
+		public LookAction unscaled() {
+			this.unscaled = true;
+			return this;
+		}
+
 		/** Shown this long (a zone's duration) instead of the look's own ticks. */
 		public LookAction lasting(final double seconds) {
 			this.seconds = seconds;
@@ -1642,7 +1652,8 @@ public final class Actions {
 
 		private void show(final SkillContext ctx) {
 			int ticks = this.seconds > 0 ? (int)Math.round(this.seconds * 20) : this.look.ticks();
-			float size = (float)ctx.area(this.size > 0 ? this.size : this.look.size());
+			double raw = this.size > 0 ? this.size : this.look.size();
+			float size = (float)(this.unscaled ? raw : ctx.area(raw));
 			Entity holder = ctx.caster;
 			switch (this.place) {
 				case FEET -> SkillVfx.spawn(ctx, this.look, ctx.caster.position(), ctx.flatLook(), size, 0.0F, ticks, holder);

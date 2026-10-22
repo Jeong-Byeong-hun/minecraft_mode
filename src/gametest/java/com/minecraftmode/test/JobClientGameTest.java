@@ -159,6 +159,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkArcherLooks(context, server, connection);
 			checkMageLooks(context, server, connection);
 			checkPirateLooks(context, server, connection);
+			checkWarriorLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -1009,6 +1010,64 @@ public class JobClientGameTest implements FabricClientGameTest {
 			new LookCase("thunderclap_blunderbuss", 3, SkillLook.RECOIL, 4, 9, 3, 1)
 		);
 		checkClassLooks(context, server, connection, JobClass.PIRATE, cases, SkillLook.BATTLESHIP, SkillLook.RECOIL, "nika_knuckles.bajrang_gun");
+	}
+
+	/**
+	 * Every skill of the nine tier 4 Warrior weapons draws its own look (0.5.41): Artoria and Saber Alter's Excaliburs, the Lion King's
+	 * Rhongomyniad, Lancelot, Mordred, Gawain, St. George, Kusanagi and the Round Table's shield. Screenshots {@code look_<skill>}, the
+	 * sword of promised victory once more with improved transparency ({@code _fabulous}).
+	 */
+	private static void checkWarriorLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("excalibur", 0, SkillLook.EXCALIBUR, 4, 4, 1.5, 4).focus(SkillLook.NONE).lift(1.5).shot("excalibur.promised_victory_raise"),
+			new LookCase("excalibur", 0, SkillLook.EXCALIBUR, 14, 9, 3, 2),
+			new LookCase("excalibur", 1, SkillLook.AIR_RELEASE, 4, 5, 4, 7),
+			new LookCase("excalibur", 1, SkillLook.STRIKE_AIR, 3, 3, 1, 3).husk(14).shot("excalibur.strike_air_shot"),
+			new LookCase("excalibur", 2, SkillLook.MANA_BURST, 4, 9, 3, 1),
+			new LookCase("excalibur", 3, SkillLook.AVALON_SHEATH, 4, 2.5, 1, -4).shot("excalibur.avalon_guard_sheath"),
+			new LookCase("excalibur", 3, SkillLook.AVALON_SHEATH, 28, 3.5, 2, -5).lift(0.3),
+			new LookCase("excalibur_morgan", 0, SkillLook.VORTIGERN, 4, 4, 1.5, 4).focus(SkillLook.NONE).lift(1.5).shot("excalibur_morgan.vortigern_raise"),
+			new LookCase("excalibur_morgan", 0, SkillLook.VORTIGERN, 14, 9, 3, 2),
+			new LookCase("excalibur_morgan", 1, SkillLook.DARK_BURST, 5, 5, 4, 8),
+			new LookCase("excalibur_morgan", 2, SkillLook.TYRANT_TRAIL, 4, 9, 3, 1),
+			new LookCase("excalibur_morgan", 3, SkillLook.BLACK_ARMOR, 14, 2.5, 1.5, -4),
+			new LookCase("rhongomyniad", 0, SkillLook.RHONGOMYNIAD, 4, 10, 6, 14).lift(7).shot("rhongomyniad.pillar_of_light_descent"),
+			new LookCase("rhongomyniad", 0, SkillLook.RHONGOMYNIAD, 12, 9, 4, 13).lift(3),
+			new LookCase("rhongomyniad", 1, SkillLook.STORM_LANCE, 3, 7, 1.5, 2),
+			new LookCase("rhongomyniad", 2, SkillLook.LION_CHARGE, 4, 9, 3, 1),
+			new LookCase("rhongomyniad", 3, SkillLook.LANCE_WARD, 12, 4, 2, -6).lift(1.5),
+			new LookCase("arondight", 0, List.of(SkillLook.ARONDIGHT_ARC, SkillLook.OVERLOAD_AURA), 6, 4, 2.5, 5),
+			new LookCase("arondight", 0, SkillLook.OVERLOAD_AURA, 14, 3, 1.5, -5).shot("arondight.overload_aura"),
+			new LookCase("arondight", 1, SkillLook.LAKE_KNIGHT, 16, 4, 1.5, -3).lift(0.3),
+			new LookCase("arondight", 2, SkillLook.LAKE_WAVE, 3, 3, 1, 3).husk(14),
+			new LookCase("arondight", 3, SkillLook.UNBLEMISHED, 12, 3, 1.5, -4),
+			new LookCase("clarent", 0, List.of(SkillLook.BLOOD_ARTHUR, SkillLook.RED_BOLT), 3, 4, 1.5, 4).focus(SkillLook.NONE).lift(1.5)
+				.shot("clarent.blood_arthur_raise"),
+			new LookCase("clarent", 0, SkillLook.BLOOD_ARTHUR, 10, 9, 3, 2),
+			new LookCase("clarent", 0, SkillLook.RED_BOLT, 3, 6, 3, 10).lift(3).shot("clarent.blood_arthur_bolt"),
+			new LookCase("clarent", 1, SkillLook.RED_CHAIN, 3, 6, 2, 1).focus(SkillLook.NONE).husk(5),
+			new LookCase("clarent", 2, SkillLook.REBEL_TRAIL, 4, 9, 3, 1),
+			new LookCase("clarent", 3, SkillLook.PEDIGREE_HELM, 10, 2, 0.6, -3).lift(0.6),
+			new LookCase("galatine", 0, SkillLook.GALATINE_SUN, 5, 8, 3, 13).lift(4).shot("galatine.excalibur_galatine_sun"),
+			new LookCase("galatine", 0, SkillLook.GALATINE_SUN, 12, 9, 5, 12).lift(1),
+			new LookCase("galatine", 1, SkillLook.SUNLIGHT, 14, 5, 2, -9).lift(2),
+			new LookCase("galatine", 2, SkillLook.SOLAR_FLARE, 5, 6, 4, 9).lift(0.5),
+			new LookCase("galatine", 3, SkillLook.NOON_ARC, 3, 3, 2.5, 5),
+			new LookCase("ascalon", 0, List.of(SkillLook.DRACONIS_SEAL, SkillLook.HOLY_LANCE), 4, 8, 2, 2).focus(SkillLook.HOLY_LANCE),
+			new LookCase("ascalon", 0, SkillLook.DRACONIS_SEAL, 20, 4, 1.5, 5).lift(0.5).shot("ascalon.abyssus_draconis_seal"),
+			new LookCase("ascalon", 1, SkillLook.DRAGONBANE, 3, 6, 1.5, 2),
+			new LookCase("ascalon", 2, SkillLook.MARTYR_SHIELD, 10, 2.5, 0.8, -4.5).lift(0.2),
+			new LookCase("ascalon", 3, SkillLook.SAINT_WARD, 14, 5, 4, -8),
+			new LookCase("kusanagi", 0, SkillLook.MURAKUMO, 10, 9, 4, 13).lift(2),
+			new LookCase("kusanagi", 1, SkillLook.GRASS_CUTTER, 4, 5, 4, 6),
+			new LookCase("kusanagi", 2, SkillLook.WIND_STEP, 4, 9, 3, 1),
+			new LookCase("kusanagi", 3, SkillLook.SERPENT, 3, 3, 1, 3).husk(14),
+			new LookCase("round_table_shield", 0, SkillLook.CAMELOT, 14, 8, 5, 12).lift(1),
+			new LookCase("round_table_shield", 1, SkillLook.SNOW_BULWARK, 14, 3, 1.5, -5),
+			new LookCase("round_table_shield", 2, SkillLook.ROUND_TABLE, 3, 3, 2.5, 5),
+			new LookCase("round_table_shield", 3, SkillLook.SHIELD_CHARGE, 4, 9, 3, 1)
+		);
+		checkClassLooks(context, server, connection, JobClass.WARRIOR, cases, SkillLook.EXCALIBUR, SkillLook.SHIELD_CHARGE, "excalibur.promised_victory");
 	}
 
 	/**

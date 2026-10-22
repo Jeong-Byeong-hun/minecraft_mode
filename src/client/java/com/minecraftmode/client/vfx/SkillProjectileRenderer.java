@@ -42,7 +42,7 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		}
 		// the archer's arrows, the mage's bolts and the pirate's shots trail light several blocks behind them
 		return box.inflate(Math.max(Math.max(Math.max(ArrowLooks.reach(look), KnightShots.reach(look)), Math.max(MageBolts.reach(look), PirateShots.reach(look))),
-			RogueShots.reach(look)));
+			Math.max(RogueShots.reach(look), HunterShots.reach(look))));
 	}
 
 	@Override
@@ -67,6 +67,10 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 		s.mirror = (seed & 2) == 0;
 		s.seed = entity.getId();
 		s.speed = (float)entity.getDeltaMovement().length();
+		if (HunterShots.hidesItem(s.look)) {
+			// Illumi's needles are drawn whole: the thrown knife's item would show through them
+			s.item.clear();
+		}
 	}
 
 	@Override
@@ -83,6 +87,7 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 			case CANNON_SHOT, COIN_SHOT, BIRD_SHOT, MUSKET_SHOT, IKOKU_WAVE, TSUNAMI, KAMUSARI_WAVE, THUNDER_SHOT, HAKI_SHOT -> PirateShots.submit(s, poseStack, submitNodeCollector);
 			case STRIKE_AIR, LAKE_WAVE, SERPENT -> KnightShots.submit(s, poseStack, submitNodeCollector);
 			case FORMULA_KUNAI, KAMUI_SHURIKEN, DRAGON_FANG -> RogueShots.submit(s, poseStack, submitNodeCollector);
+			case INDOOR_FISH, STOLEN_SKILL, DRAGON_HEAD, DIVE_DRAGON, SILVA_ORB, NEN_NEEDLE -> HunterShots.submit(s, poseStack, submitNodeCollector);
 			default -> {
 			}
 		}

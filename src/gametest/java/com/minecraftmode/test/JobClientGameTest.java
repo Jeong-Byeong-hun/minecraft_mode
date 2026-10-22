@@ -161,6 +161,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkPirateLooks(context, server, connection);
 			checkWarriorLooks(context, server, connection);
 			checkRogueLooks(context, server, connection);
+			checkHunterLooks(context, server, connection);
 			checkVolleys(context, server, connection);
 			checkCritsAndDummy(server, connection);
 			checkBoosts(server, connection);
@@ -1125,6 +1126,62 @@ public class JobClientGameTest implements FabricClientGameTest {
 			new LookCase("madara_gunbai", 3, SkillLook.GUNBAI_LEAP, 30, 6, 5, 8).shot("madara_gunbai.gunbai_leap_land")
 		);
 		checkClassLooks(context, server, connection, JobClass.ROGUE, cases, SkillLook.SERPENT_LAIR, SkillLook.GUNBAI_LEAP, "totsuka_blade.susanoo");
+	}
+
+	/**
+	 * Every skill of the nine tier 4 Hunter weapons draws its own look (0.5.43): Killua's Godspeed, Kurapika's chains, Adult Gon, Chrollo's
+	 * Skill Hunter, Zeno's dragons, Silva's orbs, Meruem, Netero's Guanyin and Illumi's needles. Screenshots {@code look_<skill>}; the
+	 * Fabulous one is the Zero Hand.
+	 */
+	private static void checkHunterLooks(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		List<LookCase> cases = List.of(
+			new LookCase("godspeed", 0, SkillLook.GODSPEED_STEP, 4, 9, 3, 1),
+			new LookCase("godspeed", 1, SkillLook.GODSPEED_AURA, 12, 3, 1.5, -4.5),
+			new LookCase("godspeed", 2, SkillLook.THUNDERBOLT, 4, 6, 4, 8),
+			new LookCase("godspeed", 3, List.of(SkillLook.NARUKAMI, SkillLook.THUNDERBOLT), 3, 6, 2, 1).husk(5),
+			new LookCase("emperor_time", 0, SkillLook.JUDGMENT_CHAIN, 7, 7, 2.5, 2),
+			new LookCase("emperor_time", 1, SkillLook.STEAL_CHAIN, 8, 6, 3, 4).husk(4),
+			new LookCase("emperor_time", 2, SkillLook.CHAIN_JAIL, 20, 5, 5, 9),
+			new LookCase("emperor_time", 3, SkillLook.SCARLET_EYES, 14, 3, 1.5, -5).lift(0.6),
+			new LookCase("adult_gon", 0, SkillLook.GON_RAGE, 14, 3, 1.5, -6).lift(1),
+			new LookCase("adult_gon", 1, SkillLook.JAJANKEN_ROCK, 8, 5, 1, 4).focus(SkillLook.NONE),
+			new LookCase("adult_gon", 1, SkillLook.JAJANKEN_ROCK, 32, 6, 5, 8).shot("adult_gon.first_comes_rock_land"),
+			new LookCase("adult_gon", 2, SkillLook.LONG_SCISSORS, 4, 8, 3, 3),
+			new LookCase("adult_gon", 3, SkillLook.GON_ROCK, 12, 6, 2, 8).lift(2),
+			new LookCase("adult_gon", 3, SkillLook.ROCK_BLAST, 25, 6, 7, 11).shot("adult_gon.thats_all_i_need_blast"),
+			new LookCase("skill_hunter", 0, SkillLook.SUN_MOON, 12, 3, 1.5, 4),
+			new LookCase("skill_hunter", 0, SkillLook.SEAL_CHAIN, 33, 6, 2, 1).focus(SkillLook.NONE).husk(5).shot("skill_hunter.sun_and_moon_blast"),
+			new LookCase("skill_hunter", 1, SkillLook.INDOOR_FISH, 4, 3.5, 0.8, 0.5).husk(14),
+			new LookCase("skill_hunter", 2, SkillLook.FUN_CLOTH, 12, 3, 1.5, -4),
+			new LookCase("skill_hunter", 3, List.of(SkillLook.BANDIT_BOOK, SkillLook.PAGE_GATE), 8, 4, 1.5, 3),
+			new LookCase("skill_hunter", 3, SkillLook.STOLEN_SKILL, 6, 2, 1, 2).husk(14).shot("skill_hunter.bandits_secret_shot"),
+			new LookCase("zeno_dragon", 0, SkillLook.DRAGON_HEAD, 3, 3, 1.5, 3).husk(14),
+			new LookCase("zeno_dragon", 0, SkillLook.DRAGON_BURST, 8, 5, 2, 6).shot("zeno_dragon.dragon_head_burst"),
+			new LookCase("zeno_dragon", 1, SkillLook.DRAGON_LANCE, 5, 8, 3, 3),
+			new LookCase("zeno_dragon", 2, SkillLook.ZENO_AURA, 14, 3, 1.5, -5),
+			new LookCase("zeno_dragon", 3, List.of(SkillLook.DRAGON_DIVE, SkillLook.DIVE_DRAGON), 24, 8, 9, 16).lift(3),
+			new LookCase("zeno_dragon", 3, SkillLook.DIVE_DRAGON, 20, 3, 1, 3).shot("zeno_dragon.dragon_dive_dragons"),
+			new LookCase("silva_orbs", 0, SkillLook.SILVA_ORB, 3, 2, 1, 2).husk(14),
+			new LookCase("silva_orbs", 0, SkillLook.ORB_BURST, 6, 5, 2, 6).shot("silva_orbs.aura_orb_burst"),
+			new LookCase("silva_orbs", 1, SkillLook.SILVA_ORB, 3, 3, 2, 3).husk(14),
+			new LookCase("silva_orbs", 2, SkillLook.SILVA_PRESENCE, 14, 7, 5, 9).lift(1.5),
+			new LookCase("silva_orbs", 3, List.of(SkillLook.ASSASSIN_HAND, SkillLook.SILVA_ORB), 2, 4, 1.5, 3),
+			new LookCase("silva_orbs", 3, SkillLook.ORB_BURST, 7, 5, 2, 6).shot("silva_orbs.assassins_judgment_burst"),
+			new LookCase("meruem_tail", 0, SkillLook.TAIL_PIERCE, 3, 6, 2, 2),
+			new LookCase("meruem_tail", 1, SkillLook.PHOTON, 5, 4, 5, 9),
+			new LookCase("meruem_tail", 2, SkillLook.KINGS_AURA, 16, 6, 4, -12).lift(2),
+			new LookCase("meruem_tail", 3, SkillLook.KING_ROSE, 14, 6, 8, 14).lift(3),
+			new LookCase("hundred_type_guanyin", 0, SkillLook.NETERO_PRAYER, 14, 4, 2, -6).lift(1),
+			new LookCase("hundred_type_guanyin", 1, SkillLook.GUANYIN_SWEEP, 4, 2, 10, 6),
+			new LookCase("hundred_type_guanyin", 2, SkillLook.PALM_SLAM, 5, 5, 5, 10),
+			new LookCase("hundred_type_guanyin", 3, List.of(SkillLook.ZERO_HAND, SkillLook.ZERO_BEAM), 14, 8, 6, -14).lift(3),
+			new LookCase("hundred_type_guanyin", 3, SkillLook.ZERO_BEAM, 6, 8, 3, 3).shot("hundred_type_guanyin.zero_hand_beam"),
+			new LookCase("illumi_needles", 0, List.of(SkillLook.NEEDLE_RAIN, SkillLook.NEN_NEEDLE), 20, 5, 5, 9),
+			new LookCase("illumi_needles", 1, SkillLook.NEN_NEEDLE, 2, 2, 0.6, 2).husk(14),
+			new LookCase("illumi_needles", 2, SkillLook.NEEDLE_DISGUISE, 14, 2, 0.5, -3).lift(0.4),
+			new LookCase("illumi_needles", 3, SkillLook.NEEDLE_PUPPET, 8, 3, 1.5, 4).husk(4)
+		);
+		checkClassLooks(context, server, connection, JobClass.HUNTER, cases, SkillLook.GODSPEED_STEP, SkillLook.NEEDLE_PUPPET, "hundred_type_guanyin.zero_hand");
 	}
 
 	/**

@@ -22,6 +22,10 @@ final class BladeLooks {
 	private static final int DARK_RIM = 0xE0242E;
 	private static final int BONE = 0xEFE6D2;
 	private static final int BONE_GLOW = 0xFF3030;
+	/** How far either side of its line a beam hits ({@code Actions.beam}: 0.9 blocks, not grown by Expansion). */
+	private static final float BEAM_HALF = 0.9F;
+	/** How far the Cross Slash arcs lean round the view, either way (radians). */
+	private static final float CROSS_LEAN = 0.45F;
 
 	// ------------------------------------------------------------ flash step
 
@@ -109,12 +113,15 @@ final class BladeLooks {
 		arc(s, ps, c, s.progress, lean, s.arg, s.size, 1.0F);
 	}
 
-	/** Two arcs crossing in an X, the second a moment later. */
+	/**
+	 * Two arcs crossing in an X, the second a moment later. They lean {@link #CROSS_LEAN} either way: steeper and their ends would sit
+	 * well inside the sector's edge seen from above (the side reach is the size x cos lean).
+	 */
 	static void crossSlash(final State s, final PoseStack ps, final SubmitNodeCollector c) {
-		arc(s, ps, c, s.progress, 0.75F, s.arg, s.size, 1.0F);
+		arc(s, ps, c, s.progress, CROSS_LEAN, s.arg, s.size, 1.0F);
 		float late = Mth.clamp((s.age() - 2.0F) / (s.life - 2.0F), 0.0F, 1.0F);
 		if (late > 0.0F) {
-			arc(s, ps, c, late, -0.75F, s.arg, s.size, -1.0F);
+			arc(s, ps, c, late, -CROSS_LEAN, s.arg, s.size, -1.0F);
 		}
 	}
 
@@ -286,6 +293,8 @@ final class BladeLooks {
 		Vector3f end = new Vector3f(dir).mul(length);
 		glow(ps, c, o -> {
 			if (extend > 0.01F) {
+				// a faint sheath as wide as the beam hits round the hair-thin blade
+				o.glowLine(start, tip, BEAM_HALF, argb(0.12F, s.color), argb(kill ? 0.32F : 0.25F, s.color));
 				o.glowLine(start, tip, kill ? 0.32F : 0.2F, argb(0.5F, s.color), argb(0.9F, s.color));
 				o.bar(start, tip, 0.025F, 0.02F, argb(1.0F, 0xFFFFFF), argb(1.0F, 0xFFFFFF));
 				Vector3f side = VfxOut.across(dir);
@@ -297,12 +306,13 @@ final class BladeLooks {
 			if (kill && p > 0.12F) {
 				float q = ease(p, 0.12F, 1.0F);
 				float fade = 1.0F - q;
-				o.sprite(end, s.camRight, s.camUp, 1.0F + 4.0F * q, argb(0.75F * fade, 0xB01040));
-				o.ring(new Vector3f(end).add(0, -0.5F, 0), 4.5F * q, 4.5F * q + 0.4F, argb(0.7F * fade, 0xFF5A8A));
-				o.sprite(end, s.camRight, s.camUp, 0.5F + 1.2F * q, argb(0.9F * fade, 0xFFD0E0));
+				// the line hits nothing past its width, so the end only crumbles: no wide blast to mistake for an area
+				o.sprite(end, s.camRight, s.camUp, 1.0F + 0.8F * q, argb(0.75F * fade, 0xB01040));
+				o.ring(new Vector3f(end).add(0, -0.5F, 0), 0.5F * q, BEAM_HALF * q, argb(0.7F * fade, 0xFF5A8A));
+				o.sprite(end, s.camRight, s.camUp, 0.5F + 0.5F * q, argb(0.9F * fade, 0xFFD0E0));
 				for (int i = 0; i < 28; i++) {
 					Vector3f d = shardDir(s.seed, i);
-					Vector3f at = new Vector3f(d).mul(0.4F + 4.5F * q).add(end);
+					Vector3f at = new Vector3f(d).mul(0.4F + 2.0F * q).add(end);
 					o.diamond(at, d, VfxOut.across(d), 0.9F * fade + 0.2F, 0.24F, argb(0.2F * fade, 0x8A1030), argb(0.95F * fade, 0xFF5A8A));
 				}
 			}
@@ -328,7 +338,8 @@ final class BladeLooks {
 		Vector3f tip = new Vector3f(dir).mul(Math.max(1.0F, s.size * extend));
 		int pink = s.color;
 		glow(ps, c, o -> {
-			o.glowLine(base, tip, 0.7F, argb(0.3F * fade, pink), argb(0.2F * fade, pink));
+			// the light round the blade is as wide as the beam hits
+			o.glowLine(base, tip, BEAM_HALF, argb(0.3F * fade, pink), argb(0.2F * fade, pink));
 			o.blade(base, tip, side, 0.32F, argb(0.7F * fade, 0xFFFFFF), argb(0.6F * fade, 0xFFE0EC));
 			o.blade(base, tip, up, 0.32F, argb(0.45F * fade, 0xFFFFFF), argb(0.4F * fade, 0xFFE0EC));
 			o.bar(base, tip, 0.06F, 0.02F, argb(fade, 0xFFFFFF), argb(fade, 0xFFFFFF));
@@ -349,8 +360,9 @@ final class BladeLooks {
 	}
 
 	/**
-	 * Mugetsu: a towering crescent wall of darkness running out along the beam, its rim burning a deep red, black flames on its crest,
-	 * and the dark it leaves along the ground.
+	 * Mugetsu: a tall crescent blade of darkness running out along the beam, its rim burning a deep red, black flames on its crest,
+	 * and the dark it leaves along the ground. It is only as wide as the beam hits ({@link #BEAM_HALF} either side of the line): the wide
+	 * darkness is the dome of {@code MUGETSU_VOID} over the zone.
 	 */
 	static void mugetsu(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -365,14 +377,14 @@ final class BladeLooks {
 		flat.normalize();
 		Vector3f side = VfxOut.across(flat);
 		Vector3f front = new Vector3f(dir).mul(2.0F + (s.size - 2.0F) * run);
-		float width = 7.0F * grow;
-		float height = 12.0F * grow;
-		int n = 16;
+		float width = BEAM_HALF * grow;
+		float height = 6.0F * grow;
+		int n = 8;
 		Vector3f[] lowEdge = new Vector3f[n + 1];
 		Vector3f[] topEdge = new Vector3f[n + 1];
 		for (int i = 0; i <= n; i++) {
 			float k = (float)i / n * 2 - 1;
-			float bend = k * k * 3.0F;
+			float bend = k * k * 0.8F;
 			Vector3f foot = new Vector3f(side).mul(k * width).add(new Vector3f(flat).mul(-bend)).add(front).add(0, -1.6F, 0);
 			lowEdge[i] = foot;
 			topEdge[i] = new Vector3f(foot).add(0, height * (float)Math.sqrt(Math.max(0.0F, 1 - k * k)) + 0.2F, 0);
@@ -392,19 +404,19 @@ final class BladeLooks {
 			}
 			o.quad(a, b, new Vector3f(b).add(0, height * 0.6F, 0), new Vector3f(a).add(0, 0.3F, 0), argb(0.0F, 0x050208), argb(0.55F * fade, 0x050208),
 				argb(0.0F, 0x050208), argb(0.0F, 0x050208));
-			// black flames licking up from the crest
-			for (int i = 0; i <= n; i++) {
-				o.flame(topEdge[i], new Vector3f(0, 1, 0).add(new Vector3f(flat).mul(-0.4F)), 1.8F + 2.4F * hash(s.seed + i), 1.4F, s.ageInTicks * 0.5F + i,
+			// black flames licking up from the crest (not off its two ends, which stand at the edge of the beam)
+			for (int i = 1; i < n; i++) {
+				o.flame(topEdge[i], new Vector3f(0, 1, 0).add(new Vector3f(flat).mul(-0.4F)), 1.2F + 1.6F * hash(s.seed + i), 0.5F, s.ageInTicks * 0.5F + i,
 					argb(0.9F * fade, 0x050208), argb(0.0F, 0x050208));
 			}
 		});
 		glow(ps, c, o -> {
 			for (int i = 0; i < n; i++) {
-				o.glowLine(topEdge[i], topEdge[i + 1], 0.5F, argb(0.7F * fade, 0x9A0A1E), argb(0.7F * fade, 0x9A0A1E));
+				o.glowLine(topEdge[i], topEdge[i + 1], 0.25F, argb(0.7F * fade, 0x9A0A1E), argb(0.7F * fade, 0x9A0A1E));
 				o.glowLine(topEdge[i], topEdge[i + 1], 0.08F, argb(0.9F * fade, 0xFF6A6A), argb(0.9F * fade, 0xFF6A6A));
 			}
-			o.glowLine(lowEdge[0], topEdge[0], 0.3F, argb(0.5F * fade, 0x9A0A1E), argb(0.5F * fade, 0x9A0A1E));
-			o.glowLine(lowEdge[n], topEdge[n], 0.3F, argb(0.5F * fade, 0x9A0A1E), argb(0.5F * fade, 0x9A0A1E));
+			o.glowLine(lowEdge[0], topEdge[0], 0.12F, argb(0.5F * fade, 0x9A0A1E), argb(0.5F * fade, 0x9A0A1E));
+			o.glowLine(lowEdge[n], topEdge[n], 0.12F, argb(0.5F * fade, 0x9A0A1E), argb(0.5F * fade, 0x9A0A1E));
 		});
 	}
 
@@ -449,7 +461,8 @@ final class BladeLooks {
 		});
 		glow(ps, c, o -> {
 			for (int j = 0; j < n; j++) {
-				o.glowLine(spine[j], spine[j + 1], 0.35F, argb(0.45F * fade, BONE_GLOW), argb(0.45F * fade, BONE_GLOW));
+				// with the body's sway (0.45) the red glow reaches the beam's 0.9 either side of the line
+				o.glowLine(spine[j], spine[j + 1], 0.45F, argb(0.45F * fade, BONE_GLOW), argb(0.45F * fade, BONE_GLOW));
 			}
 			// red eyes and the glow of the open mouth
 			Vector3f eyes = new Vector3f(jawUp).mul(0.35F).add(head).add(new Vector3f(up).mul(0.18F));

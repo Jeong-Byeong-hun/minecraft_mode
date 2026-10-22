@@ -347,7 +347,7 @@ final class GuanyinLooks {
 				o.star(front, s.camRight, s.camUp, 1.8F * flare + 0.4F, 10, 0.3F, s.seed, argb(0.9F * flare, 0xFFFFFF), argb(0.0F, GOLD));
 			}
 			o.sprite(front, s.camRight, s.camUp, r * 1.3F, argb(0.35F * fade, GOLD));
-			o.circle(start, side, up, r * 1.2F, 0.06F, 28, argb(0.6F * fade, GOLD_PALE));
+			o.circle(start, side, up, r, 0.06F, 28, argb(0.6F * fade, GOLD_PALE));
 		});
 	}
 

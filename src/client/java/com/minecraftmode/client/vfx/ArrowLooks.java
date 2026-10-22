@@ -38,11 +38,11 @@ final class ArrowLooks {
 			case STAR_ARROW -> starArrow(s, ps, c);
 			case TRACER -> tracer(s, ps, c);
 			case MOON_ARROW -> moonArrow(s, ps, c);
-			case CRESCENT_ARROW -> crescent(s, ps, c, 0.75F, 0.26F, MOON, 0xFFFFFF, false);
+			case CRESCENT_ARROW -> crescent(s, ps, c, 0.36F, 0.15F, MOON, 0xFFFFFF, false);
 			case FLAME_ARROW -> flameArrow(s, ps, c);
 			case GEM -> gem(s, ps, c);
 			case TREASURE -> treasure(s, ps, c);
-			case SIN_WAVE -> crescent(s, ps, c, 1.9F, 0.7F, 0xD01020, GOLD, true);
+			case SIN_WAVE -> crescent(s, ps, c, 1.05F, 0.42F, 0xD01020, GOLD, true);
 			case DISCUS -> discus(s, ps, c);
 			default -> {
 			}
@@ -64,11 +64,11 @@ final class ArrowLooks {
 		glow(ps, c, o -> {
 			Vector3f head = new Vector3f(s.forward).mul(0.4F);
 			Vector3f end = new Vector3f(back).mul(tail);
-			o.glowLine(head, end, 0.55F, argb(0.45F, ANTARES), argb(0.0F, ANTARES));
+			o.glowLine(head, end, 0.4F, argb(0.45F, ANTARES), argb(0.0F, ANTARES));
 			o.glowLine(head, end, 0.18F, argb(0.9F, 0xFFB08A), argb(0.0F, 0xFF6A40));
 			o.bar(head, new Vector3f(back).mul(Math.min(tail, 2.0F)), 0.03F, 0.01F, argb(1.0F, 0xFFFFFF), argb(0.0F, 0xFFFFFF));
 			// Antares burning at the head, a cross of light through it
-			o.sprite(head, s.camRight, s.camUp, 0.9F, argb(0.6F, ANTARES));
+			o.sprite(head, s.camRight, s.camUp, 0.6F, argb(0.6F, ANTARES));
 			o.sprite(head, s.camRight, s.camUp, 0.35F, argb(1.0F, 0xFFE8D8));
 			o.glint(head, s.camRight, s.camUp, 1.3F, time * 0.15F, argb(0.9F, 0xFFD0B0));
 			// stars glinting in the tail, drifting out a little as they fall behind
@@ -96,7 +96,7 @@ final class ArrowLooks {
 		float tail = trail(s, 3.2F);
 		glow(ps, c, o -> {
 			Vector3f end = new Vector3f(back).mul(tail);
-			o.glowLine(new Vector3f(), end, 0.16F, argb(0.6F, s.color), argb(0.0F, s.color));
+			o.glowLine(new Vector3f(), end, 0.25F, argb(0.6F, s.color), argb(0.0F, s.color));
 			o.glowLine(new Vector3f(), end, 0.05F, argb(1.0F, 0xFFE2A0), argb(0.0F, 0xFFB050));
 			o.sprite(new Vector3f(), s.camRight, s.camUp, 0.16F, argb(1.0F, 0xFFF6E0));
 			if (s.ageInTicks < 2.5F) {
@@ -304,7 +304,7 @@ final class ArrowLooks {
 				}
 				float a = echo == 0 ? 1.0F : 0.35F / echo;
 				Vector3f at = new Vector3f(back).mul(d);
-				disc(o, at, 0.85F, spin - echo * 0.6F, a, s.color);
+				disc(o, at, 0.36F, spin - echo * 0.6F, a, s.color);
 			}
 			o.sprite(new Vector3f(), s.camRight, s.camUp, 0.35F, argb(0.9F, 0xFFFFFF));
 		});

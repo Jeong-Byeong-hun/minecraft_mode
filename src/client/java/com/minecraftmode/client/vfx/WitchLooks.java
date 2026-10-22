@@ -26,6 +26,8 @@ final class WitchLooks {
 	private static final int DUSK = 0x2A0A4A;
 	private static final int GOLD = 0xFFD24A;
 	private static final int GOLD_PALE = 0xFFF0B0;
+	/** All Spells Must Be Broken: how far round its line the beam's drawn edge sits (Actions.beam: 0.9 plus about half a body). */
+	private static final float GIRTH = 1.05F;
 	/** Rule Breaker's blade, kink by kink. */
 	static final int[] RAINBOW = {0xFF4A6A, 0xFFA04A, 0xFFE84A, 0x6AF07A, 0x4AC8FF, 0x8A6AFF, 0xE06AFF};
 
@@ -286,12 +288,14 @@ final class WitchLooks {
 			o.glowLine(from, tip, 0.55F, argb(0.3F * fade, s.color), argb(0.2F * fade, s.color));
 			o.bar(from, tip, 0.05F, 0.03F, argb(fade, 0xFFFFFF), argb(0.9F * fade, PALE));
 			int steps = Math.min(64, Math.max(6, (int)(length * 3)));
+			// the rainbow bands wind round the beam's real girth (Actions.beam hits 0.9 round its line, plus the body's half width), opening
+			// out from the hand over the first blocks so they do not crowd the view
 			for (int band = 0; band < RAINBOW.length; band++) {
 				Vector3f prev = null;
 				for (int i = 0; i <= steps; i++) {
 					float d = start + (length - start) * i / steps;
-					float a = band * Mth.TWO_PI / RAINBOW.length + d * 1.1F - time * 0.7F;
-					float r = 0.32F + 0.06F * Mth.sin(d * 2.0F + band);
+					float a = band * Mth.TWO_PI / RAINBOW.length + d * 0.8F - time * 0.7F;
+					float r = Mth.lerp(Mth.clamp((d - start) / 2.5F, 0.0F, 1.0F), 0.32F, GIRTH) + 0.06F * Mth.sin(d * 2.0F + band);
 					Vector3f q = new Vector3f(dir).mul(d).add(new Vector3f(u).mul(Mth.cos(a) * r)).add(new Vector3f(v).mul(Mth.sin(a) * r));
 					if (prev != null) {
 						o.bar(prev, q, 0.025F, 0.025F, argb(0.9F * fade, RAINBOW[band]), argb(0.9F * fade, RAINBOW[band]));
@@ -306,7 +310,7 @@ final class WitchLooks {
 					continue;
 				}
 				float broken = ease(p, 0.15F + 0.08F * i, 0.6F + 0.08F * i);
-				brokenCircle(o, new Vector3f(dir).mul(d), u, v, 1.1F, broken, s.seed + i * 13, fade, s.color);
+				brokenCircle(o, new Vector3f(dir).mul(d), u, v, GIRTH, broken, s.seed + i * 13, fade, s.color);
 				for (int k = 0; k < 6; k++) {
 					Vector3f sd = BladeLooks.shardDir(s.seed + i, k);
 					Vector3f at = new Vector3f(sd).mul(0.4F + 2.0F * broken).add(new Vector3f(dir).mul(d));

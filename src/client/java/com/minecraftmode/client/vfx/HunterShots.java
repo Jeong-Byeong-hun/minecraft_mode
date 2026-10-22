@@ -197,7 +197,7 @@ final class HunterShots {
 		List<Vector3f> outer = new ArrayList<>();
 		for (int i = 0; i <= 8; i++) {
 			float t = -1.1F + 2.2F * i / 8.0F;
-			Vector3f round = new Vector3f(a).mul(Mth.cos(t) * 0.36F).add(new Vector3f(n).mul(Mth.sin(t) * 0.36F));
+			Vector3f round = new Vector3f(a).mul(Mth.cos(t) * 0.32F).add(new Vector3f(n).mul(Mth.sin(t) * 0.32F));
 			inner.add(new Vector3f(round).add(new Vector3f(f).mul(-0.17F)));
 			outer.add(new Vector3f(round).add(new Vector3f(f).mul(0.17F)));
 		}
@@ -271,7 +271,8 @@ final class HunterShots {
 		Vector3f f = new Vector3f(s.forward);
 		float time = s.ageInTicks;
 		float pulse = 1.0F + 0.06F * Mth.sin(time * 2.1F + s.seed);
-		float r = 0.42F * pulse;
+		// the shell as wide as the orb hits (HIT); the burst where it lands is ORB_BURST
+		float r = 0.32F * pulse;
 		float tail = trail(s, 1.3F);
 		glow(ps, c, o -> {
 			o.sprite(new Vector3f(), s.camRight, s.camUp, r * 2.3F, argb(0.35F, ORANGE));

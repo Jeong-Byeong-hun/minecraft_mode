@@ -156,7 +156,8 @@ final class PirateShots {
 			Vector3f head = new Vector3f();
 			o.sprite(head, s.camRight, s.camUp, 0.5F, argb(0.5F, SKY));
 			o.sprite(head, s.camRight, s.camUp, 0.16F, argb(1.0F, 0xFFFFFF));
-			o.bird(new Vector3f(back).mul(0.6F), s.forward, new Vector3f(0, 1, 0), 1.5F, flap, argb(0.9F, 0xEAF8FF), argb(0.7F, SKY));
+			// a small bird: its wings (1.15 x size out) stay near the bullet's reach round its line
+			o.bird(new Vector3f(back).mul(0.35F), s.forward, new Vector3f(0, 1, 0), 0.6F, flap, argb(0.9F, 0xEAF8FF), argb(0.7F, SKY));
 			o.glowLine(head, new Vector3f(back).mul(tail), 0.18F, argb(0.6F, SKY), argb(0.0F, SKY));
 			Vector3f side = VfxOut.across(back);
 			for (int i = 0; i < 5; i++) {
@@ -207,8 +208,10 @@ final class PirateShots {
 		Vector3f axis = new Vector3f(side).mul(Mth.cos(0.5F)).add(new Vector3f(up).mul(Mth.sin(0.5F)));
 		float grow = Math.min(1.0F, 0.5F + s.ageInTicks * 0.2F);
 		float time = s.ageInTicks;
-		float radius = 3.2F * grow;
-		float thick = 1.1F * grow;
+		// sized to what the wave hits (ProjectileStyle.WAVE.hitRadius, a block round its path), like the Getsuga: the horns reach radius x
+		// sin 72° either side; two echoes behind keep it a great stroke
+		float radius = 1.15F * grow;
+		float thick = 0.45F * grow;
 		float tail = trail(s, 3.0F);
 		ps.pushPose();
 		ps.translate(0.0F, 0.1F, 0.0F);
@@ -230,7 +233,7 @@ final class PirateShots {
 			// shock rings round the front
 			for (int k = 0; k < 2; k++) {
 				float q = (time * 0.12F + k * 0.5F) % 1.0F;
-				o.circle(new Vector3f(f).mul(0.4F - q * 1.5F), a, b, radius * (0.5F + 0.6F * q), 0.03F, 24, argb(0.5F * (1.0F - q), PINK_PALE));
+				o.circle(new Vector3f(f).mul(0.4F - q * 1.5F), a, b, radius * (0.6F + 0.4F * q), 0.03F, 24, argb(0.5F * (1.0F - q), PINK_PALE));
 			}
 			// golden sparkles shed off the rim
 			for (int i = 0; i < 8; i++) {
@@ -247,7 +250,7 @@ final class PirateShots {
 	}
 
 	/**
-	 * Seaquake: a wall of sea about 3.5 blocks across rising from the ground under the shot, curling forward over its own front, white foam
+	 * Seaquake: a wall of sea about 2.4 blocks across rising from the ground under the shot, curling forward over its own front, white foam
 	 * along the crest and spray thrown off it.
 	 */
 	private static void tsunami(final State s, final PoseStack ps, final SubmitNodeCollector c) {
@@ -259,7 +262,8 @@ final class PirateShots {
 		Vector3f side = VfxOut.across(f);
 		float time = s.ageInTicks;
 		float grow = Math.min(1.0F, 0.4F + time * 0.15F);
-		float half = 1.9F * grow;
+		// a wave hits a block round its line (WAVE hit radius 1.0): the wall is 2.2 blocks across
+		float half = 1.1F * grow;
 		// the shot flies at about chest height: the wave stands on the ground under it
 		float ground = -1.35F;
 		int cols = 10;
@@ -321,8 +325,10 @@ final class PirateShots {
 		}
 		float grow = Math.min(1.0F, 0.55F + s.ageInTicks * 0.22F);
 		float time = s.ageInTicks;
-		float radius = 2.2F * grow;
-		float thick = 0.8F * grow;
+		// sized to what the wave hits (ProjectileStyle.WAVE.hitRadius, a block round its path), like the Getsuga: the horns reach radius x
+		// sin 72° either side
+		float radius = 1.1F * grow;
+		float thick = 0.4F * grow;
 		float tail = trail(s, 2.0F);
 		ps.pushPose();
 		ps.translate(0.0F, 0.1F, 0.0F);
@@ -346,7 +352,7 @@ final class PirateShots {
 			float ang = (hash(seed + i * 3) - 0.5F) * 2.2F;
 			Vector3f from = new Vector3f(axis).mul(radius * 0.5F - radius * Mth.cos(ang)).add(new Vector3f(across).mul(radius * Mth.sin(ang))).add(0, 0.1F, 0);
 			Vector3f d = BladeLooks.shardDir(seed, i);
-			Vector3f to = new Vector3f(d).mul(1.0F + hash(seed + i) * 1.2F).add(from).add(new Vector3f(f).mul(-0.6F));
+			Vector3f to = new Vector3f(d).mul(0.4F + hash(seed + i) * 0.4F).add(from).add(new Vector3f(f).mul(-0.6F));
 			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.25F, 8));
 		}
 		shade(ps, c, o -> {
@@ -376,7 +382,7 @@ final class PirateShots {
 			for (int i = 0; i < 5; i++) {
 				Vector3f d0 = BladeLooks.shardDir(seed, i);
 				Vector3f d1 = BladeLooks.shardDir(seed + 7, i);
-				o.bolt(new Vector3f(d0).mul(0.3F), new Vector3f(d1).mul(0.75F).add(new Vector3f(back).mul(0.2F)), seed + i, 0.15F, 3, 0.1F, argb(0.7F, BOLT),
+				o.bolt(new Vector3f(d0).mul(0.25F), new Vector3f(d1).mul(0.55F).add(new Vector3f(back).mul(0.2F)), seed + i, 0.12F, 3, 0.1F, argb(0.7F, BOLT),
 					argb(1.0F, 0xFFFFFF));
 			}
 			if (tail > 0.5F) {

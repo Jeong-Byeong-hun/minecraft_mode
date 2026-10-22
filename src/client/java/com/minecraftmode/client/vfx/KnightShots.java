@@ -54,8 +54,9 @@ final class KnightShots {
 	}
 
 	/**
-	 * Strike Air: the wind sheathing Excalibur hurled as a hammer, a tornado lying along the flight: wind strands spiralling round it out to
-	 * the wave's reach, rings of pressure and a bright point at its head.
+	 * Strike Air: the wind sheathing Excalibur hurled as a hammer, a tornado lying along the flight: its mouth at the head as wide as the
+	 * wave hits ({@link #HIT}, a ring of pressure on it), wind strands spiralling round it and narrowing behind, rings of pressure and a
+	 * bright point at its head.
 	 */
 	private static void strikeAir(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		Vector3f f = new Vector3f(s.forward);
@@ -65,12 +66,13 @@ final class KnightShots {
 		float time = s.ageInTicks;
 		glow(ps, c, o -> {
 			o.sprite(new Vector3f(), s.camRight, s.camUp, 0.6F, argb(0.6F, 0xFFFFFF));
+			o.circle(new Vector3f(), side, up, HIT, 0.035F, 24, argb(0.55F, AIR));
 			for (int k = 0; k < 5; k++) {
 				Vector3f prev = null;
 				for (int j = 0; j <= 14; j++) {
 					float d = 0.5F - (tail + 0.5F) * j / 14;
 					float t = (0.5F - d) / (tail + 0.5F);
-					float rr = HIT * (0.35F + 0.65F * t);
+					float rr = HIT * (1.0F - 0.65F * t);
 					float a = time * 0.9F + d * 3.0F + Mth.TWO_PI * k / 5;
 					Vector3f pt = new Vector3f(f).mul(d).add(new Vector3f(side).mul(Mth.cos(a) * rr)).add(new Vector3f(up).mul(Mth.sin(a) * rr));
 					if (prev != null) {
@@ -82,7 +84,7 @@ final class KnightShots {
 			}
 			for (int i = 0; i < 3; i++) {
 				float d = ((i / 3.0F + time * 0.15F) % 1.0F) * tail;
-				o.circle(new Vector3f(f).mul(-d), side, up, HIT * (0.4F + 0.6F * d / Math.max(0.5F, tail)), 0.03F, 20, argb(0.5F * (1.0F - d / (tail + 0.5F)), AIR));
+				o.circle(new Vector3f(f).mul(-d), side, up, HIT * (1.0F - 0.6F * d / Math.max(0.5F, tail)), 0.03F, 20, argb(0.5F * (1.0F - d / (tail + 0.5F)), AIR));
 			}
 			for (int i = 0; i < 4; i++) {
 				float q = (time * 0.12F + hash(s.seed + i)) % 1.0F;

@@ -3,6 +3,8 @@ package com.minecraftmode.test;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.client.vfx.LookEdges;
+import com.minecraftmode.client.vfx.LookRanges;
 import com.minecraftmode.client.job.JobKeys;
 import com.minecraftmode.client.mixin.AbstractContainerScreenAccessor;
 import com.minecraftmode.client.job.JobScreen;
@@ -34,6 +36,7 @@ import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.QuestService;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Actions;
+import com.minecraftmode.job.skill.HitArea;
 import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Movement;
 import com.minecraftmode.job.skill.Skill;
@@ -155,6 +158,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			searchTooltips(context);
 			checkPointBlank(context, server, connection);
 			checkSkillLooks(context, server, connection);
+			checkLookRanges();
 			checkReaperLooks(context, server, connection);
 			checkArcherLooks(context, server, connection);
 			checkMageLooks(context, server, connection);
@@ -1220,6 +1224,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			// the last skill's particles would cloud this one's picture
 			context.runOnClient(minecraft -> minecraft.particleEngine.clearParticles());
 			context.waitTicks(4);
+			LookAreaOverlay.record(skill);
 			SkillCaster.Result cast = server.computeOnServer(s -> {
 				fill(connection.getServerPlayer());
 				return SkillCaster.tryCast(connection.getServerPlayer(), look.slot());
@@ -1243,6 +1248,8 @@ public class JobClientGameTest implements FabricClientGameTest {
 				context.runOnClient(minecraft -> minecraft.options.improvedTransparency().set(false));
 				context.waitTicks(5);
 			}
+			areaShot(context, server, connection, focus, "look_area_" + name.substring("look_".length()));
+			LookAreaOverlay.stop();
 			server.runCommand("tick unfreeze");
 		}
 		context.waitTicks(10);
@@ -1266,7 +1273,51 @@ public class JobClientGameTest implements FabricClientGameTest {
 		MinecraftMode.LOGGER.info("[job] every tier 4 {} skill draws its look on the client ({} looks)", job, seen.size());
 	}
 
-	/** What the camera looks at for {@code look}: the middle of a beam or cone, a trail's middle, a projectile, else above its spot. */
+	/**
+	 * Every tier 4 look is drawn the size of what its skill really hits (0.5.43, {@link LookRanges}): each look has an audited edge
+	 * ({@link LookEdges}), every ring, cone and beam edge sits within 10% of the area of its step (the radius, range, arc and length the
+	 * actions use, {@link HitArea}), and no area that hurts or helps is left undrawn. Catches a look resized by eye or an action retuned
+	 * without its look; {@code docs/SKILL-LOOKS.md} is the same table.
+	 */
+	private static void checkLookRanges() {
+		List<LookRanges.Row> rows = LookRanges.tier4();
+		require(rows.size() == 7 * 9 * 4, "expected 252 tier 4 skills, found " + rows.size());
+		List<String> wrong = new ArrayList<>();
+		for (LookRanges.Row row : rows) {
+			for (LookRanges.Drawn d : row.drawn()) {
+				if (d.verdict() == LookRanges.Verdict.MISMATCH || d.verdict() == LookRanges.Verdict.UNAUDITED) {
+					wrong.add(row.skill().id() + ": " + d.look() + " " + d.drawn() + " vs " + (d.matched() == null ? "nothing" : d.matched().describe()) + " ("
+						+ d.verdict() + ")");
+				}
+			}
+			for (HitArea area : row.undrawn()) {
+				wrong.add(row.skill().id() + ": " + area.describe() + " is not drawn");
+			}
+		}
+		require(wrong.isEmpty(), "tier 4 looks off their real areas:\n" + String.join("\n", wrong));
+		long rings = rows.stream().flatMap(r -> r.drawn().stream()).filter(d -> d.verdict() == LookRanges.Verdict.MATCH).count();
+		MinecraftMode.LOGGER.info("[job] every tier 4 look sits on its real area ({} edges compared over {} skills)", rings, rows.size());
+	}
+
+	/**
+	 * The skill's real hit areas so far ({@link HitArea#trace}, drawn by {@link LookAreaOverlay} in dashed lime and magenta on top of
+	 * everything) over its look, from high above (by night): the drawn edge should lie on the dashes. Nothing for a skill without an area.
+	 */
+	private static void areaShot(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final Vec3 look,
+		final String name) {
+		AABB box = LookAreaOverlay.bounds();
+		if (box == null) {
+			return;
+		}
+		Vec3 center = new Vec3((box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2);
+		double half = Math.max(box.getXsize(), box.getZsize()) / 2 + 1.5;
+		double height = half / 0.6 + 2.0;
+		context.runOnClient(minecraft -> LookAreaOverlay.show(minecraft, true));
+		cameraShot(context, server, connection, center, center.add(0, height, height * 0.25), name, false);
+		context.runOnClient(minecraft -> LookAreaOverlay.show(minecraft, false));
+	}
+
+	/** What the camera looks at for {@code look}:the middle of a beam or cone, a trail's middle, a projectile, else above its spot. */
 	private static @Nullable Vec3 lookFocus(final Minecraft minecraft, final SkillLook look) {
 		for (Entity e : minecraft.level.entitiesForRendering()) {
 			if (e instanceof SkillProjectile shot && shot.look() == look) {
@@ -1303,6 +1354,14 @@ public class JobClientGameTest implements FabricClientGameTest {
 		final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final Vec3 focus, final Vec3 eye,
 		final String name
 	) {
+		cameraShot(context, server, connection, focus, eye, name, true);
+	}
+
+	/** {@link #cameraShot}, by night only unless {@code dayToo}. */
+	private static void cameraShot(
+		final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final Vec3 focus, final Vec3 eye,
+		final String name, final boolean dayToo
+	) {
 		int id = server.computeOnServer(s -> {
 			ServerLevel level = connection.getServerPlayer().level();
 			ArmorStand stand = EntityTypes.ARMOR_STAND.create(level, EntitySpawnReason.COMMAND);
@@ -1331,11 +1390,13 @@ public class JobClientGameTest implements FabricClientGameTest {
 		});
 		context.waitTicks(3);
 		context.takeScreenshot(name);
-		// again by day: dark bodies (Tensa Zangetsu, Mugetsu, Kurohitsugi) only show against light
-		server.runCommand("time set noon");
-		context.waitTicks(2);
-		context.takeScreenshot(name + "_day");
-		server.runCommand("time set midnight");
+		if (dayToo) {
+			// again by day: dark bodies (Tensa Zangetsu, Mugetsu, Kurohitsugi) only show against light
+			server.runCommand("time set noon");
+			context.waitTicks(2);
+			context.takeScreenshot(name + "_day");
+			server.runCommand("time set midnight");
+		}
 		context.runOnClient(minecraft -> {
 			minecraft.setCameraEntity(minecraft.player);
 			hideHud(minecraft, false);

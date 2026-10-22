@@ -88,14 +88,15 @@ final class ArcaneLooks {
 		float top = r * 2.4F * column + 1.0F;
 		shade(ps, c, o -> {
 			if (age >= hit) {
-				o.disc(new Vector3f(0, 0.13F, 0), r * 1.15F, argb(0.6F * ease(age, hit, hit + 6), 0x1A0805), argb(0.1F, 0x1A0805));
+				o.disc(new Vector3f(0, 0.13F, 0), r, argb(0.6F * ease(age, hit, hit + 6), 0x1A0805), argb(0.1F, 0x1A0805));
 			}
 			if (smoke > 0.0F) {
 				// smoke rolling out of the cap and off the ground
 				for (int i = 0; i < 14; i++) {
 					float a = Mth.TWO_PI * i / 14 + hash(s.seed + i);
 					boolean high = i % 2 == 0;
-					float rr = high ? r * 0.9F * cap + 1.0F : r * (0.7F + 0.6F * smoke);
+					// the low smoke rolls out to the blast's edge, never past it (puffs about 1.5 across)
+					float rr = high ? r * 0.9F * cap + 1.0F : r * (0.5F + 0.3F * smoke);
 					Vector3f at = polar(a, rr, high ? top + 0.5F * smoke * 3.0F : 0.8F + smoke * 1.5F);
 					o.sprite(at, s.camRight, s.camUp, (high ? 2.2F : 1.8F) * (0.6F + 0.6F * smoke), argb(0.55F * smoke, i % 3 == 0 ? 0x3A2A22 : 0x22160F));
 				}
@@ -127,8 +128,8 @@ final class ArcaneLooks {
 				return;
 			}
 			float flash = 1.0F - ease(age, hit, hit + 5.0F);
-			o.sprite(new Vector3f(0, 1.5F, 0), s.camRight, s.camUp, r * 2.2F * flash + 0.5F, argb(0.9F * flash, 0xFFFFFF));
-			o.star(new Vector3f(0, 1.5F, 0), s.camRight, s.camUp, r * 2.6F * flash + 1.0F, 12, 0.2F, s.seed, argb(0.9F * flash, BLAST_CORE), argb(0.0F, BLAST));
+			o.sprite(new Vector3f(0, 1.5F, 0), s.camRight, s.camUp, r * flash + 0.5F, argb(0.9F * flash, 0xFFFFFF));
+			o.star(new Vector3f(0, 1.5F, 0), s.camRight, s.camUp, r * flash + 0.8F, 12, 0.2F, s.seed, argb(0.9F * flash, BLAST_CORE), argb(0.0F, BLAST));
 			// the column of fire and the flames licking up it
 			o.glowLine(new Vector3f(0, 0.3F, 0), new Vector3f(0, top, 0), r * 0.5F, argb(0.5F * burn, BLAST), argb(0.4F * burn, CRIMSON));
 			o.glowLine(new Vector3f(0, 0.3F, 0), new Vector3f(0, top, 0), r * 0.2F, argb(0.7F * burn, BLAST_CORE), argb(0.5F * burn, BLAST));
@@ -146,17 +147,17 @@ final class ArcaneLooks {
 					o.flame(at, new Vector3f(Mth.cos(a), -0.5F, Mth.sin(a)), 1.6F * cap, 1.2F, time * 0.5F + i, argb(0.7F * burn, BLAST), argb(0.0F, CRIMSON));
 				}
 			}
-			// the shock running out over the ground
-			float sr = r * 2.3F * shock;
-			o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, sr - 1.2F), sr, argb(0.9F * (1.0F - shock), BLAST_CORE));
+			// the shock running out over the ground to the blast's edge (Actions.strike: r round the spot) and holding there while it burns
+			float sr = r * shock;
+			o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, sr - 1.2F), sr, argb(0.9F * (1.0F - 0.5F * shock) * burn, BLAST_CORE));
 			o.ring(new Vector3f(0, 0.17F, 0), Math.max(0.0F, sr * 0.7F - 0.6F), sr * 0.7F, argb(0.7F * (1.0F - shock), CRIMSON));
-			o.disc(new Vector3f(0, 0.15F, 0), r * 1.1F, argb(0.5F * burn, BLAST), argb(0.0F, CRIMSON));
+			o.disc(new Vector3f(0, 0.15F, 0), r, argb(0.5F * burn, BLAST), argb(0.0F, CRIMSON));
 			// embers thrown out
 			for (int i = 0; i < 18; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
 				d.y = Math.abs(d.y) * 1.2F + 0.2F;
 				float fly = ease(age, hit, hit + 20.0F);
-				Vector3f at = new Vector3f(d).mul(1.0F + r * 1.4F * fly).add(0, 1.0F - 4.0F * fly * fly, 0);
+				Vector3f at = new Vector3f(d).mul(1.0F + r * fly).add(0, 1.0F - 4.0F * fly * fly, 0);
 				if (at.y > 0.2F) {
 					o.glint(at, s.camRight, s.camUp, 0.3F, i, argb(0.9F * burn, i % 2 == 0 ? BLAST_CORE : BLAST));
 				}
@@ -164,7 +165,8 @@ final class ArcaneLooks {
 		});
 		if (age >= hit) {
 			// the fireball and the mushroom cap
-			float br = r * 1.0F * ball + 0.5F;
+			// the fireball swells to the blast's radius (its outer, faintest shell is br across)
+			float br = r * 0.95F * ball + 0.4F;
 			ball(ps, c, new Vector3f(0, br * 0.45F, 0), br * 0.45F, 1.0F, 0xFFFFFF, 0.5F * burn);
 			ball(ps, c, new Vector3f(0, br * 0.45F, 0), br * 0.8F, 0.8F, BLAST, 0.22F * burn);
 			ball(ps, c, new Vector3f(0, br * 0.45F, 0), br, 0.7F, CRIMSON, 0.12F * burn);
@@ -215,7 +217,13 @@ final class ArcaneLooks {
 			o.sprite(hand, s.camRight, s.camUp, 0.45F, argb(0.7F * fade, DRAIN));
 			o.magicCircle(hand, right, UP, 0.28F * reach, time * 0.2F, s.seed, 5, argb(0.9F * fade, DRAIN), argb(0.8F * fade, 0xD8FFD8));
 			java.util.List<Vector3f> from = new java.util.ArrayList<>();
-			for (Vector4f t : s.targets) {
+			// only the enemies the nova really reaches (body within the radius); the renderer's search box is square
+			for (int i = 0; i < s.targets.size(); i++) {
+				Vector4f t = s.targets.get(i);
+				float half = i < s.targetWidths.size() ? s.targetWidths.get(i) * 0.5F : 0.3F;
+				if (Mth.sqrt(t.x * t.x + t.z * t.z) - half > s.size) {
+					continue;
+				}
 				from.add(new Vector3f(t.x, t.y + t.w * 0.55F, t.z));
 			}
 			if (from.isEmpty()) {
@@ -254,6 +262,8 @@ final class ArcaneLooks {
 				}
 				o.sprite(src, s.camRight, s.camUp, 0.6F, argb(0.35F * fade * reach, DRAIN));
 			}
+			// the reach of the drain on the ground round the caster (Actions.nova: r round them)
+			o.ring(new Vector3f(0, 0.14F, 0), Math.max(0.0F, s.size * reach - 0.25F), s.size * reach, argb(0.55F * fade, DRAIN));
 		});
 	}
 
@@ -455,7 +465,8 @@ final class ArcaneLooks {
 				o.glowLine(from, spot, 1.2F * k + 0.2F, argb(0.6F * k, GOLD), argb(0.8F * k, GOLD_PALE));
 				o.bar(from, spot, 0.12F * k, 0.15F * k, argb(k, 0xFFFFFF), argb(k, 0xFFFFFF));
 				o.sprite(new Vector3f(spot).add(0, 0.6F, 0), s.camRight, s.camUp, 1.6F * k + 0.3F, argb(0.8F * k, GOLD_PALE));
-				o.ring(new Vector3f(spot).add(0, 0.16F, 0), r * local, r * local + 0.5F, argb(0.8F * k, GOLD));
+				// each strike's own circle racing out to its radius (Actions.strike: r round where it lands)
+				o.ring(new Vector3f(spot).add(0, 0.16F, 0), Math.max(0.0F, r * local - 0.5F), r * local, argb(0.8F * k, GOLD));
 			}
 		});
 	}
@@ -499,15 +510,20 @@ final class ArcaneLooks {
 				Vector3f top = new Vector3f(axis).mul(h[i]).add(base[i]);
 				column(o, base[i], top, 0.5F, 0.32F, argb(0.95F, 0x5A1418), argb(0.95F, 0x7A2A22));
 			}
-			o.disc(new Vector3f(0, 0.13F, 0), s.size * 1.05F, argb(0.45F * sink, 0x1A0508), argb(0.05F, 0x1A0508));
+			o.disc(new Vector3f(0, 0.13F, 0), s.size, argb(0.45F * sink, 0x1A0508), argb(0.05F, 0x1A0508));
 		});
 		glow(ps, c, o -> {
 			for (int i = 0; i < count; i++) {
 				// the cracks the pillar burst out of
 				for (int k = 0; k < 3; k++) {
 					float a = lean[i] + (k - 1) * 1.6F + hash(i * 5 + k);
-					o.bolt(new Vector3f(base[i]).add(0, 0.15F, 0), polar(a, 1.4F + hash(k + i), 0.15F).add(base[i]), s.seed + i * 3 + k, 0.2F, 4, 0.12F, argb(0.6F * sink,
-						DEMON), argb(0.9F * sink, 0xFFB080));
+					Vector3f end = polar(a, 1.4F + hash(k + i), 0.15F).add(base[i]);
+					// the cracks stay inside the nova's ring (Actions.nova: r round the caster)
+					float out = Mth.sqrt(end.x * end.x + end.z * end.z);
+					if (out > s.size * 0.97F) {
+						end.mul(s.size * 0.97F / out, 1.0F, s.size * 0.97F / out);
+					}
+					o.bolt(new Vector3f(base[i]).add(0, 0.15F, 0), end, s.seed + i * 3 + k, 0.2F, 4, 0.12F, argb(0.6F * sink, DEMON), argb(0.9F * sink, 0xFFB080));
 				}
 				if (h[i] <= 0.01F) {
 					continue;
@@ -536,7 +552,7 @@ final class ArcaneLooks {
 			}
 			float flash = 1.0F - ease(age, 0.0F, 6.0F);
 			o.sprite(new Vector3f(0, 0.6F, 0), s.camRight, s.camUp, 2.5F * flash, argb(0.8F * flash, DEMON));
-			o.ring(new Vector3f(0, 0.15F, 0), s.size * ease(age, 0.0F, 8.0F) - 0.4F, s.size * ease(age, 0.0F, 8.0F), argb(0.8F * sink, DEMON));
+			o.ring(new Vector3f(0, 0.15F, 0), Math.max(0.0F, s.size * ease(age, 0.0F, 8.0F) - 0.4F), s.size * ease(age, 0.0F, 8.0F), argb(0.8F * sink, DEMON));
 		});
 	}
 

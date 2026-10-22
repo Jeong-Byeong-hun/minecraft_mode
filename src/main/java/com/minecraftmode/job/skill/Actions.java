@@ -76,6 +76,12 @@ public final class Actions {
 	private static final double AIM_ASSIST_RANGE = 48.0;
 	/** Share of their time summons spend hitting something (walking up, waiting for a target), for {@link SkillAction#estimate}. */
 	private static final double SUMMON_UPTIME = 0.7;
+	/** How far either side of a dash's path an enemy is hit. */
+	public static final double DASH_WIDTH = 1.2;
+	/** How far either side of a beam's line an enemy is hit (from its hitbox). */
+	public static final double BEAM_WIDTH = 0.9;
+	/** How far a chain leaps from one struck enemy to the next. */
+	public static final double CHAIN_HOP = 6.0;
 
 	/** The player a skill summon fights for, or null for anything else. */
 	public static @Nullable UUID summoner(final @Nullable Entity entity) {
@@ -310,6 +316,66 @@ public final class Actions {
 			public List<SkillSupport> supports() {
 				return action.supports();
 			}
+
+			@Override
+			public List<HitArea> area() {
+				return action.area();
+			}
+
+			@Override
+			public List<SkillAction> parts() {
+				return action.parts();
+			}
+		};
+	}
+
+	/** {@code action} that also reports where it hits ({@link HitArea}, report only). */
+	private static SkillAction reported(final SkillAction action, final HitArea area) {
+		return new SkillAction() {
+			@Override
+			public void run(final SkillContext ctx) {
+				action.run(ctx);
+			}
+
+			@Override
+			public Component describe() {
+				return action.describe();
+			}
+
+			@Override
+			public boolean isModifier() {
+				return action.isModifier();
+			}
+
+			@Override
+			public boolean moves() {
+				return action.moves();
+			}
+
+			@Override
+			public boolean damages() {
+				return action.damages();
+			}
+
+			@Override
+			public double estimate(final int targets) {
+				return action.estimate(targets);
+			}
+
+			@Override
+			public List<SkillSupport> supports() {
+				return action.supports();
+			}
+
+			@Override
+			public List<HitArea> area() {
+				return List.of(area);
+			}
+
+			@Override
+			public List<SkillAction> parts() {
+				return action.parts();
+			}
 		};
 	}
 
@@ -353,6 +419,16 @@ public final class Actions {
 			public List<SkillSupport> supports() {
 				return supports;
 			}
+
+			@Override
+			public List<HitArea> area() {
+				return action.area();
+			}
+
+			@Override
+			public List<SkillAction> parts() {
+				return action.parts();
+			}
 		};
 	}
 
@@ -367,7 +443,33 @@ public final class Actions {
 	}
 
 	private static SkillAction wrap(final SkillAction inner, final Consumer<SkillContext> run, final Component description) {
-		return tagged(run, description, inner.moves(), inner.damages());
+		SkillAction outer = tagged(run, description, inner.moves(), inner.damages());
+		return new SkillAction() {
+			@Override
+			public void run(final SkillContext ctx) {
+				outer.run(ctx);
+			}
+
+			@Override
+			public Component describe() {
+				return outer.describe();
+			}
+
+			@Override
+			public boolean moves() {
+				return outer.moves();
+			}
+
+			@Override
+			public boolean damages() {
+				return outer.damages();
+			}
+
+			@Override
+			public List<SkillAction> parts() {
+				return List.of(inner);
+			}
+		};
 	}
 
 	private static SkillAction modifier(final Consumer<SkillContext> run, final Component description) {
@@ -414,32 +516,37 @@ public final class Actions {
 	/** Cone in front of the caster. */
 	public static SkillAction slash(final double range, final double arc, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return attack(ctx -> {
+		HitArea where = new HitArea("slash", HitArea.Shape.CONE, HitArea.Anchor.CASTER, range, 0.0, arc, 0.0, true, false, true);
+		return reported(attack(ctx -> {
 			double r = ctx.area(range);
+			HitArea.placed(where, ctx.eye(), ctx.flatLook(), r);
 			ctx.hitArea(ctx.enemiesInCone(r, arc), m);
 			ctx.fx.arc(ctx.level, ctx.eye(), ctx.caster.getYRot(), Math.max(1.5, r * 0.7), arc);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0F, 0.9F + ctx.caster.getRandom().nextFloat() * 0.2F);
-		}, Component.translatable(SLASH, num(range), num(arc), pct(m)), t -> area(m, t));
+		}, Component.translatable(SLASH, num(range), num(arc), pct(m)), t -> area(m, t)), where);
 	}
 
 	/** Everything around the caster. */
 	public static SkillAction nova(final double radius, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return attack(ctx -> {
+		HitArea where = HitArea.circle("nova", HitArea.Anchor.CASTER, radius, 0.0, true);
+		return reported(attack(ctx -> {
 			double r = ctx.area(radius);
 			Vec3 c = ctx.caster.position().add(0, 0.2, 0);
+			HitArea.placed(where, c, ctx.flatLook(), r);
 			ctx.hitArea(ctx.enemiesNear(c, r), m);
 			ctx.fx.still(ctx.level, Fx.Kind.RING, c);
 			ctx.fx.circle(ctx.level, ctx.fx.kind(), c, r);
 			ctx.fx.burst(ctx.level, c.add(0, 1, 0), (int)(r * 6), r / 2, 0.1);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0F, 0.7F);
-		}, Component.translatable(NOVA, num(radius), pct(m)), t -> area(m, t));
+		}, Component.translatable(NOVA, num(radius), pct(m)), t -> area(m, t)), where);
 	}
 
 	/** Dashes over a few ticks, hitting each enemy in the path once ({@code mult} 0 = no damage). */
 	public static SkillAction dash(final double distance, final double mult) {
 		Component text = mult > 0 ? Component.translatable(DASH_HIT, num(distance), pct(mult)) : Component.translatable(DASH, num(distance));
-		return move(ctx -> {
+		HitArea where = new HitArea("dash", HitArea.Shape.PATH, HitArea.Anchor.CASTER, DASH_WIDTH, distance, 0.0, 0.0, false, false, true);
+		SkillAction dash = move(ctx -> {
 			// follow the path itself (2 blocks a tick) so steps never cut through slopes
 			List<Vec3> path = new ArrayList<>();
 			path.add(ctx.caster.position());
@@ -452,6 +559,9 @@ public final class Actions {
 				stops.add(path.getLast());
 			}
 			Set<UUID> hit = new HashSet<>();
+			if (mult > 0) {
+				HitArea.placed(where, path.getFirst().add(0, 1, 0), path.getLast().subtract(path.getFirst()), DASH_WIDTH);
+			}
 			ctx.guard(stops.size() + Engage.GUARD_TICKS);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8F, 1.5F);
 			for (int i = 0; i < stops.size(); i++) {
@@ -464,7 +574,7 @@ public final class Actions {
 					Movement.teleport(ctx.caster, to);
 					ctx.fx.line(ctx.level, from.add(0, 1, 0), to.add(0, 1, 0), 0.4);
 					if (mult > 0) {
-						for (LivingEntity e : ctx.enemiesAlong(from.add(0, 1, 0), to.add(0, 1, 0), 1.2)) {
+						for (LivingEntity e : ctx.enemiesAlong(from.add(0, 1, 0), to.add(0, 1, 0), DASH_WIDTH)) {
 							if (hit.add(e.getUUID())) {
 								ctx.hit(e, mult);
 							}
@@ -473,12 +583,14 @@ public final class Actions {
 				});
 			}
 		}, text, mult > 0, t -> mult * t);
+		return mult > 0 ? reported(dash, where) : dash;
 	}
 
 	/** Jump, then slam on landing. */
 	public static SkillAction leap(final double height, final double radius, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return move(ctx -> {
+		HitArea where = HitArea.circle("leap", HitArea.Anchor.LANDING, radius, 0.0, mult > 0);
+		return reported(move(ctx -> {
 			Vec3 dir = ctx.flatLook();
 			impulse(ctx.caster, new Vec3(dir.x * 0.9, 0.5 + height * 0.12, dir.z * 0.9));
 			sound(ctx, SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 0.6F);
@@ -487,26 +599,29 @@ public final class Actions {
 				ctx.guard(Engage.GUARD_TICKS);
 				double r = ctx.area(radius);
 				Vec3 c = ctx.caster.position();
+				HitArea.placed(where, c, ctx.flatLook(), r);
 				ctx.hitArea(ctx.enemiesNear(c, r), m);
 				ctx.fx.still(ctx.level, Fx.Kind.RING, c.add(0, 0.1, 0));
 				ctx.fx.circle(ctx.level, Fx.Kind.SHARD, c.add(0, 0.2, 0), r);
 				ctx.level.sendParticles(ParticleTypes.EXPLOSION, c.x, c.y + 0.5, c.z, 1, 0, 0, 0, 0);
 				soundAt(ctx, c, SoundEvents.GENERIC_EXPLODE.value(), 0.8F, 0.8F);
 			});
-		}, Component.translatable(LEAP, num(radius), pct(m)), mult > 0, t -> area(m, t));
+		}, Component.translatable(LEAP, num(radius), pct(m)), mult > 0, t -> area(m, t)), where);
 	}
 
 	/** Instant line through every enemy. */
 	public static SkillAction beam(final double length, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return attack(ctx -> {
+		HitArea where = new HitArea("beam", HitArea.Shape.LINE, HitArea.Anchor.CASTER, BEAM_WIDTH, length, 0.0, 0.0, false, false, true);
+		return reported(attack(ctx -> {
 			Vec3 from = ctx.eye().add(0, -0.2, 0);
 			Vec3 to = ctx.lookPoint(length);
-			ctx.hitArea(ctx.enemiesAlong(from, to, 0.9), m);
+			HitArea.placed(where, from, to.subtract(from), BEAM_WIDTH);
+			ctx.hitArea(ctx.enemiesAlong(from, to, BEAM_WIDTH), m);
 			ctx.fx.line(ctx.level, from.add(ctx.look()), to, 0.3);
 			ctx.fx.still(ctx.level, Fx.Kind.RING, to);
 			sound(ctx, SoundEvents.BEACON_ACTIVATE, 0.8F, 1.8F);
-		}, Component.translatable(BEAM, num(length), pct(m)), t -> area(m, t));
+		}, Component.translatable(BEAM, num(length), pct(m)), t -> area(m, t)), where);
 	}
 
 	public static SkillAction blink(final double distance) {
@@ -522,7 +637,7 @@ public final class Actions {
 	}
 
 	public static SkillAction shadowstep(final double range, final double mult) {
-		return move(ctx -> {
+		return reported(move(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -537,11 +652,11 @@ public final class Actions {
 			ctx.hit(target, mult);
 			ctx.fx.burst(ctx.level, Fx.Kind.SLASH, target.position().add(0, target.getBbHeight() / 2, 0), 4, 0.3, 0.0);
 			sound(ctx, SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, 1.2F);
-		}, Component.translatable(SHADOWSTEP, num(range), pct(mult)), true, t -> mult);
+		}, Component.translatable(SHADOWSTEP, num(range), pct(mult)), true, t -> mult), HitArea.target("shadowstep", range, true));
 	}
 
 	public static SkillAction execute(final double range, final double mult, final double thresholdPct, final double factor) {
-		return attack(ctx -> {
+		return reported(attack(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -555,11 +670,11 @@ public final class Actions {
 			}
 			// (no crit sound: only real critical hits make it)
 			sound(ctx, SoundEvents.PLAYER_ATTACK_STRONG, 1.0F, low ? 0.6F : 0.8F);
-		}, Component.translatable(EXECUTE, num(range), pct(mult), num(thresholdPct), num(factor)), t -> mult);
+		}, Component.translatable(EXECUTE, num(range), pct(mult), num(thresholdPct), num(factor)), t -> mult), HitArea.target("execute", range, true));
 	}
 
 	public static SkillAction chain(final double range, final int jumps, final double mult) {
-		return attack(ctx -> {
+		return reported(attack(ctx -> {
 			LivingEntity current = ctx.lookTarget(range);
 			if (current == null) {
 				current = ctx.enemiesNear(ctx.caster.position(), range).stream().min((a, b) -> Double.compare(a.distanceToSqr(ctx.caster), b.distanceToSqr(ctx.caster))).orElse(null);
@@ -573,11 +688,11 @@ public final class Actions {
 				done.add(current.getUUID());
 				from = to;
 				final Vec3 at = to;
-				current = ctx.enemiesNear(at, 6.0).stream().filter(e -> !done.contains(e.getUUID()))
+				current = ctx.enemiesNear(at, CHAIN_HOP).stream().filter(e -> !done.contains(e.getUUID()))
 					.min((a, b) -> Double.compare(a.distanceToSqr(at), b.distanceToSqr(at))).orElse(null);
 			}
 			sound(ctx, SoundEvents.TRIDENT_THUNDER.value(), 0.5F, 1.6F);
-		}, Component.translatable(CHAIN, num(range), jumps, pct(mult)), t -> mult * Math.min(jumps, t));
+		}, Component.translatable(CHAIN, num(range), jumps, pct(mult)), t -> mult * Math.min(jumps, t)), new HitArea("chain", HitArea.Shape.TARGET, HitArea.Anchor.TARGET, CHAIN_HOP, range, 0.0, 0.0, false, false, true));
 	}
 
 	// ================================================================== projectiles
@@ -743,10 +858,26 @@ public final class Actions {
 			int shots = this.shots();
 			boolean together = this.parallel > 0.0 || this.spread <= 0.0;
 			if (this.explode > 0.0F) {
-				return (together ? shots : Math.min(shots, targets)) * area(this.each(), targets);
+				return (together ? shots : Math.min(shots, targets)) * Actions.area(this.each(), targets);
 			}
 			int through = Math.min(targets, this.pierce + 1);
 			return together ? shots * this.each() * through : this.each() * (through + Math.min(shots - 1, targets - 1));
+		}
+
+		@Override
+		public List<HitArea> area() {
+			return List.of(new HitArea("shoot", HitArea.Shape.PROJECTILE, HitArea.Anchor.FLIGHT, this.style.hitRadius(), 0.0, this.spread, this.explode, false, false,
+				this.mult > 0));
+		}
+
+		/** The look this volley's shots are drawn as. */
+		public SkillLook look() {
+			return this.look;
+		}
+
+		/** The drawn look where a shot lands ({@link #lookWhereItLands}/{@link #lookWhereItBursts}), or null. */
+		public @Nullable ImpactLook impactLook() {
+			return this.impact instanceof ImpactLook drawn ? drawn : null;
 		}
 
 		@Override
@@ -850,9 +981,11 @@ public final class Actions {
 		if (explode > 0) {
 			text.append(Component.translatable(EXPLODE, num(explode)));
 		}
-		return attack(ctx -> {
+		HitArea where = new HitArea("rain", HitArea.Shape.CIRCLE, HitArea.Anchor.AIM, radius, range, 360.0, explode, true, false, true);
+		return reported(attack(ctx -> {
 			Vec3 center = ctx.groundPoint(range);
 			double r = ctx.area(radius);
+			HitArea.placed(where, center, ctx.flatLook(), r);
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, center.add(0, 0.1, 0), r);
 			for (int i = 0; i < count; i++) {
 				SkillScheduler.schedule(4 + i * 2, () -> {
@@ -869,7 +1002,7 @@ public final class Actions {
 				});
 			}
 			sound(ctx, SoundEvents.EVOKER_PREPARE_ATTACK, 0.8F, 1.2F);
-		}, text, t -> explode > 0 ? count * area(m, t) : count * m);
+		}, text, t -> explode > 0 ? count * area(m, t) : count * m), where);
 	}
 
 	/**
@@ -913,7 +1046,8 @@ public final class Actions {
 	 * it flies) and is drawn as {@code shot}. Visual only: the same projectiles from the same places.
 	 */
 	public static SkillAction barrage(final ProjectileStyle style, final int count, final double mult, final SkillLook gate, final SkillLook shot) {
-		return attack(ctx -> {
+		HitArea where = new HitArea("barrage", HitArea.Shape.PROJECTILE, HitArea.Anchor.FLIGHT, style.hitRadius(), 32.0, 0.0, 0.0, false, false, true);
+		return reported(attack(ctx -> {
 			for (int i = 0; i < count; i++) {
 				SkillScheduler.schedule(1 + i * 2, () -> {
 					if (!ctx.valid()) {
@@ -935,7 +1069,7 @@ public final class Actions {
 				});
 			}
 			sound(ctx, SoundEvents.ILLUSIONER_CAST_SPELL, 0.8F, 1.4F);
-		}, Component.translatable(BARRAGE, style(style), count, pct(mult)), t -> count * mult);
+		}, Component.translatable(BARRAGE, style(style), count, pct(mult)), t -> count * mult), where);
 	}
 
 	/**
@@ -961,7 +1095,8 @@ public final class Actions {
 	 */
 	public static SkillAction strike(final double range, final double radius, final int count, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return attack(ctx -> {
+		HitArea where = HitArea.circle("strike", HitArea.Anchor.AIM, radius, range, true);
+		return reported(attack(ctx -> {
 			Vec3 center = ctx.groundPoint(range);
 			double r = ctx.area(radius);
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, center.add(0, 0.1, 0), r);
@@ -976,18 +1111,20 @@ public final class Actions {
 					double scatter = r * 2.0 / 3.0;
 					Vec3 at = first ? aimed : aimed.add((ctx.caster.getRandom().nextDouble() - 0.5) * scatter, 0, (ctx.caster.getRandom().nextDouble() - 0.5) * scatter);
 					ctx.fx.line(ctx.level, at.add(0, 10, 0), at, 0.6);
+					HitArea.placed(where, at, ctx.flatLook(), r);
 					ctx.hitArea(ctx.enemiesNear(at, r), m);
 					ctx.fx.burst(ctx.level, at.add(0, 0.5, 0), 20, r / 2, 0.15);
 					ctx.level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y + 0.5, at.z, 1, 0, 0, 0, 0);
 					soundAt(ctx, at, SoundEvents.GENERIC_EXPLODE.value(), 0.8F, 0.9F + ctx.caster.getRandom().nextFloat() * 0.3F);
 				});
 			}
-		}, Component.translatable(STRIKE, num(range), num(radius), count, pct(m)), t -> count * area(m, t));
+		}, Component.translatable(STRIKE, num(range), num(radius), count, pct(m)), t -> count * area(m, t)), where);
 	}
 
 	public static SkillAction lightning(final double range, final double radius, final double mult) {
 		double m = mult * SkillContext.AREA_SCALE;
-		return attack(ctx -> {
+		HitArea where = HitArea.circle("lightning", HitArea.Anchor.AIM, radius, range, true);
+		return reported(attack(ctx -> {
 			Vec3 at = ctx.groundPoint(range);
 			LightningBolt bolt = EntityTypes.LIGHTNING_BOLT.create(ctx.level, EntitySpawnReason.TRIGGERED);
 			if (bolt != null) {
@@ -996,10 +1133,11 @@ public final class Actions {
 				ctx.level.addFreshEntity(bolt);
 			}
 			double r = ctx.area(radius);
+			HitArea.placed(where, at, ctx.flatLook(), r);
 			ctx.hitArea(ctx.enemiesNear(at, r), m);
 			ctx.fx.withKind(Fx.Kind.BOLT).column(ctx.level, at, 8.0);
 			ctx.fx.burst(ctx.level, Fx.Kind.SPARK, at.add(0, 0.5, 0), 25, r / 2, 0.2);
-		}, Component.translatable(LIGHTNING, num(range), num(radius), pct(m)), t -> area(m, t));
+		}, Component.translatable(LIGHTNING, num(range), num(radius), pct(m)), t -> area(m, t)), where);
 	}
 
 	/** Lingering field. */
@@ -1036,7 +1174,7 @@ public final class Actions {
 
 		@Override
 		public double estimate(final int targets) {
-			return Math.max(1, Math.round(this.seconds * 2)) * area(this.mult / 2, targets);
+			return Math.max(1, Math.round(this.seconds * 2)) * Actions.area(this.mult / 2, targets);
 		}
 
 		/** Place it where the caster looks instead of at their feet. */
@@ -1058,9 +1196,17 @@ public final class Actions {
 		}
 
 		@Override
+		public List<HitArea> area() {
+			boolean heals = this.heal > 0;
+			return List.of(new HitArea(heals ? "sanctuary" : "zone", HitArea.Shape.CIRCLE, this.targetRange > 0 ? HitArea.Anchor.AIM : HitArea.Anchor.CASTER, this.radius,
+				this.targetRange, 360.0, 0.0, true, heals, this.mult > 0));
+		}
+
+		@Override
 		public void run(final SkillContext ctx) {
 			Vec3 center = this.targetRange > 0 ? ctx.groundPoint(this.targetRange) : ctx.caster.position();
 			double r = ctx.area(this.radius);
+			HitArea.placed(this.area().getFirst(), center, ctx.flatLook(), r);
 			int pulses = Math.max(1, (int)Math.round(this.seconds * 2));
 			for (int i = 0; i < pulses; i++) {
 				SkillScheduler.schedule(1 + i * 10, () -> {
@@ -1133,7 +1279,9 @@ public final class Actions {
 	// ================================================================== crowd control
 
 	public static SkillAction pull(final double radius, final double strength) {
-		return action(ctx -> {
+		HitArea where = HitArea.circle("pull", HitArea.Anchor.CASTER, radius, 0.0, false);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			Vec3 c = ctx.caster.position();
 			for (LivingEntity e : ctx.enemiesNear(c, ctx.area(radius))) {
 				Vec3 to = c.subtract(e.position());
@@ -1141,11 +1289,13 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.SMOKE, c.add(0, 0.5, 0), ctx.area(radius));
 			sound(ctx, SoundEvents.EVOKER_CAST_SPELL, 0.6F, 0.6F);
-		}, Component.translatable(PULL, num(radius)));
+		}, Component.translatable(PULL, num(radius))), where);
 	}
 
 	public static SkillAction push(final double radius, final double strength) {
-		return action(ctx -> {
+		HitArea where = HitArea.circle("push", HitArea.Anchor.CASTER, radius, 0.0, false);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			Vec3 c = ctx.caster.position();
 			for (LivingEntity e : ctx.enemiesNear(c, ctx.area(radius))) {
 				Vec3 away = e.position().subtract(c).multiply(1, 0, 1);
@@ -1154,21 +1304,25 @@ public final class Actions {
 			}
 			ctx.fx.still(ctx.level, Fx.Kind.RING, c.add(0, 0.3, 0));
 			sound(ctx, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.0F, 0.8F);
-		}, Component.translatable(PUSH, num(radius)));
+		}, Component.translatable(PUSH, num(radius))), where);
 	}
 
 	public static SkillAction launch(final double radius, final double height) {
-		return action(ctx -> {
+		HitArea where = HitArea.circle("launch", HitArea.Anchor.CASTER, radius, 0.0, false);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			for (LivingEntity e : ctx.enemiesNear(ctx.caster.position(), ctx.area(radius))) {
 				impulse(e, e.getDeltaMovement().add(0, 0.3 + height * 0.12, 0));
 				ctx.fx.burst(ctx.level, Fx.Kind.SPARK, e.position(), 5, 0.3, 0.1);
 			}
-		}, Component.translatable(LAUNCH, num(radius)));
+		}, Component.translatable(LAUNCH, num(radius))), where);
 	}
 
 	/** Effect on every enemy around the caster (no damage). */
 	public static SkillAction debuff(final double radius, final Holder<MobEffect> effect, final double seconds, final int amplifier) {
-		return supporting(action(ctx -> {
+		HitArea where = HitArea.circle("debuff", HitArea.Anchor.CASTER, radius, 0.0, false);
+		return reported(supporting(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			double r = ctx.area(radius);
 			for (LivingEntity e : ctx.enemiesNear(ctx.caster.position(), r)) {
 				e.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), ctx.caster);
@@ -1177,11 +1331,13 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), r);
 			sound(ctx, SoundEvents.EVOKER_CAST_SPELL, 0.7F, 0.7F);
-		}, Component.translatable(DEBUFF, num(radius), effectName(effect), level(amplifier), num(seconds))), vulnerable(effect, seconds, amplifier));
+		}, Component.translatable(DEBUFF, num(radius), effectName(effect), level(amplifier), num(seconds))), vulnerable(effect, seconds, amplifier)), where);
 	}
 
 	public static SkillAction taunt(final double radius) {
-		return action(ctx -> {
+		HitArea where = HitArea.circle("taunt", HitArea.Anchor.CASTER, radius, 0.0, false);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			for (LivingEntity e : ctx.enemiesNear(ctx.caster.position(), ctx.area(radius))) {
 				if (e instanceof Mob mob) {
 					mob.setTarget(ctx.caster);
@@ -1190,7 +1346,7 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RING, ctx.caster.position().add(0, 0.2, 0), ctx.area(radius));
 			sound(ctx, SoundEvents.RAVAGER_ROAR, 0.7F, 1.3F);
-		}, Component.translatable(TAUNT, num(radius)));
+		}, Component.translatable(TAUNT, num(radius))), where);
 	}
 
 	/** Modifier: enemies hit by this skill get the effect. */
@@ -1241,7 +1397,9 @@ public final class Actions {
 	}
 
 	public static SkillAction allyBuff(final double radius, final Holder<MobEffect> effect, final double seconds, final int amplifier) {
-		return action(ctx -> {
+		HitArea where = HitArea.allies("ally buff", radius);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
 				ally.addEffect(new MobEffectInstance(effect, (int)(seconds * 20), amplifier), ctx.caster);
 				Contribution.buffed(ctx.caster, ally, (int)(seconds * 20));
@@ -1249,7 +1407,7 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
 			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.7F, 1.2F);
-		}, Component.translatable(ALLY_BUFF, num(radius), effectName(effect), level(amplifier), num(seconds)));
+		}, Component.translatable(ALLY_BUFF, num(radius), effectName(effect), level(amplifier), num(seconds))), where);
 	}
 
 	public static SkillAction heal(final double pct) {
@@ -1261,14 +1419,16 @@ public final class Actions {
 	}
 
 	public static SkillAction allyHeal(final double radius, final double pct) {
-		return action(ctx -> {
+		HitArea where = HitArea.allies("ally heal", radius);
+		return reported(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
 				healAlly(ctx, ally, (float)(ally.getMaxHealth() * pct / 100.0));
 				ctx.level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY(1.0), ally.getZ(), 4, 0.4, 0.3, 0.4, 0.0);
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
 			sound(ctx, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.2F);
-		}, Component.translatable(ALLY_HEAL, num(radius), num(pct)));
+		}, Component.translatable(ALLY_HEAL, num(radius), num(pct))), where);
 	}
 
 	/** Absorption hearts ({@code amount} health points, rounded up to the effect's steps of 4). */
@@ -1311,7 +1471,9 @@ public final class Actions {
 	/** {@link #boost} for the caster and every ally within {@code radius}. */
 	public static SkillAction allyBoost(final double radius, final Boost boost, final double seconds, final int pct) {
 		int amplifier = boost.amplifier(pct);
-		return supporting(action(ctx -> {
+		HitArea where = HitArea.allies("ally boost", radius);
+		return reported(supporting(action(ctx -> {
+			HitArea.placed(where, ctx.caster.position(), ctx.flatLook(), where.scaled() ? ctx.area(radius) : radius);
 			for (Player ally : allies(ctx, ctx.caster.position(), radius)) {
 				ally.addEffect(new MobEffectInstance(boost.effect(), (int)(seconds * 20), amplifier), ctx.caster);
 				Contribution.buffed(ctx.caster, ally, (int)(seconds * 20));
@@ -1319,7 +1481,7 @@ public final class Actions {
 			}
 			ctx.fx.circle(ctx.level, Fx.Kind.RUNE, ctx.caster.position().add(0, 0.1, 0), radius);
 			sound(ctx, SoundEvents.BEACON_POWER_SELECT, 0.7F, 1.4F);
-		}, Component.translatable(ALLY_BOOST, num(radius), boostText(boost, seconds, pct))), List.of(SkillSupport.of(boost, pct, seconds)));
+		}, Component.translatable(ALLY_BOOST, num(radius), boostText(boost, seconds, pct))), List.of(SkillSupport.of(boost, pct, seconds))), where);
 	}
 
 	private static Component boostText(final Boost boost, final double seconds, final int pct) {
@@ -1357,7 +1519,8 @@ public final class Actions {
 	}
 
 	public static SkillAction mark(final double range, final double seconds, final double bonusPct) {
-		return supporting(action(ctx -> {
+		HitArea where = HitArea.target("mark", range, false);
+		return reported(supporting(action(ctx -> {
 			LivingEntity target = ctx.lookTarget(range);
 			if (target == null) {
 				return;
@@ -1367,7 +1530,7 @@ public final class Actions {
 			target.addEffect(new MobEffectInstance(MobEffects.GLOWING, (int)(seconds * 20), 0), ctx.caster);
 			ctx.fx.still(ctx.level, Fx.Kind.RUNE, target.position().add(0, target.getBbHeight() + 0.5, 0));
 			sound(ctx, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6F, 0.6F);
-		}, Component.translatable(MARK, num(range), num(seconds), num(bonusPct))), List.of(new SkillSupport(SkillSupport.Kind.MARK, bonusPct, seconds, 0)));
+		}, Component.translatable(MARK, num(range), num(seconds), num(bonusPct))), List.of(new SkillSupport(SkillSupport.Kind.MARK, bonusPct, seconds, 0))), where);
 	}
 
 	public static SkillAction cleanse() {
@@ -1553,7 +1716,7 @@ public final class Actions {
 	 * engraving (Fairy Glitter's burst of stars). Purely visual.
 	 */
 	public static BiConsumer<SkillContext, Vec3> lookWhereItLands(final SkillLook look, final double size) {
-		return (ctx, at) -> SkillVfx.spawn(ctx, look, at, ctx.flatLook(), (float)ctx.area(size), 0.0F, look.ticks(), null);
+		return new ImpactLook(look, size, true);
 	}
 
 	/**
@@ -1561,12 +1724,20 @@ public final class Actions {
 	 * not grown by the Expansion engraving either (Kamui Shuriken's vortex). Purely visual.
 	 */
 	public static BiConsumer<SkillContext, Vec3> lookWhereItBursts(final SkillLook look, final double radius) {
-		return (ctx, at) -> SkillVfx.spawn(ctx, look, at, ctx.flatLook(), (float)radius, 0.0F, look.ticks(), null);
+		return new ImpactLook(look, radius, false);
+	}
+
+	/** A look shown where a projectile lands, {@code size} across ({@code scaled}: grown by the Expansion engraving). Purely visual. */
+	public record ImpactLook(SkillLook look, double size, boolean scaled) implements BiConsumer<SkillContext, Vec3> {
+		@Override
+		public void accept(final SkillContext ctx, final Vec3 at) {
+			SkillVfx.spawn(ctx, this.look, at, ctx.flatLook(), (float)(this.scaled ? ctx.area(this.size) : this.size), 0.0F, this.look.ticks(), null);
+		}
 	}
 
 	/** A step with a drawn effect; see {@link #look}. Purely visual: everything but {@link #run} is the wrapped action's. */
 	public static final class LookAction implements SkillAction {
-		private enum Place {
+		public enum Place {
 			FEET,
 			AIM,
 			TARGET,
@@ -1718,6 +1889,41 @@ public final class Actions {
 		@Override
 		public List<SkillSupport> supports() {
 			return this.action.supports();
+		}
+
+		@Override
+		public List<SkillAction> parts() {
+			return List.of(this.action);
+		}
+
+		/** The drawn look. */
+		public SkillLook look() {
+			return this.look;
+		}
+
+		/** Where it is drawn. */
+		public Place place() {
+			return this.place;
+		}
+
+		/** The size it is drawn at before the Expansion engraving ({@link #size}, else the look's own). */
+		public double drawnSize() {
+			return this.size > 0 ? this.size : this.look.size();
+		}
+
+		/** {@link #at}, {@link #onTarget} or {@link #beam} distance, {@link #cone} range. */
+		public double range() {
+			return this.range;
+		}
+
+		/** {@link #cone} arc in degrees. */
+		public double arc() {
+			return this.arc;
+		}
+
+		/** {@link #unscaled}: the Expansion engraving does not grow it. */
+		public boolean isUnscaled() {
+			return this.unscaled;
 		}
 	}
 

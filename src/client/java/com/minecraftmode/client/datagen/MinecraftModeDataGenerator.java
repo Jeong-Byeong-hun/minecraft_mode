@@ -27,6 +27,7 @@ public class MinecraftModeDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(CompanionAssetProvider::new);
 		pack.addProvider(ClassDocProvider::new);
 		pack.addProvider(GearDocProvider::new);
+		pack.addProvider(SkillLooksDocProvider::new);
 		pack.addProvider(ModRecipeProvider::new);
 		pack.addProvider(ModLootProviders.Blocks::new);
 		pack.addProvider(ModLootProviders.Entities::new);

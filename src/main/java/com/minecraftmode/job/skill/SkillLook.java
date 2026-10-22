@@ -584,7 +584,13 @@ public enum SkillLook {
 	/** Needle Disguise: needles driven into the caster's head, the face twisting into another. */
 	NEEDLE_DISGUISE(36, 1.0F, Hold.FOLLOW),
 	/** Zoldyck Assassination: a needle driven into the target and Nen threads pulling it like a puppet. */
-	NEEDLE_PUPPET(30, 1.0F, Hold.FOLLOW);
+	NEEDLE_PUPPET(30, 1.0F, Hold.FOLLOW),
+
+	// ------------------------------------------------------------ shared (0.5.43)
+	/** A faint ring round the caster as wide as the allies a step reaches (allyBoost, allyHeal) where the skill's own look shows something else. */
+	ALLY_RING(30, 6.0F, Hold.FOLLOW),
+	/** A shock ring running out round where a leaping caster comes down, as wide as the slam ({@link Actions#leap}): nothing until it lands. */
+	LANDING_RING(50, 3.0F, Hold.TRAIL);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

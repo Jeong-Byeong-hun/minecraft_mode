@@ -170,7 +170,10 @@ final class NavyLooks {
 		return 12.0F + (3 - g) * 3.0F + (side > 0 ? 0.0F : 1.5F) + 2.0F * hash(s.seed + g * 5 + side);
 	}
 
-	/** A shot bursting: a white flash, a fireball swelling, a smoke ring rolling out, the shock running round and splinters flung. */
+	/**
+	 * A shot bursting: a white flash, a fireball swelling, a smoke ring rolling out, the shock running round and splinters flung; the shock
+	 * stops at the blast radius ({@code size}).
+	 */
 	private static void cannonBlast(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
 		float r = Math.max(0.8F, s.size);
@@ -186,13 +189,14 @@ final class NavyLooks {
 		});
 		glow(ps, c, o -> {
 			Vector3f mid = new Vector3f(0, 0.3F, 0);
-			o.sprite(mid, s.camRight, s.camUp, r * 1.6F * flash + 0.2F, argb(0.95F * flash, 0xFFFFFF));
-			o.star(mid, s.camRight, s.camUp, r * 1.8F * flash + 0.3F, 10, 0.25F, s.seed, argb(0.9F * flash, FIRE_CORE), argb(0.0F, FIRE));
-			o.ring(new Vector3f(0, 0.05F, 0), Math.max(0.0F, r * 1.3F * out - 0.5F), r * 1.3F * out, argb(0.8F * fade, FIRE_CORE));
+			o.sprite(mid, s.camRight, s.camUp, r * 0.9F * flash + 0.2F, argb(0.95F * flash, 0xFFFFFF));
+			o.star(mid, s.camRight, s.camUp, r * 1.0F * flash + 0.2F, 10, 0.25F, s.seed, argb(0.9F * flash, FIRE_CORE), argb(0.0F, FIRE));
+			// the shock rolls out to the blast radius (lookWhereItBursts: the explode radius as given) and stops there
+			o.ring(new Vector3f(0, 0.15F, 0), Math.max(0.0F, r * out - 0.5F), r * out, argb(0.8F * fade, FIRE_CORE));
 			for (int i = 0; i < 12; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
 				d.y = Math.abs(d.y) * 0.9F + 0.15F;
-				Vector3f at = new Vector3f(d).mul(r * 1.4F * out).add(0, -1.6F * out * out, 0).add(mid);
+				Vector3f at = new Vector3f(d).mul(r * 0.9F * out).add(0, -1.6F * out * out, 0).add(mid);
 				o.bar(at, new Vector3f(d).mul(0.25F).add(at), 0.04F, 0.01F, argb(0.9F * fade, FIRE_CORE), argb(0.0F, FIRE));
 			}
 		});
@@ -268,7 +272,7 @@ final class NavyLooks {
 				float start = 10.0F + q * 16.0F;
 				float u = (age - start) / 9.0F;
 				Vector3f from = siphon.get(2);
-				Vector3f to = polar(Mth.TWO_PI * hash(s.seed + q * 7), r * (0.5F + 0.4F * hash(q * 3)), 0.14F);
+				Vector3f to = polar(Mth.TWO_PI * hash(s.seed + q * 7), r * (0.45F + 0.3F * hash(q * 3)), 0.14F);
 				if (u > 0.0F && u < 1.0F) {
 					Vector3f at = new Vector3f(from).lerp(to, u).add(0, 1.2F * Mth.sin(u * Mth.PI), 0);
 					o.sprite(at, s.camRight, s.camUp, 0.3F, argb(0.9F, 0x140A1E));
@@ -363,7 +367,7 @@ final class NavyLooks {
 			o.ring(ground, 0.0F, 0.25F, argb(0.9F * fade, RED));
 			for (int t = 0; t < 4; t++) {
 				float a = Mth.HALF_PI * t + time * 0.03F;
-				o.bar(polar(a, r * 0.6F * open, 0.16F), polar(a, r * 1.2F * open, 0.16F), 0.05F, 0.05F, argb(0.85F * fade, RED), argb(0.85F * fade, RED));
+				o.bar(polar(a, r * 0.6F * open, 0.16F), polar(a, r * 1.08F * open, 0.16F), 0.05F, 0.05F, argb(0.85F * fade, RED), argb(0.85F * fade, RED));
 			}
 			for (Vector3f plane : planes) {
 				if (plane.lengthSquared() > 30 * 30) {
@@ -392,7 +396,7 @@ final class NavyLooks {
 					Vector3f mid = new Vector3f(spot).add(0, 0.6F, 0);
 					o.sprite(mid, s.camRight, s.camUp, r * 1.3F * (1.0F - q) + 0.3F, argb(0.9F * (1.0F - q), 0xFFFFFF));
 					o.star(mid, s.camRight, s.camUp, r * 1.4F * (1.0F - q) + 0.4F, 8, 0.3F, i, argb(0.9F * (1.0F - q), FIRE_CORE), argb(0.0F, FIRE));
-					o.ring(new Vector3f(spot).add(0, 0.16F, 0), r * q, r * q + 0.5F, argb(0.8F * (1.0F - q), FIRE_CORE));
+					o.ring(new Vector3f(spot).add(0, 0.16F, 0), Math.max(0.0F, r * q - 0.5F), r * q, argb(0.8F * (1.0F - q), FIRE_CORE));
 					for (int j = 0; j < 4; j++) {
 						Vector3f d = BladeLooks.shardDir(s.seed + i, j);
 						d.y = Math.abs(d.y) + 0.4F;
@@ -477,8 +481,8 @@ final class NavyLooks {
 		float age = s.age();
 		float time = s.ageInTicks;
 		float r = s.size;
-		// the rim just outside the circle of sprites the rain lays down, so it shows past them
-		float rim = r * 1.15F;
+		// the rim on the rain's circle: the shots fall on enemies inside it
+		float rim = r;
 		float open = ease(age, 0.0F, 6.0F);
 		float fade = 1.0F - ease(s.progress, 0.8F, 1.0F);
 		int shots = 8;
@@ -503,7 +507,7 @@ final class NavyLooks {
 			o.ring(ground, (r * 0.62F - 0.12F) * open, r * 0.62F * open, argb(0.6F * fade, s.color));
 			for (int t = 0; t < 12; t++) {
 				float a = Mth.TWO_PI * t / 12 - time * 0.02F;
-				o.bar(polar(a, (rim - 0.2F) * open, 0.16F), polar(a, (rim + 0.6F) * open, 0.16F), 0.04F, 0.04F, argb(0.8F * fade, s.color), argb(0.0F, s.color));
+				o.bar(polar(a, (rim - 0.6F) * open, 0.16F), polar(a, (rim + 0.25F) * open, 0.16F), 0.04F, 0.04F, argb(0.8F * fade, s.color), argb(0.0F, s.color));
 			}
 			// lightning crawling round the rim, thrown anew every other tick
 			int seed = s.seed * 7 + (int)(time / 2);
@@ -527,7 +531,8 @@ final class NavyLooks {
 				Vector3f mid = new Vector3f(spot).add(0, 0.5F, 0);
 				o.sprite(mid, s.camRight, s.camUp, 2.0F * (1.0F - q) + 0.2F, argb(0.85F * (1.0F - q), 0xFFFFFF));
 				o.star(mid, s.camRight, s.camUp, 2.2F * (1.0F - q) + 0.3F, 8, 0.25F, i, argb(0.9F * (1.0F - q), BOLT), argb(0.0F, FIRE));
-				o.ring(spot, 2.2F * q, 2.2F * q + 0.4F, argb(0.8F * (1.0F - q), BOLT));
+				// each cannonball hits only what it strikes (no blast): a small thunder ring, not a blast radius
+				o.ring(spot, 1.0F * q, 1.0F * q + 0.3F, argb(0.8F * (1.0F - q), BOLT));
 				for (int j = 0; j < 3; j++) {
 					Vector3f d = BladeLooks.shardDir(s.seed + i, j);
 					d.y = Math.abs(d.y);
@@ -613,8 +618,8 @@ final class NavyLooks {
 	}
 
 	/**
-	 * Recoil Leap: where the caster was, the blunderbuss's blast thrown back the way they flew from (fire, a flash and a shock ring) and a
-	 * streak of powder smoke along their flight with sparks in it.
+	 * Recoil Leap: where the caster was, the blunderbuss's blast thrown back the way they flew from (fire, a flash and a shock ring as wide
+	 * as the push) and a streak of powder smoke along their flight with sparks in it.
 	 */
 	private static void recoil(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		List<Vector3f> points = VfxOut.path(s.trail);
@@ -647,8 +652,11 @@ final class NavyLooks {
 		glow(ps, c, o -> {
 			muzzleFlash(o, s, new Vector3f(back).mul(0.6F).add(blast), back, 1.2F, flash, s.seed);
 			o.flame(new Vector3f(back).mul(0.4F).add(blast), back, 3.6F * flash + 0.1F, 2.0F, s.seed, argb(0.8F * flash, FIRE_CORE), argb(0.0F, FIRE));
+			// the shock ring out to the push the skill gives where it starts (the look's size is the push radius)
 			float q = ease(p, 0.0F, 0.5F);
-			o.ring(new Vector3f(0, 0.15F, 0), 2.6F * q, 2.6F * q + 0.45F, argb(0.7F * (1.0F - q), s.color));
+			o.ring(new Vector3f(0, 0.15F, 0), Math.max(0.0F, s.size * q - 0.45F), s.size * q, argb(0.7F * (1.0F - q), s.color));
+			// the edge itself stays drawn once the shock has reached it
+			o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, s.size - 0.15F), s.size, argb(0.6F * q * fade, s.color));
 			if (n >= 2) {
 				for (int i = 0; i < 6; i++) {
 					float from = hash(s.seed * 7 + i) * 0.7F;

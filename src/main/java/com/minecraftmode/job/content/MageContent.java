@@ -151,7 +151,7 @@ public final class MageContent extends ClassContent {
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
 			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "수천일광천조팔야진석", ULTIMATE, 50, 36,
-				look(SkillLook.AMATERASU, allyHeal(12, 35)).size(12), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)).withFx(Fx.Kind.SPARK),
+				look(SkillLook.AMATERASU, allyHeal(12, 35)).size(12).unscaled(), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)).withFx(Fx.Kind.SPARK),
 			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, look(SkillLook.ENTEN, strike(18, 3.5, 3, 1.01)).at(18).size(3.5), burn(4))
 				.withFx(Fx.Kind.SPARK, 0xFF8A3A),
 			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22,
@@ -173,29 +173,29 @@ public final class MageContent extends ClassContent {
 			skill("stone_sentinel_maze", "Stone Sentinel Maze", "석병팔진", ULTIMATE, 55, 38,
 				look(SkillLook.STONE_MAZE, zone(8, 6, 1.34).at(20).pull(1.0).effect(STUN, 0)).at(20).size(8).lasting(6), inflict(VULNERABLE, 8, 1)).withFx(Fx.Kind.SPARK),
 			skill("red_cliffs_east_wind", "East Wind of Red Cliffs", "적벽의 동남풍", ATTACK, 12, 26,
-				look(SkillLook.EAST_WIND, push(4, 1.2)).cone(8, 60), shoot(ProjectileStyle.FIREBALL, 1.22).count(5).spread(50).explode(2.0F).look(SkillLook.WIND_FIRE),
+				look(SkillLook.EAST_WIND, push(4, 1.2)).cone(4, 50), shoot(ProjectileStyle.FIREBALL, 1.22).count(5).spread(50).explode(2.0F).look(SkillLook.WIND_FIRE),
 				burn(5)).withFx(Fx.Kind.SPARK),
 			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, look(SkillLook.DISCERNING_EYE, mark(24, 10, 40)).onTarget(24),
-				allyBoost(10, DAMAGE, 10, 20)).withFx(Fx.Kind.SPARK),
-			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, look(SkillLook.WAR_BANNER, allyBoost(10, DAMAGE, 10, 20)).size(10),
+				look(SkillLook.ALLY_RING, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled()).withFx(Fx.Kind.SPARK),
+			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, look(SkillLook.WAR_BANNER, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled(),
 				allyHeal(10, 15)).withFx(Fx.Kind.SPARK));
 
 		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 이스트왈",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
 			skill("fairy_law", "Fairy Law", "페어리 로", ULTIMATE, 55, 40, look(SkillLook.FAIRY_LAW, debuff(16, SLOWNESS, 2, 2)).size(16), delay(1.0, nova(16, 8.87))),
 			skill("fairy_glitter", "Fairy Glitter", "페어리 글리터", ATTACK, 12, 28,
-				shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing().look(SkillLook.FAIRY_GLITTER).onImpact(lookWhereItLands(SkillLook.GLITTER_BURST, 3.5)),
+				shoot(ProjectileStyle.ORB, 3.49).explode(3.5F).homing().look(SkillLook.FAIRY_GLITTER).onImpact(lookWhereItBursts(SkillLook.GLITTER_BURST, 3.5)),
 				inflict(VULNERABLE, 6, 1)),
 			skill("fairy_sphere", "Fairy Sphere", "페어리 스피어", UTILITY, 30, 30, look(SkillLook.FAIRY_SPHERE, boost(CRIT_CHANCE, 8, 30)).lasting(4),
-				allyBoost(10, DAMAGE, 8, 30)),
+				look(SkillLook.ALLY_RING, allyBoost(10, DAMAGE, 8, 30)).size(10).unscaled()),
 			skill("fairy_tactician", "Fairy Tactician", "요정군사", UTILITY, 20, 20, look(SkillLook.FAIRY_WINGS, allyBuff(12, SPEED, 10, 1)),
-				allyBuff(12, MANA_FLOW, 10, 0), refresh(20)));
+				look(SkillLook.ALLY_RING, allyBuff(12, MANA_FLOW, 10, 0)).size(12).unscaled(), refresh(20)));
 
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
 			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, look(SkillLook.AVALON, sanctuary(10, 10, 5)).size(10).lasting(10),
 				allyBoost(10, DAMAGE, 10, 20)),
-			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, look(SkillLook.HERO_CREATION, allyBoost(10, DAMAGE, 12, 20)).size(10),
+			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, look(SkillLook.HERO_CREATION, allyBoost(10, DAMAGE, 12, 20)).size(10).unscaled(),
 				allyBoost(10, CRIT_DAMAGE, 12, 40)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing().look(SkillLook.PETAL_ORB),
 				inflict(WEAKNESS, 4, 0)),
@@ -228,7 +228,7 @@ public final class MageContent extends ClassContent {
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", ATTACK, 8, 20,
 				barrage(ProjectileStyle.ORB, 4, 0.5, SkillLook.WITCH_CIRCLE, SkillLook.RUNE_SYLLABLE)).withFx(Fx.Kind.SPARK),
 			skill("witch_dagger", "Witch's Dagger", "마녀의 단검", ATTACK, 7, 16, look(SkillLook.WITCH_SLASH, slash(4, 180, 1.9)).cone(4, 180)).withFx(Fx.Kind.SPARK),
-			skill("territory_creation", "Territory Creation", "진지작성", UTILITY, 26, 12, look(SkillLook.TERRITORY, allyBoost(10, DAMAGE, 12, 15)).size(10),
+			skill("territory_creation", "Territory Creation", "진지작성", UTILITY, 26, 12, look(SkillLook.TERRITORY, allyBoost(10, DAMAGE, 12, 15)).size(10).unscaled(),
 				restoreMana(25)).withFx(Fx.Kind.SPARK));
 	}
 }

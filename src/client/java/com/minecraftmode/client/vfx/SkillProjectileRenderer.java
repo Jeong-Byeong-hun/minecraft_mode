@@ -137,6 +137,10 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 			axis.negate();
 		}
 		float grow = Math.min(1.0F, 0.55F + s.ageInTicks * 0.22F);
+		// sized to what the wave hits (ProjectileStyle.WAVE.hitRadius, 1 block round its path): the horns reach radius x sin 72° ≈ 1.05
+		// either side, the middle of the arc half a radius off the path
+		float radius = 1.1F * grow;
+		float thickness = THICKNESS * (1.1F / RADIUS) * grow;
 		float time = s.ageInTicks;
 		boolean dark = VfxDraw.luma(s.color) < 0.3F;
 		int glow = dark ? DARK_RIM : s.color;
@@ -148,16 +152,16 @@ public class SkillProjectileRenderer extends ThrownItemRenderer<SkillProjectile>
 				float back = echo * 0.55F;
 				float alpha = echo == 1 ? 0.38F : 0.16F;
 				Vector3f shift = new Vector3f(f).mul(-back);
-				crescent(pose, buffer, f, axis, shift, RADIUS * grow * (1 - 0.07F * echo), THICKNESS * grow, glow, glow, alpha, time, 0.0F);
+				crescent(pose, buffer, f, axis, shift, radius * (1 - 0.07F * echo), thickness, glow, glow, alpha, time, 0.0F);
 			}
 			// a dark body still glows a deep red under its shade, or it vanishes against the night
-			crescent(pose, buffer, f, axis, new Vector3f(), RADIUS * grow, THICKNESS * grow, glow, dark ? 0xFF8A80 : VfxDraw.whiten(s.color, dual ? 1.0F : 0.75F), 1.0F, time,
+			crescent(pose, buffer, f, axis, new Vector3f(), radius, thickness, glow, dark ? 0xFF8A80 : VfxDraw.whiten(s.color, dual ? 1.0F : 0.75F), 1.0F, time,
 				dark ? 0.45F : 1.0F);
 		});
 		if (dark) {
-			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, RADIUS * grow, THICKNESS * grow, time));
+			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, radius, thickness, time));
 		} else if (dual) {
-			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, RADIUS * grow * 0.8F, THICKNESS * grow * 0.6F, time));
+			collector.submitCustomGeometry(poseStack, VfxDraw.SHADE, (pose, buffer) -> body(pose, buffer, f, axis, radius * 0.8F, thickness * 0.6F, time));
 		}
 		poseStack.popPose();
 	}

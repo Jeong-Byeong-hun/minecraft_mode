@@ -161,7 +161,8 @@ final class FairyLooks {
 			if (age < release) {
 				return;
 			}
-			float r = s.size * swell + 0.5F;
+			// the dome swells to the nova's reach exactly (Actions.nova: r round the caster)
+			float r = Math.max(0.5F, s.size * swell);
 			dome(o, r, FAIRY, 0.35F * shine * selfK);
 			dome(o, r * 0.97F, 0xFFFFFF, 0.18F * shine * selfK);
 			for (int i = 0; i < 16; i++) {
@@ -189,7 +190,8 @@ final class FairyLooks {
 		glow(ps, c, o -> {
 			float flash = 1.0F - ease(p, 0.0F, 0.35F);
 			o.sprite(new Vector3f(), s.camRight, s.camUp, 2.5F * flash + 0.3F, argb(0.9F * flash, 0xFFFFFF));
-			o.star(new Vector3f(), s.camRight, s.camUp, s.size * 1.3F * out + 0.5F, 8, 0.15F, time * 0.05F, argb(0.9F * fade, 0xFFFFFF), argb(0.0F, FAIRY));
+			// size: the blast's radius (lookWhereItBursts); the star and the ring stop at it
+			o.star(new Vector3f(), s.camRight, s.camUp, s.size * 0.85F * out + 0.5F, 8, 0.15F, time * 0.05F, argb(0.9F * fade, 0xFFFFFF), argb(0.0F, FAIRY));
 			for (int i = 0; i < 21; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
 				Vector3f at = new Vector3f(d).mul(s.size * out * (0.6F + 0.4F * hash(i))).add(0, 0.5F, 0);

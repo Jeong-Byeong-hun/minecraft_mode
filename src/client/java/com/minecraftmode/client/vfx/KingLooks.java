@@ -131,7 +131,8 @@ final class KingLooks {
 		float[] open = new float[gates];
 		for (int i = 0; i < gates; i++) {
 			float a = Mth.TWO_PI * hash(s.seed + i * 7);
-			float d = s.size * 1.3F * (float)Math.sqrt(hash(s.seed * 3 + i * 11));
+			// over the circle the treasures fall into
+			float d = s.size * (float)Math.sqrt(hash(s.seed * 3 + i * 11));
 			at[i] = polar(a, d, -1.5F + 3.0F * hash(i * 13)).add(sky);
 			open[i] = ease(age - i * 0.8F, 0.0F, 4.0F);
 		}
@@ -187,9 +188,12 @@ final class KingLooks {
 			for (int i = 0; i < gates; i++) {
 				gate(o, gate[i], normal[i], 0.55F, open, fade, time + i * 2, i);
 			}
+			// the reach of the chains (the pull and the binding): a gold ring at the size
+			o.ring(new Vector3f(0, 0.14F, 0), s.size * 0.97F, s.size * 1.03F, argb(0.5F * fade * shoot, GOLD));
 			if (s.targets.isEmpty()) {
 				for (int i = 0; i < gates; i++) {
-					Vector3f end = new Vector3f(normal[i]).mul(5.0F * shoot).add(gate[i]).add(0, -1.0F * coil, 0);
+					// out to the edge of that reach
+					Vector3f end = new Vector3f(normal[i]).mul(Math.max(1.0F, s.size - 1.3F) * shoot).add(gate[i]).add(0, -1.0F * coil, 0);
 					o.chain(gate[i], end, 0.45F, time * 0.1F, chainColor);
 					o.glowLine(gate[i], end, 0.12F, argb(0.4F * fade, GOLD), argb(0.2F * fade, GOLD));
 				}
@@ -392,7 +396,8 @@ final class KingLooks {
 				for (int i = 0; i <= steps; i++) {
 					float t = (float)i / steps;
 					float a = arm * Mth.HALF_PI + t * 4.0F - time * 0.5F;
-					float r = 5.0F * (1.0F - t) * (1.0F - 0.5F * ease(p, 0.0F, 1.0F)) + 0.2F;
+					// from the pull's reach (the size) drawn in towards the blade
+					float r = s.size * (1.0F - t) * (1.0F - 0.5F * ease(p, 0.0F, 1.0F)) + 0.2F;
 					Vector3f q = new Vector3f(Mth.cos(a) * r, 0.4F + t * 1.3F, Mth.sin(a) * r).lerp(top, t * t);
 					if (prev != null) {
 						o.glowLine(prev, q, 0.12F, argb(0.7F * fade * t, RUPTURE), argb(0.7F * fade * (t + 1.0F / steps), RUPTURE));
@@ -402,6 +407,8 @@ final class KingLooks {
 			}
 			o.sprite(top, camRight, camUp, 0.9F, argb(0.7F * fade, RUPTURE));
 			o.ring(new Vector3f(0, 0.14F, 0), 0.5F, 2.2F, argb(0.5F * fade, RUPTURE));
+			// the pull's reach, fading as the wind draws in
+			o.ring(new Vector3f(0, 0.14F, 0), s.size * 0.96F, s.size * 1.04F, argb(0.6F * (1.0F - ease(p, 0.0F, 0.6F)), RUPTURE));
 		});
 		ps.popPose();
 	}
@@ -428,8 +435,9 @@ final class KingLooks {
 			for (int i = 0; i < segments; i++) {
 				float d0 = start + (length - start) * i / segments;
 				float d1 = start + (length - start) * (i + 1) / segments;
-				float r0 = 0.3F + 0.6F * d0 / Math.max(1.0F, s.size);
-				float r1 = 0.3F + 0.6F * d1 / Math.max(1.0F, s.size);
+				// the core widens towards the tip but stays inside the beam's reach (0.9 round its line)
+				float r0 = 0.25F + 0.4F * d0 / Math.max(1.0F, s.size);
+				float r1 = 0.25F + 0.4F * d1 / Math.max(1.0F, s.size);
 				for (int k = 0; k < sides; k++) {
 					float t0 = Mth.TWO_PI * k / sides + time * 0.3F;
 					float t1 = Mth.TWO_PI * (k + 1) / sides + time * 0.3F;
@@ -446,17 +454,17 @@ final class KingLooks {
 		glow(ps, c, o -> {
 			Vector3f from = new Vector3f(dir).mul(start);
 			Vector3f tip = new Vector3f(dir).mul(length);
-			o.glowLine(from, tip, 2.2F, argb(0.14F * fade, RUPTURE), argb(0.12F * fade, RUPTURE));
-			// three spirals winding round the core
+			o.glowLine(from, tip, 1.2F, argb(0.14F * fade, RUPTURE), argb(0.12F * fade, RUPTURE));
+			// three spirals winding round the core, the outer (counter-turning) three on the beam's rim at the tip
 			for (int band = 0; band < 6; band++) {
 				Vector3f prev = null;
 				int steps = Math.min(96, segments * 3);
 				for (int i = 0; i <= steps; i++) {
 					float d = start + (length - start) * i / steps;
-					float r = 0.9F + 1.6F * d / Math.max(1.0F, s.size);
+					float r = 0.5F + 0.3F * d / Math.max(1.0F, s.size);
 					boolean back = band >= 3;
 					float a = band * Mth.TWO_PI / 3 + (back ? -1 : 1) * (d * 0.9F - time * 1.1F);
-					r *= back ? 1.35F : 1.0F;
+					r *= back ? 1.12F : 1.0F;
 					Vector3f q = ringPoint(dir, u, v, d, r, a);
 					if (prev != null) {
 						float al = band >= 3 ? 0.45F : 0.85F;
@@ -466,18 +474,18 @@ final class KingLooks {
 					prev = q;
 				}
 			}
-			// rings of force bursting outward along it
+			// rings of force pulsing out to the beam's rim along it
 			for (int i = 0; i < 8; i++) {
 				float d = start + (length - start) * (i + 0.5F) / 8;
 				float q = (time * 0.07F + i * 0.37F) % 1.0F;
-				o.circle(new Vector3f(dir).mul(d), u, v, 1.2F + 3.0F * q, 0.06F, 24, argb(0.7F * fade * (1.0F - q), RUPTURE));
+				o.circle(new Vector3f(dir).mul(d), u, v, 0.7F + 0.2F * q, 0.06F, 24, argb(0.7F * fade * (1.0F - 0.6F * q), RUPTURE));
 			}
 			for (int k = 0; k < 6; k++) {
 				float d = start + (length - start) * (0.15F + 0.7F * hash(s.seed + k * 3));
 				crack(o, s, dir, u, v, d, k, 0.22F, argb(0.6F * fade, RUPTURE));
 			}
-			o.star(tip, s.camRight, s.camUp, 3.0F, 8, 0.3F, time * 0.2F, argb(0.8F * fade, 0xFF8A70), argb(0.0F, RUPTURE));
-			o.sprite(tip, s.camRight, s.camUp, 2.5F, argb(0.5F * fade, RUPTURE));
+			o.star(tip, s.camRight, s.camUp, 1.6F, 8, 0.3F, time * 0.2F, argb(0.8F * fade, 0xFF8A70), argb(0.0F, RUPTURE));
+			o.sprite(tip, s.camRight, s.camUp, 1.3F, argb(0.5F * fade, RUPTURE));
 		});
 	}
 
@@ -485,14 +493,17 @@ final class KingLooks {
 		return new Vector3f(dir).mul(d).add(new Vector3f(u).mul(Mth.cos(a) * r)).add(new Vector3f(v).mul(Mth.sin(a) * r));
 	}
 
-	/** A jagged crack of torn space running out from the beam at {@code d}, with a branch. */
+	/**
+	 * A jagged crack of torn space running out from the beam at {@code d}, with a branch: thin black lines in the air (decoration), kept
+	 * short so they do not read as the beam's width.
+	 */
 	private static void crack(final VfxOut o, final State s, final Vector3f dir, final Vector3f u, final Vector3f v, final float d, final int k, final float width,
 		final int color) {
 		float a = Mth.TWO_PI * hash(s.seed * 5 + k);
 		Vector3f out = new Vector3f(u).mul(Mth.cos(a)).add(new Vector3f(v).mul(Mth.sin(a)));
-		Vector3f prev = new Vector3f(dir).mul(d).add(new Vector3f(out).mul(1.2F));
+		Vector3f prev = new Vector3f(dir).mul(d).add(new Vector3f(out).mul(1.0F));
 		for (int j = 1; j <= 5; j++) {
-			Vector3f next = new Vector3f(dir).mul(d + (hash(k * 13 + j) - 0.5F) * 1.6F).add(new Vector3f(out).mul(1.2F + 1.1F * j));
+			Vector3f next = new Vector3f(dir).mul(d + (hash(k * 13 + j) - 0.5F) * 1.6F).add(new Vector3f(out).mul(1.0F + 0.45F * j));
 			o.bar(prev, next, width, width * 0.7F, color, color);
 			if (j == 2) {
 				Vector3f branch = new Vector3f(next).add(new Vector3f(dir).mul(1.0F)).add(new Vector3f(out).mul(0.7F));
@@ -622,7 +633,8 @@ final class KingLooks {
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
 			o.star(ground, x, z, s.size * open, 8, 0.42F, time * 0.01F, argb(0.8F * fade, GOLD), argb(0.2F * fade, VENUS));
 			o.star(new Vector3f(0, 0.16F, 0), x, z, s.size * 0.75F * open, 8, 0.4F, Mth.PI / 8 - time * 0.01F, argb(0.45F * fade, VENUS), argb(0.0F, GOLD));
-			o.circle(ground, x, z, s.size * 1.05F * open, 0.06F, 48, argb(0.8F * fade, GOLD));
+			// the star's points touch the strike's circle
+			o.circle(ground, x, z, s.size * open, 0.06F, 48, argb(0.8F * fade, GOLD));
 			if (hit <= 0.0F) {
 				Vector3f star = new Vector3f(-1.5F * (1 - fall), 0.8F + 14.0F * (1.0F - fall * fall), -1.5F * (1 - fall));
 				o.glowLine(star, new Vector3f(star).add(2.0F, 8.0F, 2.0F), 1.0F, argb(0.5F, GOLD), argb(0.0F, VENUS));
@@ -635,12 +647,13 @@ final class KingLooks {
 				Vector3f mid = new Vector3f(0, 1.0F, 0);
 				o.sprite(mid, s.camRight, s.camUp, 5.0F * k + 0.5F, argb(0.85F * k, GOLD_PALE));
 				o.star(mid, s.camRight, s.camUp, 6.0F * k + 1.0F, 8, 0.15F, 0.3F, argb(0.9F * k, 0xFFFFFF), argb(0.0F, GOLD));
-				o.ring(ground, s.size * 1.6F * hit, s.size * 1.6F * hit + 0.6F, argb(0.9F * k, VENUS));
+				// the shock ring runs out to the strike's circle and stops there
+				o.ring(ground, Math.max(0.0F, s.size * hit - 0.6F), s.size * hit, argb(0.9F * k, VENUS));
 				o.glowLine(new Vector3f(0, 0.1F, 0), new Vector3f(0, 16.0F, 0), 1.8F * k, argb(0.6F * k, GOLD), argb(0.0F, GOLD));
 				for (int i = 0; i < 16; i++) {
 					Vector3f d = BladeLooks.shardDir(s.seed, i);
 					d.y = Math.abs(d.y) * 0.8F + 0.2F;
-					Vector3f at = new Vector3f(d).mul(0.5F + 6.0F * hit).add(mid);
+					Vector3f at = new Vector3f(d).mul(0.5F + (s.size - 0.5F) * 0.9F * hit).add(mid);
 					o.diamond(at, d, VfxOut.across(d), 0.6F * k + 0.1F, 0.25F, argb(0.3F * k, VENUS), argb(0.95F * k, i % 2 == 0 ? GOLD_PALE : ROSE));
 				}
 			}
@@ -671,8 +684,9 @@ final class KingLooks {
 		Vector3f z = new Vector3f(0, 0, 1);
 		glow(ps, c, o -> {
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
-			o.star(ground, x, z, 4.0F * open, 8, 0.4F, time * 0.02F, argb(0.8F * k, GOLD), argb(0.15F * k, ROSE));
-			o.circle(ground, x, z, 4.1F * open, 0.05F, 40, argb(0.8F * k, ROSE));
+			// her star at the caster's feet, the rim on the weakening circle (the size)
+			o.star(ground, x, z, s.size * 0.4F * open, 8, 0.4F, time * 0.02F, argb(0.8F * k, GOLD), argb(0.15F * k, ROSE));
+			o.circle(ground, x, z, s.size * open, 0.05F, 64, argb(0.8F * k, ROSE));
 			float wash = ease(p, 0.05F, 0.6F);
 			o.ring(ground, Math.max(0.0F, s.size * wash - 0.5F), s.size * wash, argb(0.7F * fade * (1.0F - wash * 0.6F), ROSE));
 			if (!s.selfView) {

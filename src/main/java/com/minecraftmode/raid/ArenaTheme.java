@@ -47,7 +47,11 @@ public enum ArenaTheme {
 	/** Raijin: a shrine on the clouds. */
 	SKY_SHRINE(
 		List.of(Blocks.SMOOTH_QUARTZ, Blocks.QUARTZ_BLOCK, Blocks.QUARTZ_BRICKS, Blocks.CALCITE, Blocks.POLISHED_DIORITE),
-		List.of(Blocks.WOOL.pick(DyeColor.WHITE), Blocks.CALCITE, Blocks.WOOL.pick(DyeColor.WHITE)), Blocks.QUARTZ_BRICKS, Blocks.DIORITE_WALL, Blocks.DYED_TERRACOTTA.pick(DyeColor.RED), Blocks.PEARLESCENT_FROGLIGHT, 2);
+		List.of(Blocks.WOOL.pick(DyeColor.WHITE), Blocks.CALCITE, Blocks.WOOL.pick(DyeColor.WHITE)), Blocks.QUARTZ_BRICKS, Blocks.DIORITE_WALL, Blocks.DYED_TERRACOTTA.pick(DyeColor.RED), Blocks.PEARLESCENT_FROGLIGHT, 2),
+	/** Sukuna: the Malevolent Shrine's courtyard of blood and bones. */
+	MALEVOLENT_SHRINE(
+		List.of(Blocks.POLISHED_BLACKSTONE, Blocks.POLISHED_BLACKSTONE, Blocks.BLACKSTONE, Blocks.MUD, Blocks.POLISHED_BLACKSTONE_BRICKS, Blocks.BONE_BLOCK),
+		List.of(Blocks.BLACKSTONE, Blocks.BASALT, Blocks.MUD), Blocks.POLISHED_BLACKSTONE_BRICKS, Blocks.RED_NETHER_BRICK_WALL, Blocks.BONE_BLOCK, Blocks.SHROOMLIGHT, 3);
 
 	private final List<Block> floor;
 	private final List<Block> underside;

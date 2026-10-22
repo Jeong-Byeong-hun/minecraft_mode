@@ -1,5 +1,6 @@
 package com.minecraftmode.city;
 
+import com.minecraftmode.registry.ModBlocks;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -43,6 +44,8 @@ public final class CityFixtures {
 	public static final int END_Z1 = -59;
 	/** The plaza travel circle (a lodestone) right behind the spawn point. */
 	public static final BlockPos WAYSTONE = new BlockPos(0, 0, 17);
+	/** Sukuna's cursed relic exchange (dy 0), in the keep courtyard east of the raid gate. */
+	public static final BlockPos RELIC_SHOP = new BlockPos(21, 0, -53);
 	private static final int COOLDOWN_TICKS = 60;
 	private static final Map<UUID, Long> LAST_TRAVEL = new ConcurrentHashMap<>();
 
@@ -99,6 +102,10 @@ public final class CityFixtures {
 		return WAYSTONE.above(base);
 	}
 
+	public static BlockPos relicShop(final int base) {
+		return RELIC_SHOP.above(base);
+	}
+
 	// ------------------------------------------------------------------ building
 
 	/** Everything above, clipped to the chunk {@code b} builds (city generator and {@link #ensure}). */
@@ -113,6 +120,7 @@ public final class CityFixtures {
 			b.set(p.getX(), p.getY(), p.getZ(), Blocks.CRAFTING_TABLE);
 		}
 		waystone(b, WAYSTONE.getX(), WAYSTONE.getZ());
+		b.set(RELIC_SHOP.getX(), RELIC_SHOP.getY(), RELIC_SHOP.getZ(), ModBlocks.RELIC_SHOP);
 	}
 
 	private static void netherPortal(final Build b) {
@@ -170,6 +178,7 @@ public final class CityFixtures {
 		for (BlockPos p : craftingTables(base)) {
 			repair(level, base, p, Blocks.CRAFTING_TABLE.defaultBlockState());
 		}
+		repair(level, base, relicShop(base), ModBlocks.RELIC_SHOP.defaultBlockState());
 		Homestead.ensure(level);
 	}
 

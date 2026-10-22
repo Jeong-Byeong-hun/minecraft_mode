@@ -286,6 +286,7 @@ public class CreatureModel extends EntityModel<CreatureRenderState> {
 					}
 				}
 				case ORBIT -> m.yRot += age * 0.05F;
+				case WHEEL -> m.yRot += s.wheel;
 				case CAPE -> m.xRot += 0.08F + speed * 0.7F + Mth.sin(age * 0.1F) * 0.03F;
 				case SHIN -> {
 					if (part.index >= 10) {

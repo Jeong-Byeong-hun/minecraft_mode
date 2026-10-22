@@ -95,6 +95,10 @@ public final class ModBlocks {
 	public static final Block BUILDER_SHOP = register("builder_shop", p -> new ShopBlock(ShopType.BUILDER, p),
 		BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).instrument(NoteBlockInstrument.BASS).strength(-1.0F, 3600000.0F).sound(SoundType.WOOD)
 			.noLootTable().pushReaction(PushReaction.IMMOVEABLE));
+	/** Sukuna's relic exchange beside the raid gate: his accessories and the tier 4 ticket for fingers, at fixed prices. Unbreakable like the builder's. */
+	public static final Block RELIC_SHOP = register("relic_shop", p -> new ShopBlock(ShopType.CURSED_RELICS, p),
+		BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).instrument(NoteBlockInstrument.BASEDRUM).strength(-1.0F, 3600000.0F).sound(SoundType.BONE_BLOCK)
+			.noLootTable().pushReaction(PushReaction.IMMOVEABLE));
 
 	// Classes: engraves class weapons with essence
 	public static final Block ENGRAVING_TABLE = register(

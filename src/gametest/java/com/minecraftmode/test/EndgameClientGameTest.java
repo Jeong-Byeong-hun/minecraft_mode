@@ -730,7 +730,7 @@ public class EndgameClientGameTest implements FabricClientGameTest {
 	private static void checkProgress(final TestServerContext server, final TestServerConnection connection) {
 		String report = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
-			require(Achievements.all().size() == 48, "expected 48 achievements (31 endgame + 17 later content), got " + Achievements.all().size());
+			require(Achievements.all().size() == 49, "expected 49 achievements (31 endgame + 17 later content + Sukuna's fingers), got " + Achievements.all().size());
 			Progress.check(player);
 			PlayerRecords records = Progress.get(player);
 			require(records.has("level_25"), "level 30 should unlock the level 25 achievement");

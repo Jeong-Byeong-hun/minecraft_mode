@@ -2,6 +2,7 @@ package com.minecraftmode.client.datagen;
 
 import com.minecraftmode.craft.Crops;
 import com.minecraftmode.craft.Fishing;
+import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.progress.Codex;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
 
@@ -83,6 +84,9 @@ final class CodexLang {
 			{"awakening_crystal", "쐐기 던전 +5 이상 보상, 모험가 로완의 의뢰(한 번)", "Keystone dungeons at +5 and up, Retired Adventurer Rowan's quest (once)"},
 			{"accessory_inherit_1", "2티어 레이드(네프레케트·크라켄·이그니스) 분배 품목 (확률, 경매·주사위)", "Tier 2 raid loot: Nefrekhet, Kraken, Ignis (chance, auction or dice)"},
 			{"accessory_inherit_2", "3티어 레이드(라이진·말라카르·에테릭스) 분배 품목 (확률, 경매·주사위)", "Tier 3 raid loot: Raijin, Malachar, Aethryx (chance, auction or dice)"},
+			{"accessory_inherit_3", "스쿠나 레이드 분배 품목 (확률, 경매·주사위), 저주 유물 교환소 (손가락 " + ShopOffers.RELIC_TICKET_FINGERS + "개)",
+				"Sukuna's raid loot (chance, auction or dice), the cursed relic exchange (" + ShopOffers.RELIC_TICKET_FINGERS + " fingers)"},
+			{"sukuna_finger", "스쿠나 레이드 클리어 보상 (일반 1개, 영웅 2개, 악몽 3개)", "Sukuna raid clears (1 on Normal, 2 on Heroic, 3 on Nightmare)"},
 			{"accessory_orb", "영웅·악몽 레이드 클리어 보상 (영웅 1개, 악몽 2개)", "Heroic and Nightmare raid clears (1 on Heroic, 2 on Nightmare)"},
 			{"titan_shard", "거신 처치", "Titan kills"},
 			{"lair_map", "소굴 정복(주기마다 소굴마다 1장), 메인 스토리(소굴 장, 2장), 현상금 공적", "Every lair clear (one per lair each cycle), the main story (lair chapter, 2), bounty merit"},

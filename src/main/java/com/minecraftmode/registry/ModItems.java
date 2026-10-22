@@ -96,6 +96,10 @@ public final class ModItems {
 	public static final Item ACCESSORY_INHERIT_1 = register("accessory_inherit_1", new Item.Properties().rarity(Rarity.RARE));
 	/** Inherits a tier 2 raid accessory into a tier 3 one; tier 3 raid bosses drop it. */
 	public static final Item ACCESSORY_INHERIT_2 = register("accessory_inherit_2", new Item.Properties().rarity(Rarity.EPIC));
+	/** Inherits a tier 3 raid accessory into Sukuna's set (tier 4); Sukuna's raid drops it and the relic exchange sells it for fingers. */
+	public static final Item ACCESSORY_INHERIT_3 = register("accessory_inherit_3", new Item.Properties().rarity(Rarity.EPIC));
+	/** Sukuna's raid currency: every rewarded member gets some (bound); the relic exchange beside the raid gate takes them. */
+	public static final Item SUKUNA_FINGER = register("sukuna_finger", new Item.Properties().rarity(Rarity.EPIC));
 	/** Dropped by world bosses; the smith turns it into awakening crystals. */
 	public static final Item TITAN_SHARD = register("titan_shard", new Item.Properties().rarity(Rarity.EPIC));
 	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));
@@ -132,6 +136,7 @@ public final class ModItems {
 	public static final Item FISHMONGER_SHOP = registerBlockItem(ModBlocks.FISHMONGER_SHOP);
 	public static final Item GUILD_SHOP = registerBlockItem(ModBlocks.GUILD_SHOP);
 	public static final Item BUILDER_SHOP = registerBlockItem(ModBlocks.BUILDER_SHOP);
+	public static final Item RELIC_SHOP = registerBlockItem(ModBlocks.RELIC_SHOP);
 	public static final Item ENGRAVING_TABLE = registerBlockItem(ModBlocks.ENGRAVING_TABLE);
 	public static final Item LAIR_CHEST = registerBlockItem(ModBlocks.LAIR_CHEST);
 	public static final Item LAIR_CACHE = registerBlockItem(ModBlocks.LAIR_CACHE);

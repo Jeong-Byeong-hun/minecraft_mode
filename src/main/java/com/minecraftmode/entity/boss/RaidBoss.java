@@ -627,6 +627,11 @@ public abstract class RaidBoss extends CreatureMob {
 		};
 	}
 
+	/** Whether the running pattern is a spell: patterns that telegraph hits of their own capture it for the delayed hit. */
+	protected boolean casting() {
+		return this.casting;
+	}
+
 	/** Pattern ids that are spells (tests). */
 	public List<String> spellIds() {
 		return this.patternList().stream().filter(Pattern::magic).map(Pattern::id).toList();

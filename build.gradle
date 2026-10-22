@@ -124,6 +124,10 @@ loom {
 		if (requestedGameTests) {
 			getByName("clientGameTest").property "minecraft_mode.tests", pickedGameTests.join(",")
 		}
+		// -Pportraits=sukuna,mahoraga: the portraits test shoots only those, from the side, front and three-quarter
+		if (providers.gradleProperty("portraits").isPresent()) {
+			getByName("clientGameTest").property "minecraft_mode.portraits", providers.gradleProperty("portraits").get()
+		}
 		shards.eachWithIndex { slice, i ->
 			create("clientGameTest${i + 1}") {
 				inherit loom.runs.getByName("clientGameTest")

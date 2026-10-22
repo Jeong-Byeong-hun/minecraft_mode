@@ -56,6 +56,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.util.Unit;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.Mob;
@@ -79,6 +80,13 @@ public final class Raids {
 	public static final int VICTORY_TICKS = 20 * 60;
 	/** The leader must be this close to the marshal. */
 	public static final double MARSHAL_RANGE = 8.0;
+	/**
+	 * Past the level cap (Sukuna): ether, stones and clear EXP times this, a better scroll chance, one more accessory orb, and gear
+	 * lots (half as many: it is Lv 100 gear) enhanced this much further (min, max).
+	 */
+	public static final float PAST_CAP_SHARE = 1.5F;
+	public static final float PAST_CAP_SCROLL = 0.2F;
+	public static final int[] PAST_CAP_ENHANCE = {3, 5};
 	/** Party members must be this close to the leader to come along. */
 	public static final double GATHER_RANGE = 24.0;
 	private static final int SLOT_SPACING = 1024;
@@ -217,6 +225,9 @@ public final class Raids {
 				problems.add(problem(p, "too_far"));
 			} else if (data.level() < def.minLevel()) {
 				problems.add(problem(p, "level", def.minLevel()));
+			} else if (RaidBosses.pastCap(def) && records.raidClears(PlayerRecords.raidKey(RaidBosses.AETHRYX.id(), RaidDifficulty.NIGHTMARE.id())) == 0) {
+				// past the level cap only for those who ended the Void
+				problems.add(problem(p, "past_cap", Component.translatable(RaidBosses.AETHRYX.nameKey())));
 			} else if (!p.isAlive()) {
 				problems.add(problem(p, "dead"));
 			} else if (previous != null && records.raidClears(PlayerRecords.raidKey(def.id(), previous.id())) == 0) {
@@ -582,15 +593,19 @@ public final class Raids {
 			Progress.raidCleared(p, def, difficulty, cycle);
 			Companions.rollDrop(p, Companions.raidDrop(difficulty), Rarity.EPIC);
 		}
-		// about two lots a head (solo 3, six players 13), so bringing friends does not thin everyone's share
-		int lots = participants.isEmpty() ? 0 : 1 + 2 * participants.size() + difficulty.extraLots;
+		// about two lots a head (solo 3, six players 13), so bringing friends does not thin everyone's share; past the level cap the
+		// gear is Lv 100 gear the party mostly has already: half the lots, enhanced further
+		boolean pastCap = RaidBosses.pastCap(def);
+		int lots = participants.isEmpty() ? 0 : 1 + (pastCap ? 1 : 2) * participants.size() + difficulty.extraLots;
+		int enhanceMin = difficulty.enhanceMin + (pastCap ? PAST_CAP_ENHANCE[0] : 0);
+		int enhanceMax = difficulty.enhanceMax + (pastCap ? PAST_CAP_ENHANCE[1] : 0);
 		List<ItemStack> items = new ArrayList<>();
 		for (int i = 0; i < lots; i++) {
 			JobData bias = classes.isEmpty() ? null : classes.get(random.nextInt(classes.size()));
 			ItemStack stack = GearDrops.pick(bias, def.lo(), def.hi(), random);
 			if (!stack.isEmpty()) {
-				if (difficulty.enhanceMax > 0) {
-					stack.set(ModDataComponents.ENHANCEMENT, new Enhancement(difficulty.enhanceMin + random.nextInt(difficulty.enhanceMax - difficulty.enhanceMin + 1), 0));
+				if (enhanceMax > 0) {
+					stack.set(ModDataComponents.ENHANCEMENT, new Enhancement(enhanceMin + random.nextInt(enhanceMax - enhanceMin + 1), 0));
 				}
 				items.add(stack);
 			}
@@ -659,21 +674,35 @@ public final class Raids {
 	 */
 	private static void reward(final ServerPlayer player, final BossDef def, final RaidDifficulty difficulty, final RandomSource random) {
 		int grade = Mth.clamp(JobProgression.get(player).level(), def.lo(), def.hi());
-		give(player, EvolutionEtherItem.of(grade, Math.round((5 + random.nextInt(4)) * difficulty.ether)));
-		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, difficulty.stones));
-		if (random.nextFloat() < difficulty.scrollChance) {
+		boolean pastCap = RaidBosses.pastCap(def);
+		float more = pastCap ? PAST_CAP_SHARE : 1.0F;
+		give(player, EvolutionEtherItem.of(grade, Math.round((5 + random.nextInt(4)) * difficulty.ether * more)));
+		give(player, new ItemStack(ModItems.ENHANCEMENT_STONE, Math.round(difficulty.stones * more)));
+		if (random.nextFloat() < Math.min(1.0F, difficulty.scrollChance + (pastCap ? PAST_CAP_SCROLL : 0.0F))) {
 			give(player, new ItemStack(ModItems.PROTECTION_SCROLL));
 		}
 		give(player, new ItemStack(ModItems.CONDENSED_ESSENCE, 2 + random.nextInt(3)));
-		if (Accessories.orbs(difficulty) > 0) {
-			give(player, new ItemStack(ModItems.ACCESSORY_ORB, Accessories.orbs(difficulty)));
+		int orbs = Accessories.orbs(difficulty) + (pastCap ? 1 : 0);
+		if (orbs > 0) {
+			give(player, new ItemStack(ModItems.ACCESSORY_ORB, orbs));
 		}
-		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def == RaidBosses.AETHRYX, random)) {
+		if (pastCap) {
+			// Sukuna's fingers: what the relic exchange takes, bound so nobody trades them
+			ItemStack fingers = new ItemStack(ModItems.SUKUNA_FINGER, fingers(difficulty));
+			fingers.set(ModDataComponents.BOUND, Unit.INSTANCE);
+			give(player, fingers);
+		}
+		for (ItemStack supply : Consumables.raidRewards(RaidBosses.supplyTier(def), def.lo() >= RaidBosses.AETHRYX.lo(), random)) {
 			give(player, supply);
 		}
 		// a share of a level by difficulty, measured at the boss's top level (the boss kill itself pays nothing: its health is a raid scale)
-		JobProgression.addExp(player, JobProgression.levelExp(player, def.hi(), difficulty.exp));
+		JobProgression.addExp(player, JobProgression.levelExp(player, def.hi(), difficulty.exp * more));
 		ping(player, BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE), 1.0F);
+	}
+
+	/** Sukuna's fingers a rewarded member gets: 1 on Normal, 2 on Heroic, 3 on Nightmare. */
+	public static int fingers(final RaidDifficulty difficulty) {
+		return difficulty.ordinal() + 1;
 	}
 
 	private static void give(final ServerPlayer player, final ItemStack stack) {

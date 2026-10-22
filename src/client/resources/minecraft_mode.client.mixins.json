@@ -5,6 +5,7 @@
 	"client": [
 		"AbstractContainerScreenAccessor",
 		"BossHealthOverlayAccessor",
+		"FogRendererMixin",
 		"GuiGraphicsExtractorMixin",
 		"LightmapRenderStateExtractorMixin",
 		"MerchantScreenAccessor",

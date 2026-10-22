@@ -45,11 +45,14 @@ public class AccessoryAssetProvider implements DataProvider {
 		BufferedImage orb = AccessoryArtist.orb();
 		writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(ModItems.ACCESSORY_ORB).getPath() + ".png"), orb));
 		sheet.add(orb);
-		for (int tier = 1; tier <= 2; tier++) {
+		for (int tier = 1; tier < Accessories.PEAK_TIER; tier++) {
 			BufferedImage ticket = AccessoryArtist.ticket(tier);
 			writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(Accessories.inheritTicket(tier)).getPath() + ".png"), ticket));
 			sheet.add(ticket);
 		}
+		BufferedImage finger = AccessoryArtist.finger();
+		writes.add(ConsumableAssetProvider.write(cache, assets.resolve("textures/item/" + BuiltInRegistries.ITEM.getKey(ModItems.SUKUNA_FINGER).getPath() + ".png"), finger));
+		sheet.add(finger);
 		ConsumableAssetProvider.preview(this.output, sheet, "accessory-preview.png");
 		return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
 	}

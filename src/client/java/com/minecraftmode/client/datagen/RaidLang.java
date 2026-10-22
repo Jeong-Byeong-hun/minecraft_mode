@@ -1,8 +1,13 @@
 package com.minecraftmode.client.datagen;
 
+import com.minecraftmode.domain.DomainStyle;
 import com.minecraftmode.raid.ArenaTheme;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
+import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.economy.ShopType;
+import com.minecraftmode.registry.ModEntities;
+import com.minecraftmode.registry.ModItems;
 import java.util.Map;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
 
@@ -37,7 +42,11 @@ final class RaidLang {
 		"aethryx", new String[] {
 			"The void opens - orbs seek you out.", "공허가 열린다 - 구체들이 너를 쫓는다.",
 			"Rifts tear the island apart.", "균열이 섬을 찢는다.",
-			"Starfall! The island collapses!", "별이 떨어진다! 섬이 무너진다!"}
+			"Starfall! The island collapses!", "별이 떨어진다! 섬이 무너진다!"},
+		"sukuna", new String[] {
+			"Slashes rain down - Kamutoke flashes!", "참격이 쏟아진다 - 카무토케가 번뜩인다!",
+			"A flame is drawn between his hands...", "그의 두 손 사이에 불꽃이 당겨진다...",
+			"The King of Curses stops holding back!", "저주의 왕이 봐주기를 그만둔다!"}
 	);
 
 	/** Mechanic id -> {en name, ko name, en hint, ko hint}. */
@@ -67,6 +76,12 @@ final class RaidLang {
 			"블랙홀이 끌어당긴다. 붕괴할 때 중심에서 11블록 밖에 있어라!"},
 		{"aethryx_seals", "Starfall Seals", "별의 봉인", "Every seal needs someone standing on it when the stars fall.", "별이 떨어질 때 모든 봉인 위에 누군가 서 있어야 한다."},
 		{"aethryx_judgment", "Void Judgment", "공허의 심판", "Gather on the marked player: 60% of the party must share the blow.", "표식이 찍힌 사람에게 모여라: 파티의 60% 이상이 함께 받아내야 한다."},
+		{"sukuna_mahoraga", "Ten Shadows: Mahoraga", "십종영법술: 마허라",
+			"Sukuna cannot be hurt while Mahoraga stands. It adapts to whatever hurts it most - fell it fast with many kinds of damage before its wheel turns eight times!",
+			"마허라가 서 있는 동안 스쿠나는 피해를 받지 않는다. 마허라는 가장 아프게 한 것에 적응한다 - 법진이 여덟 번 돌기 전에 여러 종류의 피해로 빠르게 쓰러뜨려라!"},
+		{"sukuna_domain", "Domain Expansion: Malevolent Shrine", "영역전개: 복마어주자",
+			"Inside the red edge every slash is a sure hit. Run out past it, or shelter in a Simple Domain (blue circle) - the first ones break once the second ones appear!",
+			"붉은 경계 안에서는 모든 참격이 필중이다. 경계 밖으로 달아나거나 간이영역(파란 원) 안으로 피하라 - 첫 원은 두 번째 원이 생기면 깨진다!"},
 	};
 
 	static void add(final TranslationBuilder b, final boolean ko) {
@@ -88,7 +103,36 @@ final class RaidLang {
 				b.add(def.nameKey() + ".phase" + phase, lines != null && i < lines.length ? lines[i] : "");
 			}
 		}
-		b.add("entity.minecraft_mode.aethryx.collapse", ko ? "섬이 무너진다 - 중심으로!" : "The island collapses - get to the center!");
+		b.add(ModEntities.MAHORAGA, ko ? "팔악검 이계신장 마허라" : "Eight-Handled Sword Divergent Sila Divine General Mahoraga");
+		b.add(ModEntities.MALEVOLENT_SHRINE, ko ? "복마어주자" : "Malevolent Shrine");
+		b.add(DomainStyle.MALEVOLENT_SHRINE.nameKey(), ko ? "영역전개 · 복마어주자" : "Domain Expansion · Malevolent Shrine");
+		b.add("domain.minecraft_mode.sure_hit", ko ? "필중 범위 - 간이영역으로 피하거나 경계 밖으로 달아나라" : "Sure hit - shelter in a Simple Domain or run past the edge");
+		String s = "raid.minecraft_mode.sukuna.";
+		b.add(s + "guarded", ko ? "마허라가 서 있는 동안 스쿠나에게는 피해가 들어가지 않는다!" : "Sukuna cannot be hurt while Mahoraga stands!");
+		b.add(s + "fuga", ko ? "■ 개 「푸가」" : "■ Open: Fuga");
+		b.add(s + "world_slash", ko ? "세계를 가르는 참격" : "World-Cutting Slash");
+		b.add(s + "world_slash.hint", ko ? "선 밖으로 피하라: 어떤 방어도 소용없다!" : "Get out of the line: no defense holds it!");
+		b.add(s + "rct", ko ? "반전술식" : "Reverse Cursed Technique");
+		b.add(s + "rct.hint", ko ? "체력의 %s%%만큼 피해를 주어 회복을 끊어라!" : "Deal %s%% of his health to break the heal!");
+		b.add(s + "rct_broken", ko ? "반전술식 저지!" : "The heal is broken!");
+		b.add(s + "rct_healed", ko ? "스쿠나의 상처가 아물었다" : "Sukuna's wounds close");
+		b.add(ModItems.SUKUNA_FINGER, ko ? "스쿠나의 손가락" : "Sukuna's Finger");
+		b.add(ModItems.SUKUNA_FINGER.getDescriptionId() + ".tooltip", ko
+			? "특급 주물. 레이드 입구 옆 저주 유물 교환소에서 스쿠나의 장신구(" + ShopOffers.RELIC_PIECE_FINGERS + "개)나 4티어 계승권(" + ShopOffers.RELIC_TICKET_FINGERS + "개)으로 바꿉니다."
+			: "A special grade cursed object. Trade it at the cursed relic exchange by the raid gate for one of Sukuna's accessories (" + ShopOffers.RELIC_PIECE_FINGERS
+				+ ") or a tier 4 inheritance ticket (" + ShopOffers.RELIC_TICKET_FINGERS + ").");
+		b.add(ModItems.RELIC_SHOP, ko ? "저주 유물 교환소" : "Cursed Relic Exchange");
+		b.add(ShopType.CURSED_RELICS.titleKey(), ko ? "저주 유물 교환소" : "Cursed Relic Exchange");
+		String m = "raid.minecraft_mode.mahoraga.";
+		b.add(m + "adapted", ko ? "법진이 돈다: 마허라가 %s에 적응했다 (내성 %s%%, %s/%s)" : "The wheel turns: Mahoraga adapted to %s (%s%% resistance, %s/%s)");
+		b.add(m + "complete", ko ? "마허라가 완전히 적응했다" : "Mahoraga has fully adapted");
+		b.add(m + "phenomenon.strike", ko ? "타격" : "strikes");
+		b.add(m + "phenomenon.shot", ko ? "사격" : "shots");
+		b.add(m + "phenomenon.fire", ko ? "불" : "fire");
+		b.add(m + "phenomenon.lightning", ko ? "번개" : "lightning");
+		b.add(m + "phenomenon.explosion", ko ? "폭발" : "explosions");
+		b.add(m + "phenomenon.technique", ko ? "%s의 술식" : "the %s's technique");
+		b.add("entity.minecraft_mode.aethryx.collapse",ko ? "섬이 무너진다 - 중심으로!" : "The island collapses - get to the center!");
 	}
 
 	private static void mechanics(final TranslationBuilder b, final boolean ko) {
@@ -138,7 +182,8 @@ final class RaidLang {
 			ArenaTheme.VOID_ISLES, new String[] {"Void Isles", "공허의 부유섬"},
 			ArenaTheme.FOREST_GROVE, new String[] {"Overgrown Grove", "우거진 숲의 유적"},
 			ArenaTheme.DESERT_TOMB, new String[] {"Pharaoh's Tomb", "파라오의 무덤"},
-			ArenaTheme.SKY_SHRINE, new String[] {"Shrine Above the Clouds", "구름 위 신전"});
+			ArenaTheme.SKY_SHRINE, new String[] {"Shrine Above the Clouds", "구름 위 신전"},
+			ArenaTheme.MALEVOLENT_SHRINE, new String[] {"Malevolent Shrine", "복마어주자"});
 		for (ArenaTheme theme : ArenaTheme.values()) {
 			b.add("screen.minecraft_mode.raid.arena." + theme.name().toLowerCase(), arenas.get(theme)[ko ? 1 : 0]);
 		}
@@ -150,6 +195,7 @@ final class RaidLang {
 		b.add(p + "problem.too_far", ko ? "너무 멀리 있음" : "too far away");
 		b.add(p + "problem.level", ko ? "레벨 %s 필요" : "needs level %s");
 		b.add(p + "problem.dead", ko ? "사망 상태" : "dead");
+		b.add(p + "problem.past_cap", ko ? "악몽 난이도 %s 클리어 필요" : "needs a Nightmare %s clear");
 		b.add(p + "problem.fee", ko ? "입장료 %s 부족" : "cannot pay the %s fee");
 		b.add(p + "fee_paid", ko ? "입장료 %s을(를) 냈습니다." : "Paid the %s entry fee.");
 		b.add(p + "busy", ko ? "모든 경기장이 사용 중입니다. 잠시 후 다시 시도하세요." : "All arenas are in use. Try again shortly.");

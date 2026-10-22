@@ -79,6 +79,9 @@ public final class Accessories {
 			bonus(5, l(SKILL_DAMAGE, 10), l(DAMAGE, 6)));
 		set(RaidBosses.AETHRYX, 3, "Voidscale", "공허비늘", 0x2A2440, 0xC07AFF, bonus(2, l(BOSS_DAMAGE, 6)), bonus(3, l(CRIT_CHANCE, 4)),
 			bonus(5, l(DAMAGE, 8), l(PROTECTION, 3)));
+		// past the ladder: Sukuna's own set, above every tier 3 one
+		set(RaidBosses.SUKUNA, 4, "King of Curses'", "저주의 왕의", 0x2A1A1E, 0xC0182A, bonus(2, l(BOSS_DAMAGE, 8)), bonus(3, l(CRIT_DAMAGE, 20)),
+			bonus(5, l(DAMAGE, 10), l(FINAL_DAMAGE, 3)));
 	}
 
 	private static void set(
@@ -181,9 +184,14 @@ public final class Accessories {
 	}
 
 	/** The tier every boss drops from Heroic on. */
+	/** The top of the raid ladder: Heroic and Nightmare clears of the ladder's bosses drop tier 3 pieces. */
 	public static final int TOP_TIER = 3;
+	/** Past the ladder: the post-cap boss's set (Sukuna), which only its own raid drops. */
+	public static final int PEAK_TIER = 4;
 	/** Normal-difficulty chance per rewarded member that a boss of tier 1, 2, 3 drops a piece of its own set. */
 	private static final float[] NORMAL_CHANCE = {0.15F, 0.08F, 0.015F};
+	/** A peak set's chance by difficulty (Normal, Heroic, Nightmare). */
+	private static final float[] PEAK_CHANCE = {0.03F, 0.06F, 0.10F};
 	/** Heroic and Nightmare: tier 3 pieces only, from the first boss's chance up to the last boss's (Heroic Verdessa beats Normal Aethryx). */
 	private static final float HEROIC_FIRST = 0.025F;
 	private static final float HEROIC_LAST = 0.05F;
@@ -196,22 +204,29 @@ public final class Accessories {
 		if (set == null) {
 			return 0.0F;
 		}
+		if (set.tier() > TOP_TIER) {
+			return PEAK_CHANCE[difficulty.ordinal()];
+		}
 		if (difficulty == RaidDifficulty.NORMAL) {
 			return NORMAL_CHANCE[set.tier() - 1];
 		}
-		// harder bosses drop more often, evenly from the first set to the last
-		float along = SETS.size() <= 1 ? 1.0F : SETS.indexOf(set) / (float)(SETS.size() - 1);
+		// harder bosses drop more often, evenly from the ladder's first set to its last (a peak set never moves the others)
+		List<AccessorySet> ladder = SETS.stream().filter(s -> s.tier() <= TOP_TIER).toList();
+		float along = ladder.size() <= 1 ? 1.0F : ladder.indexOf(set) / (float)(ladder.size() - 1);
 		return difficulty == RaidDifficulty.HEROIC ? HEROIC_FIRST + (HEROIC_LAST - HEROIC_FIRST) * along
 			: NIGHTMARE_FIRST + (NIGHTMARE_LAST - NIGHTMARE_FIRST) * along;
 	}
 
-	/** The sets a clear of {@code boss} on {@code difficulty} drops from: its own on Normal (and for tier 3 bosses), else every tier 3 set. */
+	/**
+	 * The sets a clear of {@code boss} on {@code difficulty} drops from: its own on Normal (and for tier 3 and peak bosses), else every
+	 * tier 3 set.
+	 */
 	public static List<AccessorySet> dropSets(final BossDef boss, final RaidDifficulty difficulty) {
 		AccessorySet own = setOf(boss);
 		if (own == null) {
 			return List.of();
 		}
-		if (difficulty == RaidDifficulty.NORMAL || own.tier() == TOP_TIER) {
+		if (difficulty == RaidDifficulty.NORMAL || own.tier() >= TOP_TIER) {
 			return List.of(own);
 		}
 		return SETS.stream().filter(set -> set.tier() == TOP_TIER).toList();
@@ -253,12 +268,12 @@ public final class Accessories {
 	/** Chance per rewarded member that a tier 2 or 3 boss adds an inheritance ticket to the loot, by difficulty (Normal, Heroic, Nightmare). */
 	private static final float[] TICKET_CHANCE = {0.05F, 0.07F, 0.10F};
 
-	/** The ticket that inherits a piece of tier {@code tier} into the next tier, or null at the top tier. */
+	/** The ticket that inherits a piece of tier {@code tier} into the next tier (tier 3 into the peak set), or null at the peak. */
 	public static @Nullable Item inheritTicket(final int tier) {
-		return tier == 1 ? ModItems.ACCESSORY_INHERIT_1 : tier == 2 ? ModItems.ACCESSORY_INHERIT_2 : null;
+		return tier == 1 ? ModItems.ACCESSORY_INHERIT_1 : tier == 2 ? ModItems.ACCESSORY_INHERIT_2 : tier == 3 ? ModItems.ACCESSORY_INHERIT_3 : null;
 	}
 
-	/** The ticket a clear of {@code boss} may give: tier 2 bosses the tier 1 ticket, tier 3 bosses the tier 2 one, tier 1 bosses none. */
+	/** The ticket a clear of {@code boss} may give: tier 2 bosses the tier 1 ticket, tier 3 bosses the tier 2 one, the peak boss the tier 3 one, tier 1 bosses none. */
 	public static @Nullable Item ticketDrop(final BossDef boss) {
 		AccessorySet set = setOf(boss);
 		return set == null || set.tier() <= 1 ? null : inheritTicket(set.tier() - 1);
@@ -286,7 +301,7 @@ public final class Accessories {
 
 	/** Opening bid of an inheritance ticket at a raid loot auction: the guild weapon price of the lowest bracket it leads into; 0 for anything else. */
 	public static int ticketStart(final ItemStack stack) {
-		for (int tier = 1; tier < TOP_TIER; tier++) {
+		for (int tier = 1; tier < PEAK_TIER; tier++) {
 			Item ticket = inheritTicket(tier);
 			if (ticket != null && stack.is(ticket)) {
 				final int next = tier + 1;
@@ -297,9 +312,12 @@ public final class Accessories {
 		return 0;
 	}
 
-	/** What a piece of {@code def} can be inherited into: the same slot of every set one tier up (none at the top tier). */
+	/** What a piece of {@code def} can be inherited into: the same slot of every set one tier up (tier 3 into the peak set; none from the peak). */
 	public static List<AccessoryDef> inheritTargets(final AccessoryDef def) {
 		List<AccessoryDef> out = new ArrayList<>();
+		if (def.set().tier() >= PEAK_TIER) {
+			return out;
+		}
 		for (AccessorySet set : SETS) {
 			if (set.tier() == def.set().tier() + 1) {
 				out.add(def(set, def.slot()));

@@ -420,6 +420,7 @@ public class CodexScreen extends Screen {
 			case "raijin" -> Items.NOTE_BLOCK;
 			case "malachar" -> Items.WITHER_SKELETON_SKULL;
 			case "aethryx" -> Items.DRAGON_HEAD;
+			case "sukuna" -> Items.SKELETON_SKULL;
 			default -> Items.NETHER_STAR;
 		});
 	}

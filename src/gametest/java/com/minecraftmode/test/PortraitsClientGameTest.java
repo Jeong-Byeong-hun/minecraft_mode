@@ -9,6 +9,8 @@ import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.raid.BossDef;
 import com.minecraftmode.raid.RaidBosses;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -67,23 +69,36 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 					minecraft.gui.hud.toggle();
 				}
 			});
-			for (Companions.PetDef def : Companions.pets()) {
+			List<String> only = Arrays.stream(System.getProperty("minecraft_mode.portraits", "").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
+			for (String id : only) {
+				// a closer look at a few models: side, front, three-quarter and mid-move
+				portrait(context, server, connection, id, 0.0, Pose.STAND, SIDE, "");
+				portrait(context, server, connection, id, 0.0, Pose.STAND, FRONT, "_front");
+				portrait(context, server, connection, id, 0.0, Pose.STAND, THREE_QUARTER, "_34");
+				portrait(context, server, connection, id, 0.0, Pose.ROAR, THREE_QUARTER, "_34");
+				portrait(context, server, connection, id, 0.0, Pose.ATTACK, THREE_QUARTER, "_34");
+			}
+			for (Companions.PetDef def : only.isEmpty() ? Companions.pets() : List.<Companions.PetDef>of()) {
 				portrait(context, server, connection, "pet_" + def.id(), def.flying() ? 1.0 : 0.0, Pose.STAND);
 				portrait(context, server, connection, "pet_" + def.id(), def.flying() ? 1.0 : 0.0, Pose.REST);
 			}
-			for (Companions.MountDef def : Companions.mounts()) {
+			for (Companions.MountDef def : only.isEmpty() ? Companions.mounts() : List.<Companions.MountDef>of()) {
 				portrait(context, server, connection, "mount_" + def.id(), 0.0, Pose.STAND);
 				if (!def.flying() && !def.id().equals("dune_raptor")) {
 					portrait(context, server, connection, "mount_" + def.id(), 0.0, Pose.REAR);
 				}
 			}
-			NamedMobs.all().forEach(def -> {
-				portrait(context, server, connection, def.id(), 0.0, Pose.STAND);
-				portrait(context, server, connection, def.id(), 0.0, Pose.ATTACK);
-			});
-			for (BossDef def : RaidBosses.all()) {
-				portrait(context, server, connection, def.id(), 0.0, Pose.STAND);
-				portrait(context, server, connection, def.id(), 0.0, Pose.ROAR);
+			if (only.isEmpty()) {
+				NamedMobs.all().forEach(def -> {
+					portrait(context, server, connection, def.id(), 0.0, Pose.STAND);
+					portrait(context, server, connection, def.id(), 0.0, Pose.ATTACK);
+				});
+				for (BossDef def : RaidBosses.all()) {
+					portrait(context, server, connection, def.id(), 0.0, Pose.STAND);
+					portrait(context, server, connection, def.id(), 0.0, Pose.ROAR);
+				}
+				portrait(context, server, connection, "mahoraga", 0.0, Pose.STAND);
+				portrait(context, server, connection, "mahoraga", 0.0, Pose.ATTACK);
 			}
 			context.runOnClient(minecraft -> {
 				if (minecraft.gui.hud.isHidden()) {
@@ -94,9 +109,19 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 		}
 	}
 
-	/** Spawns {@code id} alone (no AI) in {@code pose}, steps back as far as its size needs and takes the picture. */
+	/** Camera yaws: south of the subject looking north (its flank), east of it looking west (its face), and between the two. */
+	private static final float SIDE = 180.0F;
+	private static final float FRONT = 90.0F;
+	private static final float THREE_QUARTER = 135.0F;
+
 	private static void portrait(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final String id,
 		final double lift, final Pose pose) {
+		portrait(context, server, connection, id, lift, pose, SIDE, "");
+	}
+
+	/** Spawns {@code id} alone (no AI) in {@code pose}, steps back as far as its size needs and takes the picture from {@code cameraYaw}. */
+	private static void portrait(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection, final String id,
+		final double lift, final Pose pose, final float cameraYaw, final String view) {
 		double[] size = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			player.level().getEntitiesOfClass(Entity.class, player.getBoundingBox().inflate(80), e -> e instanceof Mob).forEach(Entity::discard);
@@ -129,7 +154,10 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 			player.getAbilities().flying = true;
 			player.onUpdateAbilities();
 		});
-		server.runCommand(String.format(Locale.ROOT, "tp @p %.2f %.2f %.2f 180 %.1f", X, eyeHeight - 1.62, Z + distance, pitch));
+		// stand back along the view: a yaw looks along (-sin, cos)
+		double yaw = Math.toRadians(cameraYaw);
+		server.runCommand(String.format(Locale.ROOT, "tp @p %.2f %.2f %.2f %.1f %.1f", X + Math.sin(yaw) * distance, eyeHeight - 1.62, Z - Math.cos(yaw) * distance,
+			cameraYaw, pitch));
 		context.waitTicks(20);
 		if (pose == Pose.ATTACK || pose == Pose.ROAR) {
 			CreatureAnim anim = pose == Pose.ATTACK ? CreatureAnim.ATTACK : CreatureAnim.ROAR;
@@ -138,6 +166,6 @@ public class PortraitsClientGameTest implements FabricClientGameTest {
 			// the middle of the move, where the pose is strongest
 			context.waitTicks(anim.ticks() / 2);
 		}
-		context.takeScreenshot("portrait_" + id + pose.suffix);
+		context.takeScreenshot("portrait_" + id + view + pose.suffix);
 	}
 }

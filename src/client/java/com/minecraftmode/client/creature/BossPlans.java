@@ -16,7 +16,8 @@ import java.util.List;
  */
 final class BossPlans {
 	static List<BodyPlan> all() {
-		return List.of(verdessa(), arachne(), gorvath(), nefrekhet(), kraken(), ignis(), raijin(), malachar(), aethryx());
+		return List.of(verdessa(), arachne(), gorvath(), nefrekhet(), kraken(), ignis(), raijin(), malachar(), aethryx(), SukunaPlans.sukuna(),
+			SukunaPlans.mahoraga(), SukunaPlans.shrine());
 	}
 
 	/** Verdessa, the Thornmother: a tall dryad of bark and leaves with a crown of branches and thorny vine arms. */

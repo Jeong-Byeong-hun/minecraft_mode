@@ -2,6 +2,7 @@ package com.minecraftmode;
 
 import com.minecraftmode.accessory.Accessories;
 import com.minecraftmode.character.Characters;
+import com.minecraftmode.domain.Domains;
 import com.minecraftmode.admin.AdminState;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.city.CityServices;
@@ -112,6 +113,7 @@ public class MinecraftMode implements ModInitializer {
 		Characters.init();
 		AdminState.init();
 		Raids.init();
+		Domains.init();
 		Dungeons.init();
 		TrialHunts.init();
 		com.minecraftmode.jump.JumpForest.init();

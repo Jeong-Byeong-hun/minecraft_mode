@@ -334,7 +334,89 @@ public enum SkillLook {
 	/** Armament Round: a bullet coated black in Armament Haki, a red sheen on it (projectile). */
 	HAKI_SHOT(0, 1.0F, Hold.FREE),
 	/** Recoil Leap: the blunderbuss's blast behind where the caster was and a streak of smoke along their flight. */
-	RECOIL(20, 1.0F, Hold.TRAIL);
+	RECOIL(20, 1.0F, Hold.TRAIL),
+
+	// ------------------------------------------------------------ Warrior, King of Knights (0.5.41)
+	/** Excalibur: the sword raised in a pillar of gold, light streaming into it, then swung down in a torrent of golden light (along a beam). */
+	EXCALIBUR(36, 24.0F, Hold.FREE),
+	/** Invisible Air unbound: the wind sheathing the sword bursting out round the caster in whirling gusts. */
+	AIR_RELEASE(14, 5.0F, Hold.FREE),
+	/** Strike Air: a hammer of wind, a tornado lying along its flight (projectile). */
+	STRIKE_AIR(0, 1.0F, Hold.FREE),
+	/** Mana Burst: jets of blue mana blasting off the caster's path. */
+	MANA_BURST(20, 1.0F, Hold.TRAIL),
+	/** Avalon: the blue and gold scabbard over the caster coming apart into a dome of shining fragments. */
+	AVALON_SHEATH(60, 1.6F, Hold.FOLLOW),
+	/** Excalibur Morgan: the black sword raised in a pillar of darkness, then a torrent of black light rimmed in red (along a beam). */
+	VORTIGERN(36, 22.0F, Hold.FREE),
+	/** Mana Burst (dark): black flame erupting round the caster, red at the rims, a crimson shock ring rolling out. */
+	DARK_BURST(18, 5.0F, Hold.FREE),
+	/** Tyrant's Charge: black mana streaming off the caster's path, the ground cracking red under it. */
+	TYRANT_TRAIL(20, 1.0F, Hold.TRAIL),
+	/** Black Armor: Saber Alter's dark armor: black flame rising round the caster, red lines running over it, the visor glowing. */
+	BLACK_ARMOR(60, 1.0F, Hold.FOLLOW),
+	/** Rhongomyniad: storm clouds over the aimed spot and the lance at the end of the world coming down out of them as a tower of light. */
+	RHONGOMYNIAD(50, 5.0F, Hold.FREE),
+	/** Storm Thrust: a lance of light thrust out, storm wind drilling round it (along a beam). */
+	STORM_LANCE(14, 12.0F, Hold.FREE),
+	/** Lion King's Charge: the lance levelled at the caster's front in a cone of storm wind, the storm spiralling along their path. */
+	LION_CHARGE(20, 1.0F, Hold.TRAIL),
+	/** Holy Lance Ward: the holy lance standing upright behind the caster, a storm turning round it, blessings washing out. */
+	LANCE_WARD(50, 8.0F, Hold.FOLLOW),
+	/** Arondight Overload: lake-blue mana overflowing off the caster in dark streams, crackling. */
+	OVERLOAD_AURA(30, 1.0F, Hold.FOLLOW),
+	/** One overloaded Arondight cut: a blue-black blade arc crackling with blue light (along a cone). */
+	ARONDIGHT_ARC(9, 5.0F, Hold.FREE),
+	/** Knight of the Lake: the lake rippling at the caster's feet, mist rising, a sword of light rising out of the water behind them. */
+	LAKE_KNIGHT(50, 1.0F, Hold.FOLLOW),
+	/** Lake Slash: a crescent of lake water and light throwing off spray (projectile). */
+	LAKE_WAVE(0, 1.0F, Hold.FREE),
+	/** Unblemished: stains flaking off the caster and turning into motes of light, a clear ring at the feet. */
+	UNBLEMISHED(40, 1.0F, Hold.FOLLOW),
+	/** Clarent Blood Arthur: red lightning gathering into the raised sword, then a torrent of crimson lightning (along a beam). */
+	BLOOD_ARTHUR(30, 18.0F, Hold.FREE),
+	/** A crimson lightning strike on the aimed ground, branching and bursting. */
+	RED_BOLT(16, 5.0F, Hold.FREE),
+	/** Red Lightning: crimson bolts leaping from the caster's sword from enemy to enemy. */
+	RED_CHAIN(14, 12.0F, Hold.FOLLOW),
+	/** Rebel's Charge: red lightning crackling along the caster's path, the ground scorched under it. */
+	REBEL_TRAIL(20, 1.0F, Hold.TRAIL),
+	/** Secret of Pedigree: Mordred's horned helm closing over the caster's head and a red haze swallowing their outline. */
+	PEDIGREE_HELM(40, 1.0F, Hold.FOLLOW),
+	/** Excalibur Galatine: a sun forming over the aimed spot and swung down onto it, bursting in a dome of solar fire. */
+	GALATINE_SUN(34, 5.0F, Hold.FREE),
+	/** Sunlight Blessing: the noon sun blazing over the caster, its rays falling round them and a sun sigil on the ground. */
+	SUNLIGHT(50, 10.0F, Hold.FOLLOW),
+	/** Solar Flare: a shell of solar fire swelling round the caster, loops of flame arching off it. */
+	SOLAR_FLARE(18, 5.0F, Hold.FREE),
+	/** Noon Strike: a golden blade arc trailing sun-fire (along a cone). */
+	NOON_ARC(9, 5.0F, Hold.FREE),
+	/** Abyssus Draconis: the target branded a dragon: a holy seal under it, dragon wings of shadow behind it, pinned by a shaft of light. */
+	DRACONIS_SEAL(50, 1.0F, Hold.FOLLOW),
+	/** Ascalon's thrust: a great lance of holy light and St. George's cross flaring at its tip (along a beam). */
+	HOLY_LANCE(26, 16.0F, Hold.FREE),
+	/** Dragonbane Thrust: a spear of light with dragon scales shattering off along it (along a beam). */
+	DRAGONBANE(14, 10.0F, Hold.FREE),
+	/** Martyr's Shield: a great shield of light bearing St. George's red cross in front of the caster, a halo over them. */
+	MARTYR_SHIELD(50, 1.6F, Hold.FOLLOW),
+	/** Saint's Ward: holy ground round the caster, St. George's cross and roses on it, light rising. */
+	SAINT_WARD(50, 10.0F, Hold.FOLLOW),
+	/** Ame-no-Murakumo: storm clouds gathering over the caster, a whirlwind rising and blades of wind cutting out. */
+	MURAKUMO(34, 6.0F, Hold.FREE),
+	/** Grass Cutter: a sweep of wind almost all the way round, cut grass flying (along a cone). */
+	GRASS_CUTTER(12, 6.0F, Hold.FREE),
+	/** Wind Step: streaks of wind along the caster's path, leaves whirling behind. */
+	WIND_STEP(18, 1.0F, Hold.TRAIL),
+	/** Eight-Headed Bane: one head of Yamata no Orochi, jaws open, its neck writhing behind (projectile). */
+	SERPENT(0, 1.0F, Hold.FREE),
+	/** Lord Camelot: the shield planted and the white castle rising round the caster, walls and towers of light on the Round Table's sigil. */
+	CAMELOT(60, 6.0F, Hold.FREE),
+	/** Bulwark of Snowflakes: snowflakes of light turning round the caster, frost at their feet. */
+	SNOW_BULWARK(50, 1.6F, Hold.FOLLOW),
+	/** Round Table Bash: the great round shield swept along its arc (along a cone). */
+	ROUND_TABLE(10, 5.0F, Hold.FREE),
+	/** Camelot Charge: a shield of light leading the caster's charge, a wall of light left along the path. */
+	SHIELD_CHARGE(20, 1.0F, Hold.TRAIL);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

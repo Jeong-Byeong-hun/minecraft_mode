@@ -416,7 +416,87 @@ public enum SkillLook {
 	/** Round Table Bash: the great round shield swept along its arc (along a cone). */
 	ROUND_TABLE(10, 5.0F, Hold.FREE),
 	/** Camelot Charge: a shield of light leading the caster's charge, a wall of light left along the path. */
-	SHIELD_CHARGE(20, 1.0F, Hold.TRAIL);
+	SHIELD_CHARGE(20, 1.0F, Hold.TRAIL),
+
+	// ------------------------------------------------------------ Rogue, Shadow Monarch (0.5.42)
+	/** Great Serpent's Lair: Kasaka, the great venom serpent, coiled round the caster as wide as the blast, rearing with its fangs bared. */
+	SERPENT_LAIR(34, 6.0F, Hold.FREE),
+	/** Paralytic Bite: Kasaka's two venom fangs closing on the target, green venom dripping. */
+	VENOM_BITE(22, 1.0F, Hold.FOLLOW),
+	/** Venom Mist: a pool of toxic green mist on the aimed ground, bubbles bursting in it. */
+	VENOM_MIST(120, 5.0F, Hold.FREE),
+	/** Sprint: green afterimages and streaks of speed left along the caster's path. */
+	SPRINT_TRAIL(80, 1.0F, Hold.TRAIL),
+	/** Knight's Bane: the hunter's mark over the target and a black-violet cross cut through it. */
+	KNIGHTS_BANE(30, 1.0F, Hold.FOLLOW),
+	/** Mutilation: one black-violet dagger cut (along a cone). */
+	MUTILATION(7, 3.5F, Hold.FREE),
+	/** Killing Intent: a red-black pressure of killing intent rolling out round the caster, a looming shadow behind them. */
+	KILLING_INTENT(40, 8.0F, Hold.FOLLOW),
+	/** Riposte: two daggers crossed in guard in front of the caster, a dark shield shimmering round them. */
+	RIPOSTE(50, 1.0F, Hold.FOLLOW),
+	/** Ant King's Rampage: Beru's claw rakes torn along the caster's charge. */
+	ANT_DASH(20, 1.0F, Hold.TRAIL),
+	/** Ant King's Rampage: Beru's claws slashing all round the caster, as wide as each blast. */
+	ANT_FRENZY(9, 5.0F, Hold.FREE),
+	/** Devour: the ant king's great mandibles closing on the target. */
+	DEVOUR(20, 1.0F, Hold.FOLLOW),
+	/** Stolen Healing Arts: a ring of green healing light washing out to the allies it reaches. */
+	STOLEN_HEALING(40, 10.0F, Hold.FOLLOW),
+	/** Wing Burst: the ant king's insect wings on the caster's back in flight and the crash where they land. */
+	WING_BURST(44, 4.0F, Hold.TRAIL),
+	/** Yellow Flash: yellow flashes cutting through the target from every side, formula kunai left round it. */
+	YELLOW_FLASH(32, 1.0F, Hold.FOLLOW),
+	/** Formula Kunai: Minato's three-pronged kunai, its seal tag streaming (projectile). */
+	FORMULA_KUNAI(0, 1.0F, Hold.FREE),
+	/** Flying Thunder God: a yellow flash from where the caster was to the formula seal where they appear. */
+	HIRAISHIN(18, 1.0F, Hold.TRAIL),
+	/** Space-Time Barrier: the Flying Thunder God formula written round the caster and a barrier flickering over them. */
+	SPACE_TIME_BARRIER(50, 1.4F, Hold.FOLLOW),
+	/** Susanoo: Itachi's crimson Susanoo rising round the caster, ribs, arms and the Yata Mirror. */
+	SUSANOO_ITACHI(60, 1.0F, Hold.FOLLOW),
+	/** The Totsuka Blade: a blade of liquid sake poured out of the sealing gourd and thrust along the beam (along a beam). */
+	TOTSUKA(26, 16.0F, Hold.FREE),
+	/** Amaterasu: black flames that never go out burning over the aimed ground. */
+	BLACK_FLAMES(120, 3.5F, Hold.FREE),
+	/** Tsukuyomi: the Mangekyo Sharingan's gaze, a red-black ray to the target under a red moon (along a beam). */
+	TSUKUYOMI(30, 16.0F, Hold.FREE),
+	/** Crow Clone: the caster bursting into a flock of black crows that wheel round them. */
+	CROW_CLONE(50, 1.0F, Hold.FOLLOW),
+	/** Monarch's Domain: the Shadow Monarch's domain spread over the ground, shadow mist and hands drawing enemies in. */
+	MONARCH_DOMAIN(160, 8.0F, Hold.FREE),
+	/** Ruler's Authority: an unseen hand of violet force lifting everything round the caster and slamming it down. */
+	RULERS_AUTHORITY(26, 7.0F, Hold.FREE),
+	/** Reaper's Chain: the chain sickle swung round on its chain (along a cone). */
+	REAPER_CHAIN(10, 7.0F, Hold.FREE),
+	/** Abyssal Guard: shadow knights rising round the caster, shields raised. */
+	ABYSSAL_GUARD(60, 1.0F, Hold.FOLLOW),
+	/** Susanoo: Kamui Shuriken: a great four-bladed shuriken of violet chakra, a space-time vortex turning in its middle (projectile). */
+	KAMUI_SHURIKEN(0, 1.0F, Hold.FREE),
+	/** Where a Kamui Shuriken bursts: a space-time vortex warping everything in its reach away. */
+	KAMUI_VORTEX(20, 4.0F, Hold.FREE),
+	/** Purple Lightning: violet lightning leaping from the caster's hand from enemy to enemy. */
+	PURPLE_CHAIN(14, 16.0F, Hold.FOLLOW),
+	/** Kamui: the space round the caster twisting into a vortex, the Mangekyo Sharingan over it. */
+	KAMUI_WARP(40, 1.0F, Hold.FOLLOW),
+	/** Kamui Raikiri: a vortex where the caster vanished, a streak of violet lightning and the Raikiri's burst where they strike. */
+	KAMUI_RAIKIRI(20, 3.5F, Hold.TRAIL),
+	/** Arise: purple-black smoke boiling up round the caster and shadow soldiers rising out of the ground. */
+	ARISE(50, 7.0F, Hold.FREE),
+	/** Dragon's Fear: Kamish's head roaring over the caster, rings of dread rolling out. */
+	DRAGON_FEAR(36, 10.0F, Hold.FOLLOW),
+	/** Dragon Fang Volley: a dagger wreathed in Kamish's red-black dragon flame (projectile). */
+	DRAGON_FANG(0, 1.0F, Hold.FREE),
+	/** Shadow Exchange: the caster sinking into a pool of shadow and rising out of another. */
+	SHADOW_EXCHANGE(20, 1.0F, Hold.TRAIL),
+	/** Uchiha Return: the gunbai raised, drinking in what hits it, then the stored force thrown back out in a blast. */
+	UCHIHA_RETURN(34, 7.0F, Hold.FOLLOW),
+	/** Majestic Destroyer Flame: a wall of fire rolling out to the aimed spot and a sea of flame on it. */
+	DESTROYER_FLAME(32, 5.0F, Hold.FREE),
+	/** Gunbai Sweep: the war fan swept along its arc, a gust of wind in front of it (along a cone). */
+	GUNBAI_SWEEP(10, 6.0F, Hold.FREE),
+	/** Gunbai Leap: the war fan raised over the leaping caster and slammed down where they land. */
+	GUNBAI_LEAP(44, 4.0F, Hold.TRAIL);
 
 	/** How a look moves once it is shown. */
 	public enum Hold {

@@ -1556,6 +1556,14 @@ public final class Actions {
 		return (ctx, at) -> SkillVfx.spawn(ctx, look, at, ctx.flatLook(), (float)ctx.area(size), 0.0F, look.ticks(), null);
 	}
 
+	/**
+	 * {@link #lookWhereItLands} for an exploding projectile: {@code radius} as given, since its {@link ProjectileAction#explode} radius is
+	 * not grown by the Expansion engraving either (Kamui Shuriken's vortex). Purely visual.
+	 */
+	public static BiConsumer<SkillContext, Vec3> lookWhereItBursts(final SkillLook look, final double radius) {
+		return (ctx, at) -> SkillVfx.spawn(ctx, look, at, ctx.flatLook(), (float)radius, 0.0F, look.ticks(), null);
+	}
+
 	/** A step with a drawn effect; see {@link #look}. Purely visual: everything but {@link #run} is the wrapped action's. */
 	public static final class LookAction implements SkillAction {
 		private enum Place {

@@ -139,69 +139,104 @@ public final class RogueContent extends ClassContent {
 			skill("fan_dance", "Fan Dance", "부채춤", MOVEMENT, 12, 14, leap(4, 4, 1.6)));
 
 		// ---------------------------------------------------------------- tier 4: Shadow Monarch
+		// Every tier 4 skill draws its own look (SkillLook, 0.5.42): visual only, the numbers are the wrapped actions'.
+		// Where the weapon's big sprites (bubbles, runes, rings, orbs) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("kasaka_venom_fang", 4, 70, DAGGER, "Kasaka's Venom Fang", "카사카의 독니",
 			art(0xE8E4D0, 0x1F4D3A, 0x76FF03), fx(Fx.Kind.BUBBLE, 0x7CFC00),
-			skill("serpent_lair", "Great Serpent's Lair", "거대 독사의 소굴", ULTIMATE, 45, 38, nova(6, 6.46), inflict(POISON, 8, 2), stun(1.0)),
-			skill("paralytic_bite", "Paralytic Bite", "마비의 이빨", ATTACK, 9, 20, shadowstep(12, 2.0), stun(1.5), inflict(POISON, 5, 1)),
-			skill("venom_mist", "Venom Mist", "독안개", UTILITY, 16, 22, zone(5, 6, 0.5).at(14).effect(POISON, 1)),
-			skill("sprint", "Sprint", "질주", MOVEMENT, 14, 16, buff(SPEED, 8, 2), cleanse()));
+			skill("serpent_lair", "Great Serpent's Lair", "거대 독사의 소굴", ULTIMATE, 45, 38, look(SkillLook.SERPENT_LAIR, nova(6, 6.46)).size(6).quiet(),
+				inflict(POISON, 8, 2), stun(1.0)).withFx(Fx.Kind.SPARK),
+			skill("paralytic_bite", "Paralytic Bite", "마비의 이빨", ATTACK, 9, 20, look(SkillLook.VENOM_BITE, shadowstep(12, 2.0)).onTarget(12).quiet(), stun(1.5),
+				inflict(POISON, 5, 1)).withFx(Fx.Kind.SPARK),
+			skill("venom_mist", "Venom Mist", "독안개", UTILITY, 16, 22, look(SkillLook.VENOM_MIST, zone(5, 6, 0.5).at(14).effect(POISON, 1)).at(14).size(5).lasting(6)
+				.quiet()).withFx(Fx.Kind.SPARK),
+			skill("sprint", "Sprint", "질주", MOVEMENT, 14, 16, look(SkillLook.SPRINT_TRAIL, buff(SPEED, 8, 2)).lasting(4), cleanse()).withFx(Fx.Kind.SPARK));
 
 		weapon("knight_killer", 4, 74, DAGGER, "Knight Killer", "나이트 킬러",
 			art(0x8C939C, 0x1B1B1F, 0xB03A2E), fx(Fx.Kind.SHARD, 0xC0C6CE),
-			skill("knights_bane", "Knight's Bane", "기사의 재앙", ULTIMATE, 45, 36, mark(16, 10, 50), shadowstep(16, 5.4), inflict(VULNERABLE, 8, 2)),
-			skill("mutilation", "Mutilation", "난도", ATTACK, 10, 24, repeat(6, 2, slash(3.5, 140, 0.48)), inflict(BLEEDING, 6, 1)),
-			skill("killing_intent", "Killing Intent", "살기", UTILITY, 20, 20, debuff(8, WEAKNESS, 6, 1), debuff(8, SLOWNESS, 6, 1)),
-			skill("riposte", "Riposte", "되받아치기", DEFENSE, 18, 20, boost(CRIT_DAMAGE, 5, 50), shield(8, 5)));
+			skill("knights_bane", "Knight's Bane", "기사의 재앙", ULTIMATE, 45, 36, look(SkillLook.KNIGHTS_BANE, mark(16, 10, 50)).onTarget(16).lasting(1.5).quiet(),
+				look(SkillLook.NONE, shadowstep(16, 5.4)).quiet(), inflict(VULNERABLE, 8, 2)).withFx(Fx.Kind.SPARK, 0xB070FF),
+			skill("mutilation", "Mutilation", "난도", ATTACK, 10, 24, repeat(6, 2, look(SkillLook.MUTILATION, slash(3.5, 140, 0.48)).cone(3.5, 140).quiet()),
+				inflict(BLEEDING, 6, 1)).withFx(Fx.Kind.SPARK, 0xB070FF),
+			skill("killing_intent", "Killing Intent", "살기", UTILITY, 20, 20, look(SkillLook.KILLING_INTENT, debuff(8, WEAKNESS, 6, 1)).size(8).quiet(),
+				look(SkillLook.NONE, debuff(8, SLOWNESS, 6, 1)).quiet()).withFx(Fx.Kind.SPARK, 0xFF4040),
+			skill("riposte", "Riposte", "되받아치기", DEFENSE, 18, 20, look(SkillLook.RIPOSTE, boost(CRIT_DAMAGE, 5, 50)).quiet(), look(SkillLook.NONE, shield(8, 5)).quiet())
+				.withFx(Fx.Kind.SPARK, 0xB070FF));
 
 		weapon("beru_talons", 4, 78, CLAW, "Beru's Talons", "베르의 발톱",
 			art(0x1C1C2A, 0x3B1F4A, 0xB14EFF), fx(Fx.Kind.SMOKE, 0x6A0DAD),
-			skill("ant_king_rampage", "Ant King's Rampage", "개미왕의 폭주", ULTIMATE, 50, 38, lifesteal(20), dash(8, 1.76), delay(0.4, repeat(4, 4, nova(5, 1.32)))),
-			skill("devour", "Devour", "포식", ATTACK, 12, 22, execute(5, 2.2, 30, 2.2), lifesteal(40)),
-			skill("stolen_healing", "Stolen Healing Arts", "빼앗은 치유술", DEFENSE, 30, 24, allyHeal(10, 25), buff(REGENERATION, 6, 1)),
-			skill("wing_burst", "Wing Burst", "날개 돌격", MOVEMENT, 10, 18, leap(6, 4, 1.8)));
+			skill("ant_king_rampage", "Ant King's Rampage", "개미왕의 폭주", ULTIMATE, 50, 38, lifesteal(20), look(SkillLook.ANT_DASH, dash(8, 1.76)).lasting(1.0),
+				delay(0.4, repeat(4, 4, look(SkillLook.ANT_FRENZY, nova(5, 1.32)).size(5).quiet()))).withFx(Fx.Kind.SPARK, 0xB14EFF),
+			skill("devour", "Devour", "포식", ATTACK, 12, 22, look(SkillLook.DEVOUR, execute(5, 2.2, 30, 2.2)).onTarget(5).quiet(), lifesteal(40))
+				.withFx(Fx.Kind.SPARK, 0xB14EFF),
+			skill("stolen_healing", "Stolen Healing Arts", "빼앗은 치유술", DEFENSE, 30, 24, look(SkillLook.STOLEN_HEALING, allyHeal(10, 25)).size(10).unscaled().quiet(),
+				buff(REGENERATION, 6, 1)).withFx(Fx.Kind.SPARK, 0x7DFF9A),
+			skill("wing_burst", "Wing Burst", "날개 돌격", MOVEMENT, 10, 18, look(SkillLook.WING_BURST, leap(6, 4, 1.8)).size(4).lasting(2.2))
+				.withFx(Fx.Kind.SPARK, 0xB14EFF));
 
 		weapon("hiraishin_kunai", 4, 82, KUNAI, "Flying Thunder God Kunai", "비뢰신 쿠나이",
 			art(0x8C949E, 0xF2F2F2, 0xFFD400), fx(Fx.Kind.BOLT, 0xFFE34D),
-			skill("yellow_flash", "Yellow Flash", "금빛 섬광", ULTIMATE, 45, 38, repeat(4, 5, shadowstep(20, 1.0)), delay(1.0, nova(5, 3.0))),
-			skill("formula_kunai", "Formula Kunai", "술식 쿠나이", ATTACK, 7, 18, shoot(ProjectileStyle.KUNAI, 1.6).count(3).spread(24).pierce(2), mark(20, 8, 25)),
-			skill("flying_thunder_god", "Flying Thunder God Technique", "비뢰신의 술", MOVEMENT, 8, 18, blink(14), boost(CRIT_CHANCE, 4, 25)),
-			skill("space_time_barrier", "Space-Time Barrier", "시공간 결계", UTILITY, 24, 22, boost(CRIT_DAMAGE, 5, 60), cleanse()));
+			// Minato's yellow flashes end in a Rasengan (the blue sphere and its burst, the same looks as the Rasenshuriken's)
+			skill("yellow_flash", "Yellow Flash", "금빛 섬광", ULTIMATE, 45, 38,
+				look(SkillLook.YELLOW_FLASH, repeat(4, 5, look(SkillLook.NONE, shadowstep(20, 1.0)).quiet())).onTarget(20).lasting(1.6),
+				look(SkillLook.RASENGAN, delay(1.0, look(SkillLook.RASENGAN_BURST, nova(5, 3.0)).size(5).quiet())).lasting(1.0)).withFx(Fx.Kind.SPARK, 0x8FD8FF),
+			skill("formula_kunai", "Formula Kunai", "술식 쿠나이", ATTACK, 7, 18,
+				shoot(ProjectileStyle.KUNAI, 1.6).count(3).spread(24).pierce(2).look(SkillLook.FORMULA_KUNAI), mark(20, 8, 25)),
+			skill("flying_thunder_god", "Flying Thunder God Technique", "비뢰신의 술", MOVEMENT, 8, 18, look(SkillLook.HIRAISHIN, blink(14)).lasting(0.9),
+				boost(CRIT_CHANCE, 4, 25)).withFx(Fx.Kind.SPARK),
+			skill("space_time_barrier", "Space-Time Barrier", "시공간 결계", UTILITY, 24, 22, look(SkillLook.SPACE_TIME_BARRIER, boost(CRIT_DAMAGE, 5, 60)).quiet(),
+				cleanse()).withFx(Fx.Kind.SPARK));
 
 		weapon("totsuka_blade", 4, 86, NINJATO, "Totsuka Blade", "토츠카의 검",
 			art(0xFFD9C7, 0x6B1A1A, 0xFF4D2E), fx(Fx.Kind.RUNE, 0xFF5A3C),
-			skill("susanoo", "Susanoo", "스사노오", ULTIMATE, 50, 40, shield(20, 10), beam(16, 6.08), stun(1.5)),
-			skill("amaterasu", "Amaterasu", "아마테라스", ATTACK, 14, 26, zone(3.5, 6, 0.68).at(16), burn(6)),
-			skill("tsukuyomi", "Tsukuyomi", "츠쿠요미", UTILITY, 22, 24, beam(16, 1.4), stun(2.0), inflict(WEAKNESS, 6, 1)),
-			skill("crow_clone", "Crow Clone", "까마귀 분신술", UTILITY, 18, 20, boost(CRIT_CHANCE, 5, 25), stealth(3, 60)));
+			skill("susanoo", "Susanoo", "스사노오", ULTIMATE, 50, 40, look(SkillLook.SUSANOO_ITACHI, shield(20, 10)).lasting(3.0).quiet(),
+				look(SkillLook.TOTSUKA, beam(16, 6.08)).beam(16).quiet(), stun(1.5)).withFx(Fx.Kind.SPARK),
+			skill("amaterasu", "Amaterasu", "아마테라스", ATTACK, 14, 26, look(SkillLook.BLACK_FLAMES, zone(3.5, 6, 0.68).at(16)).at(16).size(3.5).lasting(6).quiet(),
+				burn(6)).withFx(Fx.Kind.SPARK, 0x9A1428),
+			skill("tsukuyomi", "Tsukuyomi", "츠쿠요미", UTILITY, 22, 24, look(SkillLook.TSUKUYOMI, beam(16, 1.4)).beam(16).quiet(), stun(2.0), inflict(WEAKNESS, 6, 1))
+				.withFx(Fx.Kind.SPARK),
+			skill("crow_clone", "Crow Clone", "까마귀 분신술", UTILITY, 18, 20, look(SkillLook.CROW_CLONE, boost(CRIT_CHANCE, 5, 25)).quiet(),
+				look(SkillLook.NONE, stealth(3, 60)).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("monarch_chain_sickle", 4, 90, KUSARIGAMA, "Shadow Monarch's Chain Sickle", "그림자 군주의 쿠사리가마",
 			art(0x15121F, 0x2C2340, 0x8A2BE2), fx(Fx.Kind.SMOKE, 0x4B1F7A),
-			skill("monarchs_domain", "Monarch's Domain", "군주의 영역", ULTIMATE, 50, 38, nova(8, 3.0), zone(8, 8, 0.6).pull(0.5), boost(DAMAGE, 8, 20)),
-			skill("rulers_authority", "Ruler's Authority", "지배자의 권능", UTILITY, 14, 26, launch(7, 4), delay(0.5, nova(7, 2.2)), stun(1.0)),
-			skill("reapers_chain", "Reaper's Chain", "사신의 사슬", ATTACK, 8, 24, slash(7, 240, 2.2), inflict(BLEEDING, 6, 2)),
-			skill("abyssal_guard", "Abyssal Guard", "심연의 수호", DEFENSE, 24, 24, shield(16, 8), boost(DAMAGE, 6, 20)));
+			skill("monarchs_domain", "Monarch's Domain", "군주의 영역", ULTIMATE, 50, 38, look(SkillLook.MONARCH_DOMAIN, nova(8, 3.0)).size(8).lasting(8).quiet(),
+				look(SkillLook.NONE, zone(8, 8, 0.6).pull(0.5)).quiet(), boost(DAMAGE, 8, 20)).withFx(Fx.Kind.SPARK, 0x9A5CFF),
+			skill("rulers_authority", "Ruler's Authority", "지배자의 권능", UTILITY, 14, 26, look(SkillLook.RULERS_AUTHORITY, launch(7, 4)).size(7).lasting(1.3).quiet(),
+				delay(0.5, look(SkillLook.NONE, nova(7, 2.2)).quiet()), stun(1.0)).withFx(Fx.Kind.SPARK, 0x9A5CFF),
+			skill("reapers_chain", "Reaper's Chain", "사신의 사슬", ATTACK, 8, 24, look(SkillLook.REAPER_CHAIN, slash(7, 240, 2.2)).cone(7, 240).quiet(),
+				inflict(BLEEDING, 6, 2)).withFx(Fx.Kind.SPARK, 0x9A5CFF),
+			skill("abyssal_guard", "Abyssal Guard", "심연의 수호", DEFENSE, 24, 24, look(SkillLook.ABYSSAL_GUARD, shield(16, 8)).lasting(3.0).quiet(),
+				boost(DAMAGE, 6, 20)).withFx(Fx.Kind.SPARK, 0x9A5CFF));
 
 		weapon("kamui_shuriken", 4, 95, SHURIKEN, "Kamui Shuriken", "카무이 수리검",
 			art(0x1B2A3A, 0x0E0E14, 0x9B59FF), fx(Fx.Kind.RING, 0x9B6BFF),
 			skill("susanoo_kamui_shuriken", "Perfect Susanoo: Kamui Shuriken", "완성체 스사노오: 카무이 수리검", ULTIMATE, 50, 40,
-				shoot(ProjectileStyle.SHURIKEN, 5.76).count(2).spread(16).speed(1.2F).pierce(10).explode(4.0F)),
-			skill("purple_lightning", "Purple Lightning", "자전", ATTACK, 10, 26, chain(16, 6, 1.8), stun(0.6)),
-			skill("kamui", "Kamui", "카무이", UTILITY, 18, 24, boost(CRIT_CHANCE, 5, 30), cleanse()),
-			skill("kamui_raikiri", "Kamui Raikiri", "카무이 뇌절", MOVEMENT, 10, 24, blink(10), nova(3.5, 2.6), stun(0.6)));
+				shoot(ProjectileStyle.SHURIKEN, 5.76).count(2).spread(16).speed(1.2F).pierce(10).explode(4.0F).look(SkillLook.KAMUI_SHURIKEN)
+					.onImpact(lookWhereItBursts(SkillLook.KAMUI_VORTEX, 4.0))),
+			skill("purple_lightning", "Purple Lightning", "자전", ATTACK, 10, 26, look(SkillLook.PURPLE_CHAIN, chain(16, 6, 1.8)).size(16).unscaled(), stun(0.6)),
+			skill("kamui", "Kamui", "카무이", UTILITY, 18, 24, look(SkillLook.KAMUI_WARP, boost(CRIT_CHANCE, 5, 30)).quiet(), cleanse()).withFx(Fx.Kind.SPARK),
+			skill("kamui_raikiri", "Kamui Raikiri", "카무이 뇌절", MOVEMENT, 10, 24, look(SkillLook.KAMUI_RAIKIRI, blink(10)).size(3.5).lasting(1.0),
+				look(SkillLook.NONE, nova(3.5, 2.6)).quiet(), stun(0.6)).withFx(Fx.Kind.SPARK));
 
 		weapon("kamish_wrath", 4, 100, DAGGER, "Kamish's Wrath", "카미쉬의 분노",
 			art(0x24182E, 0x0B0B12, 0xE040FB), fx(Fx.Kind.SLASH, 0xC77DFF),
-			skill("arise", "Arise", "일어나라", ULTIMATE, 60, 40, nova(7, 3.0), summon(Summon.IRON_GOLEM, 2, 12), summon(Summon.WOLF, 4, 12)),
-			skill("dragons_fear", "Dragon's Fear", "드래곤 피어", UTILITY, 22, 26, debuff(10, STUN, 2, 0), debuff(10, WEAKNESS, 6, 1)),
+			skill("arise", "Arise", "일어나라", ULTIMATE, 60, 40, look(SkillLook.ARISE, nova(7, 3.0)).size(7).lasting(2.5).quiet(), summon(Summon.IRON_GOLEM, 2, 12),
+				summon(Summon.WOLF, 4, 12)).withFx(Fx.Kind.SPARK),
+			skill("dragons_fear", "Dragon's Fear", "드래곤 피어", UTILITY, 22, 26, look(SkillLook.DRAGON_FEAR, debuff(10, STUN, 2, 0)).size(10).quiet(),
+				look(SkillLook.NONE, debuff(10, WEAKNESS, 6, 1)).quiet()).withFx(Fx.Kind.SPARK, 0xFF4A3A),
 			skill("dragon_fang_volley", "Dragon Fang Volley", "용아 투척", ATTACK, 9, 28,
-				shoot(ProjectileStyle.BLADE, 1.5).count(8).spread(60).pierce(3), inflict(VULNERABLE, 6, 1)),
-			skill("shadow_exchange", "Shadow Exchange", "그림자 교환", MOVEMENT, 12, 20, cleanse(), blink(14), stealth(2, 40)));
+				shoot(ProjectileStyle.BLADE, 1.5).count(8).spread(60).pierce(3).look(SkillLook.DRAGON_FANG), inflict(VULNERABLE, 6, 1)),
+			skill("shadow_exchange", "Shadow Exchange", "그림자 교환", MOVEMENT, 12, 20, cleanse(), look(SkillLook.SHADOW_EXCHANGE, blink(14)).lasting(1.0),
+				look(SkillLook.NONE, stealth(2, 40)).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("madara_gunbai", 4, 88, WAR_FAN, "Madara's Gunbai", "마다라의 군배",
 			art(0xB33A2E, 0x2A1A14, 0xF2F2F2), fx(Fx.Kind.ORB, 0xFF4A2A),
-			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, shield(12, 4), delay(1.0, nova(7, 6.0))),
-			skill("great_fire_annihilation", "Great Fire Annihilation", "호화멸각", ATTACK, 12, 24, burn(6), strike(12, 5, 1, 2.8)),
-			skill("gunbai_sweep", "Gunbai Sweep", "군배 휩쓸기", ATTACK, 7, 18, slash(6, 180, 1.7), push(5, 1.2)),
-			skill("gunbai_leap", "Gunbai Leap", "군배 도약", MOVEMENT, 10, 14, leap(5, 4, 1.4)));
+			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, look(SkillLook.UCHIHA_RETURN, shield(12, 4)).size(7).lasting(1.7).quiet(),
+				delay(1.0, look(SkillLook.NONE, nova(7, 6.0)).quiet())).withFx(Fx.Kind.SPARK),
+			skill("great_fire_annihilation", "Great Fire Annihilation", "호화멸각", ATTACK, 12, 24, burn(6),
+				look(SkillLook.DESTROYER_FLAME, strike(12, 5, 1, 2.8)).at(12).size(5).lasting(1.6).quiet()).withFx(Fx.Kind.SPARK),
+			skill("gunbai_sweep", "Gunbai Sweep", "군배 휩쓸기", ATTACK, 7, 18, look(SkillLook.GUNBAI_SWEEP, slash(6, 180, 1.7)).cone(6, 180).quiet(),
+				look(SkillLook.NONE, push(5, 1.2)).quiet()).withFx(Fx.Kind.SPARK),
+			skill("gunbai_leap", "Gunbai Leap", "군배 도약", MOVEMENT, 10, 14, look(SkillLook.GUNBAI_LEAP, leap(5, 4, 1.4)).size(4).lasting(2.2)).withFx(Fx.Kind.SPARK));
 	}
 }

@@ -195,7 +195,7 @@ final class EmperorLooks {
 				float t = half - 2 * half * Math.min(swing, hash(s.seed + i));
 				float q = ease(age, 1.0F + hash(i * 3) * 4.0F, 10.0F);
 				Vector3f d = new Vector3f(f).rotateY(-t);
-				Vector3f at = new Vector3f(d).mul(r * (0.9F + 0.5F * q)).add(0, 0.3F - 1.0F * q * q + (hash(i * 7) - 0.5F) * 0.6F, 0);
+				Vector3f at = new Vector3f(d).mul(r * (0.85F + 0.2F * q)).add(0, 0.3F - 1.0F * q * q + (hash(i * 7) - 0.5F) * 0.6F, 0);
 				Vector3f spin = new Vector3f(Mth.cos(age * 0.4F + i), 0.5F, Mth.sin(age * 0.3F + i)).normalize();
 				o.diamond(at, spin, VfxOut.across(spin), 0.28F, 0.09F, argb(0.2F * fade, SKY), argb(0.85F * fade, SKY_PALE));
 			}
@@ -247,7 +247,7 @@ final class EmperorLooks {
 
 	/**
 	 * Ikoku Sovereignty: Napoleon swung overhead and down across the front in one great diagonal stroke, a broad sheet of pink force with a
-	 * golden edge left behind it, the bicorne on its hilt, and a shock rolling over the ground.
+	 * golden edge left behind it, the bicorne on its hilt, and a shock rolling over the ground round the caster as far as the push.
 	 */
 	private static void ikokuSwing(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -257,7 +257,8 @@ final class EmperorLooks {
 		Vector3f f = new Vector3f(s.forward);
 		Vector3f right = VfxOut.across(f);
 		Vector3f b = new Vector3f(UP).mul(0.82F).add(new Vector3f(right).mul(0.57F)).normalize();
-		float r = s.size * 0.85F;
+		// the stroke itself hits nothing (the wave does, about a block either side of its line): kept to about 1.3 blocks either side
+		float r = s.size * 0.4F;
 		float from = 2.3F;
 		float to = -0.95F;
 		float now = Mth.lerp(swing, from, to);
@@ -283,9 +284,10 @@ final class EmperorLooks {
 				o.blade(hilt, new Vector3f(d).mul(r + 0.4F).add(hilt), along, 0.2F, argb(fade, 0xFFFFFF), argb(fade, PINK_PALE));
 				o.sprite(hilt, s.camRight, s.camUp, 0.5F, argb(0.6F * fade, GOLD));
 			}
-			// the shock rolling over the ground ahead
+			// the shock rolling over the ground round the caster, out to the push (the cone's range is the push radius)
 			float q = ease(age, 3.0F, 12.0F);
-			o.ring(new Vector3f(f).mul(2.5F).add(0, ground + 0.3F, 0), s.size * q, s.size * q + 0.5F, argb(0.6F * (1.0F - q), PINK_PALE));
+			o.ring(new Vector3f(0, ground + 0.14F, 0), Math.max(0.0F, s.size * q - 0.5F), s.size * q, argb(0.6F * (1.0F - q), PINK_PALE));
+			o.ring(new Vector3f(0, ground + 0.15F, 0), Math.max(0.0F, s.size - 0.15F), s.size, argb(0.55F * q * fade, PINK_PALE));
 			for (int i = 0; i < 10; i++) {
 				Vector3f at = new Vector3f(f).rotateY((hash(s.seed + i) - 0.5F) * 2.0F).mul(2.0F + 4.0F * q * hash(i * 3)).add(0, ground + 0.5F + 1.5F * hash(i * 5) * q, 0);
 				o.glint(at, s.camRight, s.camUp, 0.25F, i + age * 0.2F, argb(0.8F * fade, i % 2 == 0 ? GOLD_PALE : PINK_PALE));
@@ -480,7 +482,7 @@ final class EmperorLooks {
 				}
 			}
 			float hit = ease(age, 0.0F, 10.0F);
-			o.ring(new Vector3f(0, 0.15F, 0), s.size * hit, s.size * hit + 0.5F, argb(0.8F * (1.0F - hit), 0xFFF080));
+			o.ring(new Vector3f(0, 0.15F, 0), Math.max(0.0F, s.size * hit - 0.5F), s.size * hit, argb(0.8F * (1.0F - hit), 0xFFF080));
 			float flash = 1.0F - ease(age, 0.0F, 6.0F);
 			o.sprite(new Vector3f(0, 0.8F, 0), s.camRight, s.camUp, s.size * flash + 0.2F, argb(0.8F * flash, 0xFFFFFF));
 			o.ring(new Vector3f(0, 0.15F, 0), s.size - 0.25F, s.size, argb(0.5F * k, 0xFFF080));
@@ -593,7 +595,7 @@ final class EmperorLooks {
 
 	/**
 	 * Island Shaker: the fist strikes the air in front of the caster and the air cracks like glass round it, then the quake bursts out in
-	 * a shell of white force, the ground splitting outward and rubble thrown up.
+	 * a shell of white force round the caster, the ground splitting outward from their feet and rubble thrown up, as far as the nova.
 	 */
 	private static void quake(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float age = s.age();
@@ -612,9 +614,11 @@ final class EmperorLooks {
 			Vector3f d = new Vector3f(right).mul(Mth.cos(a)).add(new Vector3f(UP).mul(Mth.sin(a)));
 			cracks.add(VfxOut.zigzag(punch, new Vector3f(d).mul((1.2F + 0.8F * hash(i * 3)) * crack).add(punch), s.seed + i, 0.18F, 5));
 		}
+		// the quake (nova + launch) is centred on the caster's feet: the shell and the ground cracks are too, the glass stays at the fist
+		Vector3f core = new Vector3f(0, 1.3F, 0);
 		List<List<Vector3f>> ground = new ArrayList<>();
 		float run = ease(age, 3.0F, 14.0F);
-		Vector3f foot = new Vector3f(f).mul(1.3F).add(0, 0.16F, 0);
+		Vector3f foot = new Vector3f(0, 0.16F, 0);
 		for (int i = 0; i < 10; i++) {
 			float a = Mth.TWO_PI * i / 10 + hash(s.seed * 5 + i) * 0.5F;
 			ground.add(VfxOut.zigzag(foot, polar(a, r * (0.6F + 0.4F * hash(i * 7)) * run, 0.0F).add(foot), s.seed * 3 + i, 0.6F, 8));
@@ -654,10 +658,10 @@ final class EmperorLooks {
 			if (shell > 0.0F && shell < 1.0F) {
 				float rr = r * shell;
 				float al = 0.8F * (1.0F - shell);
-				o.circle(punch, right, UP, rr, 0.06F, 36, argb(al, QUAKE));
-				o.circle(punch, new Vector3f(f), UP, rr, 0.05F, 36, argb(al * 0.8F, QUAKE));
-				o.circle(punch, right, new Vector3f(f), rr, 0.05F, 36, argb(al * 0.8F, QUAKE));
-				o.ring(new Vector3f(0, 0.16F, 0).add(new Vector3f(f).mul(1.3F)), Math.max(0.0F, rr - 0.8F), rr, argb(al, QUAKE));
+				o.circle(core, right, UP, rr, 0.06F, 36, argb(al, QUAKE));
+				o.circle(core, new Vector3f(f), UP, rr, 0.05F, 36, argb(al * 0.8F, QUAKE));
+				o.circle(core, right, new Vector3f(f), rr, 0.05F, 36, argb(al * 0.8F, QUAKE));
+				o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, rr - 0.8F), rr, argb(al, QUAKE));
 			}
 			for (List<Vector3f> g : ground) {
 				o.glowPolyline(g, 0.2F, argb(0.45F * fade, QUAKE));
@@ -736,11 +740,13 @@ final class EmperorLooks {
 			}
 			float flash = 1.0F - ease(since, 0.0F, 6.0F);
 			o.sprite(new Vector3f(foot).add(0, 0.5F, 0), s.camRight, s.camUp, r * 0.9F * flash + 0.2F, argb(0.8F * flash, 0xFFFFFF));
-			o.ring(new Vector3f(foot.x, holder.y + 0.15F, foot.z), r * impact, r * impact + 0.6F, argb(0.85F * (1.0F - impact), QUAKE));
+			// the slam hits round where the caster landed (not round the anchor in front of them): the shock ring and the cracks are centred there
+			Vector3f landing = new Vector3f(holder.x, holder.y + 0.15F, holder.z);
+			o.ring(landing, Math.max(0.0F, r * impact - 0.6F), r * impact, argb(0.85F * (1.0F - impact), QUAKE));
 			for (int i = 0; i < 8; i++) {
 				float a = Mth.TWO_PI * i / 8 + hash(s.seed + i);
-				o.bolt(new Vector3f(foot.x, holder.y + 0.16F, foot.z), polar(a, r * 0.8F * ease(since, 0.0F, 6.0F), 0.0F).add(foot.x, holder.y + 0.16F, foot.z), s.seed + i,
-					0.4F, 6, 0.1F, argb(0.5F * fade, QUAKE), argb(0.8F * fade, 0xFFFFFF));
+				o.bolt(new Vector3f(landing).add(0, 0.01F, 0), polar(a, r * 0.85F * ease(since, 0.0F, 6.0F), 0.01F).add(landing), s.seed + i, 0.4F, 6, 0.1F,
+					argb(0.5F * fade, QUAKE), argb(0.8F * fade, 0xFFFFFF));
 			}
 			for (int i = 0; i < 10; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);

@@ -89,9 +89,10 @@ final class MageBolts {
 			Vector3f head = new Vector3f();
 			Vector3f a = new Vector3f(s.camRight).mul(Mth.cos(spin)).add(new Vector3f(s.camUp).mul(Mth.sin(spin)));
 			Vector3f b = new Vector3f(s.camRight).mul(-Mth.sin(spin)).add(new Vector3f(s.camUp).mul(Mth.cos(spin)));
-			o.sprite(head, s.camRight, s.camUp, 0.55F, argb(0.45F, s.color));
-			o.rune(head, a, b, 0.3F, s.seed, 0.035F, argb(1.0F, PALE));
-			o.circle(head, a, b, 0.45F, 0.02F, 18, argb(0.8F, s.color));
+			// a plain orb: its ring about the shot's hit radius (0.3)
+			o.sprite(head, s.camRight, s.camUp, 0.45F, argb(0.45F, s.color));
+			o.rune(head, a, b, 0.26F, s.seed, 0.035F, argb(1.0F, PALE));
+			o.circle(head, a, b, 0.35F, 0.02F, 18, argb(0.8F, s.color));
 			o.glowLine(head, new Vector3f(back).mul(tail), 0.12F, argb(0.6F, s.color), argb(0.0F, s.color));
 		});
 	}

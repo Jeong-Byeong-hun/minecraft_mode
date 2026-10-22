@@ -220,11 +220,11 @@ final class GonLooks {
 			float sheen = (time * 0.12F) % 1.0F;
 			o.sprite(new Vector3f(root).lerp(front, sheen), s.camRight, s.camUp, 0.5F, argb(0.6F * fade, 0xFFFFFF));
 			o.sprite(hand, s.camRight, s.camUp, 0.45F, argb(0.6F * fade, GOLD));
-			// how far round the line it cuts
+			// how far round the line it cuts: the whole length from the fingers (the blade itself narrows to nothing at both ends)
 			if (front.length() > 1.0F) {
 				for (int k = 0; k < 4; k++) {
 					Vector3f off = new Vector3f(k < 2 ? up : side).mul((k % 2 == 0 ? 1 : -1) * r);
-					o.glowLine(new Vector3f(widest).add(off), new Vector3f(front).add(off), 0.05F, argb(0.22F * fade, GOLD), argb(0.22F * fade, GOLD));
+					o.glowLine(new Vector3f(root).add(off), new Vector3f(front).add(off), 0.05F, argb(0.22F * fade, GOLD), argb(0.22F * fade, GOLD));
 				}
 			}
 			float flash = 1.0F - ease(age, 2.0F, 9.0F);

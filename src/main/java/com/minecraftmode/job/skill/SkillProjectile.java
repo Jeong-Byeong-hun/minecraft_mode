@@ -60,6 +60,8 @@ public class SkillProjectile extends ThrowableItemProjectile {
 	private int pierce;
 	private double sweep = ProjectileUtil.DEFAULT_ENTITY_HIT_RESULT_MARGIN;
 	private float explode;
+	/** How a blast is reported to {@link HitArea#trace} (game tests). */
+	private static final HitArea BLAST = new HitArea("blast", HitArea.Shape.CIRCLE, HitArea.Anchor.FLIGHT, 0.0, 0.0, 360.0, 0.0, false, false, true);
 	private int maxAge = 60;
 	private boolean homing;
 	private @Nullable Volley volley;
@@ -388,6 +390,7 @@ public class SkillProjectile extends ThrowableItemProjectile {
 		}
 		if (this.explode > 0.0F) {
 			ServerPlayer owner = this.owner();
+			HitArea.placed(BLAST, pos, Vec3.ZERO, this.explode);
 			if (owner != null) {
 				AABB box = new AABB(pos, pos).inflate(this.explode);
 				List<LivingEntity> caught = level.getEntitiesOfClass(LivingEntity.class, box, e -> e.getBoundingBox().distanceToSqr(pos) <= this.explode * this.explode

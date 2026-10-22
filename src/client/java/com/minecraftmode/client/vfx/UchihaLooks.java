@@ -239,11 +239,12 @@ final class UchihaLooks {
 				float d = ((i / 6.0F + time * 0.04F) % 1.0F) * reach;
 				o.circle(new Vector3f(dir).mul(0.9F + d), side, up, BEAM_R, 0.04F, 24, argb(0.5F * fade, SAKE));
 			}
-			o.blade(front, new Vector3f(front).add(new Vector3f(dir).mul(1.4F)), up, 0.32F, argb(0.9F * fade, SAKE), argb(0.9F * fade, 0xFFFFFF));
+			// the blade's point ends where the beam does (never past what it hits), and the seal there is as wide as the beam
+			float point = Math.min(1.4F, reach);
+			o.blade(new Vector3f(front).sub(new Vector3f(dir).mul(point)), front, up, 0.32F, argb(0.9F * fade, SAKE), argb(0.9F * fade, 0xFFFFFF));
 			float seal = ease(age, 5.0F, 9.0F);
 			if (seal > 0.0F) {
-				o.magicCircle(new Vector3f(front).add(new Vector3f(dir).mul(0.6F)), side, up, 1.1F * seal, time * 0.08F, s.seed, 5, argb(0.7F * fade * seal, SAKE_GOLD),
-					argb(0.6F * fade * seal, SAKE));
+				o.magicCircle(front, side, up, BEAM_R * seal, time * 0.08F, s.seed, 5, argb(0.7F * fade * seal, SAKE_GOLD), argb(0.6F * fade * seal, SAKE));
 			}
 			for (int i = 0; i < 14; i++) {
 				float q = (time * 0.06F + hash(s.seed + i)) % 1.0F;
@@ -300,7 +301,7 @@ final class UchihaLooks {
 
 	/**
 	 * Tsukuyomi: the Mangekyo Sharingan turns before the caster's eyes, its gaze runs to the target as a black ray edged in red (as wide as
-	 * the beam hits), and at its end the eye opens again, huge, before a red moon.
+	 * the beam hits), and at its end the eye opens again, its rim on the beam's, before a red moon.
 	 */
 	private static void tsukuyomi(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float age = s.age();
@@ -327,7 +328,7 @@ final class UchihaLooks {
 				o.bar(start, front, 0.14F, 0.1F, argb(0.9F * fade, BLACK), argb(0.7F * fade, BLACK));
 			}
 			if (big > 0.0F) {
-				o.eye(far, side, up, 1.15F * big, time * 0.05F, VfxOut.ITACHI, argb(0.95F * fade, IRIS), argb(0.95F * fade, INK));
+				o.eye(far, side, up, BEAM_R * 0.95F * big, time * 0.05F, VfxOut.ITACHI, argb(0.95F * fade, IRIS), argb(0.95F * fade, INK));
 			}
 		});
 		glow(ps, c, o -> {
@@ -345,7 +346,7 @@ final class UchihaLooks {
 			if (big > 0.0F) {
 				// the red moon behind the eye
 				o.sprite(new Vector3f(far).add(new Vector3f(dir).mul(0.4F)).add(new Vector3f(up).mul(0.5F)), s.camRight, s.camUp, 2.6F * big, argb(0.4F * fade * big, 0xC81020));
-				o.circle(far, side, up, 1.2F * big, 0.05F, 32, argb(0.6F * fade, 0xFF3030));
+				o.circle(far, side, up, BEAM_R * big, 0.05F, 32, argb(0.6F * fade, 0xFF3030));
 			}
 		});
 	}

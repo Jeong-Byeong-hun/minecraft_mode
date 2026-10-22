@@ -159,7 +159,10 @@ final class LanceLooks {
 		});
 	}
 
-	/** Storm Thrust: the lance's point of light thrust out along the line, storm wind drilling round the shaft and a burst at its head. */
+	/**
+	 * Storm Thrust: the lance's point of light thrust out along the line, storm wind drilling round the shaft and rings running down it as
+	 * wide as the beam hits ({@link PendragonLooks#BEAM_R}), a burst at its head.
+	 */
 	private static void stormLance(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float age = s.age();
 		float p = s.progress;
@@ -183,7 +186,8 @@ final class LanceLooks {
 					float t = (float)j / steps;
 					float d = 0.5F + (reach - 0.5F) * t;
 					float a = d * 1.8F - time * 0.9F + Mth.TWO_PI * k / 3;
-					float rr = 0.75F - 0.35F * t;
+					// the storm drills round the line as wide as the beam hits, closing a little on the point
+					float rr = PendragonLooks.BEAM_R * (1.0F - 0.15F * t);
 					Vector3f pt = new Vector3f(dir).mul(d).add(new Vector3f(side).mul(Mth.cos(a) * rr)).add(new Vector3f(up).mul(Mth.sin(a) * rr));
 					if (prev != null) {
 						o.glowLine(prev, pt, 0.07F, argb(0.65F * fade * (0.3F + 0.7F * t), STORM), argb(0.65F * fade * (0.3F + 0.7F * t), STORM));
@@ -193,7 +197,7 @@ final class LanceLooks {
 			}
 			for (int i = 0; i < 4; i++) {
 				float d = ((i / 4.0F + time * 0.1F) % 1.0F) * reach;
-				o.circle(new Vector3f(dir).mul(d), side, up, 0.6F + 0.3F * d / len, 0.035F, 18, argb(0.5F * fade, STORM));
+				o.circle(new Vector3f(dir).mul(d), side, up, PendragonLooks.BEAM_R, 0.035F, 18, argb(0.5F * fade, STORM));
 			}
 			float burst = ease(age, 2.0F, 9.0F);
 			if (burst > 0.0F && burst < 1.0F) {
@@ -467,7 +471,9 @@ final class LanceLooks {
 
 	/**
 	 * Martyr's Shield: a great kite shield of light rises before the caster, white with St. George's red cross and a gold rim, a halo
-	 * over the caster's head and a ring calling every foe near rolling out from their feet. In first person the shield is only an outline.
+	 * over the caster's head and a ring calling every foe near rolling out from their feet (the taunt's reach). Seen by others (and in third
+	 * person) the shield stands half again as big, a little further out and raised so its cross clears the caster's own body: from the
+	 * usual camera behind them the body used to cover the cross's middle and lower half. In first person the shield is only an outline.
 	 */
 	private static void martyrShield(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -477,30 +483,36 @@ final class LanceLooks {
 		float time = s.ageInTicks;
 		Vector3f ahead = WitchLooks.ahead(s);
 		Vector3f right = VfxOut.across(ahead);
-		Vector3f center = new Vector3f(ahead).mul(0.95F).add(0, 1.05F + 0.6F * (1.0F - open), 0);
+		float scale = s.selfView ? 1.0F : 1.5F;
+		Vector3f center = s.selfView ? new Vector3f(ahead).mul(0.95F).add(0, 1.05F + 0.6F * (1.0F - open), 0)
+			: new Vector3f(ahead).mul(1.3F).add(0, 1.6F + 0.6F * (1.0F - open), 0);
+		float size = open * scale;
 		float[][] outline = {{-0.6F, 0.7F}, {0.6F, 0.7F}, {0.6F, 0.0F}, {0.45F, -0.45F}, {0.0F, -0.9F}, {-0.45F, -0.45F}, {-0.6F, 0.0F}};
 		Vector3f[] edge = new Vector3f[outline.length];
 		for (int i = 0; i < outline.length; i++) {
-			edge[i] = new Vector3f(right).mul(outline[i][0] * open).add(new Vector3f(UP).mul(outline[i][1] * open)).add(center);
+			edge[i] = new Vector3f(right).mul(outline[i][0] * size).add(new Vector3f(UP).mul(outline[i][1] * size)).add(center);
 		}
 		if (!s.selfView) {
 			shade(ps, c, o -> {
-				// the face laid out in small cells, white or the red of the cross, never one over the other (translucent quads sort by
-				// their middles, so a big white face over a red cross would hide half of it)
+				// the face laid out in small cells (15 x 20, exactly filling the outline's box), white or the red of the cross, never one
+				// over the other (translucent quads sort by their middles, so a big white face over a red cross would hide half of it)
 				int white = argb(0.9F * k, SHIELD_WHITE);
 				int red = argb(0.95F * k, CROSS_RED);
-				float cell = 0.075F;
-				for (float y = -0.9F; y < 0.7F - 1.0E-4F; y += cell) {
-					for (float x = -0.6F; x < 0.6F - 1.0E-4F; x += cell) {
+				float cell = 0.08F;
+				for (int row = 0; row < 20; row++) {
+					float y = -0.9F + row * cell;
+					float cy = y + cell / 2;
+					float limit = cy >= 0.0F ? 0.6F : cy >= -0.45F ? Mth.lerp(-cy / 0.45F, 0.6F, 0.45F) : Mth.lerp((-cy - 0.45F) / 0.45F, 0.45F, 0.0F);
+					for (int col = 0; col < 15; col++) {
+						float x = -0.6F + col * cell;
 						float cx = x + cell / 2;
-						float cy = y + cell / 2;
-						float limit = cy >= 0.0F ? 0.6F : cy >= -0.45F ? Mth.lerp(-cy / 0.45F, 0.6F, 0.45F) : Mth.lerp((-cy - 0.45F) / 0.45F, 0.45F, 0.0F);
 						if (Math.abs(cx) > limit) {
 							continue;
 						}
+						// three cells wide each way: the middle column and the rows at 0.06..0.3 above the middle
 						boolean cross = Math.abs(cx) <= 0.1F || cy >= 0.08F && cy <= 0.28F;
-						o.quad(at(center, right, x * open, y * open), at(center, right, (x + cell) * open, y * open), at(center, right, (x + cell) * open, (y + cell) * open),
-							at(center, right, x * open, (y + cell) * open), cross ? red : white);
+						o.quad(at(center, right, x * size, y * size), at(center, right, (x + cell) * size, y * size), at(center, right, (x + cell) * size, (y + cell) * size),
+							at(center, right, x * size, (y + cell) * size), cross ? red : white);
 					}
 				}
 			});
@@ -508,10 +520,10 @@ final class LanceLooks {
 		glow(ps, c, o -> {
 			float rim = s.selfView ? 0.5F : 1.0F;
 			for (int i = 0; i < edge.length; i++) {
-				o.bar(edge[i], edge[(i + 1) % edge.length], 0.035F, 0.035F, argb(0.95F * k * rim, GOLD), argb(0.95F * k * rim, GOLD));
+				o.bar(edge[i], edge[(i + 1) % edge.length], 0.035F * scale, 0.035F * scale, argb(0.95F * k * rim, GOLD), argb(0.95F * k * rim, GOLD));
 			}
 			if (!s.selfView) {
-				o.sprite(center, s.camRight, s.camUp, 1.6F, argb(0.2F * k, 0xFFFFFF));
+				o.sprite(center, s.camRight, s.camUp, 1.6F * scale, argb(0.2F * k, 0xFFFFFF));
 				Vector3f halo = new Vector3f(0, 2.25F, 0);
 				o.circle(halo, X, Z, 0.42F, 0.04F, 24, argb(0.9F * k, GOLD));
 				o.sprite(halo, s.camRight, s.camUp, 0.7F, argb(0.3F * k, LIGHT));
@@ -520,6 +532,8 @@ final class LanceLooks {
 			if (q < 1.0F) {
 				o.ring(new Vector3f(0, 0.15F, 0), Math.max(0.0F, s.size * q - 0.7F), s.size * q, argb(0.75F * (1.0F - q), CROSS_RED));
 			}
+			// the taunt's reach stays drawn once the wave has run out to it
+			o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, s.size - 0.18F), s.size, argb(0.6F * q * k, CROSS_RED));
 			o.ring(new Vector3f(0, 0.14F, 0), 0.6F, 1.3F, argb(0.5F * k, GOLD));
 			for (int i = 0; i < 8; i++) {
 				float t = (time * 0.04F + hash(s.seed + i)) % 1.0F;
@@ -539,7 +553,8 @@ final class LanceLooks {
 
 	/**
 	 * Saint's Ward: holy ground opens round the caster, a circle with St. George's cross across it and roses blooming at the cross's ends,
-	 * a wall of light rising on its rim, motes drifting up and the blessing washing out to the allies near.
+	 * motes drifting up and the blessing washing out to the allies near; a faint wall of light rises on the heal's reach (its size), so
+	 * the edge that reads as the ward's is where it really stops.
 	 */
 	private static void saintWard(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -561,17 +576,20 @@ final class LanceLooks {
 					argb(0.95F * fade * bloom, 0xFFD24A));
 			}
 		});
+		float reach = s.size * open;
 		glow(ps, c, o -> {
-			o.circle(ground, X, Z, R, 0.05F, 48, argb(0.9F * k, HOLY_PALE));
+			o.circle(ground, X, Z, R, 0.04F, 48, argb(0.75F * k, HOLY_PALE));
 			o.circle(ground, X, Z, R * 0.9F, 0.03F, 48, argb(0.7F * k, HOLY));
 			o.disc(ground, R, argb(0.2F * k, HOLY), argb(0.05F * k, HOLY));
+			// the heal's reach: a bright line on the ground and a wall of light standing on it
+			o.circle(ground, X, Z, reach, 0.05F, 64, argb(0.9F * k, HOLY_PALE));
+			o.wall(new Vector3f(), reach, 0.0F, 1.8F * open, argb(0.22F * k, HOLY), argb(0.0F, HOLY));
 			// St. George's cross
 			o.bar(ends[0], ends[1], 0.14F, 0.14F, argb(0.85F * k, 0xFF5A5A), argb(0.85F * k, 0xFF5A5A));
 			o.bar(ends[2], ends[3], 0.14F, 0.14F, argb(0.85F * k, 0xFF5A5A), argb(0.85F * k, 0xFF5A5A));
 			for (Vector3f e : ends) {
 				o.sprite(new Vector3f(e).add(0, 0.25F, 0), s.camRight, s.camUp, 0.5F * bloom, argb(0.5F * fade * bloom, 0xFF8A90));
 			}
-			o.wall(new Vector3f(), R, 0.0F, 2.6F * open, argb(0.28F * k, HOLY), argb(0.0F, HOLY));
 			for (int w = 0; w < 2; w++) {
 				float q = ease(p, 0.1F + 0.25F * w, 0.55F + 0.25F * w);
 				if (q > 0.0F && q < 1.0F) {

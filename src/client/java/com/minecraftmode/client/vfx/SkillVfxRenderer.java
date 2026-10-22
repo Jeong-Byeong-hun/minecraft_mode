@@ -148,7 +148,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 	 */
 	private static void enemies(final SkillVfx entity, final State state, final Vec3 at, final float partialTicks) {
 		List<LivingEntity> near = entity.level().getEntitiesOfClass(LivingEntity.class, new AABB(at, at).inflate(state.size),
-			e -> e instanceof Enemy && e.isAlive() && !e.isInvisible());
+			e -> e instanceof Enemy && e.isAlive() && !e.isInvisible() && e.getBoundingBox().distanceToSqr(at) <= state.size * state.size);
 		near.sort(java.util.Comparator.comparingDouble(e -> e.position().distanceToSqr(at)));
 		for (LivingEntity e : near.subList(0, Math.min(MAX_TARGETS, near.size()))) {
 			Vec3 feet = e.getPosition(partialTicks).subtract(at);
@@ -229,6 +229,8 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			case ORB_BURST, SILVA_PRESENCE, ASSASSIN_HAND, NEEDLE_RAIN, NEEDLE_DISGUISE, NEEDLE_PUPPET -> ZoldyckLooks.submit(state, poseStack, collector);
 			case TAIL_PIERCE, PHOTON, KINGS_AURA, KING_ROSE -> ChimeraLooks.submit(state, poseStack, collector);
 			case NETERO_PRAYER, GUANYIN_SWEEP, PALM_SLAM, ZERO_HAND, ZERO_BEAM -> GuanyinLooks.submit(state, poseStack, collector);
+			case ALLY_RING -> submitAllyRing(state, poseStack, collector);
+			case LANDING_RING -> submitLandingRing(state, poseStack, collector);
 			default -> {
 			}
 		}
@@ -264,7 +266,7 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 		sphere(s, poseStack, collector, camera, r, s.ageInTicks * 1.6F, fade, 1.0F - p * 0.7F);
 		poseStack.popPose();
 		// the shock running along the ground, a little ahead of the sphere
-		float ring = s.size * Math.min(1.0F, p * 1.5F) * 1.1F;
+		float ring = s.size * Math.min(1.0F, p * 1.5F);
 		poseStack.pushPose();
 		poseStack.translate(0.0F, 0.2F, 0.0F);
 		collector.submitCustomGeometry(poseStack, VfxDraw.GLOW, (pose, buffer) -> {
@@ -272,6 +274,48 @@ public class SkillVfxRenderer extends EntityRenderer<SkillVfx, SkillVfxRenderer.
 			VfxDraw.ring(pose, buffer, Math.max(0.0F, ring * 0.6F - 0.3F), ring * 0.6F, VfxDraw.whiten(s.color, 0.6F), 0.5F * fade);
 		});
 		poseStack.popPose();
+	}
+
+	/**
+	 * {@link SkillLook#ALLY_RING}: a faint pale ring round the caster at the allies' reach (size, not grown by the Expansion engraving),
+	 * fading in and out, with a breath of wash inside; quiet so it never reads as a hit area.
+	 */
+	private static void submitAllyRing(final State s, final PoseStack poseStack, final SubmitNodeCollector collector) {
+		float p = s.progress;
+		float alpha = Math.min(1.0F, p * 5.0F) * Math.min(1.0F, (1.0F - p) * 2.5F);
+		float r = s.size;
+		int pale = VfxDraw.whiten(s.color, 0.5F);
+		poseStack.pushPose();
+		poseStack.translate(0.0F, 0.14F, 0.0F);
+		collector.submitCustomGeometry(poseStack, VfxDraw.GLOW, (pose, buffer) -> {
+			VfxDraw.ring(pose, buffer, Math.max(0.0F, r - 0.18F), r, pale, 0.45F * alpha);
+			VfxDraw.ring(pose, buffer, Math.max(0.0F, r - 0.9F), r - 0.18F, s.color, 0.12F * alpha);
+		});
+		poseStack.popPose();
+	}
+
+	/**
+	 * {@link SkillLook#LANDING_RING}: nothing while the leap is in the air; where the holder comes down a shock ring runs out to the slam's
+	 * edge (size) and a rim stays there a moment, in the skill's colour.
+	 */
+	private static void submitLandingRing(final State s, final PoseStack poseStack, final SubmitNodeCollector collector) {
+		float q = AntLooks.landed(s);
+		if (q < 0.0F || q > 30.0F) {
+			return;
+		}
+		Vector3f g = AntLooks.landing(s).add(0.0F, 0.15F, 0.0F);
+		float r = Math.max(0.5F, s.size);
+		float shock = VfxOut.ease(q, 0.0F, 6.0F);
+		float fade = 1.0F - VfxOut.ease(q, 12.0F, 30.0F);
+		int pale = VfxDraw.whiten(s.color, 0.6F);
+		glow(poseStack, collector, o -> {
+			o.ring(g, Math.max(0.0F, r - 0.22F), r, VfxOut.argb(0.8F * fade * Math.max(0.35F, shock), s.color));
+			o.ring(new Vector3f(g).add(0.0F, 0.01F, 0.0F), Math.max(0.0F, r - 0.06F), r, VfxOut.argb(0.7F * fade, pale));
+			if (shock < 1.0F) {
+				o.ring(new Vector3f(g).add(0.0F, 0.02F, 0.0F), Math.max(0.0F, r * shock - 0.7F), r * shock, VfxOut.argb(0.8F * (1.0F - shock), pale));
+			}
+			o.disc(g, r, VfxOut.argb(0.18F * fade * (1.0F - shock * 0.5F), s.color), VfxOut.argb(0.04F * fade, s.color));
+		});
 	}
 
 	/**

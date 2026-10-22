@@ -178,7 +178,7 @@ public final class WarriorContent extends ClassContent {
 			art(0xD9D9D9, 0x8B0000, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF4040),
 			skill("blood_arthur", "Clarent Blood Arthur", "클라렌트 블러드 아서", ULTIMATE, 45, 40, look(SkillLook.RED_BOLT, lightning(16, 5, 3.9)).at(16).size(5),
 				look(SkillLook.BLOOD_ARTHUR, beam(18, 3.9)).beam(18)).withFx(Fx.Kind.SPARK),
-			skill("red_lightning", "Red Lightning", "붉은 번개", ATTACK, 9, 20, look(SkillLook.RED_CHAIN, chain(12, 5, 1.8)).size(12)),
+			skill("red_lightning", "Red Lightning", "붉은 번개", ATTACK, 9, 20, look(SkillLook.RED_CHAIN, chain(12, 5, 1.8)).size(12).unscaled()),
 			skill("rebels_charge", "Rebel's Charge", "반역의 돌진", MOVEMENT, 11, 16, stun(1.0), look(SkillLook.REBEL_TRAIL, dash(9, 1.8)).lasting(1.0))
 				.withFx(Fx.Kind.SPARK),
 			skill("secret_of_pedigree", "Secret of Pedigree", "부정을 숨기는 투구", UTILITY, 25, 20, look(SkillLook.PEDIGREE_HELM, stealth(4, 80)), buff(SPEED, 4, 2))
@@ -217,7 +217,7 @@ public final class WarriorContent extends ClassContent {
 		weapon("round_table_shield", 4, 84, GREATSHIELD, "Round Table Shield", "원탁의 대방패",
 			art(0xDCE3EE, 0x3B4A6B, 0x9FD4FF), fx(Fx.Kind.RING, 0xBFE4FF),
 			skill("lord_camelot", "Lord Camelot", "로드 카멜롯", ULTIMATE, 50, 40, look(SkillLook.CAMELOT, shield(20, 10)).size(6).lasting(3).quiet(),
-				look(SkillLook.NONE, allyBoost(12, DAMAGE, 12, 20)).quiet(), look(SkillLook.NONE, nova(6, 5.5)).quiet()).withFx(Fx.Kind.SPARK),
+				look(SkillLook.ALLY_RING, allyBoost(12, DAMAGE, 12, 20)).size(12).unscaled().quiet(), look(SkillLook.NONE, nova(6, 5.5)).quiet()).withFx(Fx.Kind.SPARK),
 			skill("snowflake_bulwark", "Bulwark of Snowflakes", "눈꽃의 벽", DEFENSE, 24, 20, look(SkillLook.SNOW_BULWARK, allyHeal(8, 15)).size(8).unscaled().quiet(),
 				look(SkillLook.NONE, shield(10, 8)).quiet())
 				.withFx(Fx.Kind.SPARK),

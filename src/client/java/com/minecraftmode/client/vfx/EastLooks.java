@@ -269,7 +269,8 @@ final class EastLooks {
 					o.flame(foot, new Vector3f(Mth.cos(a) * 0.4F, 1, Mth.sin(a) * 0.4F), 2.6F * kb + 0.4F, 0.85F, time * 0.9F + j, argb(0.9F * kb, FIRE_CORE),
 						argb(0.0F, FIRE));
 				}
-				o.ring(new Vector3f(spot).add(0, 0.16F, 0), s.size * b, s.size * b + 0.5F, argb(0.8F * kb, FIRE));
+				// each strike's own circle of fire racing out to its radius (Actions.strike: r round where it lands)
+				o.ring(new Vector3f(spot).add(0, 0.16F, 0), Math.max(0.0F, s.size * b - 0.5F), s.size * b, argb(0.8F * kb, FIRE));
 			}
 		});
 	}
@@ -479,7 +480,7 @@ final class EastLooks {
 		float r = s.size;
 		float height = 4.6F * rise;
 		shade(ps, c, o -> {
-			o.disc(new Vector3f(0, 0.13F, 0), r * 1.1F, argb(0.25F * fade, 0xDDE6EE), argb(0.05F * fade, 0xDDE6EE));
+			o.disc(new Vector3f(0, 0.13F, 0), r, argb(0.25F * fade, 0xDDE6EE), argb(0.05F * fade, 0xDDE6EE));
 			for (int i = 0; i < 8; i++) {
 				float a = Mth.PI / 8 + Mth.TWO_PI * i / 8;
 				pillar(o, polar(a, r, 0.0F), polar(a, 1.0F, 0.0F), 0.95F, height, fade);
@@ -566,7 +567,8 @@ final class EastLooks {
 
 	/**
 	 * East Wind of Red Cliffs: streams of wind sweep forward from behind the caster and fan out over the cone, gusts racing along them and
-	 * embers carried on them.
+	 * embers carried on them. Wired as the push's reach ahead over the fireballs' fan: the streams thin out at the range (they run a tenth
+	 * past it, fading) and the outer ones follow the arc's edges.
 	 */
 	private static void eastWind(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -608,7 +610,7 @@ final class EastLooks {
 			for (int i = 0; i < 16; i++) {
 				int stream = i % 9;
 				float theta = -half + 2.0F * half * stream / 8;
-				float d = -1.0F + (time * 0.7F + hash(i * 13 + s.seed) * r) % (r + 1.5F);
+				float d = -1.0F + (time * 0.7F + hash(i * 13 + s.seed) * r) % (r + 1.0F);
 				float y = -0.7F + 1.8F * hash(s.seed + stream * 3) + 0.2F * Mth.sin(time * 0.3F + i);
 				Vector3f at = windPoint(f, right, theta, d, r, y, time, stream);
 				o.glint(at, s.camRight, s.camUp, 0.16F, time * 0.2F + i, argb(0.95F * k, i % 3 == 0 ? FIRE_CORE : FIRE));
@@ -619,7 +621,8 @@ final class EastLooks {
 	/** A point {@code d} along wind stream {@code i}: fanning out to {@code theta} as it goes, waving up and down. */
 	private static Vector3f windPoint(final Vector3f f, final Vector3f right, final float theta, final float d, final float r, final float y, final float time,
 		final int i) {
-		float t = Mth.clamp(d / r, 0.0F, 1.2F);
+		// fanned all the way out by the cone's range, so the outer streams run along the edges of the arc
+		float t = Mth.clamp(d / r, 0.0F, 1.0F);
 		float a = theta * t;
 		return new Vector3f(f).mul(Mth.cos(a) * d).add(new Vector3f(right).mul(Mth.sin(a) * d)).add(0, y + 0.25F * Mth.sin(d * 0.9F - time * 0.5F + i), 0);
 	}

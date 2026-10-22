@@ -165,7 +165,7 @@ public final class ArcherContent extends ClassContent {
 			art(0xFFD24A, 0xFFF3D6, 0xFF7A00), fx(Fx.Kind.SPARK, 0xFFC93C),
 			skill("hekatebolos", "Hekatebolos", "헤카테볼로스", ULTIMATE, 45, 38, look(SkillLook.SUN_BEAM, beam(26, 7.6)).beam(26), burn(6), inflict(BLINDNESS, 3, 0)),
 			skill("achilles_heel", "Achilles' Heel", "아킬레스건", ATTACK, 14, 24, look(SkillLook.HEEL_STRIKE, execute(24, 2.6, 40, 2.0)).onTarget(24)),
-			skill("paean", "Paean", "파이안", UTILITY, 26, 24, look(SkillLook.PAEAN, allyHeal(10, 25)).size(10), allyBuff(10, REGENERATION, 8, 1), cleanse()),
+			skill("paean", "Paean", "파이안", UTILITY, 26, 24, look(SkillLook.PAEAN, allyHeal(10, 25)).size(10).unscaled(), allyBuff(10, REGENERATION, 8, 1), cleanse()),
 			skill("sunlit_step", "Sunlit Step", "햇살 걸음", MOVEMENT, 9, 16, look(SkillLook.SUN_STEP, blink(12)), buff(SPEED, 6, 1)));
 
 		weapon("artemis_bow", 4, 79, SHORTBOW, "Bow of Artemis", "아르테미스의 활",
@@ -174,7 +174,7 @@ public final class ArcherContent extends ClassContent {
 				repeat(3, 8, shoot(ProjectileStyle.ARROW, 2.1).count(3).spread(15).homing().look(SkillLook.MOON_ARROW)), inflict(VULNERABLE, 6, 1)),
 			skill("crescent_volley", "Crescent Volley", "초승달 연사", ATTACK, 8, 22,
 				shoot(ProjectileStyle.ARROW, 1.5).count(5).spread(60).pierce(2).look(SkillLook.CRESCENT_ARROW)),
-			skill("hounds_of_the_moon", "Hounds of the Moon", "달의 사냥개", UTILITY, 28, 24, look(SkillLook.MOON_SIGIL, summon(Summon.WOLF, 3, 18)).size(6),
+			skill("hounds_of_the_moon", "Hounds of the Moon", "달의 사냥개", UTILITY, 28, 24, look(SkillLook.MOON_SIGIL, summon(Summon.WOLF, 3, 18)).size(12),
 				debuff(12, SLOWNESS, 5, 1)),
 			skill("moonlight_veil", "Moonlight Veil", "월광의 장막", UTILITY, 22, 20, look(SkillLook.MOON_VEIL, stealth(4, 60)).lasting(4), boost(CRIT_CHANCE, 6, 25)));
 
@@ -182,7 +182,8 @@ public final class ArcherContent extends ClassContent {
 			art(0xF2F2F2, 0x1E2A44, 0x4AA8FF), fx(Fx.Kind.BOLT, 0x7FB8FF),
 			skill("pashupata", "Pashupata", "파괴신의 손짓", ULTIMATE, 55, 40, look(SkillLook.PASHUPATA_BOLT, lightning(24, 6, 7.6)).at(24).size(6), inflict(WITHER, 6, 1)),
 			skill("agni_gandiva", "Agni Gandiva", "아그니 간디바", ATTACK, 10, 24,
-				shoot(ProjectileStyle.ARROW, 1.28).count(3).spread(12).explode(2.0F).look(SkillLook.FLAME_ARROW), burn(5)),
+				shoot(ProjectileStyle.ARROW, 1.28).count(3).spread(12).explode(2.0F).look(SkillLook.FLAME_ARROW)
+					.onImpact(lookWhereItBursts(SkillLook.FLAME_BURST, 2.0)), burn(5)),
 			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, look(SkillLook.ENDOWED, restoreMana(25)), buff(MANA_FLOW, 12, 0), refresh(30)),
 			skill("flame_burst", "Mana Burst (Flame)", "마력방출(불꽃)", MOVEMENT, 10, 18, look(SkillLook.MANA_FLAME, dash(10, 1.8)).lasting(1.2), burn(3)));
 
@@ -210,7 +211,7 @@ public final class ArcherContent extends ClassContent {
 
 		weapon("ea_and_merodach", 4, 100, TWIN_BLADES, "Ea & Merodach", "에아 & 메로닥",
 			art(0x8B1010, 0xFFD700, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF3030),
-			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, look(SkillLook.EA_CHARGE, pull(10, 1.4)),
+			skill("enuma_elish", "Enuma Elish", "에누마 엘리시", ULTIMATE, 60, 40, look(SkillLook.EA_CHARGE, pull(10, 1.4)).size(10),
 				delay(0.6, look(SkillLook.ENUMA_ELISH, beam(32, 10.0)).beam(32)), inflict(VULNERABLE, 8, 2)),
 			skill("original_sin", "Merodach: Original Sin", "원죄 (메로닥)", ATTACK, 9, 26, look(SkillLook.SLASH, slash(5, 200, 1.4)).cone(5, 200),
 				shoot(ProjectileStyle.WAVE, 1.3).pierce(6).look(SkillLook.SIN_WAVE)).withFx(Fx.Kind.SPARK),

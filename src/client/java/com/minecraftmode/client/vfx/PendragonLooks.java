@@ -481,7 +481,8 @@ final class PendragonLooks {
 				Vector3f at = VfxOut.along(points, last, t).add(BladeLooks.shardDir(s.seed, i).mul(0.3F + q)).add(0, 0.6F + q, 0);
 				o.glint(at, s.camRight, s.camUp, 0.13F, time * 0.2F + i, argb(0.9F * fade * (1.0F - q), CRIMSON_PALE));
 			}
-			o.ring(new Vector3f(0, 0.15F, 0), 0.4F, 0.4F + 2.0F * ease(p, 0.0F, 0.4F), argb(0.6F * fade, CRIMSON));
+			// the red splash where they set off, no wider than the charge hits round its line (1.2)
+			o.ring(new Vector3f(0, 0.15F, 0), 0.4F, 0.4F + 0.8F * ease(p, 0.0F, 0.4F), argb(0.6F * fade, CRIMSON));
 		});
 	}
 

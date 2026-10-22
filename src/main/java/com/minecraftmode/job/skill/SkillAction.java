@@ -39,4 +39,14 @@ public interface SkillAction {
 	default List<SkillSupport> supports() {
 		return List.of();
 	}
+
+	/** Where this step itself hits ({@link HitArea}; report only: the look table and its game test read it). */
+	default List<HitArea> area() {
+		return List.of();
+	}
+
+	/** The steps this one wraps (repeat, delay, a drawn look), so reports can walk into them. */
+	default List<SkillAction> parts() {
+		return List.of();
+	}
 }

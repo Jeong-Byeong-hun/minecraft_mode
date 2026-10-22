@@ -110,9 +110,10 @@ final class KnightLooks {
 			float t = (half - 2 * half * swing * i / n) * (flip ? -1 : 1);
 			float y = (flip ? -0.6F : 0.7F) + (flip ? 1.3F : -1.3F) * (swing * i / n);
 			Vector3f d = new Vector3f(f).rotateY(-t);
+			// the white edge just inside the cut's reach and its blue glow fading out over it, so the cut reads as far as it hits
 			inner[i] = new Vector3f(d).mul(r * 0.3F).add(0, y, 0);
-			outer[i] = new Vector3f(d).mul(r * 0.88F).add(0, y, 0);
-			edge[i] = new Vector3f(d).mul(r).add(0, y, 0);
+			outer[i] = new Vector3f(d).mul(r * 0.95F).add(0, y, 0);
+			edge[i] = new Vector3f(d).mul(r * 1.05F).add(0, y, 0);
 		}
 		List<List<Vector3f>> bolts = new ArrayList<>();
 		int seed = s.seed * 13 + (int)(s.ageInTicks / 2);
@@ -302,9 +303,14 @@ final class KnightLooks {
 			}
 			o.glowLine(start, front, PendragonLooks.BEAM_R * 1.1F, argb(0.25F * fade, RED), argb(0.2F * fade, RED));
 			o.glowLine(start, front, 0.5F, argb(0.45F * fade, RED), argb(0.4F * fade, RED));
+			// the lit edges where the beam stops hitting, along the four sides of its body
+			for (int k = 0; k < 4; k++) {
+				Vector3f off = new Vector3f(k < 2 ? up : side).mul((k % 2 == 0 ? 1 : -1) * PendragonLooks.BEAM_R);
+				o.glowLine(new Vector3f(start).add(off), new Vector3f(front).add(off), 0.14F, argb(0.4F * fade, RED), argb(0.35F * fade, RED));
+			}
 			for (int i = 0; i < 7; i++) {
-				Vector3f off0 = new Vector3f(side).mul((hash(seed + i * 3) - 0.5F) * 1.4F).add(new Vector3f(up).mul((hash(seed * 5 + i) - 0.5F) * 1.4F));
-				Vector3f off1 = new Vector3f(side).mul((hash(seed * 7 + i) - 0.5F) * 1.2F).add(new Vector3f(up).mul((hash(seed * 9 + i) - 0.5F) * 1.2F));
+				Vector3f off0 = new Vector3f(side).mul((hash(seed + i * 3) - 0.5F) * 1.6F).add(new Vector3f(up).mul((hash(seed * 5 + i) - 0.5F) * 1.6F));
+				Vector3f off1 = new Vector3f(side).mul((hash(seed * 7 + i) - 0.5F) * 1.6F).add(new Vector3f(up).mul((hash(seed * 9 + i) - 0.5F) * 1.6F));
 				o.bolt(new Vector3f(start).add(off0), new Vector3f(front).add(off1), seed + i, 0.35F, Math.max(6, (int)(reach / 1.2F)), 0.2F, argb(0.65F * fade, RED),
 					argb(0.95F * fade, 0xFFE8E8));
 			}

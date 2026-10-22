@@ -168,12 +168,14 @@ final class SpiritLooks {
 		glow(ps, c, o -> {
 			shards.accept(o);
 			o.sprite(crackAt, s.camRight, s.camUp, 0.6F * (1 - fly), argb(0.9F * crack, 0xFFFFFF));
-			// the water moon: rings spreading on the ground
+			// the water moon: rings spreading on the ground out to the size (what Complete Hypnosis blinds; a block round the feet
+			// for Illusion Step, which hits nothing) and resting there as they fade
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
+			float rest = 1.0F - ease(p, 0.75F, 1.0F);
 			for (int w = 0; w < 3; w++) {
 				float q = Mth.clamp(p * 1.4F - w * 0.18F, 0.0F, 1.0F);
 				if (q > 0) {
-					o.ring(ground, 3.5F * q, 3.5F * q + 0.25F, argb(0.6F * (1 - q), VIOLET));
+					o.ring(ground, Math.max(0.0F, s.size * q - 0.3F), s.size * q, argb(0.6F * (1 - 0.5F * q) * rest, VIOLET));
 				}
 			}
 		});
@@ -189,14 +191,15 @@ final class SpiritLooks {
 
 	/**
 	 * Hado #90 Kurohitsugi: black walls rise round the aimed spot and close into a coffin, violet light running along their seams and
-	 * spears driven in through them, before it breaks apart.
+	 * spears driven in through them, before it breaks apart. The coffin's corners and the violet ring on the ground stand on the zone's
+	 * edge (the size).
 	 */
 	static void kurohitsugi(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
 		float rise = ease(p, 0.0F, 0.2F);
 		float spears = ease(p, 0.3F, 0.45F);
 		float fade = 1.0F - ease(p, 0.85F, 1.0F);
-		float half = Math.max(1.4F, s.size * 0.55F);
+		float half = Math.max(1.4F, s.size * 0.71F);
 		float height = 4.0F * rise;
 		Vector3f f = new Vector3f(s.forward);
 		Vector3f side = VfxOut.across(f);
@@ -225,7 +228,7 @@ final class SpiritLooks {
 				Vector3f b = corners[(wall + 1) % 4];
 				Vector3f at = new Vector3f(a).lerp(b, 0.2F + 0.6F * hash(i * 3 + s.seed)).add(0, 0.6F + 2.8F * hash(i * 5), 0);
 				Vector3f in = new Vector3f(0, at.y, 0).sub(at).normalize();
-				Vector3f outside = new Vector3f(at).sub(new Vector3f(in).mul(1.4F));
+				Vector3f outside = new Vector3f(at).sub(new Vector3f(in).mul(0.9F));
 				Vector3f tip = new Vector3f(at).add(new Vector3f(in).mul(half * 0.85F * spears));
 				o.blade(outside, tip, UP, 0.12F, black, argb(0.95F * fade, 0x3A2060));
 			}
@@ -245,7 +248,7 @@ final class SpiritLooks {
 						argb(0.5F * fade, VIOLET));
 				}
 			}
-			o.ring(new Vector3f(0, 0.15F, 0), half * 1.2F, half * 1.6F, argb(0.5F * fade, VIOLET));
+			o.ring(new Vector3f(0, 0.15F, 0), s.size * 0.85F, s.size * 1.02F, argb(0.5F * fade, VIOLET));
 		});
 	}
 
@@ -360,13 +363,13 @@ final class SpiritLooks {
 			}
 			for (int i = 0; i < 18; i++) {
 				float a = Mth.TWO_PI * i / 18;
-				o.flame(polar(a, r, 0.0F), new Vector3f(Mth.cos(a) * 0.4F, 1, Mth.sin(a) * 0.4F), 1.5F + 1.5F * hash(i + s.seed), 1.2F, s.ageInTicks * 0.4F + i,
+				o.flame(polar(a, r, 0.0F), new Vector3f(Mth.cos(a) * 0.15F, 1, Mth.sin(a) * 0.15F), 1.5F + 1.5F * hash(i + s.seed), 1.2F, s.ageInTicks * 0.4F + i,
 					argb(0.85F * fade, 0x040206), argb(0.0F, 0x040206));
 			}
 		});
 		glow(ps, c, o -> {
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
-			o.ring(ground, r * 0.95F, r * 1.15F, argb(0.7F * fade, 0x9A0A1E));
+			o.ring(ground, r * 0.88F, r * 1.03F, argb(0.7F * fade, 0x9A0A1E));
 			o.wall(ground, r * 1.01F, 0.0F, 0.8F, argb(0.5F * fade, 0xC81E2E), argb(0.0F, 0x9A0A1E));
 		});
 	}
@@ -376,8 +379,8 @@ final class SpiritLooks {
 	}
 
 	/**
-	 * Higa Zekko: Zabimaru's bone segments hang in a ring round the caster, fangs turned in, and dart inward together at each of the
-	 * three strikes.
+	 * Higa Zekko: Zabimaru's bone segments hang in a ring round the caster on the strikes' edge (the size), fangs turned in, and dart
+	 * inward together at each of the three strikes.
 	 */
 	static void boneFangs(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
@@ -400,8 +403,8 @@ final class SpiritLooks {
 			float a = Mth.TWO_PI * i / n + s.ageInTicks * 0.04F;
 			float r = s.size * open * (1.0F - 0.8F * d);
 			float y = 1.0F + 0.5F * Mth.sin(i * 1.9F + s.ageInTicks * 0.2F);
-			base[i] = polar(a, r + 1.0F, y + 0.35F);
-			tip[i] = polar(a, Math.max(0.3F, r - 1.2F), y);
+			base[i] = polar(a, r, y + 0.35F);
+			tip[i] = polar(a, Math.max(0.3F, r - 2.0F), y);
 		}
 		shade(ps, c, o -> {
 			for (int i = 0; i < n; i++) {

@@ -140,7 +140,7 @@ public final class PirateContent extends ClassContent {
 			art(0x4F5B66, 0x2C3E50, 0xF1C40F), fx(Fx.Kind.SPARK, 0xFFC94D),
 			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, look(SkillLook.BATTLESHIP, shield(16, 10)), boost(DAMAGE, 10, 20),
 				shoot(ProjectileStyle.CANNONBALL, 4.8).count(3).spread(30).explode(3.0F).look(SkillLook.CANNON_SHOT)
-					.onImpact(lookWhereItLands(SkillLook.CANNON_BLAST, 3.0))),
+					.onImpact(lookWhereItBursts(SkillLook.CANNON_BLAST, 3.0))),
 			skill("octopus", "Octopus", "옥토퍼스", ATTACK, 18, 24, look(SkillLook.OCTOPUS, zone(4, 6, 0.9).at(12).effect(BLINDNESS, 0)).at(12).size(4).lasting(6)),
 			skill("air_strike", "Air Strike", "에어 스트라이크", ATTACK, 14, 26, look(SkillLook.AIR_STRIKE, strike(20, 3.5, 5, 0.88)).at(20).size(3.5)),
 			skill("bullseye", "Bullseye", "불스아이", UTILITY, 20, 18, look(SkillLook.BULLSEYE, mark(24, 10, 40)).onTarget(24), empower(3, 50, 10)));
@@ -151,7 +151,7 @@ public final class PirateContent extends ClassContent {
 				look(SkillLook.WILD_HUNT, barrage(ProjectileStyle.CANNONBALL, 14, 0.42, SkillLook.GHOST_CANNON, SkillLook.CANNON_SHOT)),
 				delay(1.5, look(SkillLook.GOLDEN_HIND, strike(22, 5, 1, 2.45)).at(22).size(5)), loot(25)).withFx(Fx.Kind.SPARK),
 			skill("golden_rule", "Golden Rule", "황금률", ATTACK, 9, 20, shoot(ProjectileStyle.COIN, 1.6).count(5).spread(40).pierce(1).look(SkillLook.COIN_SHOT), loot(30)),
-			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, look(SkillLook.STORM_VOYAGE, allyBoost(10, DAMAGE, 10, 20)).size(10),
+			skill("voyager_of_the_storm", "Voyager of the Storm", "폭풍의 항해자", UTILITY, 26, 22, look(SkillLook.STORM_VOYAGE, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled(),
 				allyBuff(10, DOLPHINS_GRACE, 10, 0)).withFx(Fx.Kind.SPARK),
 			skill("pioneer_of_the_stars", "Pioneer of the Stars", "별의 개척자", MOVEMENT, 12, 18, look(SkillLook.STAR_WAKE, dash(10, 1.6)).lasting(1.2), buff(SPEED, 8, 2))
 				.withFx(Fx.Kind.SPARK));
@@ -162,7 +162,7 @@ public final class PirateContent extends ClassContent {
 				delay(0.5, shoot(ProjectileStyle.BULLET, 4.2).pierce(4).look(SkillLook.BIRD_SHOT)), inflict(VULNERABLE, 5, 1)).withFx(Fx.Kind.SPARK),
 			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, look(SkillLook.CUTLASS_ARC, slash(4.5, 160, 2.2)).cone(4.5, 160), inflict(BLEEDING, 5, 1)).withFx(Fx.Kind.SPARK),
 			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22,
-				shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F).look(SkillLook.MUSKET_SHOT).onImpact(lookWhereItLands(SkillLook.CANNON_BLAST, 2.0)), inflict(SLOWNESS, 3, 1)),
+				shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F).look(SkillLook.MUSKET_SHOT).onImpact(lookWhereItBursts(SkillLook.CANNON_BLAST, 2.0)), inflict(SLOWNESS, 3, 1)),
 			skill("pirates_glory", "Pirate's Glory", "해적의 명예", DEFENSE, 22, 18, look(SkillLook.TWIN_BIRDS, boost(CRIT_CHANCE, 6, 25)), heal(15)).withFx(Fx.Kind.SPARK));
 
 		weapon("dutchman_harpoon", 4, 81, HARPOON, "Flying Dutchman's Harpoon", "플라잉 더치맨의 작살",
@@ -193,7 +193,7 @@ public final class PirateContent extends ClassContent {
 			skill("seaquake", "Seaquake", "해진", ATTACK, 10, 24, shoot(ProjectileStyle.WAVE, 2.21).count(3).spread(25).pierce(10).look(SkillLook.TSUNAMI)),
 			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, look(SkillLook.ANCHOR_DROP, leap(7, 5, 2.6)).size(5).lasting(3), inflict(SLOWNESS, 3, 2))
 				.withFx(Fx.Kind.SPARK),
-			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, look(SkillLook.MY_SONS, allyBoost(12, DAMAGE, 12, 20)).size(12), allyBoost(12, CRIT_CHANCE, 12, 10),
+			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, look(SkillLook.MY_SONS, allyBoost(12, DAMAGE, 12, 20)).size(12).unscaled(), allyBoost(12, CRIT_CHANCE, 12, 10),
 				allyHeal(12, 15)).withFx(Fx.Kind.SPARK));
 
 		weapon("nika_knuckles", 4, 94, KNUCKLE, "Nika's Knuckles", "니카의 너클",
@@ -209,9 +209,9 @@ public final class PirateContent extends ClassContent {
 			art(0xF2F2F2, 0x8B0000, 0xFFD700), fx(Fx.Kind.BOLT, 0xD01E2E),
 			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, look(SkillLook.KAMUSARI, slash(6, 180, 4.0)).cone(6, 180).quiet(),
 				shoot(ProjectileStyle.WAVE, 5.0).pierce(15).look(SkillLook.KAMUSARI_WAVE), stun(1.0)).withFx(Fx.Kind.SPARK),
-			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, look(SkillLook.HAKI_CLASH, nova(6, 3.4)).size(8), push(8, 3.0)).withFx(Fx.Kind.SPARK),
+			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, look(SkillLook.HAKI_CLASH, nova(6, 3.4)).size(6), push(8, 3.0)).withFx(Fx.Kind.SPARK),
 			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), look(SkillLook.WILL_OF_D, heal(20)), boost(DAMAGE, 6, 25)),
-			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, look(SkillLook.PIRATE_ERA, allyBoost(12, DAMAGE, 12, 30)).size(12),
+			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, look(SkillLook.PIRATE_ERA, allyBoost(12, DAMAGE, 12, 30)).size(12).unscaled(),
 				allyBoost(12, CRIT_CHANCE, 15, 10)).withFx(Fx.Kind.SPARK));
 
 		weapon("thunderclap_blunderbuss", 4, 96, BLUNDERBUSS, "Thunderclap Blunderbuss", "벽력 나팔총",
@@ -221,6 +221,6 @@ public final class PirateContent extends ClassContent {
 				.withFx(Fx.Kind.SPARK),
 			skill("buckshot_storm", "Buckshot Storm", "산탄 폭풍", ATTACK, 9, 20, look(SkillLook.BUCKSHOT, slash(6, 100, 1.9)).cone(6, 100)).withFx(Fx.Kind.SPARK),
 			skill("armament_round", "Armament Round", "무장색 탄환", ATTACK, 8, 18, inflict(VULNERABLE, 4, 0), shoot(ProjectileStyle.BULLET, 1.6).pierce(3).look(SkillLook.HAKI_SHOT)),
-			skill("recoil_leap", "Recoil Leap", "반동 도약", MOVEMENT, 12, 14, push(4, 1.5), look(SkillLook.RECOIL, dash(8, 1.4)).lasting(1.0)).withFx(Fx.Kind.SPARK));
+			skill("recoil_leap", "Recoil Leap", "반동 도약", MOVEMENT, 12, 14, push(4, 1.5), look(SkillLook.RECOIL, dash(8, 1.4)).size(4).lasting(1.0)).withFx(Fx.Kind.SPARK));
 	}
 }

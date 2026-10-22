@@ -180,7 +180,7 @@ final class GhostSeaLooks {
 					if (h < 0.2F && q > 0.5F) {
 						continue;
 					}
-					Vector3f at = new Vector3f(d).mul(r * (0.3F + 1.1F * q * (0.6F + 0.4F * hash(i * 3)))).add(0, Math.max(0.2F, h), 0);
+					Vector3f at = new Vector3f(d).mul(r * (0.25F + 0.7F * q * (0.6F + 0.4F * hash(i * 3)))).add(0, Math.max(0.2F, h), 0);
 					float spin = time * 0.6F + i;
 					Vector3f a = new Vector3f(d);
 					Vector3f b = new Vector3f(0, Mth.cos(spin), 0).add(new Vector3f(d).cross(UP).mul(Mth.sin(spin))).normalize();
@@ -200,17 +200,18 @@ final class GhostSeaLooks {
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
 			if (after < 0.0F) {
 				// the mark it is coming down on
-				o.ring(ground, r * (1.0F - fall) + 0.2F, r * (1.0F - fall) + 0.5F, argb(0.8F, GOLD));
+				o.ring(ground, Math.max(0.0F, r * (1.0F - fall) - 0.3F), r * (1.0F - fall), argb(0.8F, GOLD));
 				o.ring(ground, r - 0.2F, r, argb(0.5F, GOLD));
 				return;
 			}
 			float flash = 1.0F - ease(after, 0.0F, 6.0F);
 			Vector3f mid = new Vector3f(0, 1.0F, 0);
-			o.sprite(mid, s.camRight, s.camUp, r * 1.8F * flash + 0.3F, argb(0.9F * flash, 0xFFFFFF));
-			o.star(mid, s.camRight, s.camUp, r * 2.2F * flash + 0.5F, 12, 0.22F, s.seed, argb(0.95F * flash, GOLD_PALE), argb(0.0F, GOLD));
+			o.sprite(mid, s.camRight, s.camUp, r * 0.9F * flash + 0.3F, argb(0.9F * flash, 0xFFFFFF));
+			o.star(mid, s.camRight, s.camUp, r * 1.0F * flash + 0.3F, 12, 0.22F, s.seed, argb(0.95F * flash, GOLD_PALE), argb(0.0F, GOLD));
 			float q = ease(after, 0.0F, 14.0F);
-			o.ring(ground, r * 1.6F * q, r * 1.6F * q + 0.7F, argb(0.85F * (1.0F - q), GOLD_PALE));
-			o.ring(ground, r * 1.0F * q, r * 1.0F * q + 0.4F, argb(0.7F * (1.0F - q), GOLD));
+			// the shock runs out to the strike's radius and stops there
+			o.ring(ground, Math.max(0.0F, r * q - 0.7F), r * q, argb(0.85F * (1.0F - q), GOLD_PALE));
+			o.ring(ground, Math.max(0.0F, r * 0.6F * q - 0.4F), r * 0.6F * q, argb(0.7F * (1.0F - q), GOLD));
 			o.glowLine(new Vector3f(0, 0.2F, 0), new Vector3f(0, 9.0F * burst, 0), r * 0.4F, argb(0.45F * burst, GOLD), argb(0.0F, GOLD_PALE));
 			for (int i = 0; i < 18; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
@@ -221,7 +222,7 @@ final class GhostSeaLooks {
 				if (h < 0.2F && qq > 0.5F) {
 					continue;
 				}
-				Vector3f at = new Vector3f(d).mul(r * (0.3F + 1.1F * qq * (0.6F + 0.4F * hash(i * 3)))).add(0, Math.max(0.2F, h), 0);
+				Vector3f at = new Vector3f(d).mul(r * (0.25F + 0.7F * qq * (0.6F + 0.4F * hash(i * 3)))).add(0, Math.max(0.2F, h), 0);
 				o.glint(at, s.camRight, s.camUp, 0.3F, time * 0.3F + i, argb(0.9F * burst, GOLD_PALE));
 			}
 		});
@@ -408,7 +409,7 @@ final class GhostSeaLooks {
 				arm(o, arms.get(i), thick[i], 0.05F, 1.0F);
 			}
 			for (int i = 0; i < 8; i++) {
-				Vector3f at = polar(Mth.TWO_PI * hash(s.seed + i * 5) + time * 0.01F, r * (0.7F + 0.5F * hash(i)), 0.5F + 0.4F * hash(i * 3));
+				Vector3f at = polar(Mth.TWO_PI * hash(s.seed + i * 5) + time * 0.01F, r * (0.55F + 0.25F * hash(i)), 0.5F + 0.4F * hash(i * 3));
 				o.sprite(at, s.camRight, s.camUp, 1.4F, argb(0.25F * sink * open, 0x3A5A52));
 			}
 		});
@@ -447,7 +448,7 @@ final class GhostSeaLooks {
 	}
 
 	/**
-	 * The kraken's slam: one great arm rears up out of the ground just beyond the aimed spot, hooks over, and comes crashing down across
+	 * The kraken's slam: one great arm rears up out of the ground at the far side of the aimed spot, hooks over, and comes crashing down across
 	 * it towards the caster with a burst of spray and a ring of sea, then slides back into the ground.
 	 */
 	private static void krakenSlam(final State s, final PoseStack ps, final SubmitNodeCollector c) {
@@ -457,7 +458,8 @@ final class GhostSeaLooks {
 		float hit = 8.0F;
 		Vector3f f = new Vector3f(s.forward);
 		Vector3f toward = new Vector3f(f).negate();
-		Vector3f base = new Vector3f(f).mul(r * 1.1F).add(0, -0.3F, 0);
+		// it breaks the ground just inside the far edge, so its hole stays (about) within the strike's circle
+		Vector3f base = new Vector3f(f).mul(r * 0.85F).add(0, -0.3F, 0);
 		float grow = ease(age, 0.0F, 5.0F) * (1.0F - ease(age, 20.0F, 30.0F));
 		float slam = ease(age, 4.0F, hit);
 		float bend = Mth.lerp(slam, 0.25F, 2.5F);
@@ -469,7 +471,7 @@ final class GhostSeaLooks {
 		}
 		float after = age - hit;
 		shade(ps, c, o -> {
-			o.disc(new Vector3f(base).add(0, 0.435F, 0), 1.6F * grow, argb(0.7F, SEA_DARK), argb(0.0F, SEA_DARK));
+			o.disc(new Vector3f(base).add(0, 0.435F, 0), 1.2F * grow, argb(0.7F, SEA_DARK), argb(0.0F, SEA_DARK));
 			arm(o, arm, 0.9F * Math.max(0.3F, grow), 0.08F, 1.0F);
 			if (after >= 0.0F) {
 				o.disc(new Vector3f(0, 0.135F, 0), r * 0.9F, argb(0.5F * (1.0F - ease(after, 10.0F, 22.0F)), SEA_DARK), argb(0.0F, SEA_DARK));
@@ -484,8 +486,9 @@ final class GhostSeaLooks {
 				return;
 			}
 			float q = ease(after, 0.0F, 14.0F);
-			o.ring(ground, r * 1.4F * q, r * 1.4F * q + 0.6F, argb(0.85F * (1.0F - q), FOAM));
-			o.ring(ground, r * 0.8F * q, r * 0.8F * q + 0.35F, argb(0.7F * (1.0F - q), GHOST));
+			// the ring of sea runs out to the strike's radius and stops there
+			o.ring(ground, Math.max(0.0F, r * q - 0.6F), r * q, argb(0.85F * (1.0F - q), FOAM));
+			o.ring(ground, Math.max(0.0F, r * 0.6F * q - 0.35F), r * 0.6F * q, argb(0.7F * (1.0F - q), GHOST));
 			// spray thrown up both sides of the arm
 			for (int i = 0; i < 14; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
@@ -496,7 +499,7 @@ final class GhostSeaLooks {
 				o.blade(foot, new Vector3f(d).mul(1.0F + h * 1.5F).add(foot), VfxOut.across(d), 0.18F, argb(0.8F * (1.0F - q), FOAM), argb(0.0F, GHOST_PALE));
 			}
 			float flash = 1.0F - ease(after, 0.0F, 5.0F);
-			o.sprite(new Vector3f(0, 0.8F, 0), s.camRight, s.camUp, r * 1.4F * flash + 0.2F, argb(0.6F * flash, GHOST_PALE));
+			o.sprite(new Vector3f(0, 0.8F, 0), s.camRight, s.camUp, r * 0.9F * flash + 0.2F, argb(0.6F * flash, GHOST_PALE));
 		});
 	}
 
@@ -607,7 +610,7 @@ final class GhostSeaLooks {
 			float roll = ease(p, 0.0F, 0.6F);
 			for (int i = 0; i < 16; i++) {
 				float a = Mth.TWO_PI * i / 16 + hash(s.seed + i);
-				Vector3f at = polar(a, s.size * roll * (0.6F + 0.4F * hash(i * 3)), 0.5F + 0.3F * hash(i));
+				Vector3f at = polar(a, s.size * roll * (0.45F + 0.3F * hash(i * 3)), 0.5F + 0.3F * hash(i));
 				o.sprite(at, s.camRight, s.camUp, 1.6F + 1.0F * roll, argb(0.3F * fade * (1.0F - roll * 0.5F), 0x4A6A60));
 			}
 		});
@@ -687,7 +690,8 @@ final class GhostSeaLooks {
 					o.glint(at, s.camRight, s.camUp, 0.16F, i, argb(0.9F * fade, FOAM));
 				}
 			}
-			o.ring(new Vector3f(end).add(0, 0.16F, 0), 2.4F * burst, 2.4F * burst + 0.4F, argb(0.7F * (1.0F - burst), FOAM));
+			// a small splash ring (blink hits nothing: kept well inside what would read as an area)
+			o.ring(new Vector3f(end).add(0, 0.16F, 0), 1.2F * burst, 1.2F * burst + 0.3F, argb(0.7F * (1.0F - burst), FOAM));
 			float flash = 1.0F - ease(p, 0.0F, 0.3F);
 			o.sprite(new Vector3f(end).add(0, 1.0F, 0), s.camRight, s.camUp, 2.0F * flash + 0.1F, argb(0.6F * flash, GHOST));
 		});

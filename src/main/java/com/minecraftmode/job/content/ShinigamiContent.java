@@ -155,14 +155,15 @@ public final class ShinigamiContent extends ClassContent {
 				inflict(BLEEDING, 6, 1)),
 			skill("gokei", "Gokei", "항경", ATTACK, 14, 26, look(SkillLook.PETAL_SPHERE, pull(8, 1.4)).size(6), delay(0.5, nova(6, 2.21))),
 			skill("senkei", "Senkei", "섬경", ATTACK, 22, 24, boost(DAMAGE, 8, 25), look(SkillLook.SENKEI, zone(6, 6, 0.59)).size(6).lasting(6)),
-			skill("shukei_hakuteiken", "Shukei: Hakuteiken", "종경 백제검", ULTIMATE, 55, 45, look(SkillLook.HAKUTEIKEN, beam(26, 4.6)).beam(26), dash(8, 1.84)));
+			skill("shukei_hakuteiken", "Shukei: Hakuteiken", "종경 백제검", ULTIMATE, 55, 45, look(SkillLook.HAKUTEIKEN, beam(26, 4.6)).beam(26),
+				look(SkillLook.FLASH_TRAIL, dash(8, 1.84)).lasting(1.0)));
 
 		weapon("daiguren_hyorinmaru", 4, 78, KATANA, "Daiguren Hyorinmaru", "대홍련빙륜환",
 			art(0xD0F0FF, 0x1A3A6A, 0x8AE0FF), fx(Fx.Kind.SHARD, 0xBFEFFF),
 			skill("ryusenka", "Ryusenka", "용산가", ATTACK, 9, 22, look(SkillLook.ICE_FLOWER, shadowstep(10, 1.77)).onTarget(10), inflict(SLOWNESS, 5, 3)),
 			skill("sennen_hyoro", "Sennen Hyoro", "천년빙뢰", ATTACK, 16, 28, look(SkillLook.ICE_PRISON, rain(ProjectileStyle.ICICLE, 16, 4, 14, 0.25)).at(16).size(4),
 				inflict(SLOWNESS, 5, 2)),
-			skill("ice_wings", "Ice Wings", "얼음 날개", MOVEMENT, 12, 18, look(SkillLook.ICE_WINGS, leap(8, 3, 1.29)).lasting(6), buff(SLOW_FALLING, 6, 0)),
+			skill("ice_wings", "Ice Wings", "얼음 날개", MOVEMENT, 12, 18, look(SkillLook.ICE_WINGS, look(SkillLook.LANDING_RING, leap(8, 3, 1.29)).size(3).lasting(6)).lasting(6), buff(SLOW_FALLING, 6, 0)),
 			skill("hyoten_hyakkaso", "Hyoten Hyakkaso", "빙천백화장", ULTIMATE, 55, 45,
 				look(SkillLook.ICE_BLOOM, zone(7, 6, 1.1).at(14).effect(SLOWNESS, 4)).at(14).size(7).lasting(6), stun(2.0)));
 
@@ -170,7 +171,8 @@ public final class ShinigamiContent extends ClassContent {
 			art(0x6A5A4A, 0x2A1A0A, 0xFF5A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
 			skill("all_things_to_ash", "Reduce All Creation to Ash", "만상일체 잿더미가 되어라", ATTACK, 10, 24, look(SkillLook.FLAME_BURST, nova(6, 1.84)).size(6), burn(6)),
 			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", DEFENSE, 22, 26, look(SkillLook.FLAME_WALL, zone(6, 6, 0.74)).size(6).lasting(6), shield(14, 6)),
-			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F).look(SkillLook.TAIMATSU), burn(6)),
+			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F).look(SkillLook.TAIMATSU)
+				.onImpact(lookWhereItBursts(SkillLook.FLAME_BURST, 4.0)), burn(6)),
 			skill("zanka_no_tachi", "Zanka no Tachi", "잔화태도", ULTIMATE, 60, 50, look(SkillLook.ZANKA, slash(8, 360, 7.59)).size(8), burn(8)));
 
 		weapon("kamishini_no_yari", 4, 85, SPEAR, "Kamishini no Yari", "신살창",
@@ -183,7 +185,7 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("kyoka_suigetsu", 4, 88, KATANA, "Kyoka Suigetsu", "경화수월",
 			art(0xE8E4F0, 0x3A2A5A, 0x8A5AFF), fx(Fx.Kind.RUNE, 0xB08AFF),
-			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, look(SkillLook.MIRROR, stealth(5, 80)), debuff(8, BLINDNESS, 5, 0))
+			skill("complete_hypnosis", "Complete Hypnosis", "완전 최면", UTILITY, 20, 22, look(SkillLook.MIRROR, stealth(5, 80)).size(8), debuff(8, BLINDNESS, 5, 0))
 				.withFx(Fx.Kind.SPARK),
 			skill("hado_90_kurohitsugi", "Hado #90: Kurohitsugi", "파도의 90 흑관", ATTACK, 18, 32,
 				look(SkillLook.KUROHITSUGI, zone(4, 3, 1.6).at(16).pull(0.8)).at(16).size(4).lasting(3), inflict(VULNERABLE, 6, 1)).withFx(Fx.Kind.SPARK),

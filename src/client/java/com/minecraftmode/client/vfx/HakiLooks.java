@@ -99,12 +99,12 @@ final class HakiLooks {
 			if (after < 0.0F) {
 				o.disc(new Vector3f(0, 0.135F, 0), k * (0.4F + 0.8F * swell), argb(0.45F * swell, 0x101018), argb(0.0F, 0x101018));
 			} else {
-				o.disc(new Vector3f(0, 0.135F, 0), r * 1.1F, argb(0.55F * fade, 0x181410), argb(0.0F, 0x181410));
+				o.disc(new Vector3f(0, 0.135F, 0), r, argb(0.55F * fade, 0x181410), argb(0.0F, 0x181410));
 				float q = ease(after, 0.0F, 18.0F);
 				for (int i = 0; i < 16; i++) {
 					float a = Mth.TWO_PI * i / 16 + hash(s.seed + i);
-					Vector3f at = polar(a, r * (0.8F + 1.0F * q), 0.5F + 1.2F * q * hash(i * 3));
-					o.sprite(at, s.camRight, s.camUp, 1.0F + 1.6F * q, argb(0.45F * (1.0F - q), i % 2 == 0 ? 0xC8C0B0 : 0x9A9080));
+					Vector3f at = polar(a, r * (0.55F + 0.3F * q), 0.5F + 1.2F * q * hash(i * 3));
+					o.sprite(at, s.camRight, s.camUp, 0.8F + 0.9F * q, argb(0.45F * (1.0F - q), i % 2 == 0 ? 0xC8C0B0 : 0x9A9080));
 				}
 			}
 		});
@@ -123,26 +123,27 @@ final class HakiLooks {
 			float q = ease(after, 0.0F, 12.0F);
 			float flash = 1.0F - ease(after, 0.0F, 6.0F);
 			Vector3f mid = new Vector3f(0, 1.0F, 0);
-			o.star(mid, s.camRight, s.camUp, r * 2.4F * flash + 0.5F, 12, 0.3F, s.seed, argb(0.95F * flash, 0xFFFFFF), argb(0.0F, SUN));
+			o.star(mid, s.camRight, s.camUp, r * 1.0F * flash + 0.5F, 12, 0.3F, s.seed, argb(0.95F * flash, 0xFFFFFF), argb(0.0F, SUN));
 			for (int w = 0; w < 3; w++) {
 				float qq = ease(after - w * 2.0F, 0.0F, 14.0F);
 				if (qq <= 0.0F || qq >= 1.0F) {
 					continue;
 				}
-				o.ring(new Vector3f(0, 0.16F + w * 0.01F, 0), r * 2.0F * qq, r * 2.0F * qq + 0.7F, argb(0.85F * (1.0F - qq), w == 1 ? SUN : 0xFFFFFF));
+				// cartoon shock rings running out to the strike's radius and stopping there
+				o.ring(new Vector3f(0, 0.16F + w * 0.01F, 0), Math.max(0.0F, r * qq - 0.7F), r * qq, argb(0.85F * (1.0F - qq), w == 1 ? SUN : 0xFFFFFF));
 			}
 			// cartoon stars and sparkles bouncing out
 			for (int i = 0; i < 12; i++) {
 				Vector3f d = BladeLooks.shardDir(s.seed, i);
 				d.y = Math.abs(d.y) + 0.3F;
-				Vector3f at = new Vector3f(d).mul(1.0F + r * 1.4F * q).add(0, 1.0F - 3.0F * q * q, 0);
+				Vector3f at = new Vector3f(d).mul(0.5F + r * 0.8F * q).add(0, 1.0F - 3.0F * q * q, 0);
 				if (at.y > 0.2F) {
 					o.star(at, s.camRight, s.camUp, 0.45F, 5, 0.45F, time * 0.2F + i, argb(0.95F * (1.0F - q), i % 2 == 0 ? SUN : 0xFFFFFF), argb(0.3F * (1.0F - q), SUN));
 				}
 			}
 			for (int i = 0; i < 8; i++) {
 				float a = Mth.TWO_PI * i / 8 + hash(s.seed * 3 + i);
-				o.bolt(new Vector3f(0, 0.16F, 0), polar(a, r * 1.2F * ease(after, 0.0F, 5.0F), 0.16F), s.seed + i, 0.5F, 6, 0.12F, argb(0.6F * fade, SUN),
+				o.bolt(new Vector3f(0, 0.16F, 0), polar(a, r * 0.9F * ease(after, 0.0F, 5.0F), 0.16F), s.seed + i, 0.5F, 6, 0.12F, argb(0.6F * fade, SUN),
 					argb(0.9F * fade, 0xFFFFFF));
 			}
 		});
@@ -200,8 +201,9 @@ final class HakiLooks {
 			float burst = ease(age, 3.0F, 9.0F);
 			if (burst > 0.0F && burst < 1.0F) {
 				Vector3f end = new Vector3f(d).mul(len - 0.6F).add(start);
-				o.star(end, s.camRight, s.camUp, 2.2F * (1.0F - burst) + 0.4F, 10, 0.3F, s.seed, argb(0.9F * (1.0F - burst), FIRE_CORE), argb(0.0F, FIRE));
-				o.circle(end, right, up, 2.0F * burst, 0.06F, 20, argb(0.8F * (1.0F - burst), FIRE));
+				o.star(end, s.camRight, s.camUp, 1.0F * (1.0F - burst) + 0.4F, 10, 0.3F, s.seed, argb(0.9F * (1.0F - burst), FIRE_CORE), argb(0.0F, FIRE));
+				// the beam hits about a block either side of its line: the blast ring stops there
+				o.circle(end, right, up, 1.0F * burst, 0.06F, 20, argb(0.8F * (1.0F - burst), FIRE));
 			}
 		});
 	}
@@ -236,8 +238,10 @@ final class HakiLooks {
 			ext[i] = Mth.sin(phase * Mth.PI);
 			dirs[i] = d;
 			shoulders[i] = new Vector3f(side).mul(i % 2 == 0 ? 0.35F : -0.35F).add(new Vector3f(f).mul(0.3F)).add(0, 0.15F, 0);
-			fists[i] = new Vector3f(d).mul(0.9F + (r - 0.9F) * ext[i]).add(shoulders[i]);
-			echoes[i] = new Vector3f(d).mul(0.9F + (r - 0.9F) * ext[i] * 0.55F).add(shoulders[i]);
+			// the knuckles (half a fist ahead of its middle, from shoulders 0.3 forward) reach the slash's range at full stretch
+			float stretch = Math.max(0.0F, r - 0.9F - 0.85F);
+			fists[i] = new Vector3f(d).mul(0.9F + stretch * ext[i]).add(shoulders[i]);
+			echoes[i] = new Vector3f(d).mul(0.9F + stretch * ext[i] * 0.55F).add(shoulders[i]);
 		}
 		int skin = argb(0.97F * on, 0xFFF8F4);
 		int skinDark = argb(0.97F * on, 0x7A6E88);
@@ -295,7 +299,8 @@ final class HakiLooks {
 				if (q < 0.0F || q > 1.0F) {
 					continue;
 				}
-				float rr = 0.6F + 3.2F * q;
+				// a self buff: the beats stay close round the caster so they never read as an area
+				float rr = 0.6F + 2.2F * q;
 				for (int i = 0; i < 14; i++) {
 					Vector3f at = polar(Mth.TWO_PI * i / 14 + b, rr, 1.0F + 0.1F * Mth.sin(i * 2.0F));
 					o.sprite(at, s.camRight, s.camUp, 0.45F + 0.3F * q, argb(0.55F * (1.0F - q) * fade * self, CLOUD));
@@ -316,8 +321,8 @@ final class HakiLooks {
 				float q = (age - b) / 12.0F;
 				if (q >= 0.0F && q <= 1.0F) {
 					pulse = Math.max(pulse, 1.0F - ease(age - b, 0.0F, 4.0F));
-					o.ring(new Vector3f(0, 1.0F, 0), 0.6F + 3.2F * q - 0.15F, 0.6F + 3.2F * q, argb(0.7F * (1.0F - q) * fade * self, 0xFFFFFF));
-					o.ring(new Vector3f(0, 0.15F, 0), 0.6F + 3.6F * q - 0.3F, 0.6F + 3.6F * q, argb(0.5F * (1.0F - q) * fade, SUN));
+					o.ring(new Vector3f(0, 1.0F, 0), 0.6F + 2.2F * q - 0.15F, 0.6F + 2.2F * q, argb(0.7F * (1.0F - q) * fade * self, 0xFFFFFF));
+					o.ring(new Vector3f(0, 0.15F, 0), 0.6F + 1.4F * q - 0.3F, 0.6F + 1.4F * q, argb(0.5F * (1.0F - q) * fade, SUN));
 				}
 			}
 			Vector3f chest = new Vector3f(ahead).mul(0.25F).add(0, 1.2F, 0);
@@ -386,7 +391,8 @@ final class HakiLooks {
 			Vector3f from = new Vector3f(outer[at]);
 			Vector3f d = BladeLooks.shardDir(seed, i);
 			d.y = -Math.abs(d.y) - 0.3F;
-			Vector3f to = new Vector3f(d).mul(1.5F + 1.5F * hash(i * 3)).add(from);
+			// short and mostly downward, so they stay inside the arc's edge
+			Vector3f to = new Vector3f(d).mul(0.5F + 0.5F * hash(i * 3)).add(from);
 			to.y = Math.max(to.y, -1.1F);
 			bolts.add(VfxOut.zigzag(from, to, seed + i, 0.28F, 9));
 		}
@@ -443,7 +449,7 @@ final class HakiLooks {
 			for (List<Vector3f> b : sky) {
 				o.polyline(b, 0.16F, argb(0.95F * fade, HAKI));
 			}
-			o.disc(new Vector3f(0, 0.135F, 0), r * 0.8F * dome, argb(0.55F * fade, 0x140408), argb(0.0F, 0x140408));
+			o.disc(new Vector3f(0, 0.135F, 0), r * dome, argb(0.55F * fade, 0x140408), argb(0.0F, 0x140408));
 		});
 		ps.pushPose();
 		ps.translate(mid.x, mid.y, mid.z);
@@ -469,6 +475,8 @@ final class HakiLooks {
 			}
 			float q = ease(age, 0.0F, 12.0F);
 			o.ring(new Vector3f(0, 0.16F, 0), Math.max(0.0F, r * q - 0.8F), r * q, argb(0.8F * (1.0F - q), CRIMSON));
+			// the nova's edge stays drawn once the wave has reached it
+			o.ring(new Vector3f(0, 0.17F, 0), Math.max(0.0F, r - 0.15F), r, argb(0.75F * q * fade, CRIMSON));
 		});
 		NavyLooks.ball(ps, c, mid, r * 0.7F * dome + 0.3F, 1.0F, CRIMSON, 0.08F * fade * (1.0F - dome * 0.5F));
 	}

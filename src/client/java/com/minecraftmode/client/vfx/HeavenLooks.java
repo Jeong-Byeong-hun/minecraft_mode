@@ -129,8 +129,9 @@ final class HeavenLooks {
 				if (q <= 0.0F || q >= 1.0F) {
 					continue;
 				}
+				// the front stops on the slash's reach and stays visible up to it
 				float rad = 0.8F + (r - 0.8F) * ease(q, 0.0F, 1.0F);
-				float a = 0.75F * (1.0F - q) * fade;
+				float a = 0.75F * Mth.sqrt(1.0F - q) * fade;
 				int n = 18;
 				for (int i = 0; i < n; i++) {
 					float t0 = -half + 2 * half * i / n;
@@ -154,7 +155,7 @@ final class HeavenLooks {
 				Vector3f prev = new Vector3f(f).mul(0.9F).add(0, ground + 0.13F, 0);
 				int steps = 5;
 				for (int j = 1; j <= steps; j++) {
-					float d = (0.9F + (r * (0.7F + 0.3F * hash(k * 5)) - 0.9F) * j / steps) * run;
+					float d = (0.9F + (r * (0.85F + 0.15F * hash(k * 5)) - 0.9F) * j / steps) * run;
 					Vector3f next = new Vector3f(dir).mul(d).add(new Vector3f(side).mul((hash(s.seed * 7 + k * 11 + j) - 0.5F) * 0.5F)).add(0, ground + 0.13F, 0);
 					o.bar(prev, next, 0.04F, 0.025F, argb(0.6F * fade, 0xFFB070), argb(0.4F * fade, tone));
 					prev = next;
@@ -312,19 +313,20 @@ final class HeavenLooks {
 			// sunlight poured from it into the shot
 			o.glowLine(sun, start, 0.5F, argb(0.4F * fade, SUN), argb(0.5F * fade, SUN));
 			if (extend > 0.0F) {
-				o.glowLine(start, tip, 1.1F, argb(0.35F * fade, 0xFF9A20), argb(0.25F * fade, 0xFF9A20));
+				// the glow fades out at the beam's reach (0.9 round its line)
+				o.glowLine(start, tip, 1.0F, argb(0.35F * fade, 0xFF9A20), argb(0.25F * fade, 0xFF9A20));
 				o.glowLine(start, tip, 0.45F, argb(0.7F * fade, SUN), argb(0.6F * fade, SUN));
 				o.bar(start, tip, 0.09F, 0.06F, argb(fade, 0xFFFFFF), argb(fade, SUN_CORE));
-				// rings of light running down the beam
+				// rings of light running down the beam, on its rim
 				float reach = start.distance(tip);
 				for (int i = 0; i < 8; i++) {
 					float d = ((i / 8.0F + time * 0.05F) % 1.0F) * reach;
 					Vector3f at = new Vector3f(dir).mul(0.6F + d);
-					float rr = 0.5F + 0.35F * Mth.sin(time * 0.5F + i);
-					o.circle(at, side, up, rr + 0.3F, 0.05F, 20, argb(0.8F * fade, SUN_CORE));
+					float rr = 0.84F + 0.06F * Mth.sin(time * 0.5F + i);
+					o.circle(at, side, up, rr, 0.05F, 20, argb(0.8F * fade, SUN_CORE));
 				}
-				o.star(tip, s.camRight, s.camUp, 2.0F, 8, 0.3F, time * 0.1F, argb(0.85F * fade, 0xFFFFFF), argb(0.0F, SUN));
-				o.sprite(tip, s.camRight, s.camUp, 1.6F, argb(0.6F * fade, SUN));
+				o.star(tip, s.camRight, s.camUp, 1.3F, 8, 0.3F, time * 0.1F, argb(0.85F * fade, 0xFFFFFF), argb(0.0F, SUN));
+				o.sprite(tip, s.camRight, s.camUp, 1.0F, argb(0.6F * fade, SUN));
 			}
 		});
 	}
@@ -483,7 +485,7 @@ final class HeavenLooks {
 
 	/**
 	 * Hounds of the Moon: a moon sigil drawn on the ground (a full moon in the middle, a ring of crescents waxing and waning round it,
-	 * runes turning on the rim) and the full moon itself over the caster.
+	 * runes turning on the rim) and the full moon itself over the caster. Its rim is the slowing circle (the size).
 	 */
 	private static void moonSigil(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;

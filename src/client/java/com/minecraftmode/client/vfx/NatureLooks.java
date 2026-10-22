@@ -56,13 +56,16 @@ final class NatureLooks {
 		});
 	}
 
-	/** Gokei: petals close in from all sides into a sphere round the caster, crush inward with a flash and scatter. */
+	/**
+	 * Gokei: petals close in from all sides into a sphere round the caster (from about the pull's reach, 8/6 of the size), crush inward
+	 * with a flash as the burst lands, and blow out to the burst's edge (the size), where they hang as they fade with a ring on the ground.
+	 */
 	static void petalSphere(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
 		float close = ease(p, 0.0F, 0.5F);
-		float burst = ease(p, 0.52F, 1.0F);
-		float radius = s.size * (1.35F - 0.7F * close) + s.size * 0.9F * burst;
-		float fade = 1.0F - burst;
+		float burst = ease(p, 0.52F, 0.8F);
+		float radius = s.size * (1.35F - 0.7F * close + 0.35F * burst);
+		float fade = 1.0F - ease(p, 0.72F, 1.0F);
 		float time = s.ageInTicks;
 		glow(ps, c, o -> {
 			int n = 260;
@@ -87,20 +90,26 @@ final class NatureLooks {
 				o.sprite(center, s.camRight, s.camUp, s.size * 0.8F, argb(0.8F * flash, s.color));
 				o.sprite(center, s.camRight, s.camUp, s.size * 0.35F, argb(flash, 0xFFFFFF));
 			}
+			if (burst > 0.0F) {
+				o.ring(new Vector3f(0, 0.15F, 0), s.size * 0.85F * burst, s.size * burst, argb(0.5F * fade, s.color));
+			}
 		});
 	}
 
-	/** Senkei: three rows of great swords rising round the field, points up, a ring of pink light on the ground. */
+	/**
+	 * Senkei: three rows of great swords rising round the field, points up, a ring of pink light on the ground; the outer, tallest row
+	 * stands on the field's edge (the size), the others just inside it.
+	 */
 	static void senkei(final State s, final PoseStack ps, final SubmitNodeCollector c) {
 		float p = s.progress;
 		float fade = 1.0F - ease(p, 0.88F, 1.0F);
 		float age = s.age();
 		glow(ps, c, o -> {
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
-			o.ring(ground, s.size * 0.9F, s.size * 1.45F, argb(0.5F * fade, s.color));
+			o.ring(ground, s.size * 0.78F, s.size * 1.02F, argb(0.5F * fade, s.color));
 			for (int row = 0; row < 3; row++) {
-				int count = 26 + row * 4;
-				float r = s.size * (1.0F + row * 0.17F);
+				int count = 24 + row * 4;
+				float r = s.size * (0.8F + row * 0.1F);
 				for (int i = 0; i < count; i++) {
 					float a = Mth.TWO_PI * (i + row * 0.5F) / count;
 					// each sword rises out of the ground in turn
@@ -173,7 +182,8 @@ final class NatureLooks {
 				if (rise <= 0.0F) {
 					continue;
 				}
-				Vector3f base = polar(a, s.size * 1.05F, -0.3F);
+				// on the rim: the pillar's outer face (0.42 thick) stands at the size
+				Vector3f base = polar(a, s.size - 0.35F, -0.3F);
 				// leaning in over the middle
 				Vector3f d = new Vector3f(-Mth.cos(a) * 0.42F, 1.0F, -Mth.sin(a) * 0.42F);
 				int body = o.glow ? argb(0.85F * fade, ICE_EDGE) : argb(0.45F * fade, ICE_BODY);
@@ -184,8 +194,8 @@ final class NatureLooks {
 		glow(ps, c, o -> {
 			pillars.accept(o);
 			Vector3f ground = new Vector3f(0, 0.15F, 0);
-			o.disc(ground, s.size * 1.2F, argb(0.35F * fade, 0xFFFFFF), argb(0.0F, ICE_EDGE));
-			o.ring(ground, s.size * 0.95F, s.size * 1.25F, argb(0.6F * fade, ICE_EDGE));
+			o.disc(ground, s.size, argb(0.35F * fade, 0xFFFFFF), argb(0.0F, ICE_EDGE));
+			o.ring(ground, s.size * 0.85F, s.size * 1.03F, argb(0.6F * fade, ICE_EDGE));
 		});
 	}
 

@@ -146,8 +146,9 @@ final class WarLooks {
 		});
 		glow(ps, c, o -> {
 			Vector3f ground = new Vector3f(0, 0.14F, 0);
-			o.disc(ground, r * 1.1F, argb(0.35F * fade, 0xA0201A), argb(0.0F, BLOOD));
-			o.ring(ground, r * 1.05F, r * 1.15F, argb(0.8F * fade, BLOOD));
+			// the rim on the rain's circle
+			o.disc(ground, r, argb(0.35F * fade, 0xA0201A), argb(0.0F, BLOOD));
+			o.ring(ground, r * 0.95F, r * 1.05F, argb(0.8F * fade, BLOOD));
 			for (int i = 0; i < swords; i++) {
 				if (land[i] <= 0.0F) {
 					continue;
@@ -333,8 +334,10 @@ final class WarLooks {
 			float burst = ease(p, 0.15F, 0.6F);
 			if (burst > 0.0F) {
 				Vector3f ground = new Vector3f(0, 0.14F, 0);
-				o.ring(ground, s.size * burst, s.size * burst + 0.5F, argb(0.85F * (1 - burst), DIVINE));
-				o.disc(ground, s.size * 0.9F, argb(0.4F * fade, s.color), argb(0.0F, s.color));
+				// the shock runs out to the bolt's radius and stops there; the rim stays on it
+				o.ring(ground, Math.max(0.0F, s.size * burst - 0.5F), s.size * burst, argb(0.85F * (1 - burst), DIVINE));
+				o.ring(ground, s.size * 0.96F, s.size * 1.04F, argb(0.7F * fade, DIVINE));
+				o.disc(ground, s.size, argb(0.4F * fade, s.color), argb(0.0F, s.color));
 				sigil(o, s, ground, s.size * 0.8F, argb(0.8F * fade, DIVINE));
 				o.sprite(new Vector3f(0, 0.8F, 0), s.camRight, s.camUp, 2.5F * (1 - burst) + 0.5F, argb(0.8F * fade, 0xFFFFFF));
 			}
@@ -404,8 +407,9 @@ final class WarLooks {
 		float time = s.ageInTicks;
 		glow(ps, c, o -> {
 			Vector3f ground = new Vector3f(0, 0.14F, 0);
-			sigil(o, s, ground, s.size * open, argb(0.85F * fade, DIVINE));
-			o.circle(ground, new Vector3f(1, 0, 0), new Vector3f(0, 0, 1), s.size * open * 1.1F, 0.04F, 40, argb(0.6F * fade, s.color));
+			// the sigil (its point circles reach 0.97) inside the strike's circle
+			sigil(o, s, ground, s.size * 0.88F * open, argb(0.85F * fade, DIVINE));
+			o.circle(ground, new Vector3f(1, 0, 0), new Vector3f(0, 0, 1), s.size * open, 0.05F, 48, argb(0.7F * fade, s.color));
 			Vector3f disc = new Vector3f(0, 0.4F + 10.0F * (1.0F - fall * fall), 0);
 			// tilted so it shows its face from most sides instead of a line
 			ArrowLooks.disc(o, disc, new Vector3f(1, 0, 0), new Vector3f(0, Mth.sin(0.8F), Mth.cos(0.8F)), s.size * 0.55F, time * 0.9F, fade, s.color);
@@ -415,7 +419,7 @@ final class WarLooks {
 			}
 			if (hit > 0.0F) {
 				float k = 1.0F - hit;
-				o.ring(ground, s.size * 1.4F * hit, s.size * 1.4F * hit + 0.5F, argb(0.9F * k, DIVINE));
+				o.ring(ground, Math.max(0.0F, s.size * hit - 0.5F), s.size * hit, argb(0.9F * k, DIVINE));
 				o.sprite(new Vector3f(0, 1.0F, 0), s.camRight, s.camUp, 3.0F * k + 0.5F, argb(0.9F * k, 0xFFFFFF));
 				o.glowLine(new Vector3f(0, 0.1F, 0), new Vector3f(0, 12.0F, 0), 1.2F * k, argb(0.6F * k, s.color), argb(0.0F, s.color));
 			}

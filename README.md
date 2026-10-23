@@ -65,7 +65,7 @@ Minecraft **26.3** (Java Edition) Fabric 모드. 새 광물·도구·갑옷, 출
 | 스킬 이펙트 | 7직업 4차 스킬 252개 전부와 스쿠나 패턴에 직접 그린 이펙트(검기·광선·마법진·문장·괴수 등)가 있고, 위험 범위는 실제 타격 범위와 ±10% 안으로 맞춘다([docs/SKILL-LOOKS.md](docs/SKILL-LOOKS.md)). 그 밖에 새로 그린 파티클 12종, 투사체(표창·쿠나이·총알·포탄·마력탄·검기 등), 직업 HUD(레벨·EXP·MP·스킬 쿨다운) |
 | 공유 기여도 | 몬스터가 실제로 잃은 체력을 때린 사람별로 기록해, 5% 이상 기여한 사람끼리 경험치를 나누고(파티 보너스) 가장 많이 기여한 사람이 장비·펫을 굴린다. 아군 강화·적 약화도 기여로 친다. 시련 처치와 펫 성장은 기여한 모두에게 |
 
-직업·전직 시련·무기·스킬·각인 전체 목록과 수치: [docs/CLASSES.md](docs/CLASSES.md) · 장비(상점·드롭률·방어구 세트): [docs/GEAR.md](docs/GEAR.md) · 네임드·소굴·보스: [docs/MONSTERS.md](docs/MONSTERS.md) · 소모품: [docs/CONSUMABLES.md](docs/CONSUMABLES.md) · 엔드게임(의뢰·강화·거래소·업적·특성): [docs/ENDGAME.md](docs/ENDGAME.md) · 초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·스토리·주민 의뢰: [docs/CONTENT.md](docs/CONTENT.md) · 실측 피해(직업별 Lv 100 허수아비 1분): [docs/DAMAGE.md](docs/DAMAGE.md) · 스킬 이펙트 범위: [docs/SKILL-LOOKS.md](docs/SKILL-LOOKS.md) · 인챈트: [docs/ENCHANTMENTS.md](docs/ENCHANTMENTS.md) · 설계: [docs/DESIGN-gear-raids.md](docs/DESIGN-gear-raids.md), [docs/DESIGN-economy-consumables.md](docs/DESIGN-economy-consumables.md), [docs/DESIGN-endgame.md](docs/DESIGN-endgame.md)
+직업·전직 시련·무기·스킬·각인 전체 목록과 수치: [docs/CLASSES.md](docs/CLASSES.md) · 각인(직업별 무기·방어구 부위, 능력치별 찾아보기): [docs/ENGRAVINGS.md](docs/ENGRAVINGS.md) · 장비(상점·드롭률·방어구 세트): [docs/GEAR.md](docs/GEAR.md) · 네임드·소굴·보스: [docs/MONSTERS.md](docs/MONSTERS.md) · 소모품: [docs/CONSUMABLES.md](docs/CONSUMABLES.md) · 엔드게임(의뢰·강화·거래소·업적·특성): [docs/ENDGAME.md](docs/ENDGAME.md) · 초월·각성·생활 기술·펫과 탈것·던전·월드 이벤트·스토리·주민 의뢰: [docs/CONTENT.md](docs/CONTENT.md) · 실측 피해(직업별 Lv 100 허수아비 1분): [docs/DAMAGE.md](docs/DAMAGE.md) · 스킬 이펙트 범위: [docs/SKILL-LOOKS.md](docs/SKILL-LOOKS.md) · 인챈트: [docs/ENCHANTMENTS.md](docs/ENCHANTMENTS.md) · 설계: [docs/DESIGN-gear-raids.md](docs/DESIGN-gear-raids.md), [docs/DESIGN-economy-consumables.md](docs/DESIGN-economy-consumables.md), [docs/DESIGN-endgame.md](docs/DESIGN-endgame.md)
 
 직업·스킬은 헌터×헌터, 블리치, 나루토, 타입문(Fate) 같은 작품을 중심으로 고른다(사신·헌터 추가됨).
 
@@ -218,7 +218,7 @@ java -Xmx4G -Xms2G -jar fabric-server-mc.26.3-loader.0.19.5-launcher.<설치기�
 ```bash
 ./gradlew build              # build/libs/minecraft_mode-<ver>.jar
 ./gradlew runClient          # 개발용 클라이언트 실행
-./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트/차원 JSON, 무기·방어구·몬스터 텍스처 → src/main/generated, docs/CLASSES.md·GEAR.md·MONSTERS.md·CONSUMABLES.md·ENDGAME.md·CONTENT.md·SKILL-LOOKS.md
+./gradlew runDatagen         # 레시피/모델/태그/번역/월드젠/인챈트/차원 JSON, 무기·방어구·몬스터 텍스처 → src/main/generated, docs/CLASSES.md·ENGRAVINGS.md·GEAR.md·MONSTERS.md·CONSUMABLES.md·ENDGAME.md·CONTENT.md·SKILL-LOOKS.md
 ./gradlew runClientGameTest  # 자동 테스트 (월드 생성 → 검증 → 스크린샷 build/run/clientGameTest/screenshots)
 ./gradlew runClientGameTest -Ptests=job,town  # 고른 테스트만 (이름 = 클래스 이름에서 ClientGameTest를 뺀 소문자)
 ./gradlew runClientGameTestParallel           # 전체 테스트를 게임 3개로 나눠 동시에 (-Pshards=N, -Ptests=...; build/run/clientGameTest1..N)

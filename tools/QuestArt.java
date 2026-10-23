@@ -67,6 +67,7 @@ final class QuestArt {
 		TextureGen.write("entity/npc/veteran", rowan());
 		TextureGen.write("entity/npc/child", pip());
 		TextureGen.write("entity/npc/lumberjack", bjorn());
+		TextureGen.write("entity/npc/map_combiner", ysolde());
 	}
 
 	// ---------------------------------------------------------------- helpers
@@ -1743,6 +1744,43 @@ final class QuestArt {
 		arms(shirt);
 		fill(40, 29, 16, 1, vest);           // rolled sleeves and hands
 		fill(40, 30, 16, 2, skin);
+		fill(48, 16, 4, 4, skin);
+
+		legs(trousers);
+		fill(0, 28, 16, 4, shoe);
+		fill(8, 16, 4, 4, shoe);
+		return img;
+	}
+
+	/** Cartographer Ysolde (0.5.49): copper hair in a braid, round spectacles, a violet coat with a map case across it, ink on the fingers. */
+	static BufferedImage ysolde() {
+		BufferedImage img = newSkin(131);
+		int skin = 0xEED0B8, hair = 0xB0602A, coat = 0x5A3A8A, coatDark = 0x3E2864, shirt = 0xEAE2D0, brass = 0xD8B048, strap = 0x6A4A2A,
+			parchment = 0xF0E0B0, ink = 0x2A2440, trousers = 0x2E2A3A, shoe = 0x2A1E1A;
+		head(skin, hair);
+		hair(hair, 1, 2, 2);
+		fill(14, 14, 2, 2, hair);            // the braid's start behind the ear
+		eyes(12, 0xFFFFFF, 0x3A5A8A);
+		fill(9, 11, 3, 1, brass);            // round spectacles
+		fill(12, 11, 3, 1, brass);
+		px(12, 12, brass);
+		px(11, 15, 0xC07A70);
+
+		body(coat);
+		fill(22, 20, 4, 12, shirt);          // coat open over the shirt
+		for (int i = 0; i < 8; i++) {        // map case strap across the chest, the case at the hip
+			px(20 + i, 20 + i, strap);
+		}
+		fill(25, 27, 3, 4, parchment);
+		px(26, 28, ink);
+		fill(20, 29, 8, 1, strap);
+		fill(16, 30, 24, 2, coatDark);
+
+		arms(coat);
+		fill(40, 29, 16, 1, coatDark);       // cuffs and inky fingers
+		fill(40, 30, 16, 2, skin);
+		px(41, 31, ink);
+		px(45, 31, ink);
 		fill(48, 16, 4, 4, skin);
 
 		legs(trousers);

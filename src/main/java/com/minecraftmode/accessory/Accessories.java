@@ -340,6 +340,8 @@ public final class Accessories {
 		AccessoryDef source = def(from);
 		ItemStack result = new ItemStack(item(target));
 		result.set(ModDataComponents.ENHANCEMENT, Enhancement.of(from));
+		// an imbued line stays with the piece (0.5.49)
+		result.copyFrom(ModDataComponents.IMBUE, from);
 		GearRolls rolls = from.get(ModDataComponents.GEAR_ROLLS);
 		if (rolls != null && source != null) {
 			List<StatLine> lines = new ArrayList<>();

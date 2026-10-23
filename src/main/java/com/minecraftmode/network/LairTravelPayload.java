@@ -13,6 +13,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 public record LairTravelPayload(int action) implements CustomPacketPayload {
 	public static final int TRAVEL = 0;
 	public static final int EXIT = 1;
+	/** Opens the tier lair a tier map last offered ({@code TierLairs#confirm}). */
+	public static final int TIER = 2;
 	public static final Type<LairTravelPayload> TYPE = new Type<>(MinecraftMode.id("lair_travel"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, LairTravelPayload> CODEC = StreamCodec.composite(
 		ByteBufCodecs.VAR_INT, LairTravelPayload::action,

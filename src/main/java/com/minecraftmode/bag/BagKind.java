@@ -1,6 +1,7 @@
 package com.minecraftmode.bag;
 
 import com.minecraftmode.accessory.Accessories;
+import com.minecraftmode.enhance.ImbueScrollItem;
 import com.minecraftmode.job.gear.ClassArmor;
 import com.minecraftmode.job.quest.QuestTokenItem;
 import com.minecraftmode.job.weapon.JobWeapons;
@@ -40,7 +41,8 @@ public enum BagKind {
 	/** Enhancement and crafting materials (the enhancement bench and the crafting stations read them from the bags too). */
 	private static boolean material(final ItemStack stack) {
 		return stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.AWAKENING_CRYSTAL) || stack.is(ModItems.TITAN_SHARD)
-			|| stack.is(ModItems.ACCESSORY_ORB) || stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3);
+			|| stack.is(ModItems.ACCESSORY_ORB) || stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3)
+			|| stack.is(ModItems.EVOLUTION_SHARD) || stack.is(ModItems.EVOLUTION_CORE) || stack.getItem() instanceof ImbueScrollItem;
 	}
 
 	private final String id;

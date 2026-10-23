@@ -234,6 +234,7 @@ final class JobLang {
 		AccessoryLang.add(b, ko);
 		TownQuestLang.add(b, ko);
 		JumpLang.add(b, ko);
+		TierLang.add(b, ko);
 	}
 
 	private JobLang() {

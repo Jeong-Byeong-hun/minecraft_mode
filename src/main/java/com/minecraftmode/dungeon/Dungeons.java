@@ -8,6 +8,7 @@ import com.minecraftmode.companion.MountEntity;
 import com.minecraftmode.companion.PetEntity;
 import com.minecraftmode.job.quest.TrialHunts;
 import com.minecraftmode.jump.JumpForest;
+import com.minecraftmode.worldgen.lair.TierLairs;
 import com.minecraftmode.enhance.Enhancement;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.MobPower;
@@ -196,13 +197,14 @@ public final class Dungeons {
 		ServerPlayerEvents.JOIN.register(Dungeons::onJoin);
 		// monsters saved with a dungeon chunk (server stopped mid-run) must not haunt the next run there
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
-			if (DungeonDimension.is(level) && entity instanceof Mob && !insideRunning(entity.position()) && !TrialHunts.insideAnyArena(entity.position())) {
+			if (DungeonDimension.is(level) && entity instanceof Mob && !insideRunning(entity.position()) && !TrialHunts.insideAnyArena(entity.position())
+				&& !TierLairs.insideAny(entity.position())) {
 				entity.discard();
 			}
 		});
 		// nor anything an earlier party left in a reused slot, which loads back after the new run is built (InstanceSweep)
 		ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) -> !DungeonDimension.is(level)
-			|| InstanceSweep.admit(entity, runningTagAt(entity.position()), fromDisk));
+			|| InstanceSweep.admit(entity, runningTagAt(entity.position()) != null ? runningTagAt(entity.position()) : TierLairs.tagAt(entity.position()), fromDisk));
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> server.execute(() -> {
 			DungeonInstance instance = BY_PLAYER.get(handler.player.getUUID());
 			DungeonInstance.Member member = instance == null ? null : instance.member(handler.player.getUUID());
@@ -502,6 +504,9 @@ public final class Dungeons {
 		if (JumpForest.busy(player)) {
 			return JumpForest.leave(player);
 		}
+		if (TierLairs.leave(player)) {
+			return true;
+		}
 		DungeonInstance instance = instanceOf(player);
 		if (instance == null) {
 			if (DungeonDimension.is(player.level())) {
@@ -528,6 +533,10 @@ public final class Dungeons {
 		}
 		// a jump course sends its climber home itself
 		if (JumpForest.fall(player)) {
+			return true;
+		}
+		// so does a tier lair (wake at its gate, or home after the last life)
+		if (TierLairs.fall(player)) {
 			return true;
 		}
 		player.setHealth(1.0F);
@@ -559,6 +568,9 @@ public final class Dungeons {
 			if (instance.bar != null) {
 				instance.bar.addPlayer(player);
 			}
+			return;
+		}
+		if (TierLairs.rejoin(player)) {
 			return;
 		}
 		PENDING.put(player.getUUID(), false);

@@ -8,6 +8,7 @@ import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.job.engrave.EngravingMenu;
 import com.minecraftmode.loot.UpgradeMenu;
 import com.minecraftmode.style.StylistMenu;
+import com.minecraftmode.worldgen.lair.MapCombinerMenu;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.flag.FeatureFlags;
@@ -45,6 +46,10 @@ public final class ModMenus {
 
 	public static final MenuType<AccessoryMenu> ACCESSORIES = Registry.register(
 		BuiltInRegistries.MENU, MinecraftMode.id("accessories"), new MenuType<>(AccessoryMenu::new, FeatureFlags.VANILLA_SET)
+	);
+
+	public static final MenuType<MapCombinerMenu> MAP_COMBINER = Registry.register(
+		BuiltInRegistries.MENU, MinecraftMode.id("map_combiner"), new MenuType<>(MapCombinerMenu::new, FeatureFlags.VANILLA_SET)
 	);
 
 	public static void init() {

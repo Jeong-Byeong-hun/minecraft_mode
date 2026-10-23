@@ -37,6 +37,8 @@ import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.enhance.Imbue;
+import com.minecraftmode.enhance.ImbueSlot;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.boss.RaidBoss;
 import com.minecraftmode.entity.combat.PlayerArmor;
@@ -96,8 +98,10 @@ import com.minecraftmode.worldgen.lair.LairLayout;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
 import com.minecraftmode.worldgen.lair.LairStructure;
+import com.minecraftmode.worldgen.lair.LairTier;
 import com.minecraftmode.worldgen.lair.LairTravel;
 import com.minecraftmode.worldgen.lair.NamedLairs;
+import com.minecraftmode.worldgen.lair.TierLairs;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -532,6 +536,47 @@ public class GearDocProvider implements DataProvider {
 		return this.ko.getOrDefault(key, key).replace("%%", "%");
 	}
 
+	/** Tier lairs (0.5.49): strength by tier, the next maps, the combiner, rewards and imbue scrolls. */
+	private void tierLairs(final StringBuilder md) {
+		md.append("## 티어 소굴 (레벨 ").append(JobProgression.MAX_LEVEL).append(", 0.5.49)\n\n");
+		md.append("- 직업 Lv ").append(JobProgression.MAX_LEVEL).append(" 캐릭터가 소굴을 정복하면 다음 지도로 **티어 1 소굴 지도**를 받습니다. 티어 지도를 읽으면 확인 창이 뜨고, **열기**를 누르면 지도를 쓰고 파티(")
+			.append((int)TierLairs.GATHER_RANGE).append("블록 안, 최대 ").append(Dungeons.MAX_PARTY).append("명, 모두 Lv ").append(JobProgression.MAX_LEVEL)
+			.append(")와 함께 던전 차원의 **나만의 소굴**로 갑니다. 22개 소굴 중 하나가 매번 새로 지어집니다(파티장만 열 수 있음).\n");
+		md.append("- 안에는 그 지역 몬스터 무리(").append(TierLairs.PACKS).append(" + 미로 한 변의 칸 수, 무리당 ").append(TierLairs.PACK_MIN).append("–")
+			.append(TierLairs.PACK_MAX).append("마리), 네임드 ").append(TierLairs.ELITES).append("마리, 목표 방의 **군주**(체력 ×").append(ClassDocProvider.num(NamedMob.LORD_HEALTH * LairTier.LORD_HEALTH))
+			.append(", 피해 ×").append(ClassDocProvider.num(NamedMob.LORD_DAMAGE)).append(", 분노 패턴, 재생 한 번)가 있습니다. 모두 Lv ").append(JobProgression.MAX_LEVEL)
+			.append(" 기준에 아래 티어 배율을 곱하고, 인원 배율은 던전과 같습니다. 군주만 쓰러뜨리면 됩니다.\n");
+		md.append("- 쓰러지면 입구에서 깨어납니다(").append(TierLairs.LIVES).append("번까지, 그다음은 귀환). 귀환하거나 모두 쓰러지면 지도는 사라집니다. 서버가 꺼지거나 파티 전원의 접속이 끊기면 지도가 파티장의 우편함으로 돌아옵니다. 군주를 쓰러뜨리면 ")
+			.append(TierLairs.VICTORY_TICKS / 20).append("초 뒤 소굴이 닫히고, 바닥에 남은 물건은 파티장에게 갑니다.\n\n");
+		md.append("| 티어 | 체력 | 피해 | 던전 변이 | 보물 배율 | 다음 티어 확률(장당) | 아래 티어 | 진화의 파편 | 진화의 핵 | 부여 주문서 | 상급 주문서 | 조합 성공 |\n");
+		md.append("|---|---|---|---|---|---|---|---|---|---|---|---|\n");
+		for (int t = 1; t <= LairTier.MAX; t++) {
+			md.append("| ").append(t).append(" | ×").append(JobTooltips.fine(LairTier.health(t))).append(" | ×").append(JobTooltips.fine(LairTier.damage(t)))
+				.append(" | ").append(LairTier.affixCount(t)).append(" | ×").append(ClassDocProvider.num(LairTier.rewardScale(t)))
+				.append(" | ").append(ClassDocProvider.num(LairTier.upChance(t) * 100)).append("% | ").append(ClassDocProvider.num(LairTier.downChance(t) * 100))
+				.append("% | ").append(LairTier.shards(t)).append(" | ").append(ClassDocProvider.num(LairTier.coreChance(t) * 100)).append("% | ")
+				.append(ClassDocProvider.num(LairTier.scrollChance(t) * 100)).append("% | ").append(ClassDocProvider.num(LairTier.greaterChance(t) * 100)).append("% | ")
+				.append(t < LairTier.MAX ? LairTier.combineChance(t) + "%" : "—").append(" |\n");
+		}
+		md.append("\n- **다음 지도**: 한 번 정복에 1–5장(40/28/17/10/5%, 평균 ").append(ClassDocProvider.num(LairTier.expectedMaps()))
+			.append("장). 장마다 따로 굴려 위 표의 확률로 한 티어 위·아래, 나머지는 같은 티어입니다. 티어 지도는 귀속이 아니라 경매장에서 거래할 수 있습니다.\n");
+		md.append("- **보상**(군주를 쓰러뜨릴 때 소굴 안에 있던 파티원 모두): Lv ").append(JobProgression.MAX_LEVEL)
+			.append(" 소굴 보물(동전·장비·소모품·에테르·정수·강화석)을 보물 배율만큼(소수 부분은 확률로 한 번 더), 보물 경험치 × 보물 배율, 다음 지도, 진화의 파편, 확률로 진화의 핵·부여 주문서·상급 부여 주문서, 소굴 펫 확률 ")
+			.append(ClassDocProvider.num(Companions.LAIR_DROP * 100)).append("%. 소굴 정복으로 기록됩니다(의뢰·업적).\n");
+		md.append("- **지도 조합사 이솔데**(모험가 길드의 지도 제작대 옆, x ").append(CityZone.npcHome(CityNpc.Role.MAP_COMBINER, 0).getX()).append(", z ")
+			.append(CityZone.npcHome(CityNpc.Role.MAP_COMBINER, 0).getZ()).append("): 지도 칸에 티어 지도를 넣고 **강화**하면 표의 확률로 한 티어 오릅니다. 한 번에 티어 ")
+			.append(LairTier.ETHER_FROM - 1).append("까지는 응축된 정수 1개, 티어 ").append(LairTier.ETHER_FROM).append("부터는 Lv 100 진화의 에테르 1개. 실패해도 지도는 남고 확률은 오르지 않습니다. 같은 티어 지도 ")
+			.append(LairTier.MERGE).append("장은 **조합**으로 다음 티어 1장이 확실히 됩니다.\n\n");
+		md.append("### 부여 주문서\n\n");
+		md.append("- 부위마다 정해진 옵션 한 줄을 영구히 붙입니다. 강화 장인 브로크의 강화대에 장비를 넣으면 맞는 주문서가 있을 때 슬롯 아래에 **부여** 버튼이 뜹니다(항상 성공, 주문서 1장). 한 장비에 한 줄이며, 상급은 일반 줄을 덮어쓸 수 있습니다. 진화·계승해도 남고, 주문서는 거래할 수 있습니다. 직업과 상관없는 옵션이라 직업 밸런스(옵션 제외)에 영향이 없습니다.\n\n");
+		md.append("| 부위 | 일반 | 상급 |\n|---|---|---|\n");
+		for (ImbueSlot slot : ImbueSlot.values()) {
+			md.append("| ").append(this.ko(slot.nameKey())).append(" | ").append(this.stat(slot.stat(), slot.value(Imbue.NORMAL))).append(" | ")
+				.append(this.stat(slot.stat(), slot.value(Imbue.GREATER))).append(" |\n");
+		}
+		md.append("\n");
+	}
+
 	private String endgame() {
 		StringBuilder md = new StringBuilder();
 		md.append("# 엔드게임 (반복 콘텐츠와 성장)\n\n");
@@ -556,6 +601,8 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 보물 상자를 그 주기에 처음 열면 소굴 정복으로 기록됩니다(도감·업적·의뢰). 보물 상자에 강화석 1–2개, 보급품에 25% 확률로 강화석.\n");
 		md.append("- **소굴 지도**(잡화점 5S, 공적 상점, 소굴 정복 보상): 쓰면 내 직업 레벨 ±").append(LairTravel.LEVEL_REACH)
 			.append("의 가장 가까운 소굴을 지도(M)에 표시하고 확인 창을 띄웁니다. **이동**을 누르면 지도를 쓰고 그 소굴 입구로 갑니다(자세한 순환은 몬스터 문서의 소굴 항목).\n\n");
+
+		this.tierLairs(md);
 
 		md.append("## 레이드 난이도\n\n| 난이도 | 보스 체력 | 보스 피해 | 입장료 | 추가 분배 | 에테르 | 강화석 | 보호 주문서 | 장비 강화 | 장신구 구슬 |\n|---|---|---|---|---|---|---|---|---|---|\n");
 		for (RaidDifficulty d : RaidDifficulty.values()) {
@@ -905,9 +952,18 @@ public class GearDocProvider implements DataProvider {
 		md.append("- 획득: 무작위 고급 펫 부적·질풍마 호루라기(공적 상점), 희귀(네임드 처치 ").append(ClassDocProvider.num(Companions.NAMED_DROP * 100)).append("%, 소굴 보물 ")
 			.append(ClassDocProvider.num(Companions.LAIR_DROP * 100)).append("%, 던전 2%), 영웅(레이드 일반 3%·영웅 6%·악몽 10%, 거신 10%, +10 이상 던전), 메인 스토리. ")
 			.append("이미 가진 것은 떨어지지 않습니다.\n\n");
-		md.append("| 펫 | 등급 | 레벨당 보너스 | 비행 |\n|---|---|---|---|\n");
+		md.append("- **진화**(0.5.49): Lv ").append(Companions.MAX_PET_LEVEL).append(" 펫은 수집 창(U)의 ★ 버튼으로 진화합니다(계정 공유, 펫마다 따로). 재료는 티어 소굴에서만 나옵니다.\n");
+		for (int stars = 1; stars <= Companions.MAX_EVOLUTION; stars++) {
+			md.append("  - ★").append(stars).append(": 진화의 파편 ").append(Companions.evolveShards(stars))
+				.append(Companions.evolveCores(stars) > 0 ? " + 진화의 핵 " + Companions.evolveCores(stars) : "").append(" → 보너스 ×")
+				.append(ClassDocProvider.num(Companions.evolveScale(stars))).append(stars == Companions.MAX_EVOLUTION ? " (크기 +30%, 반짝임)" : " (크기 +" + stars * 10 + "%)").append("\n");
+		}
+		md.append("\n| 펫 | 등급 | 레벨당 보너스 | Lv ").append(Companions.MAX_PET_LEVEL).append(" | Lv ").append(Companions.MAX_PET_LEVEL).append(" ★")
+			.append(Companions.MAX_EVOLUTION).append(" | 비행 |\n|---|---|---|---|---|---|\n");
 		for (Companions.PetDef def : Companions.pets()) {
 			md.append("| ").append(def.ko()).append(" | ").append(rarity(def.rarity())).append(" | ").append(def.lines(1).stream().map(this::stat).collect(Collectors.joining(", ")))
+				.append(" | ").append(def.lines(Companions.MAX_PET_LEVEL).stream().map(this::stat).collect(Collectors.joining(", ")))
+				.append(" | ").append(Companions.evolvedLines(def, Companions.MAX_PET_LEVEL, Companions.MAX_EVOLUTION).stream().map(this::stat).collect(Collectors.joining(", ")))
 				.append(" | ").append(def.flying() ? "예" : "").append(" |\n");
 		}
 		md.append("\n| 탈것 | 등급 | 속도(블록/초) | 점프 | 비행 |\n|---|---|---|---|---|\n");

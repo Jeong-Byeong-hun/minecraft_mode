@@ -22,6 +22,7 @@ import com.minecraftmode.raid.RaidRecordsData;
 import com.minecraftmode.registry.ModItems;
 import com.minecraftmode.story.Story;
 import com.minecraftmode.style.StylistMenu;
+import com.minecraftmode.worldgen.lair.MapCombinerMenu;
 import com.minecraftmode.townquest.TownQuestService;
 import com.minecraftmode.travel.Travel;
 import java.util.HashMap;
@@ -126,7 +127,11 @@ public class CityNpc extends PathfinderMob {
 			"진짜 모험가예요? 나 대신 멋진 거 해 줄 수 있어요? 네에?"),
 		LUMBERJACK("lumberjack", 0x6A9A3A, "Lumberjack Bjorn", "나무꾼 비요른",
 			"Ha! Strong arms. Stormhold eats timber faster than I can fell it. Give me a hand?",
-			"하! 팔뚝 튼튼하네. 스톰홀드는 내가 베는 것보다 나무를 빨리 먹어 치워. 좀 도와줄래?");
+			"하! 팔뚝 튼튼하네. 스톰홀드는 내가 베는 것보다 나무를 빨리 먹어 치워. 좀 도와줄래?"),
+		// tier lair maps (worldgen/lair/MapCombinerMenu, 0.5.49)
+		MAP_COMBINER("map_combiner", 0x8A5AD0, "Cartographer Ysolde", "지도 조합사 이솔데",
+			"Tier maps, at last! Bring me essence or Lv 100 ether and I will redraw them into harder lairs. Three of a tier, and one of the next is yours for sure.",
+			"드디어 티어 지도군요! 정수나 Lv 100 에테르를 가져오면 더 험한 소굴로 다시 그려 드리죠. 같은 티어 세 장이면 다음 티어 한 장은 확실해요.");
 
 		private final String id;
 		private final int color;
@@ -244,6 +249,7 @@ public class CityNpc extends PathfinderMob {
 			case VETERAN -> Items.SPYGLASS;
 			case CHILD -> Items.COOKIE;
 			case LUMBERJACK -> Items.STONE_AXE;
+			case MAP_COMBINER -> Items.FILLED_MAP;
 		}));
 	}
 
@@ -327,6 +333,8 @@ public class CityNpc extends PathfinderMob {
 				case WAYMASTER -> Travel.open(serverPlayer, this.getId());
 				case LOOT_BUYER -> LootBuyer.open(serverPlayer, this.getId());
 				case FARMER_WIFE, OLD_MINER, FISHERMAN, VETERAN, CHILD, LUMBERJACK -> TownQuestService.open(serverPlayer, this.getId(), role);
+				case MAP_COMBINER -> serverPlayer.openMenu(new SimpleMenuProvider((id, inventory, p) -> new MapCombinerMenu(id, inventory, this),
+					Component.translatable("container.minecraft_mode.map_combiner")));
 			}
 		}
 		return InteractionResult.SUCCESS;

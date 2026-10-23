@@ -50,6 +50,8 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 	private @Nullable Vec3 ownerLast;
 	private boolean ownerCrouched;
 	private int reactCooldown;
+	/** Evolution stars ({@link #applyEvolution}); server only, never saved (pets are not). */
+	private int stars;
 	/** Where the pet keeps looking after a kill, and for how many more ticks. */
 	private @Nullable Vec3 watching;
 	private int watchTicks;
@@ -150,6 +152,15 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 		return 0;
 	}
 
+	/**
+	 * Shows the pet's evolution (0.5.49): a tenth bigger per star, and a shimmer at the last one. Server only; the size reaches the client
+	 * through the scale attribute.
+	 */
+	public void applyEvolution(final int stars) {
+		this.stars = stars;
+		this.getAttribute(Attributes.SCALE).setBaseValue(1.0 + 0.1 * stars);
+	}
+
 	@Override
 	public void tick() {
 		this.setNoGravity(this.isFlyingCreature());
@@ -164,6 +175,11 @@ public class PetEntity extends PathfinderMob implements AnimatedCreature {
 		}
 		if (this.reactCooldown > 0) {
 			this.reactCooldown--;
+		}
+		// a fully evolved pet shimmers
+		if (this.stars >= Companions.MAX_EVOLUTION && this.tickCount % 10 == 0) {
+			level.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY(0.6), this.getZ(), 1, this.getBbWidth() * 0.4, this.getBbHeight() * 0.3,
+				this.getBbWidth() * 0.4, 0.01);
 		}
 		UUID id = this.owner();
 		ServerPlayer owner = id == null ? null : level.getServer().getPlayerList().getPlayer(id);

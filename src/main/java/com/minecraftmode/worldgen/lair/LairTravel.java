@@ -524,8 +524,11 @@ public final class LairTravel {
 	public static void cleared(final ServerPlayer player, final LairChestBlockEntity chest, final LairDef def) {
 		ServerLevel level = player.level();
 		markCleared(player, key(level.dimension(), chest.getBlockPos()));
-		Bags.give(player, new ItemStack(ModItems.LAIR_MAP));
-		player.sendSystemMessage(Component.translatable("message.minecraft_mode.lair.next_map").withStyle(ChatFormatting.AQUA));
+		// at the level cap the next map is a tier 1 map, the way into tier lairs (0.5.49)
+		boolean capped = JobProgression.get(player).level() >= JobProgression.MAX_LEVEL;
+		Bags.give(player, capped ? LairTier.map(1, 1) : new ItemStack(ModItems.LAIR_MAP));
+		player.sendSystemMessage(Component.translatable(capped ? "message.minecraft_mode.lair.next_tier_map" : "message.minecraft_mode.lair.next_map")
+			.withStyle(ChatFormatting.AQUA));
 		BlockPos exit = chest.exit(level);
 		if (exit == null) {
 			return;

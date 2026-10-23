@@ -4,6 +4,7 @@ import com.minecraftmode.entity.named.NamedDef;
 import com.minecraftmode.entity.named.NamedMobs;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.WeightedList;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.util.valueproviders.UniformInt;
@@ -35,6 +36,18 @@ public enum LairMobs {
 
 	LairMobs(final Map<EntityType<?>, Integer> base) {
 		this.base = new LinkedHashMap<>(base);
+	}
+
+	/** One ordinary monster of the region by weight (tier lairs place their packs with it). */
+	public EntityType<?> pick(final RandomSource random) {
+		int roll = random.nextInt(this.totalWeight());
+		for (Map.Entry<EntityType<?>, Integer> e : this.base.entrySet()) {
+			roll -= e.getValue();
+			if (roll < 0) {
+				return e.getKey();
+			}
+		}
+		return this.base.keySet().iterator().next();
 	}
 
 	public int totalWeight() {

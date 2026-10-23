@@ -94,6 +94,7 @@ public class LairClientGameTest implements FabricClientGameTest {
 			server.runCommand("gamemode creative @p");
 			checkRegistry(server);
 			LairLayoutChecks.run(context, server);
+			TierLairChecks.run(context, server, connection);
 
 			String[][] lairs = {
 				{"dune_scorpion", "600", "600"}, {"bandit_captain", "-600", "600"}, {"goblin_warchief", "600", "-600"},

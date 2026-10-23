@@ -280,6 +280,29 @@ public class NamedMob extends CreatureMob {
 	}
 
 	/**
+	 * Tier lairs (0.5.49): makes this monster fight at {@code level} like {@link #raiseTo}, whatever its own range, then {@code health} and
+	 * {@code damage} times stronger on top (tier, affixes, party), named {@code name} (also on its boss bar). Toughness multiplies what it
+	 * already has (a champion's health past the cap), the damage multiplier replaces any earlier one. Never saved: tier lair monsters live
+	 * in server memory only.
+	 */
+	public void empower(final int level, final float health, final float damage, final Component name) {
+		NamedDef def = this.def();
+		double own = NamedMobs.levelScale(def, this.namedLevel);
+		double[] typical = NamedMobs.typicalPower(level);
+		float toughness = (float)Math.max(1.0, typical[0] / (def.health() * own)) * health;
+		this.powerToughness = toughness;
+		this.powerLevel = Math.max(level, this.namedLevel);
+		MobPower.setToughness(this.getUUID(), MobPower.toughness(this) * toughness);
+		MobPower.set(this.getUUID(), (float)Math.max(1.0, typical[1] / (def.damage() * own)) * damage);
+		this.setCustomName(name);
+		this.setCustomNameVisible(true);
+		if (this.lordBar != null) {
+			this.lordBar.setName(name);
+		}
+		this.setHealth(this.getMaxHealth());
+	}
+
+	/**
 	 * Fits a lair lord to the strongest challenger's {@code level}: raises it ({@link #raiseTo}), or lowers it back to its own level when
 	 * nobody above its range is near, healing it whenever the power changes (so chipping it at a low level and raising it never pays).
 	 * Returns true when anything changed.

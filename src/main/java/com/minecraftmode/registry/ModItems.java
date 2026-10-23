@@ -5,12 +5,17 @@ import com.minecraftmode.bag.BagItem;
 import com.minecraftmode.bag.BagKind;
 import com.minecraftmode.consumable.ReturnScrollItem;
 import com.minecraftmode.dungeon.KeystoneItem;
+import com.minecraftmode.enhance.Imbue;
+import com.minecraftmode.enhance.ImbueScrollItem;
+import com.minecraftmode.enhance.ImbueSlot;
 import com.minecraftmode.item.ClassResetScrollItem;
 import com.minecraftmode.item.EssenceItem;
 import com.minecraftmode.item.ModMaterials;
 import com.minecraftmode.loot.EvolutionEtherItem;
 import com.minecraftmode.residence.LandDeedItem;
 import com.minecraftmode.worldgen.lair.LairMapItem;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -103,6 +108,14 @@ public final class ModItems {
 	/** Dropped by world bosses; the smith turns it into awakening crystals. */
 	public static final Item TITAN_SHARD = register("titan_shard", new Item.Properties().rarity(Rarity.EPIC));
 	public static final Item LAIR_MAP = register("lair_map", LairMapItem::new, new Item.Properties().stacksTo(16));
+	/** Tier lairs (0.5.49): pet evolution material, one or more from every tier lair clear. */
+	public static final Item EVOLUTION_SHARD = register("evolution_shard", new Item.Properties().rarity(Rarity.RARE));
+	/** Tier lairs from tier 11: the core a pet's third evolution needs. */
+	public static final Item EVOLUTION_CORE = register("evolution_core", new Item.Properties().rarity(Rarity.EPIC));
+	/** Imbue scrolls (0.5.49), one per {@link ImbueSlot}: tier lairs drop them, Artisan Brokk puts them on. */
+	public static final Map<ImbueSlot, Item> IMBUE_SCROLLS = imbueScrolls(Imbue.NORMAL);
+	/** Greater imbue scrolls from tier 11, which may also replace a normal line. */
+	public static final Map<ImbueSlot, Item> GREATER_IMBUE_SCROLLS = imbueScrolls(Imbue.GREATER);
 	/** A dungeon keystone (component {@code keystone}): the leader's key to a harder, timed run. */
 	public static final Item DUNGEON_KEYSTONE = register("dungeon_keystone", KeystoneItem::new, new Item.Properties().stacksTo(1).rarity(Rarity.RARE));
 
@@ -143,6 +156,15 @@ public final class ModItems {
 	public static final Item KITCHEN_STATION = registerBlockItem(ModBlocks.KITCHEN_STATION);
 	public static final Item ALCHEMY_STATION = registerBlockItem(ModBlocks.ALCHEMY_STATION);
 	public static final Item SMITHING_STATION = registerBlockItem(ModBlocks.SMITHING_STATION);
+
+	private static Map<ImbueSlot, Item> imbueScrolls(final int grade) {
+		Map<ImbueSlot, Item> out = new EnumMap<>(ImbueSlot.class);
+		for (ImbueSlot slot : ImbueSlot.values()) {
+			out.put(slot, register((grade >= Imbue.GREATER ? "greater_imbue_scroll_" : "imbue_scroll_") + slot.id(), p -> new ImbueScrollItem(p, slot, grade),
+				new Item.Properties().stacksTo(16).rarity(grade >= Imbue.GREATER ? Rarity.EPIC : Rarity.RARE)));
+		}
+		return java.util.Collections.unmodifiableMap(out);
+	}
 
 	private static Item register(final String name) {
 		return register(name, Item::new, new Item.Properties());

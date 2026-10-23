@@ -481,7 +481,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			// the whole collection for the screen and the lineup
 			Map<String, Integer> pets = new HashMap<>();
 			Companions.pets().forEach(d -> pets.put(d.id(), d.id().equals("ember_fox") ? Companions.petExpFor(4) : 0));
-			player.setAttached(ModAttachments.COMPANIONS, new Companions.Data(pets, Companions.mounts().stream().map(Companions.MountDef::id).toList(), "", "storm_griffin"));
+			player.setAttached(ModAttachments.COMPANIONS, new Companions.Data(pets, Companions.mounts().stream().map(Companions.MountDef::id).toList(), "", "storm_griffin", Map.of()));
 			Progress.changed(player);
 			require(Progress.get(player).has("pets_all") && Progress.get(player).has("mounts_all"), "full collections count toward achievements");
 			Companions.summonPet(player, "ember_fox");

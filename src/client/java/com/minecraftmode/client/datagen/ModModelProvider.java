@@ -102,9 +102,15 @@ public class ModModelProvider extends FabricModelProvider {
 		generators.generateFlatItem(ModItems.PROTECTION_SCROLL, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAIR_MAP, ModelTemplates.FLAT_ITEM);
 		generators.generateFlatItem(ModItems.LAND_DEED, ModelTemplates.FLAT_ITEM);
+		for (Item item : ModItems.IMBUE_SCROLLS.values()) {
+			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
+		for (Item item : ModItems.GREATER_IMBUE_SCROLLS.values()) {
+			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);
+		}
 		for (Item item : new Item[] {
 			ModItems.AWAKENING_CRYSTAL, ModItems.ACCESSORY_ORB, ModItems.ACCESSORY_INHERIT_1, ModItems.ACCESSORY_INHERIT_2, ModItems.ACCESSORY_INHERIT_3, ModItems.SUKUNA_FINGER,
-			ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE,
+			ModItems.TITAN_SHARD, ModItems.DUNGEON_KEYSTONE, ModItems.EVOLUTION_SHARD, ModItems.EVOLUTION_CORE,
 			ModItems.SUNLEAF, ModItems.MOONPETAL, ModItems.FROSTROOT, ModItems.GLOWCAP, ModItems.EMBERBLOOM, ModItems.VOIDCAP
 		}) {
 			generators.generateFlatItem(item, ModelTemplates.FLAT_ITEM);

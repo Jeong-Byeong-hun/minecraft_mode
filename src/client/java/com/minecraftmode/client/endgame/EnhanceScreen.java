@@ -7,6 +7,8 @@ import com.minecraftmode.bag.Bags;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.enhance.EnhanceMenu;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.enhance.Imbue;
+import com.minecraftmode.enhance.ImbueScrollItem;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.ClassGear;
 import com.minecraftmode.job.gear.StatLine;
@@ -23,6 +25,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Artisan Brokk's bench: the gear slot on the left; on the right the next level, the success chance (with artisan's spirit), what
@@ -36,6 +40,9 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	private static final int BUTTON_Y = 80;
 	private static final int BUTTON_W = 74;
 	private static final int BUTTON_H = 16;
+	private static final int IMBUE_X = 4;
+	private static final int IMBUE_Y = 62;
+	private static final int IMBUE_W = 34;
 
 	public EnhanceScreen(final EnhanceMenu menu, final Inventory inventory, final Component title) {
 		super(menu, inventory, title, EnhanceMenu.WIDTH, EnhanceMenu.HEIGHT);
@@ -60,6 +67,11 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	private AccessoryDef accessory() {
 		AccessoryDef def = Accessories.def(this.menu.input());
 		return def != null && Enhancement.level(this.menu.input()) < AccessoryEnhance.MAX ? def : null;
+	}
+
+	/** The imbue scroll the bench would put on the piece in the slot, or null. */
+	private @Nullable ImbueScrollItem imbueScroll() {
+		return this.minecraft.player == null || this.menu.input().isEmpty() ? null : EnhanceMenu.scrollFor(this.minecraft.player, this.menu.input());
 	}
 
 	private boolean canPay(final boolean protect) {
@@ -92,11 +104,21 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 				case EnhanceMenu.RESULT_SUCCESS -> "screen.minecraft_mode.enhance.result.success";
 				case EnhanceMenu.RESULT_SAVED -> "screen.minecraft_mode.enhance.result.saved";
 				case EnhanceMenu.RESULT_AWAKENED -> "screen.minecraft_mode.enhance.result.awakened";
+				case EnhanceMenu.RESULT_IMBUED -> "screen.minecraft_mode.enhance.result.imbued";
 				case EnhanceMenu.RESULT_DROP -> "screen.minecraft_mode.enhance.result.drop";
 				default -> "screen.minecraft_mode.enhance.result.fail";
 			};
-			int color = result == EnhanceMenu.RESULT_AWAKENED ? 0xFFB02AB0 : result == EnhanceMenu.RESULT_SUCCESS ? 0xFF1E8A2E : result == EnhanceMenu.RESULT_SAVED ? 0xFF2A6AB0 : 0xFFB02A2A;
+			int color = result == EnhanceMenu.RESULT_AWAKENED || result == EnhanceMenu.RESULT_IMBUED ? 0xFFB02AB0
+				: result == EnhanceMenu.RESULT_SUCCESS ? 0xFF1E8A2E : result == EnhanceMenu.RESULT_SAVED ? 0xFF2A6AB0 : 0xFFB02A2A;
 			g.centeredText(this.font, Component.translatable(key), x + EnhanceMenu.SLOT_X + 8, y + EnhanceMenu.SLOT_Y + 24, color);
+		}
+		// an imbue scroll that fits the piece: the small button under the slot (0.5.49)
+		if (this.imbueScroll() != null) {
+			int ix = x + IMBUE_X;
+			int iy = y + IMBUE_Y;
+			boolean hover = inside(mouseX, mouseY, ix, iy, IMBUE_W, BUTTON_H);
+			g.fill(ix, iy, ix + IMBUE_W, iy + BUTTON_H, hover ? 0xFFC070E0 : 0xFF8A4AB0);
+			g.centeredText(this.font, Component.translatable("screen.minecraft_mode.enhance.imbue"), ix + IMBUE_W / 2, iy + 4, 0xFFFFFFFF);
 		}
 		if (this.minecraft.player != null) {
 			String wallet = "◎" + Coins.format(Coins.total(this.minecraft.player));
@@ -241,6 +263,20 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	@Override
 	protected void extractTooltip(final GuiGraphicsExtractor g, final int mouseX, final int mouseY) {
 		super.extractTooltip(g, mouseX, mouseY);
+		ImbueScrollItem scroll = this.imbueScroll();
+		if (scroll != null && inside(mouseX, mouseY, this.leftPos + IMBUE_X, this.topPos + IMBUE_Y, IMBUE_W, BUTTON_H)) {
+			Imbue imbue = new Imbue(scroll.slot(), scroll.grade());
+			List<Component> tip = new ArrayList<>();
+			tip.add(Component.translatable("screen.minecraft_mode.enhance.imbue_title", new ItemStack(scroll).getHoverName()).withStyle(ChatFormatting.LIGHT_PURPLE));
+			tip.add(Component.literal(" • ").withStyle(ChatFormatting.DARK_GRAY)
+				.append(Component.translatable(imbue.slot().stat().key(), JobTooltips.num(imbue.line().value())).withStyle(ChatFormatting.GREEN)));
+			if (Imbue.of(this.menu.input()) != null) {
+				tip.add(Component.translatable("screen.minecraft_mode.enhance.imbue_replace").withStyle(ChatFormatting.YELLOW));
+			}
+			tip.add(Component.translatable("screen.minecraft_mode.enhance.imbue_note").withStyle(ChatFormatting.DARK_GRAY));
+			g.setComponentTooltipForNextFrame(this.font, tip, mouseX, mouseY);
+			return;
+		}
 		AccessoryDef accessory = this.accessory();
 		if (accessory != null && inside(mouseX, mouseY, this.leftPos + PX, this.topPos + BUTTON_Y, BUTTON_W, BUTTON_H)) {
 			int target = Enhancement.level(this.menu.input()) + 1;
@@ -292,6 +328,12 @@ public class EnhanceScreen extends AbstractContainerScreen<EnhanceMenu> {
 	public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
 		int bx = this.leftPos + PX;
 		int by = this.topPos + BUTTON_Y;
+		if (this.imbueScroll() != null && inside(event.x(), event.y(), this.leftPos + IMBUE_X, this.topPos + IMBUE_Y, IMBUE_W, BUTTON_H)
+			&& this.menu.clickMenuButton(this.minecraft.player, EnhanceMenu.BUTTON_IMBUE)) {
+			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+			this.minecraft.gameMode.handleInventoryButtonClick(this.menu.containerId, EnhanceMenu.BUTTON_IMBUE);
+			return true;
+		}
 		if (this.menu.canAwaken() && this.minecraft.player != null && inside(event.x(), event.y(), bx, by, BUTTON_W, BUTTON_H)
 			&& this.menu.clickMenuButton(this.minecraft.player, EnhanceMenu.BUTTON_AWAKEN)) {
 			this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));

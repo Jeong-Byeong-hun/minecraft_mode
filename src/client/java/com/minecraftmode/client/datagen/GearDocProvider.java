@@ -1197,7 +1197,7 @@ public class GearDocProvider implements DataProvider {
 		return String.format(Locale.ROOT, stat.ko(job), ClassDocProvider.num(value)).replace("%%", "%");
 	}
 
-	private static String slotName(final GearSlot slot) {
+	static String slotName(final GearSlot slot) {
 		return switch (slot) {
 			case HEAD -> "투구";
 			case CHEST -> "갑옷";

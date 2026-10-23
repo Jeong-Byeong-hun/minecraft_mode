@@ -102,7 +102,7 @@ public class LandScreen extends Screen {
 			OpenLandPayload.Plot plot = this.land.plots().get(i);
 			int bx = plot.chunkX() << 4;
 			int bz = plot.chunkZ() << 4;
-			Component line = Component.translatable(K + "plot", bx, bx + 15, bz, bz + 15, plot.minY(), plot.minY() + 15);
+			Component line = Component.translatable(K + "plot", bx, bx + 15, bz, bz + 15, plot.minY());
 			g.text(this.font, line, x + 16, y + PLOTS_Y + i * ROW, 0xFFDDDDDD, false);
 		}
 		int fy = this.friendsTop();

@@ -1665,6 +1665,7 @@ public final class Actions {
 				Vec3 pos = ctx.caster.position().add(Math.cos(a) * 1.5, 0.1, Math.sin(a) * 1.5);
 				mob.snapTo(pos.x, pos.y, pos.z, ctx.caster.getYRot(), 0.0F);
 				markSummon(mob, ctx.caster, ctx.power);
+				SummonTargetGoal.install(mob);
 				mob.setPersistenceRequired();
 				ctx.level.addFreshEntity(mob);
 				ctx.fx.burst(ctx.level, Fx.Kind.SMOKE, pos.add(0, 0.8, 0), 15, 0.3, 0.03);

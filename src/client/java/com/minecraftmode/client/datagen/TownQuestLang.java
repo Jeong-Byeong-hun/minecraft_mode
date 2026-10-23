@@ -59,7 +59,7 @@ final class TownQuestLang {
 		b.add(m + "progress", ko ? "%s: %s/%s" : "%s: %s/%s");
 		b.add(m + "complete", ko ? "의뢰 달성: %s! %s에게 돌아가 보고하세요." : "Quest done: %s! Return to %s.");
 		b.add(m + "turned_in", ko ? "의뢰 완료: %s! 보상: %s" : "Quest complete: %s! Reward: %s");
-		b.add(m + "reward", ko ? "경험치 %s, %s, 강화석 %s개" : "%s EXP, %s, %s enhancement stone(s)");
+		b.add(m + "reward", ko ? "경험치 %s, %s, 강화석 %s개, 공적 %s" : "%s EXP, %s, %s enhancement stone(s), %s merit");
 		b.add(m + "abandoned", ko ? "의뢰를 포기했습니다: %s" : "Quest abandoned: %s");
 
 		b.add("guide.minecraft_mode.quests", ko ? "주민 의뢰" : "Town quests");

@@ -5,6 +5,8 @@ import com.minecraftmode.client.lair.LairClearScreen;
 import com.minecraftmode.consumable.ConsumableItem;
 import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.entity.SpaceCheck;
+import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobClass;
@@ -50,7 +52,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureSpawnOverride;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Named monster lairs: the 22 definitions and their spawn lists, the goal loot rules, mazes that
@@ -67,6 +72,19 @@ public class LairClientGameTest implements FabricClientGameTest {
 		try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
 			TestServerConnection connection = singleplayer.getConnection();
 			TestServerContext server = singleplayer.getServer();
+			try {
+				run(context, server, connection);
+			} catch (AssertionError | RuntimeException e) {
+				// a failure would otherwise only be logged after the world closed, and closing without WorldClose hangs (see CLAUDE.md)
+				MinecraftMode.LOGGER.error("[lair] failed", e);
+				WorldClose.prepare(context, server);
+				throw e;
+			}
+		}
+	}
+
+	private static void run(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
+		{
 			connection.waitForChunksRender();
 			// item stacks need the loaded registries, so the loot rules are checked with a world open
 			server.runOnServer(s -> checkDefinitions());
@@ -75,6 +93,8 @@ public class LairClientGameTest implements FabricClientGameTest {
 			server.runCommand("time set noon");
 			server.runCommand("gamemode creative @p");
 			checkRegistry(server);
+			LairLayoutChecks.run(context, server);
+			TierLairChecks.run(context, server, connection);
 
 			String[][] lairs = {
 				{"dune_scorpion", "600", "600"}, {"bandit_captain", "-600", "600"}, {"goblin_warchief", "600", "-600"},
@@ -97,7 +117,7 @@ public class LairClientGameTest implements FabricClientGameTest {
 		for (LairDef def : NamedLairs.all()) {
 			NamedDef named = def.named();
 			require(!def.biomes().isEmpty(), def.id() + " has no biomes");
-			require(def.size() >= 53 && def.size() <= 77, def.id() + " size " + def.size());
+			require(def.size() >= 66 && def.size() <= 96, def.id() + " size " + def.size());
 			shapes.merge(def.shape(), 1, Integer::sum);
 			// loot: coins always and at least one reward, for many rolls
 			for (int seed = 0; seed < 40; seed++) {
@@ -216,7 +236,8 @@ public class LairClientGameTest implements FabricClientGameTest {
 				}
 			}
 			float wallShare = walls / (float)(walls + open);
-			require(wallShare > 0.25F && wallShare < 0.75F, id + ": maze wall share " + wallShare);
+			// 4-wide corridors (0.5.48) leave about a fifth of the floor plan walled, 3-wide ones about a third
+			require(wallShare > 0.15F && wallShare < 0.75F, id + ": maze wall share " + wallShare);
 			require(level.getBlockState(new BlockPos(x - half, floor + 2, z - half)).isSolid(), id + ": the corner should be walled");
 			int height = top - floor;
 			if (def.shape() == LairDef.Shape.TREE) {
@@ -288,7 +309,64 @@ public class LairClientGameTest implements FabricClientGameTest {
 		if (id.equals("wendigo")) {
 			checkLoop(context, server, dimension, def, new BlockPos(result[0], result[1], result[2]));
 		}
+		if (id.equals("ancient_treant")) {
+			checkRoom(context, server, dimension, new BlockPos(result[0], result[1], result[2]));
+		}
 		server.runCommand(in + "forceload remove all");
+	}
+
+	/**
+	 * Big monsters in the four-high corridors (the tallest named monster, the treant, 3.6 high): its lord grows only as far as the room
+	 * allows, walks without choking, comes back home into free space after being dragged off, and minions summoned by it land where they fit.
+	 * Until 0.5.46 the 1.2x lord stood in the roof and suffocated, and minions were dropped into walls.
+	 */
+	private static void checkRoom(final ClientGameTestContext context, final TestServerContext server, final ResourceKey<Level> dimension, final BlockPos chest) {
+		int lordId = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = level.getEntitiesOfClass(NamedMob.class, new AABB(chest).inflate(8), NamedMob::isLord).stream().findFirst().orElse(null);
+			require(lord != null, "the treant lord should still be up");
+			lord.setNoAi(false);
+			lord.setHealth(lord.getMaxHealth());
+			return lord.getId();
+		});
+		context.waitTicks(100);
+		String walked = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = (NamedMob)level.getEntity(lordId);
+			require(lord != null && lord.isAlive(), "the treant lord should still be alive");
+			require(lord.getHealth() == lord.getMaxHealth(), "the treant lord lost health on its own: " + lord.getHealth() + " / " + lord.getMaxHealth());
+			if (!SpaceCheck.fits(level, lord, lord.position())) {
+				StringBuilder hit = new StringBuilder();
+				for (BlockPos at : BlockPos.betweenClosed(BlockPos.containing(lord.getBoundingBox().minX, lord.getBoundingBox().minY, lord.getBoundingBox().minZ),
+					BlockPos.containing(lord.getBoundingBox().maxX, lord.getBoundingBox().maxY, lord.getBoundingBox().maxZ))) {
+					var shape = level.getBlockState(at).getCollisionShape(level, at);
+					if (!shape.isEmpty() && shape.bounds().move(at).intersects(lord.getBoundingBox())) {
+						hit.append(at.toShortString()).append('=').append(level.getBlockState(at).getBlock().getDescriptionId()).append(' ');
+					}
+				}
+				throw new AssertionError("the treant lord should stand free of the walls at scale " + lord.getScale() + ", box " + lord.getBoundingBox()
+					+ " overlaps " + hit + " entities " + level.getEntities(lord, lord.getBoundingBox()));
+			}
+			float scale = lord.getScale();
+			// dragged off down a corridor, it comes home to a free spot
+			lord.teleportTo(lord.getX(), lord.getY(), lord.getZ() - NamedMob.LORD_LEASH - 6);
+			return String.format("scale %.2f", scale);
+		});
+		context.waitTicks(40);
+		String home = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = (NamedMob)level.getEntity(lordId);
+			require(lord.distanceToSqr(Vec3.atBottomCenterOf(chest)) < NamedMob.LORD_LEASH * NamedMob.LORD_LEASH, "the lord should be back home, at " + lord.position());
+			require(SpaceCheck.fits(level, lord, lord.position()), "the lord came home into a wall at " + lord.position());
+			List<? extends Mob> minions = Attacks.summon(level, (EntityType<? extends Mob>)lord.getType(), lord.position(), 6, null, 200);
+			for (Mob minion : minions) {
+				require(SpaceCheck.fits(level, minion, minion.position()), "a minion landed in a wall at " + minion.position());
+				minion.discard();
+			}
+			return minions.size() + " minions";
+		});
+		context.waitTicks(20);
+		MinecraftMode.LOGGER.info("[lair] treant lord in the corridors: {}, home, {} placed free", walked, home);
 	}
 
 	/**

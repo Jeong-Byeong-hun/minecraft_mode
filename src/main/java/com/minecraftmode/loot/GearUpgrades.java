@@ -103,6 +103,8 @@ public final class GearUpgrades {
 			result.set(ModDataComponents.ENHANCEMENT, enhancement);
 		}
 		result.copyFrom(ModDataComponents.BOUND, from);
+		// an imbued line stays with the piece (0.5.49): an armor piece evolves into the same slot
+		result.copyFrom(ModDataComponents.IMBUE, from);
 		return result;
 	}
 

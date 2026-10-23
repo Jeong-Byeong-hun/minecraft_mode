@@ -19,12 +19,15 @@ import net.minecraft.world.level.saveddata.SavedDataType;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Land in the residence dimension (server SavedData). A claim is a 16x16x16 box: one chunk wide, from {@code minY} up 16 blocks.
- * Each owner keeps one list of trusted players for all of their land. Only one owner can hold land in a chunk column (so nobody
- * buys the air over someone's house); an owner extends upwards or downwards with more deeds. Names are remembered so the HUD and
- * the land screen can show owners and friends who are offline.
+ * Land in the residence dimension (server SavedData). A claim is a whole chunk column (0.5.46): one chunk wide, from the bottom of the
+ * world to the build limit, so a deed is enough for a tower or a cellar; {@code minY} (under the claimer's feet) only marks the floor the
+ * borders are drawn on. Until 0.5.46 a claim was a 16x16x16 box from {@code minY} and taller houses needed a deed per 16 blocks:
+ * several claims of one owner in one column, which loading folds into one, handing the extra deeds back ({@link #refunds}).
+ * Each owner keeps one list of trusted players for all of their land. Names are remembered so the HUD and the land screen can show
+ * owners and friends who are offline.
  */
 public final class LandClaims extends SavedData {
+	/** A claim's width (and length) in blocks: one chunk. */
 	public static final int SIZE = 16;
 	public static final int MAX_CLAIMS = 8;
 	public static final int MAX_TRUSTED = 12;
@@ -44,12 +47,9 @@ public final class LandClaims extends SavedData {
 			return ChunkPos.getZ(this.chunk);
 		}
 
-		public int maxY() {
-			return this.minY + SIZE - 1;
-		}
-
+		/** The whole column, any height. */
 		public boolean contains(final BlockPos pos) {
-			return ChunkPos.pack(pos) == this.chunk && pos.getY() >= this.minY && pos.getY() <= this.maxY();
+			return ChunkPos.pack(pos) == this.chunk;
 		}
 	}
 
@@ -65,7 +65,8 @@ public final class LandClaims extends SavedData {
 	private static final Codec<LandClaims> CODEC = RecordCodecBuilder.create(i -> i.group(
 		Claim.CODEC.listOf().optionalFieldOf("claims", List.of()).forGetter(d -> d.claims),
 		Codec.unboundedMap(UUIDUtil.STRING_CODEC, UUIDUtil.CODEC.listOf()).optionalFieldOf("trusted", Map.of()).forGetter(d -> d.trusted),
-		Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.STRING).optionalFieldOf("names", Map.of()).forGetter(d -> d.names)
+		Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.STRING).optionalFieldOf("names", Map.of()).forGetter(d -> d.names),
+		Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.INT).optionalFieldOf("refunds", Map.of()).forGetter(d -> d.refunds)
 	).apply(i, LandClaims::new));
 
 	public static final SavedDataType<LandClaims> TYPE = new SavedDataType<>(MinecraftMode.id("land_claims"), LandClaims::new, CODEC, null);
@@ -74,14 +75,25 @@ public final class LandClaims extends SavedData {
 	private final Map<UUID, List<UUID>> trusted = new HashMap<>();
 	private final Map<UUID, String> names = new HashMap<>();
 	private final Map<Long, List<Claim>> byChunk = new HashMap<>();
+	/** Deeds owed to owners whose stacked claims of before 0.5.46 were folded into one column ({@link #takeRefunds}). */
+	private final Map<UUID, Integer> refunds = new HashMap<>();
 	/** Bumped on every change to claims or trust lists, so players in the residence get the new borders ({@code ResidenceRules}). */
 	private int version;
 
 	public LandClaims() {
 	}
 
-	private LandClaims(final List<Claim> claims, final Map<UUID, List<UUID>> trusted, final Map<UUID, String> names) {
-		claims.forEach(this::add);
+	private LandClaims(final List<Claim> claims, final Map<UUID, List<UUID>> trusted, final Map<UUID, String> names, final Map<UUID, Integer> refunds) {
+		this.refunds.putAll(refunds);
+		for (Claim claim : claims) {
+			// a column holds one claim now: the first of an owner's stacked boxes stays, the others become deeds to hand back
+			if (this.byChunk.containsKey(claim.chunk())) {
+				this.refunds.merge(claim.owner(), 1, Integer::sum);
+				this.setDirty();
+			} else {
+				this.add(claim);
+			}
+		}
 		trusted.forEach((owner, list) -> this.trusted.put(owner, new ArrayList<>(list)));
 		this.names.putAll(names);
 	}
@@ -125,23 +137,18 @@ public final class LandClaims extends SavedData {
 		return claim.owner().equals(player) || this.trusted(claim.owner()).contains(player);
 	}
 
-	/** Claims the box of the chunk at {@code feet}, from the block under the feet up 16 blocks, for {@code owner}. */
+	/** Claims the column of the chunk at {@code feet} for {@code owner}; its borders are drawn from the block under the feet. */
 	public Result claim(final UUID owner, final String name, final BlockPos feet, final LevelHeightAccessor heights) {
 		int minY = feet.getY() - 1;
 		if (ResidenceDimension.isPublic(feet)) {
 			return Result.SPAWN;
 		}
-		if (minY < heights.getMinY() || minY + SIZE - 1 > heights.getMaxY()) {
+		if (minY < heights.getMinY() || minY > heights.getMaxY()) {
 			return Result.HEIGHT;
 		}
 		long chunk = ChunkPos.pack(feet);
 		for (Claim other : this.byChunk.getOrDefault(chunk, List.of())) {
-			if (!other.owner().equals(owner)) {
-				return Result.TAKEN;
-			}
-			if (Math.abs(other.minY() - minY) < SIZE) {
-				return Result.OVERLAP;
-			}
+			return other.owner().equals(owner) ? Result.OVERLAP : Result.TAKEN;
 		}
 		if (this.owned(owner).size() >= MAX_CLAIMS) {
 			return Result.LIMIT;
@@ -164,6 +171,15 @@ public final class LandClaims extends SavedData {
 		}
 		this.changed();
 		return true;
+	}
+
+	/** The deeds owed to {@code owner} from folded claims (see the class notes), now taken off the books. */
+	public int takeRefunds(final UUID owner) {
+		Integer owed = this.refunds.remove(owner);
+		if (owed != null) {
+			this.setDirty();
+		}
+		return owed == null ? 0 : owed;
 	}
 
 	public List<UUID> trusted(final UUID owner) {

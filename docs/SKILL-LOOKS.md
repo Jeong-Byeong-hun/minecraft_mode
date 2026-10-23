@@ -24,7 +24,7 @@
 | 롱고미니아드 | 땅끝의 탑 | lightning r5 at 20<br>strike r4 at 20 | `rhongomyniad` ring r5 | ✅ |
 | 롱고미니아드 | 폭풍 찌르기 | beam 12 x ±0.9 | `storm_lance` beam 12 x ±0.9 | ✅ |
 | 롱고미니아드 | 사자왕의 돌격 | dash 10 x ±1.2 | `lion_charge` along the path | ◻ |
-| 롱고미니아드 | 성창의 가호 | ally boost r8 (fixed)<br>ally heal r8 (fixed) | `lance_ward` ring r8 (fixed) | ✅ |
+| 롱고미니아드 | 성창의 가호 | ally boost r8 (fixed)<br>ally boost r8 (fixed) | `lance_ward` ring r8 (fixed) | ✅ |
 | 아론다이트 | 박쇄전단・과중호광 | slash 5 / 200° | `overload_aura` on the caster<br>`arondight_arc` cone 5 / 200° | ◻ ✅ |
 | 아론다이트 | 호수의 기사 | - | `lake_knight` on the caster | ◻ |
 | 아론다이트 | 호수 베기 | shoot hit ±1 | `lake_wave` shot ±1.05 | ✅ |
@@ -34,19 +34,19 @@
 | 클라렌트 | 반역의 돌진 | dash 9 x ±1.2 | `rebel_trail` along the path | ◻ |
 | 클라렌트 | 부정을 숨기는 투구 | - | `pedigree_helm` on the caster | ◻ |
 | 갈라틴 | 전륜하는 승리의 검 | strike r5 at 16 | `galatine_sun` ring r5 | ✅ |
-| 갈라틴 | 태양의 축복 | ally boost r10 (fixed)<br>ally buff r10 (fixed) | `sunlight` ring r10 (fixed) | ✅ |
+| 갈라틴 | 태양의 축복 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `sunlight` ring r10 (fixed) | ✅ |
 | 갈라틴 | 태양 폭발 | nova r5 | `solar_flare` ring r5 | ✅ |
 | 갈라틴 | 정오의 일격 | slash 5 / 150° | `noon_arc` cone 5 / 150° | ✅ |
 | 아스칼론 | 그대는 용이니라 | mark 1 target ≤20<br>beam 16 x ±0.9 | `draconis_seal` on the target<br>`holy_lance` beam 16 x ±0.9 | ◻ ✅ |
 | 아스칼론 | 용살 찌르기 | beam 10 x ±0.9 | `dragonbane` beam 10 x ±0.9 | ✅ |
-| 아스칼론 | 순교자의 방패 | taunt r10 | `martyr_shield` ring r10 | ✅ |
-| 아스칼론 | 성자의 수호 | ally heal r10 (fixed) | `saint_ward` ring r10 (fixed) | ✅ |
+| 아스칼론 | 순교자의 서약 | nova r5<br>debuff r10 | `martyr_shield` ring r5 | ✅ |
+| 아스칼론 | 성자의 축복 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `saint_ward` ring r10 (fixed) | ✅ |
 | 쿠사나기노츠루기 | 아메노무라쿠모 | pull r8<br>nova r6 | `murakumo` ring r6 | ✅ |
 | 쿠사나기노츠루기 | 풀베기 | slash 6 / 300° | `grass_cutter` cone 6 / 300° | ✅ |
 | 쿠사나기노츠루기 | 풍보 | dash 10 x ±1.2 | `wind_step` along the path | ◻ |
 | 쿠사나기노츠루기 | 야마타의 화근 | shoot hit ±1 | `serpent` shot ±1 | ✅ |
-| 원탁의 대방패 | 로드 카멜롯 | ally boost r12 (fixed)<br>nova r6 | `camelot` ring r6<br>`ally_ring` ring r12 (fixed) | ✅ ✅ |
-| 원탁의 대방패 | 눈꽃의 벽 | ally heal r8 (fixed) | `snow_bulwark` ring r8 (fixed) | ✅ |
+| 원탁의 대방패 | 로드 카멜롯 | nova r6<br>ally boost r12 (fixed)<br>ally boost r12 (fixed) | `camelot` ring r6<br>`ally_ring` ring r12 (fixed) | ✅ ✅ |
+| 원탁의 대방패 | 눈꽃의 깃발 | ally boost r8 (fixed) | `snow_bulwark` ring r8 (fixed) | ✅ |
 | 원탁의 대방패 | 원탁 강타 | slash 5 / 160° | `round_table` cone 5 / 160° | ✅ |
 | 원탁의 대방패 | 카멜롯 돌격 | dash 9 x ±1.2 | `shield_charge` along the path | ◻ |
 ## 도적
@@ -63,7 +63,7 @@
 | 나이트 킬러 | 되받아치기 | - | `riposte` on the caster | ◻ |
 | 베르의 발톱 | 개미왕의 폭주 | dash 8 x ±1.2<br>nova r5 | `ant_dash` along the path<br>`ant_frenzy` ring r5 | ◻ ✅ |
 | 베르의 발톱 | 포식 | execute 1 target ≤5 | `devour` on the target | ◻ |
-| 베르의 발톱 | 빼앗은 치유술 | ally heal r10 (fixed) | `stolen_healing` ring r10 (fixed) | ✅ |
+| 베르의 발톱 | 빼앗은 비술 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `stolen_healing` ring r10 (fixed) | ✅ |
 | 베르의 발톱 | 날개 돌격 | leap r4 on landing | `wing_burst` ring r4 | ✅ |
 | 비뢰신 쿠나이 | 금빛 섬광 | shadowstep 1 target ≤20<br>nova r5 | `yellow_flash` on the target<br>`rasengan` on the caster<br>`rasengan_burst` ring r5 | ◻ ◻ ✅ |
 | 비뢰신 쿠나이 | 술식 쿠나이 | shoot hit ±0.3<br>mark 1 target ≤20 | `formula_kunai` shot ±0.3 | ✅ |
@@ -76,7 +76,7 @@
 | 그림자 군주의 쿠사리가마 | 군주의 영역 | nova r8<br>zone r8 | `monarch_domain` ring r8 | ✅ |
 | 그림자 군주의 쿠사리가마 | 지배자의 권능 | launch r7<br>nova r7 | `rulers_authority` ring r7 | ✅ |
 | 그림자 군주의 쿠사리가마 | 사신의 사슬 | slash 7 / 240° | `reaper_chain` cone 7 / 240° | ✅ |
-| 그림자 군주의 쿠사리가마 | 심연의 수호 | - | `abyssal_guard` on the caster | ◻ |
+| 그림자 군주의 쿠사리가마 | 심연의 무장 | - | `abyssal_guard` on the caster | ◻ |
 | 카무이 수리검 | 완성체 스사노오: 카무이 수리검 | shoot hit ±0.3, blast r4 | `kamui_shuriken` shot ±0.93<br>`kamui_vortex` burst r4 (fixed) | ◇ ✅ |
 | 카무이 수리검 | 자전 | chain 1 target ≤16 | `purple_chain` on the target | ◻ |
 | 카무이 수리검 | 카무이 | - | `kamui_warp` on the caster | ◻ |
@@ -97,7 +97,7 @@
 | 콜키스의 홀 | 파계해야 할 모든 부적 | shadowstep 1 target ≤10 | `rule_breaker` on the target | ◻ |
 | 콜키스의 홀 | 고속신언 | - | `divine_words` on the caster | ◻ |
 | 콜키스의 홀 | 황금양모 | - | `golden_fleece` on the caster | ◻ |
-| 야타노카가미 | 수천일광천조팔야진석 | ally heal r12 (fixed)<br>ally buff r12 (fixed) | `amaterasu` ring r12 (fixed) | ✅ |
+| 야타노카가미 | 수천일광천조팔야진석 | ally boost r12 (fixed)<br>ally buff r12 (fixed) | `amaterasu` ring r12 (fixed) | ✅ |
 | 야타노카가미 | 염천 | strike r3.5 at 18 | `enten` ring r3.5 | ✅ |
 | 야타노카가미 | 빙천 | rain r4 at 18 | `hyoten` ring r4 | ✅ |
 | 야타노카가미 | 변화 | - | `fox_fire` on the caster | ◻ |
@@ -108,19 +108,19 @@
 | 와룡의 병법서 | 석병팔진 | zone r8 at 20 | `stone_maze` ring r8 | ✅ |
 | 와룡의 병법서 | 적벽의 동남풍 | push r4<br>shoot hit ±0.3, blast r2 | `east_wind` on the caster<br>`wind_fire` shot ±0.45 | ◻ ✅ |
 | 와룡의 병법서 | 감식안 | mark 1 target ≤24<br>ally boost r10 (fixed) | `discerning_eye` on the target<br>`ally_ring` ring r10 (fixed) | ◻ ✅ |
-| 와룡의 병법서 | 군사의 충언 | ally boost r10 (fixed)<br>ally heal r10 (fixed) | `war_banner` ring r10 (fixed) | ✅ |
+| 와룡의 병법서 | 군사의 충언 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `war_banner` ring r10 (fixed) | ✅ |
 | 루멘 이스트왈 | 페어리 로 | debuff r16<br>nova r16 | `fairy_law` ring r16 | ✅ |
 | 루멘 이스트왈 | 페어리 글리터 | shoot hit ±0.3, blast r3.5 | `fairy_glitter` shot ±0.9<br>`glitter_burst` burst r3.5 (fixed) | ◇ ✅ |
 | 루멘 이스트왈 | 페어리 스피어 | ally boost r10 (fixed) | `fairy_sphere` on the caster<br>`ally_ring` ring r10 (fixed) | ◻ ✅ |
 | 루멘 이스트왈 | 요정군사 | ally buff r12 (fixed)<br>ally buff r12 (fixed) | `fairy_wings` on the caster<br>`ally_ring` ring r12 (fixed) | ◻ ✅ |
-| 멀린의 지팡이 | 영원히 닫힌 이상향 | sanctuary r10<br>ally boost r10 (fixed) | `avalon` ring r10 | ✅ |
+| 멀린의 지팡이 | 영원히 닫힌 이상향 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `avalon` ring r10 (fixed) | ✅ |
 | 멀린의 지팡이 | 영웅 작성 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `hero_creation` ring r10 (fixed) | ✅ |
 | 멀린의 지팡이 | 꽃보라 | shoot hit ±0.3 | `petal_orb` shot ±0.3 | ✅ |
 | 멀린의 지팡이 | 환술 | - | `illusion` along the path | ◻ |
 | 프리렌의 지팡이 | 졸트라크 일제 사격 | barrage hit ±0.3 | - | - |
 | 프리렌의 지팡이 | 쥬드라질룸 | lightning r4.5 at 22 | `judradjim` ring r4.5 | ✅ |
 | 프리렌의 지팡이 | 방어 마법 | - | `hex_barrier` on the caster | ◻ |
-| 프리렌의 지팡이 | 꽃밭을 만드는 마법 | sanctuary r7 | `flower_field` ring r7 | ✅ |
+| 프리렌의 지팡이 | 꽃밭을 만드는 마법 | ally boost r7 (fixed)<br>ally boost r7 (fixed) | `flower_field` ring r7 (fixed) | ✅ |
 | 레메게톤 | 아르스 알마델 살로모니스 | strike r7 at 24 | `ars_almadel` ring r7 | ✅ |
 | 레메게톤 | 마신주 강림 | launch r6<br>nova r6 | `demon_pillars` ring r6 | ✅ |
 | 레메게톤 | 천리안 | mark 1 target ≤24<br>debuff r14 | `clairvoyance` on the target | ◻ |
@@ -143,7 +143,7 @@
 | 간장·막야 (얼터) | 잔상 사격 | shoot hit ±0.3 | `flash_trail` along the path<br>`tracer` shot ±0.25 | ◻ ✅ |
 | 아폴론의 활 | 헤카테볼로스 | beam 26 x ±0.9 | `sun_beam` beam 26 x ±0.9 | ✅ |
 | 아폴론의 활 | 아킬레스건 | execute 1 target ≤24 | `heel_strike` on the target | ◻ |
-| 아폴론의 활 | 파이안 | ally heal r10 (fixed)<br>ally buff r10 (fixed) | `paean` ring r10 (fixed) | ✅ |
+| 아폴론의 활 | 파이안 | ally boost r10 (fixed)<br>ally boost r10 (fixed) | `paean` ring r10 (fixed) | ✅ |
 | 아폴론의 활 | 햇살 걸음 | - | `sun_step` along the path | ◻ |
 | 아르테미스의 활 | 트라이스타 아모레 미오 | shoot hit ±0.3 | `moon_arrow` shot ±0.32 | ✅ |
 | 아르테미스의 활 | 초승달 연사 | shoot hit ±0.3 | `crescent_arrow` shot ±0.34 | ✅ |
@@ -160,7 +160,7 @@
 | 왕의 재보 | 왕의 재보: 전면 개방 | barrage hit ±0.3<br>rain r6 at 20 | `babylon_sky` ring r6 | ✅ |
 | 왕의 재보 | 보구 사출 | barrage hit ±0.3 | - | - |
 | 왕의 재보 | 하늘의 사슬 | pull r10<br>debuff r10<br>debuff r10 | `enkidu` ring r10 | ✅ |
-| 왕의 재보 | 보물고의 방패 | - | `treasury_shields` on the caster | ◻ |
+| 왕의 재보 | 보물고의 무구 | - | `treasury_shields` on the caster | ◻ |
 | 에아 & 메로닥 | 에누마 엘리시 | pull r10<br>beam 32 x ±0.9 | `ea_charge` ring r10<br>`enuma_elish` beam 32 x ±0.9 | ✅ ✅ |
 | 에아 & 메로닥 | 원죄 (메로닥) | slash 5 / 200°<br>shoot hit ±1 | `slash` cone 5 / 200°<br>`sin_wave` shot ±1 | ✅ ✅ |
 | 에아 & 메로닥 | 모든 것을 본 자 | debuff r16<br>mark 1 target ≤24 | `sha_naqba` ring r16 | ✅ |
@@ -196,7 +196,7 @@
 | 모비딕호의 닻 | 섬 흔들기 | nova r8<br>launch r8 | `quake` ring r8 | ✅ |
 | 모비딕호의 닻 | 해진 | shoot hit ±1 | `tsunami` shot ±1.1 | ✅ |
 | 모비딕호의 닻 | 닻 내리기 | leap r5 on landing | `anchor_drop` ring r5 | ✅ |
-| 모비딕호의 닻 | 내 아들들 | ally boost r12 (fixed)<br>ally boost r12 (fixed)<br>ally heal r12 (fixed) | `my_sons` ring r12 (fixed) | ✅ |
+| 모비딕호의 닻 | 내 아들들 | ally boost r12 (fixed)<br>ally boost r12 (fixed)<br>ally boost r12 (fixed) | `my_sons` ring r12 (fixed) | ✅ |
 | 니카의 너클 | 고무고무 바즈랑 건 | strike r6 at 20 | `bajrang_gun` ring r6 | ✅ |
 | 니카의 너클 | 고무고무 레드 호크 | beam 10 x ±0.9 | `red_hawk` beam 10 x ±0.9 | ✅ |
 | 니카의 너클 | 고무고무 제트 개틀링 | slash 4 / 100° | `jet_gatling` cone 4 / 100° | ✅ |
@@ -248,7 +248,7 @@
 | 쌍왕 사미환 | 비아절교 | pull r6<br>nova r6 | `bone_fangs` ring r6 | ✅ |
 | 쌍왕 사미환 | 사아철포 | beam 16 x ±0.9 | `bone_snake` beam 16 x ±0.9 | ✅ |
 | 쌍왕 사미환 | 쌍왕 채찍 | slash 7 / 220° | `bone_lash` cone 7 / 220° | ✅ |
-| 쌍왕 사미환 | 비골 갑주 | taunt r8 | `bone_cage` on the caster | ◻ |
+| 쌍왕 사미환 | 비골 갑주 | - | `bone_cage` on the caster | ◻ |
 ## 헌터
 
 | 무기 | 스킬 | 실제 범위 | 이펙트 경계 | 일치 |
@@ -275,7 +275,7 @@
 | 제노의 드래곤 헤드 | 드래곤 다이브 | rain r7 at 24 | `dragon_dive` ring r7 | ✅ |
 | 실버의 넨구 | 아우라 구 | shoot hit ±0.3, blast r3 | `silva_orb` shot ±0.32<br>`orb_burst` burst r3 (fixed) | ✅ ✅ |
 | 실버의 넨구 | 넨구 연사 | shoot hit ±0.3, blast r1.5 | `silva_orb` shot ±0.32<br>`orb_burst` burst r1.5 (fixed) | ✅ ✅ |
-| 실버의 넨구 | 가주의 위엄 | debuff r10<br>taunt r10 | `silva_presence` ring r10 | ✅ |
+| 실버의 넨구 | 가주의 위엄 | debuff r10<br>debuff r10 | `silva_presence` ring r10 | ✅ |
 | 실버의 넨구 | 암살가의 심판 | execute 1 target ≤8<br>shoot hit ±0.3, blast r3 | `assassin_hand` on the target<br>`silva_orb` shot ±0.32<br>`orb_burst` burst r3 (fixed) | ◻ ✅ ✅ |
 | 메르엠의 꼬리 | 꼬리 관통 | beam 10 x ±0.9 | `tail_pierce` beam 10 x ±0.9 | ✅ |
 | 메르엠의 꼬리 | 광자 | nova r6 | `photon` ring r6 | ✅ |

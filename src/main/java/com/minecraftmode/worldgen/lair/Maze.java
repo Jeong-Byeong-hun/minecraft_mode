@@ -179,22 +179,22 @@ public final class Maze {
 		return open + (x == this.entranceX() && z == this.n - 1 ? 1 : 0);
 	}
 
-	/** Whether the wall block at local maze coordinates (0..size-1) is solid. */
-	public boolean wall(final int lx, final int lz) {
-		int size = this.n * LairPiece.CELL + 1;
-		boolean onX = lx % LairPiece.CELL == 0;
-		boolean onZ = lz % LairPiece.CELL == 0;
+	/** Whether the wall block at local maze coordinates (0..size-1) is solid, for cells of {@code cell} blocks ({@link LairLayout#cell}). */
+	public boolean wall(final int lx, final int lz, final int cell) {
+		int size = this.n * cell + 1;
+		boolean onX = lx % cell == 0;
+		boolean onZ = lz % cell == 0;
 		if (onX && onZ) {
 			return true;
 		}
 		if (onX) {
-			int i = lx / LairPiece.CELL;
-			int j = lz / LairPiece.CELL;
+			int i = lx / cell;
+			int j = lz / cell;
 			return i == 0 || i == this.n || !this.east[i - 1][j];
 		}
 		if (onZ) {
-			int i = lx / LairPiece.CELL;
-			int j = lz / LairPiece.CELL;
+			int i = lx / cell;
+			int j = lz / cell;
 			if (j == this.n && i == this.entranceX() && lz == size - 1) {
 				return false;
 			}

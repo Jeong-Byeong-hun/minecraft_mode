@@ -1,11 +1,13 @@
 package com.minecraftmode.client.endgame;
 
 import com.minecraftmode.client.job.JobKeys;
+import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.network.AuctionStatePayload;
 import com.minecraftmode.network.OpenBountyPayload;
 import com.minecraftmode.network.ProgressActionPayload;
 import com.minecraftmode.registry.ModDataComponents;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.worldgen.lair.LairTier;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -48,8 +50,17 @@ public final class EndgameClient {
 		}));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> client.execute(() -> auction = null));
 		ItemTooltipCallback.EVENT.register((stack, context, flag, lines) -> {
-			if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP) || stack.is(ModItems.ACCESSORY_ORB)
-				|| stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3) || stack.is(ModItems.SUKUNA_FINGER)) {
+			int tier = LairTier.of(stack);
+			if (tier > 0) {
+				// a tier map: how strong its lair is, then the affixes from tier 6
+				lines.add(1, Component.translatable("item.minecraft_mode.lair_map.tier_tooltip", JobTooltips.fine(LairTier.health(tier)),
+					JobTooltips.fine(LairTier.damage(tier))).withStyle(ChatFormatting.GRAY));
+				if (LairTier.affixCount(tier) > 0) {
+					lines.add(2, Component.translatable("item.minecraft_mode.lair_map.tier_affixes", LairTier.affixCount(tier)).withStyle(ChatFormatting.LIGHT_PURPLE));
+				}
+			} else if (stack.is(ModItems.ENHANCEMENT_STONE) || stack.is(ModItems.PROTECTION_SCROLL) || stack.is(ModItems.LAIR_MAP) || stack.is(ModItems.ACCESSORY_ORB)
+				|| stack.is(ModItems.ACCESSORY_INHERIT_1) || stack.is(ModItems.ACCESSORY_INHERIT_2) || stack.is(ModItems.ACCESSORY_INHERIT_3) || stack.is(ModItems.SUKUNA_FINGER)
+				|| stack.is(ModItems.EVOLUTION_SHARD) || stack.is(ModItems.EVOLUTION_CORE)) {
 				lines.add(1, Component.translatable(stack.getItem().getDescriptionId() + ".tooltip").withStyle(ChatFormatting.GRAY));
 			}
 			if (stack.has(ModDataComponents.BOUND)) {

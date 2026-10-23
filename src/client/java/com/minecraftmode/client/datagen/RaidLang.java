@@ -118,9 +118,9 @@ final class RaidLang {
 		b.add(s + "rct_healed", ko ? "스쿠나의 상처가 아물었다" : "Sukuna's wounds close");
 		b.add(ModItems.SUKUNA_FINGER, ko ? "스쿠나의 손가락" : "Sukuna's Finger");
 		b.add(ModItems.SUKUNA_FINGER.getDescriptionId() + ".tooltip", ko
-			? "특급 주물. 레이드 입구 옆 저주 유물 교환소에서 스쿠나의 장신구(" + ShopOffers.RELIC_PIECE_FINGERS + "개)나 4티어 계승권(" + ShopOffers.RELIC_TICKET_FINGERS + "개)으로 바꿉니다."
+			? "특급 주물. 레이드 입구 옆 저주 유물 교환소에서 스쿠나의 장신구(" + ShopOffers.RELIC_PIECE_FINGERS + "개)나 3티어 장신구 계승권(4티어 스쿠나 세트로, " + ShopOffers.RELIC_TICKET_FINGERS + "개)으로 바꿉니다."
 			: "A special grade cursed object. Trade it at the cursed relic exchange by the raid gate for one of Sukuna's accessories (" + ShopOffers.RELIC_PIECE_FINGERS
-				+ ") or a tier 4 inheritance ticket (" + ShopOffers.RELIC_TICKET_FINGERS + ").");
+				+ ") or a Tier 3 Accessory Inheritance Ticket into his tier 4 set (" + ShopOffers.RELIC_TICKET_FINGERS + ").");
 		b.add(ModItems.RELIC_SHOP, ko ? "저주 유물 교환소" : "Cursed Relic Exchange");
 		b.add(ShopType.CURSED_RELICS.titleKey(), ko ? "저주 유물 교환소" : "Cursed Relic Exchange");
 		String m = "raid.minecraft_mode.mahoraga.";

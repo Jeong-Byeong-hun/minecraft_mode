@@ -788,7 +788,7 @@ public class EconomyClientGameTest implements FabricClientGameTest {
 			return instance != null && instance.state() == RaidInstance.State.FIGHT;
 		}, 400, def.id() + " should appear");
 		context.waitTicks(10);
-		// Avalon (warrior tier 4) would otherwise save the player from the lethal mechanic
+		// a plain rogue for the lethal mechanic (no class rules between the mechanic and the fall)
 		server.runOnServer(s -> JobProgression.set(connection.getServerPlayer(), JobProgression.get(connection.getServerPlayer()).withJob(JobClass.ROGUE, 1)));
 	}
 

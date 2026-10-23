@@ -21,6 +21,7 @@ import java.util.List;
 import com.minecraftmode.registry.ModBlocks;
 import com.minecraftmode.registry.ModEntities;
 import com.minecraftmode.registry.ModItems;
+import com.minecraftmode.talent.Talents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
@@ -35,8 +36,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockItemTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -59,7 +58,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Wires classes into the game: job experience and essence from kills and ores, MP regeneration,
- * stat refresh, death penalty, Avalon, and cleanup of summons.
+ * stat refresh, death penalty, the talent migration on join, and cleanup of summons.
  */
 public final class JobEvents {
 	/** A named monster's kill is worth this share of a level to each of its killers (titans, warlords and dungeon champions: {@link #LORD_SHARE}; lair lords: {@code LairExp.LORD}). */
@@ -87,19 +86,18 @@ public final class JobEvents {
 	/** Condensed essence of a Warden kill instead of one per 150 health (4): shriekers summon the next one right away. */
 	public static final int WARDEN_CONDENSED = 2;
 
-	/** Cooldown key of Avalon in {@link JobData#cooldowns()}. */
-	public static final String AVALON_COOLDOWN = "passive.avalon";
-
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(JobEvents::tick);
 		ServerLivingEntityEvents.AFTER_DEATH.register(JobEvents::afterDeath);
-		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> !(entity instanceof ServerPlayer player) || allowDeath(player, source, amount));
 		PlayerBlockBreakEvents.AFTER.register(JobEvents::afterBlockBreak);
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			JobStats.refresh(newPlayer);
 			JobProgression.set(newPlayer, JobProgression.get(newPlayer).withMana(JobStats.maxMana(newPlayer)));
 		});
-		ServerPlayerEvents.JOIN.register(JobStats::refresh);
+		ServerPlayerEvents.JOIN.register(player -> {
+			Talents.migrate(player);
+			JobStats.refresh(player);
+		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			CombatState.forget(handler.player);
 			Trash.forget(handler.player);
@@ -248,27 +246,6 @@ public final class JobEvents {
 		if (item != null) {
 			item.setGlowingTag(true);
 		}
-	}
-
-	/** Avalon (warrior tier 4): survive a lethal blow once every 3 minutes. */
-	private static boolean allowDeath(final ServerPlayer player, final DamageSource source, final float amount) {
-		JobData data = JobProgression.get(player);
-		if (!CombatHooks.has(data, JobClass.WARRIOR, 4)) {
-			return true;
-		}
-		long now = player.level().getGameTime();
-		if (now < data.readyAt(AVALON_COOLDOWN)) {
-			return true;
-		}
-		// kept in the saved cooldown map so relogging does not reset it
-		JobProgression.set(player, data.withCooldown(AVALON_COOLDOWN, now + 3600));
-		player.setHealth(player.getMaxHealth() * 0.3F);
-		player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 60, 3));
-		ServerLevel level = player.level();
-		level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY(1.0), player.getZ(), 40, 0.5, 0.8, 0.5, 0.3);
-		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.TOTEM_USE, SoundSource.PLAYERS, 0.8F, 1.3F);
-		player.sendSystemMessage(Component.translatable("message.minecraft_mode.job.avalon").withStyle(ChatFormatting.GOLD));
-		return false;
 	}
 
 	// ------------------------------------------------------------------ ores

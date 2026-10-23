@@ -20,6 +20,7 @@ import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.talent.Talents;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -202,6 +203,7 @@ public final class Characters {
 		JobData job = JobProgression.get(player);
 		List<ItemStack> gear = gear(player);
 		CompoundTag current = save(player);
+		BountyData merit = Bounties.get(player);
 		try {
 			if (target == null) {
 				start(player);
@@ -212,6 +214,8 @@ public final class Characters {
 			// the roster is untouched until the switch worked, so putting the current character back loses nothing
 			MinecraftMode.LOGGER.error("Switching {} to character slot {} failed", player.getPlainTextName(), slot + 1, e);
 			load(player, current);
+			// the saved character carries no merit (the account's is on the live one): put the account's back as it was
+			Bounties.set(player, Bounties.get(player).withMerit(merit.merit()).withDeeds(merit.deeds()));
 			return fail(player, "failed");
 		}
 		roster.put(player.getUUID(), account.swap(new CharacterRoster.Stored(account.active(), current, job.job(), job.tier(), job.level(), gear), slot));
@@ -252,6 +256,7 @@ public final class Characters {
 		CompoundTag tag = output.buildResult();
 		ACCOUNT_KEYS.forEach(tag::remove);
 		takeStoredWallet(tag);
+		takeStoredMerit(tag);
 		tag.putString(DIMENSION, player.level().dimension().identifier().toString());
 		if (Lobby.is(player.level())) {
 			// saved from the lobby: the character really is where it was before
@@ -265,7 +270,7 @@ public final class Characters {
 
 	/**
 	 * Removes the wallet from saved character data and returns its copper. Characters stored before the wallet became shared
-	 * (0.5.21) still carry their own coins; the first load pours them into the account's wallet, and later saves leave it out.
+	 * (before 0.5.24) still carry their own coins; the first load pours them into the account's wallet, and later saves leave it out.
 	 */
 	private static int takeStoredWallet(final CompoundTag tag) {
 		return tag.getCompound(AttachmentTarget.NBT_ATTACHMENT_KEY).map(attachments -> {
@@ -274,6 +279,28 @@ public final class Characters {
 			attachments.remove(key);
 			return Math.max(0, copper);
 		}).orElse(0);
+	}
+
+	/**
+	 * Removes merit and the land deed count from saved character data and returns them ({merit, deeds}). Both belong to the account
+	 * (0.5.46: land was already the account's, but a new character started at 0 merit and paid the first deed's price again); the live
+	 * character carries the account's, and characters stored before 0.5.46 pour theirs in on their first load (merit added, deeds
+	 * the higher count).
+	 */
+	private static int[] takeStoredMerit(final CompoundTag tag) {
+		return tag.getCompound(AttachmentTarget.NBT_ATTACHMENT_KEY).flatMap(attachments ->
+			attachments.getCompound(ModAttachments.BOUNTY.identifier().toString()).map(bounty -> {
+				int[] stored = {Math.max(0, bounty.getIntOr("merit", 0)), Math.max(0, bounty.getIntOr("deeds", 0))};
+				bounty.remove("merit");
+				bounty.remove("deeds");
+				return stored;
+			})).orElse(new int[2]);
+	}
+
+	/** Puts the account's merit and deed count (what {@code player} holds now, plus {@code stored}) back after a load or a fresh start. */
+	private static Runnable keepMerit(final ServerPlayer player, final int[] stored) {
+		BountyData now = Bounties.get(player);
+		return () -> Bounties.set(player, Bounties.get(player).withMerit(now.merit() + stored[0]).withDeeds(Math.max(now.deeds(), stored[1])));
 	}
 
 	/** What the character wears and holds ({@link #GEAR_SLOTS}), for its figure on the select screen. */
@@ -288,6 +315,7 @@ public final class Characters {
 		tag.remove(DIMENSION);
 		ACCOUNT_KEYS.forEach(tag::remove);
 		int storedCoins = takeStoredWallet(tag);
+		Runnable merit = keepMerit(player, takeStoredMerit(tag));
 		GameType mode = player.gameMode();
 		Runnable keep = keepAccount(player);
 		clear(player);
@@ -301,13 +329,16 @@ public final class Characters {
 			toWorldSpawn(player);
 		}
 		player.setHealth(tag.getFloatOr("Health", player.getMaxHealth()));
-		// last, so a load that throws (and is rolled back) never pays the stored coins out twice
+		// last, so a load that throws (and is rolled back) never pays the stored coins (or merit) out twice
 		Wallet.add(player, storedCoins);
+		merit.run();
+		Talents.migrate(player);
 	}
 
 	/** A fresh character: nothing carried, no class, at the world spawn (the plaza, with the handbook, in the capital's worlds). */
 	private static void start(final ServerPlayer player) {
 		GameType mode = player.gameMode();
+		Runnable merit = keepMerit(player, new int[2]);
 		clear(player);
 		player.setExperienceLevels(0);
 		player.setExperiencePoints(0);
@@ -318,6 +349,7 @@ public final class Characters {
 		player.setRespawnPosition(null, false);
 		player.setLastDeathLocation(java.util.Optional.empty());
 		resync(player, mode);
+		merit.run();
 		player.setHealth(player.getMaxHealth());
 		toWorldSpawn(player);
 		CityServices.welcome(player);

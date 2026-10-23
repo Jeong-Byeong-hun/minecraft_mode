@@ -31,6 +31,7 @@ import com.minecraftmode.client.guide.NoticeScreen;
 import com.minecraftmode.client.job.EngravingScreen;
 import com.minecraftmode.client.job.JobHud;
 import com.minecraftmode.client.lair.LairClient;
+import com.minecraftmode.client.lair.MapCombinerScreen;
 import com.minecraftmode.client.map.MapClient;
 import com.minecraftmode.client.menu.MenuClient;
 import com.minecraftmode.client.job.JobKeys;
@@ -141,6 +142,7 @@ public class MinecraftModeClient implements ClientModInitializer {
 		MenuScreens.register(ModMenus.UPGRADE, UpgradeScreen::new);
 		MenuScreens.register(ModMenus.ENHANCE, EnhanceScreen::new);
 		MenuScreens.register(ModMenus.STYLIST, StylistScreen::new);
+		MenuScreens.register(ModMenus.MAP_COMBINER, MapCombinerScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_COOKING, CraftScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_ALCHEMY, CraftScreen::new);
 		MenuScreens.register(ModMenus.CRAFT_SMITHING, CraftScreen::new);

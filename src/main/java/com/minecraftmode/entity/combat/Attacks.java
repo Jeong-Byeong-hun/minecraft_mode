@@ -1,5 +1,6 @@
 package com.minecraftmode.entity.combat;
 
+import com.minecraftmode.entity.SpaceCheck;
 import com.minecraftmode.job.skill.SkillScheduler;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,7 +140,15 @@ public final class Attacks {
 				continue;
 			}
 			double a = Math.PI * 2 * i / Math.max(1, count) + level.getRandom().nextDouble() * 0.5;
-			mob.snapTo(around.x + Math.cos(a) * 2.5, around.y, around.z + Math.sin(a) * 2.5, (float)Math.toDegrees(a), 0.0F);
+			// never inside a wall (lair corridors are three wide, and minions dropped 2.5 out used to choke in them)
+			Vec3 at = SpaceCheck.nearestFree(level, mob, new Vec3(around.x + Math.cos(a) * 2.5, around.y, around.z + Math.sin(a) * 2.5), SpaceCheck.SEARCH);
+			if (at == null) {
+				at = SpaceCheck.nearestFree(level, mob, around, SpaceCheck.SEARCH);
+			}
+			if (at == null) {
+				continue;
+			}
+			mob.snapTo(at.x, at.y, at.z, (float)Math.toDegrees(a), 0.0F);
 			mob.addTag(MINION_TAG);
 			if (target != null) {
 				mob.setTarget(target);

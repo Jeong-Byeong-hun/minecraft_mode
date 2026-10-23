@@ -19,6 +19,7 @@ import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.weapon.JobWeapons;
 import com.minecraftmode.job.weapon.WeaponDef;
 import com.minecraftmode.loot.EvolutionEtherItem;
+import com.minecraftmode.worldgen.lair.LairTier;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -133,6 +134,13 @@ public final class ModCreativeTabs {
 					output.accept(ModItems.ACCESSORY_INHERIT_3);
 					output.accept(ModItems.SUKUNA_FINGER);
 					output.accept(ModItems.TITAN_SHARD);
+					output.accept(ModItems.EVOLUTION_SHARD);
+					output.accept(ModItems.EVOLUTION_CORE);
+					ModItems.IMBUE_SCROLLS.values().forEach(output::accept);
+					ModItems.GREATER_IMBUE_SCROLLS.values().forEach(output::accept);
+					for (int tier = 1; tier <= LairTier.MAX; tier += 5) {
+						output.accept(LairTier.map(tier, 1));
+					}
 					for (int grade = ItemLevels.MIN_BRACKET; grade <= ItemLevels.MAX_BRACKET; grade += 10) {
 						output.accept(EvolutionEtherItem.of(grade, 1));
 					}

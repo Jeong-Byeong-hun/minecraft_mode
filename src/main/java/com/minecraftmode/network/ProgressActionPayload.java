@@ -10,7 +10,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
  * Client -> server: wear a title ({@link #TITLE}, value = achievement id or ""), spend a talent point ({@link #TALENT}, value =
  * node id), reset the talents ({@link #TALENT_RESET}), put a paragon point into a stat ({@link #PARAGON}, value = stat id) or reset the
  * paragon board ({@link #PARAGON_RESET}), summon a pet ({@link #PET}, value = pet id, "" dismisses) or get on / off a mount
- * ({@link #MOUNT}, value = mount id, "" = the last one).
+ * ({@link #MOUNT}, value = mount id, "" = the last one), or evolve a pet ({@link #PET_EVOLVE}, value = pet id).
  */
 public record ProgressActionPayload(int action, String value) implements CustomPacketPayload {
 	public static final int TITLE = 0;
@@ -20,6 +20,8 @@ public record ProgressActionPayload(int action, String value) implements CustomP
 	public static final int PARAGON_RESET = 4;
 	public static final int PET = 5;
 	public static final int MOUNT = 6;
+	/** Evolve a pet one star (value = pet id, 0.5.49). */
+	public static final int PET_EVOLVE = 7;
 	public static final Type<ProgressActionPayload> TYPE = new Type<>(MinecraftMode.id("progress_action"));
 	public static final StreamCodec<RegistryFriendlyByteBuf, ProgressActionPayload> CODEC = StreamCodec.composite(
 		ByteBufCodecs.VAR_INT, ProgressActionPayload::action,

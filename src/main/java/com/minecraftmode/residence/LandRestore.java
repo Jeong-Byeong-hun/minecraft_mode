@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
@@ -18,10 +19,12 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.phys.AABB;
 
 /**
- * Gives abandoned land its first look back: every block of the 16x16x16 box becomes what the flat generator put there
+ * Gives abandoned land its first look back: every block of the chunk column becomes what the flat generator put there
  * ({@link ResidenceDimension#natural}), frames, paintings, armor stands, boats and minecarts in it are removed, and whatever they or
  * the containers held goes back through {@code back} (the owner's bags, or their market mailbox when an operator frees land of an
  * offline owner). Players inside are lifted onto the grass.
@@ -34,25 +37,36 @@ public final class LandRestore {
 	public static int restore(final ServerLevel level, final LandClaims.Claim claim, final Consumer<ItemStack> back) {
 		int x0 = claim.chunkX() << 4;
 		int z0 = claim.chunkZ() << 4;
-		AABB box = new AABB(x0, claim.minY(), z0, x0 + LandClaims.SIZE, claim.minY() + LandClaims.SIZE, z0 + LandClaims.SIZE);
+		AABB box = new AABB(x0, level.getMinY(), z0, x0 + LandClaims.SIZE, level.getMaxY() + 1, z0 + LandClaims.SIZE);
 		List<ItemStack> items = new ArrayList<>();
 		for (Entity entity : level.getEntitiesOfClass(Entity.class, box,
 			e -> e instanceof BlockAttachedEntity || e instanceof ArmorStand || e instanceof VehicleEntity)) {
 			collect(entity, items);
 			entity.discard();
 		}
+		LevelChunk chunk = level.getChunk(claim.chunkX(), claim.chunkZ());
+		for (BlockEntity blockEntity : List.copyOf(chunk.getBlockEntities().values())) {
+			if (blockEntity instanceof Container container) {
+				take(container, items);
+			}
+		}
+		// the whole column (0.5.46), one section at a time: sections that are all air where the flat land is air too are skipped
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-		for (int y = claim.minY(); y <= claim.maxY(); y++) {
-			BlockState natural = ResidenceDimension.natural(y);
-			for (int x = x0; x < x0 + LandClaims.SIZE; x++) {
-				for (int z = z0; z < z0 + LandClaims.SIZE; z++) {
-					pos.set(x, y, z);
-					BlockEntity blockEntity = level.getBlockEntity(pos);
-					if (blockEntity instanceof Container container) {
-						take(container, items);
-					}
-					if (!level.getBlockState(pos).equals(natural)) {
-						level.setBlock(pos, natural, FLAGS);
+		LevelChunkSection[] sections = chunk.getSections();
+		for (int i = 0; i < sections.length; i++) {
+			int y0 = SectionPos.sectionToBlockCoord(chunk.getSectionYFromSectionIndex(i));
+			boolean naturalAir = y0 > ResidenceDimension.SURFACE_Y || y0 + 15 < ResidenceDimension.BOTTOM_Y;
+			if (naturalAir && sections[i].hasOnlyAir()) {
+				continue;
+			}
+			for (int y = y0; y < y0 + 16; y++) {
+				BlockState natural = ResidenceDimension.natural(y);
+				for (int x = x0; x < x0 + LandClaims.SIZE; x++) {
+					for (int z = z0; z < z0 + LandClaims.SIZE; z++) {
+						pos.set(x, y, z);
+						if (!level.getBlockState(pos).equals(natural)) {
+							level.setBlock(pos, natural, FLAGS);
+						}
 					}
 				}
 			}

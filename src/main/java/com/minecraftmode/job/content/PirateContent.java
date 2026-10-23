@@ -32,7 +32,7 @@ public final class PirateContent extends ClassContent {
 			art(0xA0886A, 0x5C3A21, 0xB5651D), fx(Fx.Kind.SLASH, 0xD9C29A),
 			skill("plunder_slash", "Plunder Slash", "약탈 베기", ATTACK, 6, 10, slash(4.0, 140, 1.5), loot(15)),
 			skill("boarding_rush", "Boarding Rush", "적선 돌입", MOVEMENT, 10, 8, dash(6, 0.9)),
-			skill("swig_of_rum", "Swig of Rum", "럼주 한 모금", UTILITY, 18, 10, heal(12), boost(DAMAGE, 6, 10)));
+			skill("swig_of_rum", "Swig of Rum", "럼주 한 모금", UTILITY, 18, 10, boost(CRIT_CHANCE, 6, 10), boost(DAMAGE, 6, 10)));
 
 		weapon("flintlock_pistol", 1, 15, PISTOL, "Flintlock Pistol", "플린트락 권총",
 			art(0x7A7F87, 0x6B4226, 0xC9A227), fx(Fx.Kind.SMOKE, 0xA8A8A8),
@@ -57,7 +57,7 @@ public final class PirateContent extends ClassContent {
 			art(0xCFE4F2, 0x1E1E1E, 0x6FE3FF), fx(Fx.Kind.SHARD, 0xBFF4FF),
 			skill("yahazu_giri", "Yahazu Giri", "오늬 가르기", ATTACK, 9, 14, dash(5, 0), delay(0.8, nova(4.5, 1.9))),
 			skill("soul_parade", "Soul Parade", "소울 퍼레이드", ATTACK, 10, 16, slash(4.5, 120, 1.4), inflict(SLOWNESS, 4, 2)),
-			skill("soul_king_live", "Soul King Live", "소울 킹 라이브", UTILITY, 22, 16, allyBuff(8, SPEED, 8, 1), allyBuff(8, REGENERATION, 6, 0)));
+			skill("soul_king_live", "Soul King Live", "소울 킹 라이브", UTILITY, 22, 16, allyBuff(8, SPEED, 8, 1), allyBoost(8, DAMAGE, 8, 10)));
 
 		weapon("ahab_harpoon", 2, 31, HARPOON, "Ahab's Harpoon", "에이해브의 작살",
 			art(0xA9B4BE, 0x7A5230, 0xEDEDED), fx(Fx.Kind.BUBBLE, 0x6FB7E8),
@@ -81,7 +81,7 @@ public final class PirateContent extends ClassContent {
 			art(0x3E4248, 0x6B4A2B, 0xD4AF37), fx(Fx.Kind.SMOKE, 0x8C8C8C),
 			skill("broadside", "Broadside", "현측 일제 포격", ATTACK, 10, 18, shoot(ProjectileStyle.CANNONBALL, 1.3).count(3).spread(35).explode(2.0F)),
 			skill("chain_shot", "Chain Shot", "사슬탄", UTILITY, 12, 14, shoot(ProjectileStyle.CANNONBALL, 1.6).pierce(3), inflict(SLOWNESS, 4, 2)),
-			skill("brace_for_impact", "Brace for Impact", "충격 대비", DEFENSE, 20, 14, boost(DAMAGE, 5, 20), shield(8, 6)));
+			skill("brace_for_impact", "Brace for Impact", "충격 대비", UTILITY, 20, 14, boost(DAMAGE, 5, 20), boost(CRIT_DAMAGE, 5, 20)));
 
 		// 0.5.24: the blunderbuss
 		weapon("boarding_blunderbuss", 2, 36, BLUNDERBUSS, "Boarding Blunderbuss", "접현 나팔총",
@@ -101,7 +101,7 @@ public final class PirateContent extends ClassContent {
 			art(0xD35400, 0x2B2B2B, 0xFFC93C), fx(Fx.Kind.ORB, 0xFF7A1A),
 			skill("hiken", "Hiken", "불주먹", ATTACK, 10, 20, shoot(ProjectileStyle.FIREBALL, 2.4).pierce(6).explode(2.0F), burn(5)),
 			skill("hotarubi", "Hotarubi: Hidaruma", "반디 불덩이", ATTACK, 16, 22, zone(5, 4, 1.0).at(12), burn(3)),
-			skill("flame_logia", "Flame Logia", "불꽃 자연계", DEFENSE, 20, 18, boost(CRIT_CHANCE, 6, 30), buff(FIRE_RESISTANCE, 10, 0)));
+			skill("flame_logia", "Flame Logia", "불꽃 자연계", UTILITY, 20, 18, boost(CRIT_CHANCE, 6, 30), buff(FIRE_RESISTANCE, 10, 0)));
 
 		weapon("blackbeard_flintlock", 3, 53, PISTOL, "Blackbeard's Flintlock", "검은 수염의 플린트락",
 			art(0x2A2A2A, 0x4B2E1A, 0x6A0DAD), fx(Fx.Kind.SMOKE, 0x3A1F5C),
@@ -119,7 +119,7 @@ public final class PirateContent extends ClassContent {
 			art(0x4A4F57, 0x3B2F2F, 0x3FA7D6), fx(Fx.Kind.BOLT, 0x9FD8FF),
 			skill("thunder_bagua", "Thunder Bagua", "뇌명팔괘", ATTACK, 14, 26, dash(8, 2.6), stun(1.2)),
 			skill("bolo_breath", "Bolo Breath", "보로브레스", ATTACK, 12, 22, shoot(ProjectileStyle.FIREBALL, 1.5).count(3).spread(30).explode(2.5F), burn(4)),
-			skill("strongest_creature", "World's Strongest Creature", "이 세상 최강의 생물", DEFENSE, 24, 22, boost(DAMAGE, 8, 30), shield(12, 8), taunt(8)));
+			skill("strongest_creature", "World's Strongest Creature", "이 세상 최강의 생물", UTILITY, 24, 22, boost(DAMAGE, 8, 30), boost(CRIT_DAMAGE, 8, 30)));
 
 		weapon("gryphon_sabre", 3, 66, CUTLASS, "Gryphon", "그리폰",
 			art(0xE1E6EC, 0x1E1E1E, 0xC0392B), fx(Fx.Kind.SLASH, 0xFF4B3E),
@@ -138,7 +138,7 @@ public final class PirateContent extends ClassContent {
 		// Where the weapon's big sprites (coins, bolts, rings) would bury the drawing, the skill sheds small sparks instead (withFx SPARK).
 		weapon("battleship_cannon", 4, 70, HAND_CANNON, "Battleship Cannon", "배틀쉽 캐논",
 			art(0x4F5B66, 0x2C3E50, 0xF1C40F), fx(Fx.Kind.SPARK, 0xFFC94D),
-			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, look(SkillLook.BATTLESHIP, shield(16, 10)), boost(DAMAGE, 10, 20),
+			skill("battleship", "Battleship", "배틀쉽", ULTIMATE, 50, 38, look(SkillLook.BATTLESHIP, boost(CRIT_CHANCE, 10, 15)), boost(DAMAGE, 10, 20),
 				shoot(ProjectileStyle.CANNONBALL, 4.8).count(3).spread(30).explode(3.0F).look(SkillLook.CANNON_SHOT)
 					.onImpact(lookWhereItBursts(SkillLook.CANNON_BLAST, 3.0))),
 			skill("octopus", "Octopus", "옥토퍼스", ATTACK, 18, 24, look(SkillLook.OCTOPUS, zone(4, 6, 0.9).at(12).effect(BLINDNESS, 0)).at(12).size(4).lasting(6)),
@@ -163,7 +163,7 @@ public final class PirateContent extends ClassContent {
 			skill("marys_cutlass", "Mary's Cutlass", "메리의 커틀러스", ATTACK, 8, 20, look(SkillLook.CUTLASS_ARC, slash(4.5, 160, 2.2)).cone(4.5, 160), inflict(BLEEDING, 5, 1)).withFx(Fx.Kind.SPARK),
 			skill("annes_powder_shot", "Anne's Powder Shot", "앤의 화약 사격", ATTACK, 10, 22,
 				shoot(ProjectileStyle.BULLET, 2.6).explode(2.0F).look(SkillLook.MUSKET_SHOT).onImpact(lookWhereItBursts(SkillLook.CANNON_BLAST, 2.0)), inflict(SLOWNESS, 3, 1)),
-			skill("pirates_glory", "Pirate's Glory", "해적의 명예", DEFENSE, 22, 18, look(SkillLook.TWIN_BIRDS, boost(CRIT_CHANCE, 6, 25)), heal(15)).withFx(Fx.Kind.SPARK));
+			skill("pirates_glory", "Pirate's Glory", "해적의 명예", UTILITY, 22, 18, look(SkillLook.TWIN_BIRDS, boost(CRIT_CHANCE, 6, 25)), boost(DAMAGE, 6, 15)).withFx(Fx.Kind.SPARK));
 
 		weapon("dutchman_harpoon", 4, 81, HARPOON, "Flying Dutchman's Harpoon", "플라잉 더치맨의 작살",
 			art(0x5F7F74, 0x2E3B30, 0x3FFFD2), fx(Fx.Kind.BUBBLE, 0x3FC5A8),
@@ -183,7 +183,7 @@ public final class PirateContent extends ClassContent {
 			skill("soul_pocus", "Soul Pocus", "소울 포커스", ATTACK, 12, 26, lifesteal(35), look(SkillLook.SOUL_POCUS, nova(6, 1.8)).size(6).quiet(), inflict(WEAKNESS, 6, 1))
 				.withFx(Fx.Kind.SPARK),
 			skill("zeus_raitei", "Zeus: Raitei", "제우스: 뇌정", ATTACK, 10, 22, look(SkillLook.ZEUS, lightning(18, 4, 2.6)).at(18).size(4), stun(0.8)).withFx(Fx.Kind.SPARK),
-			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, look(SkillLook.CROQUEMBOUCHE, heal(25)), boost(DAMAGE, 10, 30),
+			skill("croquembouche", "Croquembouche Craving", "크로캉부슈 발작", UTILITY, 28, 20, look(SkillLook.CROQUEMBOUCHE, boost(CRIT_DAMAGE, 10, 30)), boost(DAMAGE, 10, 30),
 				buff(SPEED, 10, 1)));
 
 		weapon("moby_dick_anchor", 4, 89, ANCHOR, "Moby Dick's Anchor", "모비딕호의 닻",
@@ -194,7 +194,7 @@ public final class PirateContent extends ClassContent {
 			skill("anchor_drop", "Anchor Drop", "닻 내리기", MOVEMENT, 14, 22, look(SkillLook.ANCHOR_DROP, leap(7, 5, 2.6)).size(5).lasting(3), inflict(SLOWNESS, 3, 2))
 				.withFx(Fx.Kind.SPARK),
 			skill("my_sons", "My Sons", "내 아들들", UTILITY, 30, 26, look(SkillLook.MY_SONS, allyBoost(12, DAMAGE, 12, 20)).size(12).unscaled(), allyBoost(12, CRIT_CHANCE, 12, 10),
-				allyHeal(12, 15)).withFx(Fx.Kind.SPARK));
+				allyBoost(12, CRIT_DAMAGE, 12, 20)).withFx(Fx.Kind.SPARK));
 
 		weapon("nika_knuckles", 4, 94, KNUCKLE, "Nika's Knuckles", "니카의 너클",
 			art(0xF5F5F5, 0xC0392B, 0xFFD54F), fx(Fx.Kind.SPARK, 0xFFF6D5),
@@ -210,7 +210,7 @@ public final class PirateContent extends ClassContent {
 			skill("divine_departure", "Divine Departure", "카무사리", ULTIMATE, 55, 40, look(SkillLook.KAMUSARI, slash(6, 180, 4.0)).cone(6, 180).quiet(),
 				shoot(ProjectileStyle.WAVE, 5.0).pierce(15).look(SkillLook.KAMUSARI_WAVE), stun(1.0)).withFx(Fx.Kind.SPARK),
 			skill("conquerors_clash", "Conqueror's Clash", "패왕색 충돌", ATTACK, 12, 26, look(SkillLook.HAKI_CLASH, nova(6, 3.4)).size(6), push(8, 3.0)).withFx(Fx.Kind.SPARK),
-			skill("will_of_d", "Will of D.", "D의 의지", DEFENSE, 26, 22, cleanse(), look(SkillLook.WILL_OF_D, heal(20)), boost(DAMAGE, 6, 25)),
+			skill("will_of_d", "Will of D.", "D의 의지", UTILITY, 26, 22, cleanse(), look(SkillLook.WILL_OF_D, boost(CRIT_CHANCE, 6, 20)), boost(DAMAGE, 6, 25)),
 			skill("great_pirate_era", "Dawn of the Great Pirate Era", "대해적시대의 개막", UTILITY, 30, 24, look(SkillLook.PIRATE_ERA, allyBoost(12, DAMAGE, 12, 30)).size(12).unscaled(),
 				allyBoost(12, CRIT_CHANCE, 15, 10)).withFx(Fx.Kind.SPARK));
 

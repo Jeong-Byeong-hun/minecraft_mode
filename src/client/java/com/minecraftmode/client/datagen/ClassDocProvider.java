@@ -72,7 +72,7 @@ public class ClassDocProvider implements DataProvider {
 		StringBuilder md = new StringBuilder();
 		md.append("# 직업 (클래스)\n\n");
 		md.append("> 이 문서는 `./gradlew runDatagen`이 코드 정의에서 생성합니다(`ClassDocProvider`). 직접 고치지 마세요.\n\n");
-		md.append("- 직업 ").append(JobClass.PLAYABLE.size()).append("종 × 4차 전직, 직업마다 무기 23종(1차 3 · 2차 6 · 3차 6 · 4차 8), 무기마다 스킬 3개(4차는 4개).\n");
+		md.append("- 직업 ").append(JobClass.PLAYABLE.size()).append("종 × 4차 전직, 직업마다 무기 26종(1차 3 · 2차 7 · 3차 7 · 4차 9), 무기마다 스킬 3개(4차는 4개).\n");
 		md.append("- 스킬 키: R / X / V / Z (4번째는 4차 무기만), 직업 창: K. 키는 설정 > 조작에서 바꿀 수 있습니다.\n");
 		md.append("- 직업 무기는 누구나 들 수 있지만, **직업·차수·레벨 조건을 모두 만족해야** 스킬과 각인이 작동합니다. 그 외에는 기본 공격만 됩니다.\n");
 		md.append("- 위력 = 4 + 2.2 × 차수 + 0.06 × 요구 레벨. 스킬의 피해 배율은 **스킬 위력**(위력 × ").append(num(WeaponDef.SKILL_POWER))
@@ -97,7 +97,14 @@ public class ClassDocProvider implements DataProvider {
 		md.append("- 2~4차 전직은 자기 직업 교관에게서 받는 시련으로 합니다. 시련은 한 번에 하나만 진행할 수 있습니다.\n");
 		md.append("- 목표 몹을 처치하면 진행도가 오르고, 해당 몹이 **시련 증표**를 확률적으로 떨어뜨립니다. 증표는 시련 중인 플레이어의 인벤토리로 바로 들어옵니다.\n");
 		md.append("- 보스(위더 · 엔더 드래곤 · 워든 · 엘더 가디언 · 미스릴 골렘)는 64블록 안에서 같은 시련을 진행 중인 모든 플레이어에게 인정됩니다.\n");
-		md.append("- 목표 처치 + 증표 + 재료를 갖추고 교관에게 돌아가 \"시련 완료\"를 누르면 증표와 재료를 소모하고 전직합니다.\n\n");
+		md.append("- 목표 처치 + 증표 + 재료를 갖추고 교관에게 돌아가 \"시련 완료\"를 누르면 증표와 재료를 소모하고 전직합니다.\n");
+		md.append("- 한 번뿐인 시련이라 마치면(시련 없는 1차 전직 포함) 그때 레벨의 ");
+		for (int tier = 1; tier <= 4; tier++) {
+			md.append(Math.round(com.minecraftmode.job.quest.QuestService.TRIAL_EXP[tier] * 100)).append(tier < 4 ? "/" : "% 경험치와 공적 ");
+		}
+		for (int tier = 1; tier <= 4; tier++) {
+			md.append(com.minecraftmode.job.quest.QuestService.TRIAL_MERIT[tier]).append(tier < 4 ? "/" : "(1~4차)을 받습니다.\n\n");
+		}
 		md.append("| 직업 | 차수 | 교관 | 시련 | 처치 목표 | 증표 (드롭) | 재료 |\n|---|---|---|---|---|---|---|\n");
 		for (QuestDef quest : Quests.all()) {
 			if (quest.instant()) {
@@ -121,8 +128,8 @@ public class ClassDocProvider implements DataProvider {
 			.append("%, 섬세한 손길 제외). 보스(네임드·시련 보스)는 응축된 정수를 반드시 떨어뜨립니다(1개 + 기본 체력 150마다 1개, 워든은 ")
 			.append(JobEvents.WARDEN_CONDENSED).append("개).\n");
 		md.append("- 응축된 정수 = 정수 9개 (조합대에서 서로 변환).\n");
-		md.append("- 정수 각인대에서 직업 무기에 각인을 최대 3줄 붙입니다. 같은 각인을 여러 줄 붙이면 수치가 더해집니다(예: 평타 반경 1.5블록 × 3 = 4.5블록).\n");
-		md.append("- 비용: 차수 × 4 × (현재 줄 수 + 1) 정수. 후보 새로 고침·줄 제거: 차수 × 2 정수.\n\n");
+		md.append("- 정수 각인대에서 직업 무기에 각인을 최대 3줄, 직업 방어구에 최대 4줄 붙입니다. 같은 각인을 여러 줄 붙이면 수치가 더해집니다(예: 평타 반경 1.5블록 × 3 = 4.5블록).\n");
+		md.append("- 비용: 차수 × 4(방어구는 3) × (현재 줄 수 + 1) 정수와 장비 구간 길드 가격 × (현재 줄 수 + 1) ÷ 4 동전. 후보 새로 고침: 차수 × 2 정수와 구간 가격 ÷ 6, 줄 제거: 차수 × 2 정수와 구간 가격 ÷ 4.\n\n");
 
 		md.append("## 특성\n\n");
 		md.append("- 특성 창: N. 포인트 = (레벨 - 10) × 2 ÷ 3 (Lv 100에 ").append(Talents.points(JobProgression.MAX_LEVEL)).append("점). 계열마다 1–4단계는 최대 ")

@@ -3,6 +3,7 @@ package com.minecraftmode.entity.named;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.MobPower;
+import com.minecraftmode.entity.SpaceCheck;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.combat.Attacks;
@@ -279,6 +280,29 @@ public class NamedMob extends CreatureMob {
 	}
 
 	/**
+	 * Tier lairs (0.5.49): makes this monster fight at {@code level} like {@link #raiseTo}, whatever its own range, then {@code health} and
+	 * {@code damage} times stronger on top (tier, affixes, party), named {@code name} (also on its boss bar). Toughness multiplies what it
+	 * already has (a champion's health past the cap), the damage multiplier replaces any earlier one. Never saved: tier lair monsters live
+	 * in server memory only.
+	 */
+	public void empower(final int level, final float health, final float damage, final Component name) {
+		NamedDef def = this.def();
+		double own = NamedMobs.levelScale(def, this.namedLevel);
+		double[] typical = NamedMobs.typicalPower(level);
+		float toughness = (float)Math.max(1.0, typical[0] / (def.health() * own)) * health;
+		this.powerToughness = toughness;
+		this.powerLevel = Math.max(level, this.namedLevel);
+		MobPower.setToughness(this.getUUID(), MobPower.toughness(this) * toughness);
+		MobPower.set(this.getUUID(), (float)Math.max(1.0, typical[1] / (def.damage() * own)) * damage);
+		this.setCustomName(name);
+		this.setCustomNameVisible(true);
+		if (this.lordBar != null) {
+			this.lordBar.setName(name);
+		}
+		this.setHealth(this.getMaxHealth());
+	}
+
+	/**
 	 * Fits a lair lord to the strongest challenger's {@code level}: raises it ({@link #raiseTo}), or lowers it back to its own level when
 	 * nobody above its range is near, healing it whenever the power changes (so chipping it at a low level and raising it never pays).
 	 * Returns true when anything changed.
@@ -464,15 +488,26 @@ public class NamedMob extends CreatureMob {
 			this.discard();
 			return;
 		}
+		// a lord only grows as far as the corridor allows (a treant lord at 1.2x stood in the four-high roof)
+		if (this.tickCount % 20 == 10 && !SpaceCheck.fits(level, this, this.position())) {
+			SpaceCheck.growTo(level, this, LORD_SCALE);
+		}
 		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > LORD_LEASH * LORD_LEASH) {
 			this.setTarget(null);
 			this.getNavigation().stop();
-			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 1.5);
+			this.goHome(level, new Vec3(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 1.5));
 		}
 		if (this.tickCount % WRATH_INTERVAL != WRATH_INTERVAL / 2 || this.getTarget() == null) {
 			return;
 		}
 		this.wrath(level);
+	}
+
+	/** Back home after being lured too far: to the nearest spot by {@code home} it fits in. */
+	private void goHome(final ServerLevel level, final Vec3 home) {
+		Vec3 at = SpaceCheck.nearestFree(level, this, home, SpaceCheck.SEARCH);
+		Vec3 to = at == null ? home : at;
+		this.teleportTo(to.x, to.y, to.z);
 	}
 
 	private void tickChampion(final ServerLevel level) {
@@ -482,7 +517,7 @@ public class NamedMob extends CreatureMob {
 		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > this.championLeash * this.championLeash) {
 			this.setTarget(null);
 			this.getNavigation().stop();
-			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 0.5);
+			this.goHome(level, Vec3.atBottomCenterOf(this.lordHome));
 		}
 		if (this.tickCount % WRATH_INTERVAL == WRATH_INTERVAL / 2 && this.getTarget() != null) {
 			this.wrath(level);

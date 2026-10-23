@@ -29,6 +29,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.DataSlot;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
@@ -51,6 +52,8 @@ public class EnhanceMenu extends AbstractContainerMenu {
 	public static final int BUTTON_PROTECTED = 1;
 	/** At +15: awaken the piece one step (awakening crystals and coins, always succeeds). */
 	public static final int BUTTON_AWAKEN = 2;
+	/** Puts an imbue scroll's line on the piece (0.5.49, {@link #scrollFor}): always succeeds, uses the scroll up. */
+	public static final int BUTTON_IMBUE = 3;
 
 	public static final int RESULT_NONE = 0;
 	public static final int RESULT_SUCCESS = 1;
@@ -58,6 +61,7 @@ public class EnhanceMenu extends AbstractContainerMenu {
 	public static final int RESULT_DROP = 3;
 	public static final int RESULT_SAVED = 4;
 	public static final int RESULT_AWAKENED = 5;
+	public static final int RESULT_IMBUED = 6;
 
 	private final @Nullable Entity npc;
 	private final DataSlot result = DataSlot.standalone();
@@ -257,10 +261,56 @@ public class EnhanceMenu extends AbstractContainerMenu {
 		return true;
 	}
 
+	/**
+	 * The imbue scroll the bench would use on {@code piece} from {@code player}'s inventory and bags: a greater one when it may go on (nothing
+	 * imbued yet or a normal line), else a normal one when nothing is imbued; null when none fits.
+	 */
+	public static @Nullable ImbueScrollItem scrollFor(final Player player, final ItemStack piece) {
+		ImbueSlot slot = Imbue.slotOf(piece);
+		if (slot == null) {
+			return null;
+		}
+		Item greater = ModItems.GREATER_IMBUE_SCROLLS.get(slot);
+		if (Imbue.canApply(piece, slot, Imbue.GREATER) && Bags.count(player, greater) > 0) {
+			return (ImbueScrollItem)greater;
+		}
+		Item normal = ModItems.IMBUE_SCROLLS.get(slot);
+		if (Imbue.canApply(piece, slot, Imbue.NORMAL) && Bags.count(player, normal) > 0) {
+			return (ImbueScrollItem)normal;
+		}
+		return null;
+	}
+
+	private boolean imbue(final Player player) {
+		ItemStack stack = this.input();
+		ImbueScrollItem scroll = scrollFor(player, stack);
+		if (scroll == null) {
+			return false;
+		}
+		if (!(player instanceof ServerPlayer serverPlayer)) {
+			return true;
+		}
+		Bags.take(player, scroll, 1);
+		Imbue imbue = new Imbue(scroll.slot(), scroll.grade());
+		stack.set(ModDataComponents.IMBUE, imbue);
+		this.container.setChanged();
+		this.result.set(RESULT_IMBUED);
+		ServerLevel level = serverPlayer.level();
+		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
+		level.sendParticles(ParticleTypes.ENCHANT, player.getX(), player.getY(1.0), player.getZ(), 40, 0.6, 0.8, 0.6, 0.6);
+		serverPlayer.sendOverlayMessage(Component.translatable("message.minecraft_mode.enhance.imbued", stack.getHoverName(),
+			Component.translatable(imbue.slot().stat().key(), ImbueScrollItem.number(imbue.line().value()))).withStyle(ChatFormatting.LIGHT_PURPLE));
+		this.broadcastChanges();
+		return true;
+	}
+
 	@Override
 	public boolean clickMenuButton(final Player player, final int buttonId) {
 		if (buttonId == BUTTON_AWAKEN) {
 			return this.awaken(player);
+		}
+		if (buttonId == BUTTON_IMBUE) {
+			return this.imbue(player);
 		}
 		if (buttonId != BUTTON_ENHANCE && buttonId != BUTTON_PROTECTED) {
 			return false;

@@ -16,12 +16,12 @@ import net.minecraft.util.StringRepresentable;
 public enum JobClass implements StringRepresentable {
 	NONE("none", 0xB8B8B8, "Adventurer", "모험가", new Tier[0]),
 	WARRIOR("warrior", 0xE0533D, "Warrior", "전사", new Tier[] {
-		new Tier("Warrior", "전사", "Iron Body", "강철 육체", "Max health +4.", "최대 체력 +4."),
-		new Tier("Gladiator", "검투사", "Arena Instinct", "투기장 본능", "Melee damage +10%.", "근접 피해 +10%."),
-		new Tier("Berserker", "버서커", "Berserk Blood", "광전사의 피",
-			"Below 40% health: damage +25% and 5% lifesteal.", "체력 40% 미만일 때 피해 +25%, 흡혈 5%."),
-		new Tier("King of Knights", "기사왕", "Avalon", "아발론",
-			"Once every 3 minutes, survive a lethal blow and recover 30% health.", "3분마다 한 번, 치명상을 버티고 체력 30%를 회복합니다.")
+		new Tier("Warrior", "전사", "Battle Instinct", "전투 본능", "Max health +4 and melee basic damage +3%.", "최대 체력 +4, 근접 기본 공격 피해 +3%."),
+		new Tier("Gladiator", "검투사", "Arena Instinct", "투기장 본능", "Melee basic damage +8% and critical chance +2%.", "근접 기본 공격 피해 +8%, 치명타 확률 +2%."),
+		new Tier("Berserker", "버서커", "Rampage", "광폭화",
+			"Every hit you land: damage +1% for 6 s, stacking up to 10 times (+10%).", "적중할 때마다 6초간 피해 +1%, 최대 10번 겹침(+10%)."),
+		new Tier("King of Knights", "기사왕", "Sword of Selection", "선정의 검",
+			"Skill damage +10%. After an ultimate: critical damage +30% for 10 s.", "스킬 피해 +10%. 궁극기를 쓰면 10초간 치명타 피해 +30%.")
 	}),
 	ROGUE("rogue", 0x9B59D0, "Rogue", "도적", new Tier[] {
 		new Tier("Thief", "도적", "Light Feet", "가벼운 발놀림", "Movement speed +10% and critical chance +5%.", "이동 속도 +10%, 치명타 확률 +5%."),

@@ -46,6 +46,9 @@ final class JobLang {
 		b.add(ModEffects.VALOR.value(), ko ? "용맹" : "Valor");
 		b.add(ModEffects.INSIGHT.value(), ko ? "간파" : "Insight");
 		b.add(ModEffects.FEROCITY.value(), ko ? "맹렬" : "Ferocity");
+		// warrior passives
+		b.add(ModEffects.RAMPAGE.value(), ko ? "광폭화" : "Rampage");
+		b.add(ModEffects.SELECTION.value(), ko ? "선정의 검" : "Sword of Selection");
 
 		// classes
 		for (JobClass job : JobClass.values()) {
@@ -143,7 +146,6 @@ final class JobLang {
 			? "레벨 10 달성! 스톰홀드의 교관에게 가면 바로 전직할 수 있습니다."
 			: "Level 10! Visit a trainer in Stormhold to take a class right away.");
 		b.add("message.minecraft_mode.job.advanced", ko ? "%s님이 %s(으)로 전직했습니다!" : "%s has become a %s!");
-		b.add("message.minecraft_mode.job.avalon", ko ? "아발론이 치명상을 막아냈습니다! (3분 후 재사용)" : "Avalon turned aside a lethal blow! (ready again in 3 minutes)");
 		b.add("message.minecraft_mode.job.reset_none", ko ? "초기화할 직업이 없습니다." : "You have no class to reset.");
 		b.add("message.minecraft_mode.essence.too_few", ko ? "정수가 %s개 있어야 응축할 수 있습니다." : "You need %s essence to condense.");
 		b.add("tooltip.minecraft_mode.essence.use", ko ? "사용: 정수 9개 → 응축된 정수 1개 (웅크리고 사용: 전부)" : "Use: 9 essence → 1 condensed essence (sneak: all)");
@@ -232,6 +234,7 @@ final class JobLang {
 		AccessoryLang.add(b, ko);
 		TownQuestLang.add(b, ko);
 		JumpLang.add(b, ko);
+		TierLang.add(b, ko);
 	}
 
 	private JobLang() {

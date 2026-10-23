@@ -12,6 +12,7 @@ import com.minecraftmode.client.job.TrainerScreen;
 import com.minecraftmode.economy.ShopOffers;
 import com.minecraftmode.economy.ShopType;
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.DummyMeter;
 import com.minecraftmode.entity.ClassTrainer;
 import com.minecraftmode.entity.TrainingDummy;
@@ -142,6 +143,12 @@ public class JobClientGameTest implements FabricClientGameTest {
 			server.runCommand("gamemode survival @p");
 			server.runCommand("tp @p 0.5 -60 0.5 180 0");
 			context.waitTicks(5);
+			// -PjobChecks=summons: only the summon check, while working on summons
+			if ("summons".equals(System.getProperty("minecraft_mode.job.only"))) {
+				SummonChecks.run(context, server, connection);
+				WorldClose.prepare(context, server);
+				return;
+			}
 
 			checkProgression(context, server, connection);
 			checkSkillKey(context, server, connection);
@@ -172,6 +179,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			checkProjectileImmunities(context, server, connection);
 			checkLockedAim(context, server, connection);
 			castEverySkill(context, server, connection);
+			SummonChecks.run(context, server, connection);
 			WorldClose.prepare(context, server);
 		}
 	}
@@ -377,7 +385,9 @@ public class JobClientGameTest implements FabricClientGameTest {
 			}
 			player.getInventory().add(new ItemStack(ModItems.ESSENCE, 9));
 			require(QuestService.status(player, JobClass.WARRIOR) == QuestService.Status.READY, "warrior_2 should be ready");
+			int merit = Bounties.get(player).merit();
 			require(QuestService.complete(player, JobClass.WARRIOR), "completing warrior_2 failed");
+			require(Bounties.get(player).merit() - merit == QuestService.TRIAL_MERIT[2], "a finished trial pays its merit");
 			require(JobProgression.get(player).tier() == 2, "tier should be 2");
 			require(JobProgression.count(player.getInventory(), ModItems.ESSENCE) == 1, "warrior_2 should take 8 of 9 essence");
 			require(JobProgression.count(player.getInventory(), Quests.CHAMPIONS_LAUREL) == Math.max(0, laurels - 4), "warrior_2 should take 4 laurels");
@@ -1451,8 +1461,11 @@ public class JobClientGameTest implements FabricClientGameTest {
 		String report = server.computeOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			ServerLevel level = player.level();
+			// no Rampage or boosts left from the volleys (a warrior's hits there stack damage dealt)
+			player.removeAllEffects();
 			JobProgression.set(player, JobProgression.get(player).withJob(JobClass.ROGUE, 4).withProgress(100, 0));
 			JobStats.refresh(player);
+			GearStats.invalidate(player);
 			TrainingDummy dummy = ModEntities.TRAINING_DUMMY.create(level, EntitySpawnReason.COMMAND);
 			dummy.snapTo(player.getX() + 3, player.getY(), player.getZ(), 0, 0);
 			level.addFreshEntity(dummy);
@@ -1493,6 +1506,7 @@ public class JobClientGameTest implements FabricClientGameTest {
 			ServerLevel level = player.level();
 			JobData saved = JobProgression.get(player);
 			ItemStack hand = player.getMainHandItem().copy();
+			player.removeAllEffects();
 			JobProgression.set(player, saved.withJob(JobClass.WARRIOR, 1).withProgress(10, 0));
 			player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(JobWeapons.item(JobWeapons.def("iron_greatsword"))));
 			JobStats.refresh(player);

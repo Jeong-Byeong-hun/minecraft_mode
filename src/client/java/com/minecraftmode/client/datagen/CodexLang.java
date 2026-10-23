@@ -3,6 +3,7 @@ package com.minecraftmode.client.datagen;
 import com.minecraftmode.craft.Crops;
 import com.minecraftmode.craft.Fishing;
 import com.minecraftmode.economy.ShopOffers;
+import com.minecraftmode.enhance.ImbueSlot;
 import com.minecraftmode.progress.Codex;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider.TranslationBuilder;
 
@@ -89,7 +90,10 @@ final class CodexLang {
 			{"sukuna_finger", "스쿠나 레이드 클리어 보상 (일반 1개, 영웅 2개, 악몽 3개)", "Sukuna raid clears (1 on Normal, 2 on Heroic, 3 on Nightmare)"},
 			{"accessory_orb", "영웅·악몽 레이드 클리어 보상 (영웅 1개, 악몽 2개)", "Heroic and Nightmare raid clears (1 on Heroic, 2 on Nightmare)"},
 			{"titan_shard", "거신 처치", "Titan kills"},
-			{"lair_map", "소굴 정복(주기마다 소굴마다 1장), 메인 스토리(소굴 장, 2장), 현상금 공적", "Every lair clear (one per lair each cycle), the main story (lair chapter, 2), bounty merit"},
+			{"lair_map", "소굴 정복(주기마다 소굴마다 1장, Lv 100은 티어 1 지도), 티어 소굴 군주(1~5장), 메인 스토리(소굴 장, 2장), 현상금 공적",
+				"Every lair clear (one per lair each cycle, a tier 1 map at Lv 100), tier lair lords (1-5), the main story (lair chapter, 2), bounty merit"},
+			{"evolution_shard", "티어 소굴 군주 (1 + 티어/4개)", "Tier lair lords (1 + tier/4)"},
+			{"evolution_core", "티어 11 이상 소굴 군주 (확률)", "Tier 11+ lair lords (chance)"},
 			{"dungeon_keystone", "던전 클리어·주기마다 던전 관리인", "Dungeon clears and the warden each cycle"},
 			{"golem_core", "미스릴 골렘", "Mythril golems"},
 			{"raw_mythril", "미스릴 광석 (깊은 곳)", "Mythril ore (deep)"},
@@ -107,6 +111,10 @@ final class CodexLang {
 		};
 		for (String[] k : known) {
 			b.add(s + k[0], ko ? k[1] : k[2]);
+		}
+		for (ImbueSlot slot : ImbueSlot.values()) {
+			b.add(s + "imbue_scroll_" + slot.id(), ko ? "티어 소굴 군주 (확률)" : "Tier lair lords (chance)");
+			b.add(s + "greater_imbue_scroll_" + slot.id(), ko ? "티어 11 이상 소굴 군주 (확률)" : "Tier 11+ lair lords (chance)");
 		}
 		farm(b, ko, s);
 	}

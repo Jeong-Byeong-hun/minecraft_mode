@@ -66,8 +66,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * The residence: the dimension is flat grassland with the arrival square; the waymaster's list (screenshot) takes the player there
- * and a second waymaster on the square takes them back; a deed claims 16x16x16 from under the feet (and is used up), more deeds stack upwards, nobody else can claim
- * in that column, overlaps, the square and the ninth plot are refused. Strangers cannot break, place, open chests or touch armor
+ * and a second waymaster on the square takes them back; a deed claims the whole chunk column (and is used up), stacked claims of older saves fold into one with the extra deeds
+ * owed back, nobody else can claim in that column, a second deed in one's own column, the square and the ninth plot are refused. Strangers cannot break, place, open chests or touch armor
  * stands inside a claim, nobody builds on unclaimed land, trusted players can, explosions break nothing, the action bar names the
  * owner, giving land up returns the deed, and the land screen opens (screenshot).
  */
@@ -147,7 +147,7 @@ final class ResidenceChecks {
 			require(claims.claim(BOB.id(), "Bob", new BlockPos(8, y, 80), level) == LandClaims.Result.SPAWN, "nobody claims the south avenue");
 			require(ResidenceRules.crosses(level, new BlockPos(EDGE, y, 40), new BlockPos(EDGE + 1, y, 40)), "x 47 to 48 crosses from Alice to Bob");
 			require(!ResidenceRules.crosses(level, new BlockPos(EDGE - 1, y, 40), new BlockPos(EDGE, y, 40)), "inside Alice's land nothing crosses");
-			require(ResidenceRules.crosses(level, new BlockPos(40, y, 40), new BlockPos(40, y + 16, 40)), "Alice's land to the open air above crosses");
+			require(!ResidenceRules.crosses(level, new BlockPos(40, y, 40), new BlockPos(40, y + 40, 40)), "Alice's land is the whole column: the air above is hers too");
 			// the chunks must tick for water, pistons, dispensers and hoppers
 			ServerPlayer player = connection.getServerPlayer();
 			player.teleportTo(level, 44.5, y, 20.5, java.util.Set.of(), 0.0F, 0.0F, true);
@@ -224,10 +224,11 @@ final class ResidenceChecks {
 			require(deedOffer >= 0, "the merit shop offers land deeds");
 			Bounties.Offer offer = Bounties.SHOP.get(deedOffer);
 			require(offer.price(Bounties.get(buyer)) == Bounties.DEED_MERIT, "the first deed costs " + Bounties.DEED_MERIT + " merit");
-			Bounties.set(buyer, Bounties.get(buyer).withMerit(Bounties.DEED_MERIT * 2 + Bounties.DEED_RAISE));
+			Bounties.set(buyer, Bounties.get(buyer).withMerit(Bounties.DEED_MERIT * 2));
 			require(Bounties.buy(buyer, deedOffer) && Bounties.buy(buyer, deedOffer), "two deeds are bought with merit");
-			require(Bounties.get(buyer).merit() == 0 && Bounties.get(buyer).deeds() == 2, "500 then 750 merit were paid");
-			require(offer.price(Bounties.get(buyer)) == Bounties.DEED_MERIT + 2 * Bounties.DEED_RAISE, "the third deed costs 1000");
+			require(Bounties.get(buyer).merit() == 0 && Bounties.get(buyer).deeds() == 2, "the first two deeds cost 500 each");
+			require(offer.price(Bounties.get(buyer)) == Bounties.DEED_MERIT + Bounties.DEED_RAISE, "the third deed costs 750");
+			require(offer.price(Bounties.get(buyer).withDeeds(3)) == Bounties.DEED_MERIT + 2 * Bounties.DEED_RAISE, "the fourth deed costs 1000");
 			require(!Bounties.buy(buyer, deedOffer), "no merit, no deed");
 			require(buyer.getInventory().countItem(ModItems.LAND_DEED) == 2, "the bought deeds are in the inventory");
 			buyer.getInventory().clearContent();
@@ -303,7 +304,7 @@ final class ResidenceChecks {
 			FakePlayer bob = FakePlayer.get(level, BOB);
 			FakePlayer carol = FakePlayer.get(level, CAROL);
 			int ground = ResidenceDimension.SURFACE_Y;
-			// a deed claims the chunk from under the feet up 16 blocks, and is used up
+			// a deed claims the whole chunk column (its borders from under the feet), and is used up
 			alice.setPos(40.5, ground + 1, 40.5);
 			alice.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(ModItems.LAND_DEED, 3));
 			InteractionResult used = ModItems.LAND_DEED.use(level, alice, InteractionHand.MAIN_HAND);
@@ -311,15 +312,14 @@ final class ResidenceChecks {
 			require(alice.getMainHandItem().getCount() == 2, "the deed is used up");
 			LandClaims.Claim claim = claims.at(new BlockPos(40, ground, 40));
 			require(claim != null && claim.owner().equals(ALICE.id()) && claim.minY() == ground, "the claim starts under the feet");
-			require(claims.at(new BlockPos(32, ground + 15, 47)) == claim, "the claim is the whole chunk, 16 high");
-			require(claims.at(new BlockPos(40, ground + 16, 40)) == null && claims.at(new BlockPos(40, ground - 1, 40)) == null, "the claim is 16 blocks high");
+			require(claims.at(new BlockPos(32, ground + 15, 47)) == claim, "the claim is the whole chunk");
+			require(claims.at(new BlockPos(40, ground + 200, 40)) == claim && claims.at(new BlockPos(40, level.getMaxY(), 40)) == claim
+				&& claims.at(new BlockPos(40, ground - 30, 40)) == claim, "the claim is the whole column, up to the build limit and down");
 			require(claims.at(new BlockPos(48, ground, 40)) == null, "the claim stops at the chunk edge");
-			// stacking, the column rule, overlaps, the square and the plot limit
+			// the column rule, the square and the plot limit
 			alice.setPos(40.5, ground + 17, 40.5);
-			require(ModItems.LAND_DEED.use(level, alice, InteractionHand.MAIN_HAND) instanceof InteractionResult.Success, "a second deed stacks on top");
-			require(claims.at(new BlockPos(40, ground + 31, 40)) != null, "the land now reaches 32 blocks up");
-			alice.setPos(40.5, ground + 5, 40.5);
-			require(claims.claim(ALICE.id(), "Alice", alice.blockPosition(), level) == LandClaims.Result.OVERLAP, "overlapping land is refused");
+			require(claims.claim(ALICE.id(), "Alice", alice.blockPosition(), level) == LandClaims.Result.OVERLAP, "a second deed in one's own column is refused");
+			require(alice.getMainHandItem().getCount() == 2, "and no deed is used up for it");
 			require(claims.claim(BOB.id(), "Bob", new BlockPos(44, ground + 60, 44), level) == LandClaims.Result.TAKEN, "nobody else claims in Alice's column");
 			require(claims.claim(BOB.id(), "Bob", new BlockPos(3, ground + 1, 3), level) == LandClaims.Result.SPAWN, "the square cannot be claimed");
 			for (int cx = 4; claims.owned(ALICE.id()).size() < LandClaims.MAX_CLAIMS; cx++) {
@@ -363,8 +363,22 @@ final class ResidenceChecks {
 			level.explode(null, 45.5, ground + 1, 45.5, 4.0F, Level.ExplosionInteraction.TNT);
 			require(level.getBlockState(new BlockPos(45, ground, 45)).is(Blocks.GRASS_BLOCK) && level.getBlockState(wall).is(Blocks.STONE), "explosions break nothing in the residence");
 			// giving land up
-			require(claims.abandon(ALICE.id(), ChunkPos.pack(2, 2), ground + 16), "Alice gives up the upper plot");
-			require(claims.at(new BlockPos(40, ground + 20, 40)) == null && claims.at(inside) != null, "only that plot is gone");
+			require(claims.abandon(ALICE.id(), ChunkPos.pack(4, 2), ground), "Alice gives up the plot at chunk 4");
+			require(claims.at(new BlockPos(70, ground + 20, 40)) == null && claims.at(inside) != null, "only that plot is gone");
+			// claims stacked in one column before 0.5.46 load as one, and the extra deeds are owed back
+			net.minecraft.nbt.CompoundTag old = new net.minecraft.nbt.CompoundTag();
+			net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+			for (int minY : new int[] {ground, ground + 16, ground + 32}) {
+				net.minecraft.nbt.CompoundTag c = new net.minecraft.nbt.CompoundTag();
+				c.putLong("chunk", ChunkPos.pack(9, 9));
+				c.putInt("min_y", minY);
+				c.put("owner", net.minecraft.core.UUIDUtil.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE, BOB.id()).getOrThrow());
+				list.add(c);
+			}
+			old.put("claims", list);
+			LandClaims folded = LandClaims.TYPE.codec().parse(net.minecraft.nbt.NbtOps.INSTANCE, old).getOrThrow();
+			require(folded.owned(BOB.id()).size() == 1 && folded.owned(BOB.id()).getFirst().minY() == ground, "stacked claims fold into the first one");
+			require(folded.takeRefunds(BOB.id()) == 2 && folded.takeRefunds(BOB.id()) == 0, "the two extra deeds are owed back once");
 			// clean up for the land screen check
 			for (LandClaims.Claim own : claims.owned(ALICE.id())) {
 				claims.abandon(ALICE.id(), own.chunk(), own.minY());
@@ -381,8 +395,8 @@ final class ResidenceChecks {
 			ServerLevel level = ResidenceDimension.level(s);
 			require(claims.claim(player.getUUID(), player.getPlainTextName(), new BlockPos(-40, ResidenceDimension.SURFACE_Y + 1, 40), level) == LandClaims.Result.CLAIMED,
 				"the player claims a plot");
-			require(claims.claim(player.getUUID(), player.getPlainTextName(), new BlockPos(-40, ResidenceDimension.SURFACE_Y + 17, 40), level) == LandClaims.Result.CLAIMED,
-				"and the plot above it");
+			require(claims.claim(player.getUUID(), player.getPlainTextName(), new BlockPos(-40, ResidenceDimension.SURFACE_Y + 1, 24), level) == LandClaims.Result.CLAIMED,
+				"and the plot north of it");
 			claims.trust(player.getUUID(), ALICE.id(), "Alice");
 			claims.trust(player.getUUID(), BOB.id(), "Bob");
 			LandOffice.open(player);
@@ -390,7 +404,7 @@ final class ResidenceChecks {
 		context.waitForScreen(LandScreen.class);
 		context.takeScreenshot("residence_land_screen");
 		context.runOnClient(mc -> mc.gui.setScreen(null));
-		// border lines: the player's two stacked plots (green), Alice's land where the player is trusted (yellow), Bob's (red)
+		// border lines: the player's two plots (green), Alice's land where the player is trusted (yellow), Bob's (red)
 		server.runOnServer(s -> {
 			ServerPlayer player = connection.getServerPlayer();
 			LandClaims claims = LandClaims.get(s);
@@ -399,7 +413,7 @@ final class ResidenceChecks {
 			require(claims.claim(ALICE.id(), "Alice", new BlockPos(-24, y, 40), level) == LandClaims.Result.CLAIMED, "Alice claims next door");
 			require(claims.claim(BOB.id(), "Bob", new BlockPos(-56, y, 40), level) == LandClaims.Result.CLAIMED, "Bob claims on the other side");
 			claims.trust(ALICE.id(), player.getUUID(), player.getPlainTextName());
-			player.teleportTo(level, -39.5, y + 10, 78.5, java.util.Set.of(), 180.0F, 12.0F, true);
+			player.teleportTo(level, -39.5, y, 58.5, java.util.Set.of(), 180.0F, -10.0F, true);
 		});
 		context.waitFor(mc -> LandBorders.count() >= 4, TRAVEL_TICKS);
 		context.waitTicks(60);
@@ -420,7 +434,7 @@ final class ResidenceChecks {
 			player.getInventory().clearContent();
 			LandOffice.act(player, new LandActionPayload(LandActionPayload.ABANDON, "", -3, 2, g));
 			LandClaims claims = LandClaims.get(s);
-			require(claims.at(chest) == null && claims.at(new BlockPos(-40, g + 20, 40)) != null, "only the lower plot is given up");
+			require(claims.at(chest) == null && claims.at(new BlockPos(-40, g + 20, 24)) != null, "only that plot is given up");
 			require(level.getBlockState(chest).isAir() && level.getBlockState(new BlockPos(-38, g + 3, 40)).isAir(), "what was built is gone");
 			require(level.getBlockState(new BlockPos(-37, g, 41)).is(Blocks.GRASS_BLOCK) && level.getBlockState(new BlockPos(-40, g, 40)).is(Blocks.GRASS_BLOCK),
 				"the ground is filled back in");

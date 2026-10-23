@@ -128,6 +128,10 @@ loom {
 		if (providers.gradleProperty("portraits").isPresent()) {
 			getByName("clientGameTest").property "minecraft_mode.portraits", providers.gradleProperty("portraits").get()
 		}
+		// -PjobChecks=summons: the job test runs only its summon check
+		if (providers.gradleProperty("jobChecks").isPresent()) {
+			getByName("clientGameTest").property "minecraft_mode.job.only", providers.gradleProperty("jobChecks").get()
+		}
 		shards.eachWithIndex { slice, i ->
 			create("clientGameTest${i + 1}") {
 				inherit loom.runs.getByName("clientGameTest")

@@ -51,7 +51,7 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.lair.first_clear", ko ? "%s 첫 공략! 직업 경험치 +%s" : "First clear of %s! +%s class experience");
 		b.add("message.minecraft_mode.lair.chest_exp", ko ? "%s의 보물: 직업 경험치 +%s" : "Treasure of %s: +%s class experience");
 		b.add("message.minecraft_mode.lair.lord_awakens", ko ? "%2$s의 군주 %1$s이(가) 깨어났다!" : "%s, lord of %s, awakens!");
-		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는 소굴이 근처에 없습니다." : "There is no lair within reach of this map.");
+		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는, 내 레벨(±5)에 맞는 소굴이 근처에 없습니다." : "There is no lair of your level (±5) within reach of this map.");
 		b.add("message.minecraft_mode.lair.map_here", ko ? "이곳에서는 소굴 지도를 쓸 수 없습니다." : "Lair maps do not work here.");
 		b.add("message.minecraft_mode.lair.travel_no_map", ko ? "소굴 지도가 없어 이동할 수 없습니다." : "You no longer hold a lair map.");
 		b.add("message.minecraft_mode.lair.travel_cleared", ko ? "이번 주기에 이미 정복한 소굴입니다." : "You already cleared that lair this cycle.");
@@ -313,6 +313,7 @@ final class EndgameLang {
 		b.add("key.minecraft_mode.talent_screen", ko ? "특성" : "Talents");
 		b.add("message.minecraft_mode.talent.no_coins", ko ? "특성 초기화에는 %s이(가) 필요합니다." : "You need %s to reset your talents.");
 		b.add("message.minecraft_mode.talent.reset", ko ? "특성을 초기화했습니다." : "Your talents were reset.");
+		b.add("message.minecraft_mode.talent.refunded", ko ? "전사 특성이 공격형으로 바뀌어(수호 → 투신) 특성 포인트를 모두 돌려드렸습니다. 특성 창(N)에서 다시 찍으세요." : "Warrior talents changed (Guardian is now War God): all your talent points are back. Spend them again in the talent window (N).");
 		b.add("screen.minecraft_mode.talent.title", ko ? "특성" : "Talents");
 		b.add("screen.minecraft_mode.talent.no_class", ko ? "먼저 스톰홀드의 직업 교관에게서 직업을 고르세요. 특성 포인트는 레벨에서 나옵니다 (10레벨 이후 3레벨마다 2점)."
 			: "Choose a class at a trainer in Stormhold first. Talent points come from levels (two for every three levels after 10).");

@@ -2,6 +2,7 @@ package com.minecraftmode.client.lair;
 
 import com.minecraftmode.network.LairClearPayload;
 import com.minecraftmode.network.LairOfferPayload;
+import com.minecraftmode.network.TierOfferPayload;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import org.jspecify.annotations.Nullable;
@@ -18,6 +19,9 @@ public final class LairClient {
 			() -> context.client().gui.setScreen(new LairTravelScreen(payload))
 		));
 		ClientPlayNetworking.registerGlobalReceiver(LairClearPayload.TYPE, (payload, context) -> context.client().execute(() -> pendingClear = payload));
+		ClientPlayNetworking.registerGlobalReceiver(TierOfferPayload.TYPE, (payload, context) -> context.client().execute(
+			() -> context.client().gui.setScreen(new TierLairScreen(payload))
+		));
 		ClientTickEvents.END_CLIENT_TICK.register(minecraft -> {
 			if (pendingClear == null) {
 				return;

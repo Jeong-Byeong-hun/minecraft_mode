@@ -46,7 +46,7 @@ public final class ShinigamiContent extends ClassContent {
 
 		weapon("hollow_hunter_blade", 1, 20, NINJATO, "Hollow Hunter's Blade", "호로 사냥 참백도",
 			art(0xE0E4EA, 0x2A2A3A, 0x8A2AC8), fx(Fx.Kind.SLASH, 0xC8A0FF),
-			skill("konso", "Konso", "혼장", UTILITY, 14, 10, execute(4, 1.6, 30, 2.0), heal(8)),
+			skill("konso", "Konso", "혼장", UTILITY, 14, 10, execute(4, 1.6, 30, 2.0)),
 			skill("hollow_cut", "Hollow Cut", "호로 베기", ATTACK, 7, 12, dash(6, 1.5), inflict(BLEEDING, 4, 0)),
 			skill("reiatsu_flare", "Spiritual Pressure", "영압 해방", DEFENSE, 18, 12, push(5, 1.4), boost(DAMAGE, 5, 10)));
 
@@ -62,12 +62,12 @@ public final class ShinigamiContent extends ClassContent {
 			skill("some_no_mai_tsukishiro", "First Dance: Tsukishiro", "시작의 춤 월백", ATTACK, 10, 16, zone(3.5, 2, 1.0).at(10).effect(SLOWNESS, 3), stun(0.8)),
 			skill("tsugi_no_mai_hakuren", "Second Dance: Hakuren", "다음의 춤 백련", ATTACK, 12, 18, shoot(ProjectileStyle.ICICLE, 1.6).count(5).spread(40).pierce(3),
 				inflict(SLOWNESS, 4, 1)),
-			skill("san_no_mai_shirafune", "Third Dance: Shirafune", "세 번째의 춤 백도", DEFENSE, 16, 14, shield(8, 6), nova(3, 1.0)));
+			skill("san_no_mai_shirafune", "Third Dance: Shirafune", "세 번째의 춤 백도", ATTACK, 16, 14, boost(CRIT_CHANCE, 6, 10), nova(3, 1.0)));
 
 		weapon("hozukimaru", 2, 32, SPEAR, "Hozukimaru", "귀등환",
 			art(0xC8A060, 0x6A3A1A, 0xF0F0F0), fx(Fx.Kind.SPARK, 0xFFD27F),
 			skill("split_spear", "Split Spear", "삼절곤 분리", ATTACK, 7, 14, repeat(3, 5, beam(6, 0.68))),
-			skill("battle_lust", "Eleventh's Battle Lust", "11번대의 전투광", UTILITY, 20, 14, boost(DAMAGE, 8, 10), taunt(8)),
+			skill("battle_lust", "Eleventh's Battle Lust", "11번대의 전투광", UTILITY, 20, 14, boost(DAMAGE, 8, 10), boost(CRIT_CHANCE, 8, 10)),
 			skill("ryumon_hozukimaru", "Ryumon Hozukimaru", "용문귀등환", ATTACK, 15, 22, leap(5, 4, 2.2), inflict(BLEEDING, 5, 1)));
 
 		weapon("haineko", 2, 36, NINJATO, "Haineko", "회묘",
@@ -85,7 +85,7 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("benihime", 2, 43, KATANA, "Benihime", "홍희",
 			art(0xD8DCE4, 0x2A2A24, 0xC8202A), fx(Fx.Kind.SLASH, 0xFF4A5A),
 			skill("nake_benihime", "Cry, Benihime", "포효하라, 홍희", ATTACK, 8, 16, shoot(ProjectileStyle.WAVE, 2.16).pierce(4)),
-			skill("chikasumi_no_tate", "Chikasumi no Tate", "피 안개의 방패", DEFENSE, 16, 14, shield(10, 6), boost(DAMAGE, 3, 20)),
+			skill("chikasumi_no_tate", "Chikasumi no Tate", "피 안개의 방패", UTILITY, 16, 14, boost(CRIT_DAMAGE, 6, 20), boost(DAMAGE, 3, 20)),
 			skill("shibari_benihime", "Shibari Benihime", "결박홍희", UTILITY, 14, 18, debuff(7, SLOWNESS, 4, 4), inflict(VULNERABLE, 6, 0), stun(1.0)));
 
 		// 0.5.24: the whip sword
@@ -107,7 +107,7 @@ public final class ShinigamiContent extends ClassContent {
 			skill("sit_upon_frozen_heavens", "Sit Upon the Frozen Heavens", "상천에 내려 앉아라", ATTACK, 9, 20, shoot(ProjectileStyle.ICICLE, 2.2).pierce(6).explode(2.0F),
 				inflict(SLOWNESS, 4, 2)),
 			skill("ice_dragon", "Ice Dragon", "빙룡", ATTACK, 14, 24, beam(16, 2.6), stun(1.0)),
-			skill("ice_wall", "Six-Flower Ice Wall", "육화 빙벽", DEFENSE, 18, 18, shield(12, 8), debuff(6, SLOWNESS, 4, 1)));
+			skill("ice_wall", "Six-Flower Ice Wall", "육화 빙벽", UTILITY, 18, 18, boost(DAMAGE, 6, 15), debuff(6, SLOWNESS, 4, 1)));
 
 		weapon("suzumebachi", 3, 54, CLAW, "Suzumebachi", "작봉",
 			art(0xE8C040, 0x1A1A1A, 0xF0F0F0), fx(Fx.Kind.SPARK, 0xFFE070),
@@ -131,13 +131,13 @@ public final class ShinigamiContent extends ClassContent {
 			art(0x9AA0A8, 0x3A2A1A, 0xE0E040), fx(Fx.Kind.SHARD, 0xE0E040),
 			skill("drink_nozarashi", "Drink, Nozarashi", "삼켜라, 야쇄", ATTACK, 10, 22, slash(6, 180, 2.8), push(5, 1.5)),
 			skill("kendo", "Kendo", "검도", ATTACK, 14, 24, leap(7, 5, 2.6), stun(1.0)),
-			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, boost(DAMAGE, 10, 30), empower(6, 50, 10), taunt(10)));
+			skill("eyepatch_off", "Eyepatch Off", "안대 해제", UTILITY, 24, 20, boost(DAMAGE, 10, 30), empower(6, 50, 10)));
 
 		weapon("hihio_zabimaru", 3, 57, WHIP_SWORD, "Hihio Zabimaru", "비비왕 사미환",
 			art(0xD8D0C0, 0x7A1E1E, 0xFF3A2A), fx(Fx.Kind.SHARD, 0xFF5A3A),
 			skill("hikotsu_taiho", "Hikotsu Taiho", "비골 대포", ATTACK, 12, 22, beam(14, 3.0)),
 			skill("serpent_lash", "Serpent Lash", "뱀의 채찍", ATTACK, 8, 18, slash(7, 200, 2.0)),
-			skill("baboon_bone_guard", "Baboon Bone Guard", "비골 수호", DEFENSE, 20, 16, shield(10, 8), taunt(6)));
+			skill("baboon_bone_guard", "Baboon Bone Guard", "비골 수호", UTILITY, 20, 16, boost(DAMAGE, 8, 15), boost(CRIT_CHANCE, 8, 10)));
 
 		// ---------------------------------------------------------------- tier 4: Captain-Commander (Bankai)
 		// Every tier 4 skill draws its own look (SkillLook, 0.5.36): visual only, the numbers are the wrapped actions'. Where the
@@ -170,7 +170,7 @@ public final class ShinigamiContent extends ClassContent {
 		weapon("ryujin_jakka", 4, 82, KATANA, "Ryujin Jakka", "류인약화",
 			art(0x6A5A4A, 0x2A1A0A, 0xFF5A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
 			skill("all_things_to_ash", "Reduce All Creation to Ash", "만상일체 잿더미가 되어라", ATTACK, 10, 24, look(SkillLook.FLAME_BURST, nova(6, 1.84)).size(6), burn(6)),
-			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", DEFENSE, 22, 26, look(SkillLook.FLAME_WALL, zone(6, 6, 0.74)).size(6).lasting(6), shield(14, 6)),
+			skill("jokaku_enjo", "Jokaku Enjo", "성곽염상", ATTACK, 22, 26, look(SkillLook.FLAME_WALL, zone(6, 6, 0.74)).size(6).lasting(6), boost(DAMAGE, 6, 15)),
 			skill("taimatsu", "Taimatsu", "횃불", ATTACK, 14, 26, shoot(ProjectileStyle.FIREBALL, 2.48).explode(4.0F).look(SkillLook.TAIMATSU)
 				.onImpact(lookWhereItBursts(SkillLook.FLAME_BURST, 4.0)), burn(6)),
 			skill("zanka_no_tachi", "Zanka no Tachi", "잔화태도", ULTIMATE, 60, 50, look(SkillLook.ZANKA, slash(8, 360, 7.59)).size(8), burn(8)));
@@ -219,6 +219,6 @@ public final class ShinigamiContent extends ClassContent {
 			skill("higa_zekko", "Higa Zekko", "비아절교", ULTIMATE, 50, 40, pull(6, 1.0), look(SkillLook.BONE_FANGS, repeat(3, 8, nova(6, 2.2))).size(6)),
 			skill("zaga_tesso", "Zaga Tesso", "사아철포", ATTACK, 9, 20, look(SkillLook.BONE_SNAKE, beam(16, 2.3)).beam(16)),
 			skill("twin_king_lash", "Twin King Lash", "쌍왕 채찍", ATTACK, 7, 18, look(SkillLook.BONE_LASH, slash(7, 220, 1.7)).cone(7, 220)),
-			skill("bone_armor", "Baboon Bone Armor", "비골 갑주", DEFENSE, 24, 20, look(SkillLook.BONE_CAGE, shield(14, 8)), taunt(8)));
+			skill("bone_armor", "Baboon Bone Armor", "비골 갑주", UTILITY, 24, 20, look(SkillLook.BONE_CAGE, boost(DAMAGE, 8, 20)), boost(CRIT_DAMAGE, 8, 30)));
 	}
 }

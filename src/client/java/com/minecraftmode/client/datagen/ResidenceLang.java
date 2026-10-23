@@ -10,15 +10,17 @@ final class ResidenceLang {
 		String s = "screen.minecraft_mode.land.";
 		b.add(ModItems.LAND_DEED, ko ? "토지 소유권 증서" : "Land Deed");
 		b.add("item.minecraft_mode.land_deed.tooltip", ko
-			? "거주구역에서 사용: 서 있는 청크의 발밑부터 위로 16칸(16×16×16)이 내 땅이 됩니다. 웅크리고 사용 또는 /land: 땅 관리"
-			: "Use in the residence: the chunk you stand in, from under your feet up 16 blocks (16x16x16), becomes yours. Sneak-use or /land: manage your land");
+			? "거주구역에서 사용: 서 있는 청크 기둥 전체(16×16, 바닥부터 건축 한계까지)가 내 땅이 됩니다. 웅크리고 사용 또는 /land: 땅 관리"
+			: "Use in the residence: the whole chunk column you stand in (16x16, from the bottom of the world to the build limit) becomes yours. Sneak-use or /land: manage your land");
 		// claiming
-		b.add(m + "claimed", ko ? "땅을 얻었습니다: X %s, Y %s, Z %s ~ X %s, Y %s, Z %s" : "This land is yours: X %s, Y %s, Z %s to X %s, Y %s, Z %s");
+		b.add(m + "claimed", ko ? "땅을 얻었습니다: X %s~%s, Z %s~%s (높이 제한 없이 위아래 모두)" : "This land is yours: X %s..%s, Z %s..%s (all the way up and down)");
 		b.add(m + "spawn", ko ? "거주구역 광장과 대로는 점유할 수 없습니다." : "The residence square and its avenues cannot be claimed.");
 		b.add(m + "taken", ko ? "이 청크 기둥에는 이미 다른 사람의 땅이 있습니다." : "Someone else already owns land in this chunk column.");
-		b.add(m + "overlap", ko ? "이미 가진 땅과 겹칩니다. 위나 아래로 16칸 떨어진 곳에서 쓰세요." : "That overlaps land you already own. Use it 16 blocks above or below.");
+		b.add(m + "overlap", ko ? "이 청크 기둥은 이미 내 땅입니다. 위아래 모두 내 땅이라 증서가 더 필요 없습니다." : "This chunk column is already yours, all the way up and down.");
 		b.add(m + "limit", ko ? "땅은 최대 %s개까지 가질 수 있습니다." : "You can own at most %s plots.");
-		b.add(m + "height", ko ? "여기서는 16칸 높이가 세계 범위를 벗어납니다." : "Sixteen blocks from here would leave the world.");
+		b.add(m + "height", ko ? "세계 범위 밖에서는 땅을 점유할 수 없습니다." : "Land cannot be claimed outside the world.");
+		b.add(m + "refunded", ko ? "땅이 청크 기둥 전체로 바뀌었습니다. 같은 기둥에 겹쳐 쓴 증서 %s장을 돌려드렸고, 다음 증서 가격도 그만큼 내려갑니다."
+			: "Land now covers the whole chunk column: the %s deeds you stacked in one column came back, and the next deed costs that much less.");
 		b.add(m + "wrong_world", ko ? "토지 소유권 증서는 거주구역에서만 쓸 수 있습니다. 광장 분수 서쪽의 이동술사 오린에게 가세요."
 			: "Land deeds only work in the residence. Ask Waymaster Orin, west of the plaza fountain.");
 		// the waymaster
@@ -50,7 +52,7 @@ final class ResidenceLang {
 		b.add(s + "title", ko ? "내 땅 관리" : "My Land");
 		b.add(s + "plots", ko ? "내 땅 (%s/%s)" : "My plots (%s/%s)");
 		b.add(s + "no_plots", ko ? "아직 땅이 없습니다. 거주구역에서 토지 소유권 증서를 쓰세요." : "No land yet. Use a land deed in the residence.");
-		b.add(s + "plot", ko ? "X %s~%s · Z %s~%s · Y %s~%s" : "X %s..%s · Z %s..%s · Y %s..%s");
+		b.add(s + "plot", ko ? "X %s~%s · Z %s~%s · 바닥 Y %s" : "X %s..%s · Z %s..%s · floor Y %s");
 		b.add(s + "abandon", ko ? "포기" : "Give up");
 		b.add(s + "confirm", ko ? "확인?" : "Sure?");
 		b.add(s + "friends", ko ? "허용한 플레이어 (%s/%s) · 내 모든 땅에 적용" : "Trusted players (%s/%s) · all your land");

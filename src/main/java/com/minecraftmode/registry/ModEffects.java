@@ -67,6 +67,12 @@ public final class ModEffects {
 	/** Critical damage. */
 	public static final Holder<MobEffect> FEROCITY = buff("ferocity", 0xB0203A);
 
+	// warrior passives (0.5.47)
+	/** Rampage stacks (tier 3): damage dealt per level. */
+	public static final Holder<MobEffect> RAMPAGE = buff("rampage", 0xC0392B);
+	/** Sword of Selection (tier 4): critical damage after an ultimate. */
+	public static final Holder<MobEffect> SELECTION = buff("selection", 0xE8C45A);
+
 	private static Holder<MobEffect> buff(final String id, final int color) {
 		return Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT, MinecraftMode.id(id), new MarkerEffect(MobEffectCategory.BENEFICIAL, color));
 	}

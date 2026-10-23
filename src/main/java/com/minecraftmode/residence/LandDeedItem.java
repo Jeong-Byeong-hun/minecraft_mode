@@ -12,8 +12,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 
 /**
- * Land deed: used in the residence it claims the chunk the player stands in, from the block under their feet up 16 blocks
- * ({@link LandClaims#claim}), and is used up. Used while sneaking (anywhere) it opens the land screen. Bought with merit from the bounty clerk (dearer each time, {@code Bounties.DEED_MERIT}).
+ * Land deed: used in the residence it claims the whole chunk column the player stands in (borders drawn from the block under their feet)
+ * ({@link LandClaims#claim}), and is used up. Used while sneaking (anywhere) it opens the land screen. Bought with merit from the bounty clerk (the same for the first {@code Bounties.FIXED_DEEDS}, then dearer each time, {@code Bounties.DEED_MERIT}).
  */
 public class LandDeedItem extends Item {
 	public LandDeedItem(final Properties properties) {
@@ -42,8 +42,7 @@ public class LandDeedItem extends Item {
 		}
 		LandClaims.Claim claim = claims.at(feet.below());
 		player.getItemInHand(hand).consume(1, player);
-		LandOffice.tell(sp, "claimed", ChatFormatting.GREEN, claim.chunkX() << 4, claim.minY(), claim.chunkZ() << 4,
-			(claim.chunkX() << 4) + 15, claim.maxY(), (claim.chunkZ() << 4) + 15);
+		LandOffice.tell(sp, "claimed", ChatFormatting.GREEN, claim.chunkX() << 4, (claim.chunkX() << 4) + 15, claim.chunkZ() << 4, (claim.chunkZ() << 4) + 15);
 		LandOffice.outline(server, claim);
 		return InteractionResult.SUCCESS;
 	}

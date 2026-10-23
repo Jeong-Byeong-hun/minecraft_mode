@@ -122,6 +122,8 @@ public class TextureGen {
 		EndgameArt.writeAll();
 		// --- Herbs, awakening crystal, titan shard, dungeon keystone, profession stations ---
 		ContentArt.writeAll();
+		// --- Tier lairs (evolution shard and core, imbue scrolls) ---
+		TierArt.writeAll();
 
 		if (args.length > 1) {
 			writePreview(Path.of(args[1]));

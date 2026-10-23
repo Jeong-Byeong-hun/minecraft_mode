@@ -1,9 +1,11 @@
 package com.minecraftmode.client.companion;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.job.gear.StatLine;
 import com.minecraftmode.network.ProgressActionPayload;
+import com.minecraftmode.registry.ModItems;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -25,6 +27,7 @@ public class CompanionScreen extends Screen {
 	private static final int ROW = 20;
 	private static final int ROWS_Y = 38;
 	private static final int MOUNT_X = 182;
+	private static final int EVOLVE_X = MOUNT_X - 74;
 
 	private Companions.Data shown = Companions.Data.DEFAULT;
 	private int left;
@@ -53,6 +56,13 @@ public class CompanionScreen extends Screen {
 				.bounds(this.left + MOUNT_X - 54, this.top + ROWS_Y + i * ROW + 1, 48, 17).build();
 			b.active = data.hasPet(def.id());
 			this.addRenderableWidget(b);
+			// evolution (0.5.49): a star button once the pet is owned and not fully evolved
+			if (data.hasPet(def.id()) && data.stars(def.id()) < Companions.MAX_EVOLUTION) {
+				Button evolve = Button.builder(Component.literal("★"), button -> CompanionClient.send(ProgressActionPayload.PET_EVOLVE, def.id()))
+					.bounds(this.left + EVOLVE_X, this.top + ROWS_Y + i * ROW + 1, 18, 17).build();
+				evolve.active = Companions.evolveProblem(player, def.id()) == null;
+				this.addRenderableWidget(evolve);
+			}
 		}
 		List<Companions.MountDef> mounts = new ArrayList<>(Companions.mounts());
 		for (int i = 0; i < mounts.size(); i++) {
@@ -102,20 +112,27 @@ public class CompanionScreen extends Screen {
 				g.fill(x + 10, ry + 1, x + 26, ry + 17, 0xB0101018);
 			}
 			Component name = owned ? Component.translatable(def.nameKey()) : Component.literal("???");
-			g.text(this.font, this.font.plainSubstrByWidth(name.getString(), 92), x + 30, ry + 2, owned ? color(def.rarity()) : 0xFF6A6A6A, false);
+			String shownName = this.font.plainSubstrByWidth(name.getString(), 58);
+			g.text(this.font, shownName, x + 30, ry + 2, owned ? color(def.rarity()) : 0xFF6A6A6A, false);
+			int stars = data.stars(def.id());
+			if (owned && stars > 0) {
+				g.text(this.font, "★".repeat(stars), x + 32 + this.font.width(shownName), ry + 2, 0xFFFFD040, false);
+			}
 			if (owned) {
 				int exp = data.pets().get(def.id());
 				int level = Companions.petLevel(exp);
 				g.text(this.font, "Lv " + level, x + 30, ry + 11, 0xFFBBBBBB, false);
 				int barX = x + 56;
-				int barW = 64;
+				int barW = 44;
 				int from = Companions.petExpFor(level);
 				int to = Companions.petExpFor(Math.min(Companions.MAX_PET_LEVEL, level + 1));
 				int fill = level >= Companions.MAX_PET_LEVEL ? barW : barW * (exp - from) / Math.max(1, to - from);
 				g.fill(barX, ry + 13, barX + barW, ry + 16, 0xFF2A2A30);
 				g.fill(barX, ry + 13, barX + fill, ry + 16, 0xFF5AB0E8);
 			}
-			if (mouseX >= x + 8 && mouseX < x + MOUNT_X - 58 && mouseY >= ry && mouseY < ry + ROW - 1) {
+			if (owned && stars < Companions.MAX_EVOLUTION && mouseX >= x + EVOLVE_X && mouseX < x + EVOLVE_X + 18 && mouseY >= ry && mouseY < ry + ROW - 1) {
+				tip = this.evolveTip(def, data, player);
+			} else if (mouseX >= x + 8 && mouseX < x + EVOLVE_X && mouseY >= ry && mouseY < ry + ROW - 1) {
 				tip = this.petTip(def, data);
 			}
 		}
@@ -164,14 +181,42 @@ public class CompanionScreen extends Screen {
 			return lines;
 		}
 		int level = Companions.petLevel(data.pets().get(def.id()));
+		int stars = data.stars(def.id());
 		lines.add(Component.translatable(def.nameKey()).withStyle(style(def.rarity())));
 		lines.add(Component.translatable(def.nameKey() + ".desc").withStyle(ChatFormatting.GRAY));
 		lines.add(Component.translatable("screen.minecraft_mode.companion.level", level, Companions.MAX_PET_LEVEL).withStyle(ChatFormatting.YELLOW));
-		lines.add(Component.translatable("screen.minecraft_mode.companion.bonus", describe(def.lines(level))).withStyle(ChatFormatting.AQUA));
+		if (stars > 0) {
+			lines.add(Component.translatable("screen.minecraft_mode.companion.evolution", stars, Companions.MAX_EVOLUTION, JobTooltips.num(Companions.evolveScale(stars)))
+				.withStyle(ChatFormatting.GOLD));
+		}
+		lines.add(Component.translatable("screen.minecraft_mode.companion.bonus", describe(Companions.evolvedLines(def, level, stars))).withStyle(ChatFormatting.AQUA));
 		if (level < Companions.MAX_PET_LEVEL) {
-			lines.add(Component.translatable("screen.minecraft_mode.companion.max_bonus", describe(def.lines(Companions.MAX_PET_LEVEL))).withStyle(ChatFormatting.DARK_AQUA));
+			lines.add(Component.translatable("screen.minecraft_mode.companion.max_bonus", describe(Companions.evolvedLines(def, Companions.MAX_PET_LEVEL, stars)))
+				.withStyle(ChatFormatting.DARK_AQUA));
 			lines.add(Component.translatable("screen.minecraft_mode.companion.grow").withStyle(ChatFormatting.DARK_GRAY));
 		}
+		return lines;
+	}
+
+	/** What the next evolution takes and gives. */
+	private List<Component> evolveTip(final Companions.PetDef def, final Companions.Data data, final LocalPlayer player) {
+		List<Component> lines = new ArrayList<>();
+		int next = data.stars(def.id()) + 1;
+		lines.add(Component.translatable("screen.minecraft_mode.companion.evolve", next).withStyle(ChatFormatting.GOLD));
+		lines.add(Component.translatable("screen.minecraft_mode.companion.evolve_bonus", describe(Companions.evolvedLines(def, Companions.MAX_PET_LEVEL, next)),
+			JobTooltips.num(Companions.evolveScale(next))).withStyle(ChatFormatting.AQUA));
+		boolean levelOk = Companions.petLevel(data.pets().get(def.id())) >= Companions.MAX_PET_LEVEL;
+		lines.add(Component.translatable("screen.minecraft_mode.companion.evolve_level", Companions.MAX_PET_LEVEL)
+			.withStyle(levelOk ? ChatFormatting.GREEN : ChatFormatting.RED));
+		int shards = Bags.count(player, ModItems.EVOLUTION_SHARD);
+		lines.add(Component.translatable("screen.minecraft_mode.companion.evolve_shards", shards, Companions.evolveShards(next))
+			.withStyle(shards >= Companions.evolveShards(next) ? ChatFormatting.GREEN : ChatFormatting.RED));
+		if (Companions.evolveCores(next) > 0) {
+			int cores = Bags.count(player, ModItems.EVOLUTION_CORE);
+			lines.add(Component.translatable("screen.minecraft_mode.companion.evolve_cores", cores, Companions.evolveCores(next))
+				.withStyle(cores >= Companions.evolveCores(next) ? ChatFormatting.GREEN : ChatFormatting.RED));
+		}
+		lines.add(Component.translatable("screen.minecraft_mode.companion.evolve_source").withStyle(ChatFormatting.DARK_GRAY));
 		return lines;
 	}
 

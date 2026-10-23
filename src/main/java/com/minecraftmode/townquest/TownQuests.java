@@ -57,22 +57,25 @@ public final class TownQuests {
 
 	/**
 	 * How much a quest pays: EXP as a share of a level at the player's level, coins as a share of {@code GearShop.bracketPrice} of the
-	 * player's level and enhancement stones. A guild daily bounty pays 1.2x the bracket price and 3 stones; a town quest pays less each,
-	 * but there are about twenty of them a day.
+	 * player's level, enhancement stones and merit. A guild daily bounty pays 1.2x the bracket price, 3 stones and 30 merit; a town quest
+	 * pays less each, but there are about twenty of them a day. 0.5.46 raised the EXP (3/5/10% of a level) and added the merit, so the
+	 * dailies help towards land deeds (500 merit) too: all of them pay about 210 merit a day.
 	 */
 	public enum Tier {
-		EASY(0.03F, 0.2F, 1),
-		NORMAL(0.05F, 0.3F, 1),
-		HARD(0.10F, 0.6F, 2);
+		EASY(0.05F, 0.2F, 1, 5),
+		NORMAL(0.08F, 0.3F, 1, 10),
+		HARD(0.15F, 0.6F, 2, 20);
 
 		public final float exp;
 		public final float coins;
 		public final int stones;
+		public final int merit;
 
-		Tier(final float exp, final float coins, final int stones) {
+		Tier(final float exp, final float coins, final int stones, final int merit) {
 			this.exp = exp;
 			this.coins = coins;
 			this.stones = stones;
+			this.merit = merit;
 		}
 	}
 

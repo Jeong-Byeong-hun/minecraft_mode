@@ -80,6 +80,19 @@ public final class CombatHooks {
 	/** What a vindicator's melee hit deals to a player on every difficulty, before armor (2.5 hearts). */
 	public static final float VINDICATOR_DAMAGE = 5.0F;
 
+	// warrior passives that are rules (0.5.47; ClassComparison copies them, the plain stats are in ClassPassives)
+	/** Arena Instinct (tier 2): melee basic hits. */
+	public static final float WARRIOR_MELEE = 0.08F;
+	/** Rampage (tier 3): damage dealt per stack, stacks, and how long they last after the last hit. */
+	public static final float RAMPAGE_STEP = 1.0F;
+	public static final int RAMPAGE_MAX = 10;
+	public static final int RAMPAGE_TICKS = 120;
+	/** Stacks of Rampage the estimate counts in a fight (they build in a few hits and hold while hitting). */
+	public static final int RAMPAGE_AVERAGE = 9;
+	/** Sword of Selection (tier 4): critical damage for {@link #SELECTION_TICKS} after an ultimate. */
+	public static final float SELECTION_CRIT_DAMAGE = 30.0F;
+	public static final int SELECTION_TICKS = 200;
+
 	private static @Nullable DamageKind current;
 	/** The hit being dealt right now was a critical one (set by {@link #outgoing}, read once by {@link #afterDamage}). */
 	private static boolean critHit;
@@ -169,6 +182,10 @@ public final class CombatHooks {
 		current = kind;
 		try {
 			target.damageCooldownTime = 0;
+			// the caster's summons and tamed wolves go after what their skills hit, as after a swing
+			if (target != attacker) {
+				attacker.setLastHurtMob(target);
+			}
 			return target.hurtServer(attacker.level(), source, amount);
 		} finally {
 			current = previous;
@@ -196,14 +213,7 @@ public final class CombatHooks {
 		if (!(entity instanceof LivingEntity living) || !living.isAlive() || living == caster || living.isSpectator() || living instanceof ArmorStand && !(living instanceof TrainingDummy)) {
 			return false;
 		}
-		if (living instanceof PetEntity || living instanceof MountEntity) {
-			return false;
-		}
-		if (living instanceof OwnableEntity ownable && ownable.getOwner() == caster) {
-			return false;
-		}
-		UUID summoner = Actions.summoner(living);
-		if (summoner != null && (summoner.equals(caster.getUUID()) || Parties.together(caster.getUUID(), summoner))) {
+		if (spares(caster, living)) {
 			return false;
 		}
 		if (living.isAlliedTo(caster) || CityServices.blocksPvp(living, caster)) {
@@ -213,6 +223,36 @@ public final class CombatHooks {
 			return false;
 		}
 		return !(living instanceof Player player) || caster.canHarmPlayer(player);
+	}
+
+	/**
+	 * What no hit of {@code attacker} ever lands on, whatever made it (swings, vanilla and class arrows, skills): their own or a party
+	 * member's skill summons, companions, and animals they or a party member tamed. Until 0.5.46 only skills spared them, so a
+	 * caster's own arrows and swings, and a party member's, killed the summons.
+	 */
+	public static boolean spares(final Player attacker, final Entity victim) {
+		if (victim instanceof PetEntity || victim instanceof MountEntity) {
+			return true;
+		}
+		UUID summoner = Actions.summoner(victim);
+		if (summoner != null && (summoner.equals(attacker.getUUID()) || Parties.together(attacker.getUUID(), summoner))) {
+			return true;
+		}
+		return victim instanceof OwnableEntity ownable && ownable.getOwner() instanceof Player owner
+			&& (owner == attacker || Parties.together(attacker.getUUID(), owner.getUUID()));
+	}
+
+	/** A skill summon's hit on its caster, a party member of theirs, or anything the caster {@link #spares}. */
+	private static boolean friendlySummonHit(final ServerLevel level, final Entity attacker, final LivingEntity victim) {
+		UUID summoner = Actions.summoner(attacker);
+		if (summoner == null) {
+			return false;
+		}
+		if (victim.getUUID().equals(summoner) || victim instanceof Player player && Parties.together(summoner, player.getUUID())) {
+			return true;
+		}
+		ServerPlayer caster = summonOwner(level, attacker);
+		return caster != null && spares(caster, victim);
 	}
 
 	// ------------------------------------------------------------------ damage adjustment
@@ -238,6 +278,11 @@ public final class CombatHooks {
 		// class arrows land every time like the other shots and skills (CombatHooks.deal); vanilla's damage cooldown would bounce
 		// every arrow of a volley after the first one off the same target, and any arrow right after someone else's hit
 		if ((arrowDamage != null || skillArrow != null) && !victim.isInvulnerableTo(level, source)) {
+			victim.damageCooldownTime = 0;
+		}
+		// skill summons land every hit too: three wolves and two golems on one monster bounced off each other's damage cooldown, and
+		// half to three quarters of their hits were lost
+		if (kind == null && Actions.summoner(source.getEntity()) != null && !victim.isInvulnerableTo(level, source)) {
 			victim.damageCooldownTime = 0;
 		}
 		if (arrowDamage != null || skillArrow != null) {
@@ -328,7 +373,7 @@ public final class CombatHooks {
 			if (melee) {
 				bonus += mods.fraction(EngraveStat.BASIC_DAMAGE);
 				if (has(data, JobClass.WARRIOR, 2)) {
-					bonus += 0.10F;
+					bonus += WARRIOR_MELEE;
 				}
 			}
 			if (isBehind(attacker, victim)) {
@@ -354,10 +399,7 @@ public final class CombatHooks {
 				}
 			}
 		}
-		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
-			bonus += 0.25F;
-		}
-		// skill boosts (Boost.DAMAGE): every hit, basic or not
+		// skill boosts (Boost.DAMAGE) and Rampage: every hit, basic or not
 		bonus += mods.fraction(EngraveStat.DAMAGE);
 		if (victim instanceof EliteMob) {
 			bonus += mods.fraction(EngraveStat.BOSS_DAMAGE);
@@ -463,6 +505,12 @@ public final class CombatHooks {
 		if (source.getEntity() != null && CityServices.blocksPvp(victim, source.getEntity())) {
 			return false;
 		}
+		if (source.getEntity() instanceof Player attacker && attacker != victim && spares(attacker, victim)) {
+			return false;
+		}
+		if (source.getEntity() != null && victim.level() instanceof ServerLevel level && friendlySummonHit(level, source.getEntity(), victim)) {
+			return false;
+		}
 		if (victim instanceof ServerPlayer guarded && Engage.guarded(guarded) && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
 			&& !RaidDamage.is(source)) {
 			if (source.getEntity() != null) {
@@ -514,6 +562,17 @@ public final class CombatHooks {
 		level.sendParticles(ParticleTypes.CRIT, victim.getX(), y, victim.getZ(), 12, 0.3, 0.3, 0.3, 0.3);
 		level.sendParticles(ColorParticleOption.create(ModParticles.SPARK, 0xFFFFC83A), victim.getX(), y, victim.getZ(), 10, 0.25, 0.35, 0.25, 0.25);
 		level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.9F, 1.15F);
+	}
+
+	/**
+	 * Rampage (warrior tier 3, 0.5.47, in place of Berserk Blood's "below 40% health", which late fights never reached): every landed hit
+	 * adds a stack of {@code ModEffects.RAMPAGE} (+{@link #RAMPAGE_STEP}% damage dealt each through {@code BuffEffects}, at most
+	 * {@link #RAMPAGE_MAX}), all gone {@link #RAMPAGE_TICKS} after the last hit.
+	 */
+	private static void rampage(final ServerPlayer attacker) {
+		MobEffectInstance now = attacker.getEffect(ModEffects.RAMPAGE);
+		int stacks = now == null ? 1 : Math.min(RAMPAGE_MAX, now.getAmplifier() + 2);
+		attacker.addEffect(new MobEffectInstance(ModEffects.RAMPAGE, RAMPAGE_TICKS, stacks - 1, false, false, true));
 	}
 
 	/** The player whose skill summoned {@code entity} (online, in this world), or null. */
@@ -580,8 +639,8 @@ public final class CombatHooks {
 				chainLightning(attacker, victim, Math.max(2.0F, dealt * 0.5F));
 			}
 		}
-		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
-			lifesteal += 0.05F;
+		if (has(data, JobClass.WARRIOR, 3) && kind != DamageKind.SPLASH && kind != DamageKind.REFLECT) {
+			rampage(attacker);
 		}
 		if (lifesteal > 0.0F) {
 			attacker.heal(dealt * lifesteal);

@@ -10,6 +10,7 @@ import com.minecraftmode.job.gear.StatLine;
 import com.minecraftmode.progress.Contribution;
 import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.registry.ModItems;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
@@ -27,6 +28,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -83,20 +85,36 @@ public final class Companions {
 		}
 	}
 
-	/** What a player owns: pets with their experience, mounts, the summoned pet and the last ridden mount. */
-	public record Data(Map<String, Integer> pets, List<String> mounts, String activePet, String lastMount) {
-		public static final Data DEFAULT = new Data(Map.of(), List.of(), "", "");
+	/**
+	 * What a player owns: pets with their experience, mounts, the summoned pet, the last ridden mount and each pet's evolution (0.5.49,
+	 * stars 1..{@link #MAX_EVOLUTION}; data saved before has none, so every pet reads as unevolved).
+	 */
+	public record Data(Map<String, Integer> pets, List<String> mounts, String activePet, String lastMount, Map<String, Integer> evolutions) {
+		public static final Data DEFAULT = new Data(Map.of(), List.of(), "", "", Map.of());
 		public static final Codec<Data> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("pets", Map.of()).forGetter(Data::pets),
 			Codec.STRING.listOf().optionalFieldOf("mounts", List.of()).forGetter(Data::mounts),
 			Codec.STRING.optionalFieldOf("active_pet", "").forGetter(Data::activePet),
-			Codec.STRING.optionalFieldOf("last_mount", "").forGetter(Data::lastMount)
+			Codec.STRING.optionalFieldOf("last_mount", "").forGetter(Data::lastMount),
+			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("evolutions", Map.of()).forGetter(Data::evolutions)
 		).apply(i, Data::new));
 		public static final StreamCodec<ByteBuf, Data> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
 
 		public Data {
 			pets = Map.copyOf(pets);
 			mounts = List.copyOf(mounts);
+			evolutions = Map.copyOf(evolutions);
+		}
+
+		/** The pet's evolution stars (0 = none). */
+		public int stars(final String id) {
+			return this.evolutions.getOrDefault(id, 0);
+		}
+
+		Data withStars(final String id, final int stars) {
+			Map<String, Integer> map = new HashMap<>(this.evolutions);
+			map.put(id, stars);
+			return new Data(this.pets, this.mounts, this.activePet, this.lastMount, map);
 		}
 
 		public boolean hasPet(final String id) {
@@ -110,7 +128,7 @@ public final class Companions {
 		Data withPet(final String id, final int exp) {
 			Map<String, Integer> map = new HashMap<>(this.pets);
 			map.put(id, exp);
-			return new Data(map, this.mounts, this.activePet, this.lastMount);
+			return new Data(map, this.mounts, this.activePet, this.lastMount, this.evolutions);
 		}
 
 		Data withMount(final String id) {
@@ -119,15 +137,15 @@ public final class Companions {
 			}
 			List<String> list = new ArrayList<>(this.mounts);
 			list.add(id);
-			return new Data(this.pets, list, this.activePet, this.lastMount);
+			return new Data(this.pets, list, this.activePet, this.lastMount, this.evolutions);
 		}
 
 		Data withActive(final String pet) {
-			return new Data(this.pets, this.mounts, pet, this.lastMount);
+			return new Data(this.pets, this.mounts, pet, this.lastMount, this.evolutions);
 		}
 
 		Data withLastMount(final String mount) {
-			return new Data(this.pets, this.mounts, this.activePet, mount);
+			return new Data(this.pets, this.mounts, this.activePet, mount, this.evolutions);
 		}
 	}
 
@@ -273,11 +291,91 @@ public final class Companions {
 		return level;
 	}
 
-	/** The summoned pet's bonus (GearStats adds it). */
+	/** The summoned pet's bonus (GearStats adds it): its level's lines times its evolution ({@link #evolvedLines}). */
 	public static List<StatLine> lines(final Player player) {
 		Data data = data(player);
 		PetDef def = data.activePet().isEmpty() ? null : PETS.get(data.activePet());
-		return def == null ? List.of() : def.lines(petLevel(data.pets().getOrDefault(def.id(), 0)));
+		return def == null ? List.of() : evolvedLines(def, petLevel(data.pets().getOrDefault(def.id(), 0)), data.stars(def.id()));
+	}
+
+	// ------------------------------------------------------------------ evolution (0.5.49)
+
+	public static final int MAX_EVOLUTION = 3;
+	/** The pet's bonus times this at 0..3 stars (1.5 times the first plan's 1.4/1.8/2.5, as the user asked). */
+	private static final float[] EVOLVE_SCALE = {1.0F, 2.1F, 2.7F, 3.75F};
+	/** Evolution shards each step takes. */
+	private static final int[] EVOLVE_SHARDS = {0, 10, 30, 60};
+	/** Evolution cores each step takes (only the last). */
+	private static final int[] EVOLVE_CORES = {0, 0, 0, 3};
+
+	public static float evolveScale(final int stars) {
+		return EVOLVE_SCALE[Math.max(0, Math.min(MAX_EVOLUTION, stars))];
+	}
+
+	public static int evolveShards(final int stars) {
+		return EVOLVE_SHARDS[Math.max(0, Math.min(MAX_EVOLUTION, stars))];
+	}
+
+	public static int evolveCores(final int stars) {
+		return EVOLVE_CORES[Math.max(0, Math.min(MAX_EVOLUTION, stars))];
+	}
+
+	/** {@code def}'s lines at {@code level} times its evolution, rounded like the level lines. */
+	public static List<StatLine> evolvedLines(final PetDef def, final int level, final int stars) {
+		float scale = evolveScale(stars);
+		List<StatLine> out = new ArrayList<>();
+		for (StatLine l : def.lines(level)) {
+			out.add(StatLine.of(l.stat(), Math.round(l.value() * scale * 100.0F) / 100.0F));
+		}
+		return out;
+	}
+
+	/** Why {@code player}'s pet {@code id} cannot evolve now (a message key suffix), or null when it can. */
+	public static @Nullable String evolveProblem(final Player player, final String id) {
+		Data data = data(player);
+		if (!data.hasPet(id)) {
+			return "unknown";
+		}
+		int stars = data.stars(id);
+		if (stars >= MAX_EVOLUTION) {
+			return "max";
+		}
+		if (petLevel(data.pets().get(id)) < MAX_PET_LEVEL) {
+			return "level";
+		}
+		if (player.isCreative()) {
+			return null;
+		}
+		if (Bags.count(player, ModItems.EVOLUTION_SHARD) < evolveShards(stars + 1) || Bags.count(player, ModItems.EVOLUTION_CORE) < evolveCores(stars + 1)) {
+			return "materials";
+		}
+		return null;
+	}
+
+	/** Evolves {@code player}'s pet {@code id} one star (the pet window's button): pays shards (and cores) from the inventory and bags. */
+	public static boolean evolve(final ServerPlayer player, final String id) {
+		String problem = evolveProblem(player, id);
+		if (problem != null) {
+			player.sendOverlayMessage(Component.translatable("message.minecraft_mode.pet.evolve_" + problem).withStyle(ChatFormatting.RED));
+			return false;
+		}
+		Data data = data(player);
+		int stars = data.stars(id) + 1;
+		if (!player.isCreative()) {
+			Bags.take(player, ModItems.EVOLUTION_SHARD, evolveShards(stars));
+			Bags.take(player, ModItems.EVOLUTION_CORE, evolveCores(stars));
+		}
+		set(player, data.withStars(id, stars));
+		GearStats.invalidate(player);
+		PetEntity pet = summonedPet(player);
+		if (pet != null) {
+			pet.applyEvolution(stars);
+		}
+		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.8F, 1.2F);
+		player.level().sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY(1.0), player.getZ(), 30, 0.6, 0.8, 0.6, 0.05);
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.pet.evolved", Component.translatable(PETS.get(id).nameKey()), stars)
+			.withStyle(ChatFormatting.LIGHT_PURPLE));
+		return true;
 	}
 
 	/**
@@ -420,6 +518,7 @@ public final class Companions {
 			return;
 		}
 		pet.setOwner(owner.getUUID());
+		pet.applyEvolution(data(owner).stars(def.id()));
 		pet.snapTo(owner.getX() + 1, owner.getY(), owner.getZ() + 1, owner.getYRot(), 0.0F);
 		level.addFreshEntity(pet);
 		Flair.arrive(level, pet, def.id());

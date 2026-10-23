@@ -9,6 +9,7 @@ import com.minecraftmode.client.map.Waypoints;
 import com.minecraftmode.entity.SpawnCandidates;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.combat.PlayerArmor;
+import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.network.LairTravelPayload;
 import com.minecraftmode.progress.ResetCycle;
 import com.minecraftmode.registry.ModBlocks;
@@ -400,7 +401,7 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 		server.runOnServer(s -> s.getPlayerList().setViewDistance(5));
 		server.runCommand("gamemode creative @p");
 		MinecraftMode.LOGGER.info("[normal] natural lair {} near {}", lair, center);
-		checkLairMap(context, server, connection, center);
+		checkLairMap(context, server, connection, center, lair.substring(0, lair.indexOf('@')));
 	}
 
 	/**
@@ -409,9 +410,16 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 	 * next map and the way back to the gate, and the next map leads to another lair.
 	 */
 	private static void checkLairMap(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection,
-		final BlockPos center) {
+		final BlockPos center, final String lairId) {
 		context.runOnClient(minecraft -> MapClient.currentWaypoints().removeIf(w -> w.color == LairMapItem.MARK_COLOR));
 		server.runCommand("time set noon");
+		// maps lead only to lairs of the reader's level (±5): read it at this lair's own level
+		server.runOnServer(s -> {
+			ServerPlayer player = connection.getServerPlayer();
+			LairDef def = NamedLairs.def(lairId);
+			int lo = def == null ? 1 : def.named().lo();
+			JobProgression.set(player, JobProgression.get(player).withProgress(lo, 0));
+		});
 		String key = null;
 		for (int i = 0; i < 2; i++) {
 			key = server.computeOnServer(s -> {
@@ -519,7 +527,7 @@ public class NormalWorldClientGameTest implements FabricClientGameTest {
 			BlockPos at = player.blockPosition();
 			require(at.distManhattan(target.entrance()) <= LairTravel.SPOT_SEARCH + 3, "the way back ends by the gate " + target.entrance() + ", got " + at);
 			// the next map skips the lair cleared this cycle
-			LairTravel.Target other = LairTravel.find(player.level(), at, 1, LairTravel.cleared(player));
+			LairTravel.Target other = LairTravel.find(player.level(), at, JobProgression.get(player).level(), LairTravel.cleared(player));
 			require(other != null && !other.key().equals(target.key()), "the next map should lead to another lair, got "
 				+ (other == null ? "none" : other.center()));
 			player.getInventory().clearContent();

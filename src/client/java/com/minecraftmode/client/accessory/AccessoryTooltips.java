@@ -7,6 +7,7 @@ import com.minecraftmode.accessory.AccessorySet;
 import com.minecraftmode.client.job.GearTooltips;
 import com.minecraftmode.client.job.JobTooltips;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.enhance.Imbue;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.gear.ArmorSetDef;
@@ -83,6 +84,12 @@ public final class AccessoryTooltips {
 			for (StatLine line : pending.lines()) {
 				lines.add(GearTooltips.statLine(AccessoryEnhance.scaled(line, e.level()), ChatFormatting.DARK_AQUA, null));
 			}
+		}
+		Imbue imbue = Imbue.of(stack);
+		if (imbue != null) {
+			lines.add(Component.translatable(imbue.grade() >= Imbue.GREATER ? "tooltip.minecraft_mode.gear.imbued_greater" : "tooltip.minecraft_mode.gear.imbued")
+				.withStyle(ChatFormatting.LIGHT_PURPLE));
+			lines.add(GearTooltips.statLine(imbue.line(), ChatFormatting.LIGHT_PURPLE, null));
 		}
 		int worn = player == null ? 0 : Accessories.setCounts(player).getOrDefault(set.id(), 0);
 		lines.add(Component.translatable("tooltip.minecraft_mode.gear.set_bonus", Component.translatable(set.nameKey())).withStyle(ChatFormatting.YELLOW));

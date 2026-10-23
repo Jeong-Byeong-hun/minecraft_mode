@@ -36,17 +36,14 @@ import org.jspecify.annotations.Nullable;
  * the lair's position and seed, so the chunks agree on one maze and one goal. The treasure and the caches are personal
  * {@link LairChestBlock lair chests}; the treasure wakes the lair's lord each cycle.
  * <p>
- * Layout: a square maze of 3-wide, 4-high corridors (cells of {@link #CELL} blocks) with a floor and a
- * roof, the entrance in the middle of the south wall, an apron of {@link #APRON} blocks around it, and
+ * Layout: a square maze of corridors (cells of {@link LairLayout#cell} blocks, {@link LairLayout#roof} high, see {@link LairLayout}) with a
+ * floor and a roof, the entrance in the middle of the south wall, an apron of {@link #APRON} blocks around it, and
  * the landmark on the roof. The piece's box also covers {@link #GROUNDS} blocks of land around the lair:
  * the lair's spawn list applies in all of it.
  */
 public class LairPiece extends StructurePiece {
-	public static final int CELL = 4;
 	public static final int APRON = 6;
 	public static final int GROUNDS = 40;
-	/** Corridor height: air from floor + 1 to floor + 4, roof at floor + 5. */
-	private static final int ROOF = 5;
 
 	private final String lair;
 	private final int cx;
@@ -54,16 +51,19 @@ public class LairPiece extends StructurePiece {
 	private final int floor;
 	private final int surface;
 	private final long seed;
+	/** The geometry it was started in (saved; pieces from before 0.5.48 have none and are {@link LairLayout#V1}). */
+	private final LairLayout layout;
 	private @Nullable Maze maze;
 
 	public LairPiece(final LairDef def, final int cx, final int floor, final int cz, final int surface, final long seed) {
-		super(NamedLairs.PIECE, 0, box(def, cx, floor, cz, surface));
+		super(NamedLairs.PIECE, 0, box(def, LairLayout.CURRENT, cx, floor, cz, surface));
 		this.lair = def.id();
 		this.cx = cx;
 		this.cz = cz;
 		this.floor = floor;
 		this.surface = surface;
 		this.seed = seed;
+		this.layout = LairLayout.CURRENT;
 	}
 
 	public LairPiece(final CompoundTag tag) {
@@ -74,6 +74,7 @@ public class LairPiece extends StructurePiece {
 		this.floor = tag.getIntOr("Floor", 0);
 		this.surface = tag.getIntOr("Surface", 0);
 		this.seed = tag.getLongOr("Seed", 0L);
+		this.layout = LairLayout.of(tag.getIntOr("Layout", LairLayout.V1.version()));
 	}
 
 	@Override
@@ -84,35 +85,49 @@ public class LairPiece extends StructurePiece {
 		tag.putInt("Floor", this.floor);
 		tag.putInt("Surface", this.surface);
 		tag.putLong("Seed", this.seed);
+		tag.putInt("Layout", this.layout.version());
 	}
 
-	private static BoundingBox box(final LairDef def, final int cx, final int floor, final int cz, final int surface) {
-		int reach = def.size() / 2 + APRON + GROUNDS;
+	private static BoundingBox box(final LairDef def, final LairLayout layout, final int cx, final int floor, final int cz, final int surface) {
+		int reach = layout.size(def) / 2 + APRON + GROUNDS;
 		int minY = def.setting() == Setting.UNDERGROUND ? floor - 6 : floor - 32;
-		int maxY = def.setting() == Setting.UNDERGROUND ? surface + 32 : floor + topOffset(def) + 20;
+		int maxY = def.setting() == Setting.UNDERGROUND ? surface + 32 : floor + topOffset(def, layout) + 20;
 		return new BoundingBox(cx - reach, minY, cz - reach, cx + reach, maxY, cz + reach);
 	}
 
-	/** Height of the landmark's top above the floor. */
+	/** Height of the landmark's top above the floor, for a new lair ({@link LairLayout#CURRENT}). */
 	public static int topOffset(final LairDef def) {
-		int half = def.size() / 2;
-		return ROOF + switch (def.shape()) {
+		return topOffset(def, LairLayout.CURRENT);
+	}
+
+	public static int topOffset(final LairDef def, final LairLayout layout) {
+		int size = layout.size(def);
+		int half = size / 2;
+		return layout.roof() + switch (def.shape()) {
 			case PYRAMID, DOME -> half + 3;
 			case ZIGGURAT -> half + 10;
 			case FORTRESS -> 24;
-			case SPIRE -> def.size() + 8;
+			case SPIRE -> size + 8;
 			case TREE -> 52;
 			case NONE -> 2;
 		};
 	}
 
-	/** Z of the shaft under an underground lair's tower, just south of the entrance. */
+	/** Z of the shaft under a new underground lair's tower, just south of the entrance. */
 	public static int shaftZ(final LairDef def, final int cz) {
-		return cz + def.size() / 2 + 4;
+		return shaftZ(def, LairLayout.CURRENT, cz);
+	}
+
+	public static int shaftZ(final LairDef def, final LairLayout layout, final int cz) {
+		return cz + layout.size(def) / 2 + 4;
 	}
 
 	public @Nullable LairDef def() {
 		return NamedLairs.def(this.lair);
+	}
+
+	public LairLayout layout() {
+		return this.layout;
 	}
 
 	public Maze maze() {
@@ -127,9 +142,11 @@ public class LairPiece extends StructurePiece {
 	public BlockPos goalPos() {
 		LairDef def = this.def();
 		Maze m = this.maze();
-		int x0 = this.cx - def.size() / 2;
-		int z0 = this.cz - def.size() / 2;
-		return new BlockPos(x0 + 2 + CELL * m.goalX(), this.floor + 1, z0 + 2 + CELL * m.goalZ());
+		int size = this.layout.size(def);
+		int x0 = this.cx - size / 2;
+		int z0 = this.cz - size / 2;
+		int cell = this.layout.cell();
+		return new BlockPos(x0 + 2 + cell * m.goalX(), this.floor + 1, z0 + 2 + cell * m.goalZ());
 	}
 
 	public int floor() {
@@ -142,21 +159,26 @@ public class LairPiece extends StructurePiece {
 		return new BlockPos(this.cx, def != null && def.setting() == Setting.UNDERGROUND ? this.surface : this.floor, this.cz);
 	}
 
-	/** Where a traveller stands just outside the maze gate (feet position, facing north into the maze); see {@link #entrance(LairDef, int, int, int)}. */
+	/** Where a traveller stands just outside the maze gate (feet position, facing north into the maze); see {@link #entrance(LairDef, LairLayout, int, int, int)}. */
 	public BlockPos entrance() {
-		return entrance(this.def(), this.cx, this.floor, this.cz);
+		return entrance(this.def(), this.layout, this.cx, this.floor, this.cz);
+	}
+
+	/** {@link #entrance(LairDef, LairLayout, int, int, int)} of a new lair. */
+	public static BlockPos entrance(final LairDef def, final int cx, final int floor, final int cz) {
+		return entrance(def, LairLayout.CURRENT, cx, floor, cz);
 	}
 
 	/**
 	 * The feet position just outside the maze gate of a lair centered on {@code cx}, {@code cz} with its floor at {@code floor}: on the paved
 	 * approach three blocks south of the gate for lairs with an apron, in the corridor between the gate and the shaft for underground ones.
-	 * The gate sits in the middle cell of the south wall ({@link Maze#entranceX}), so its middle column is {@code cx}.
+	 * The gate sits in the middle cell of the south wall ({@link Maze#entranceX}), near {@code cx}.
 	 */
-	public static BlockPos entrance(final LairDef def, final int cx, final int floor, final int cz) {
-		int size = def.size();
+	public static BlockPos entrance(final LairDef def, final LairLayout layout, final int cx, final int floor, final int cz) {
+		int size = layout.size(def);
 		int z0 = cz - size / 2;
 		int gateZ = z0 + size;
-		int x = cx - size / 2 + 2 + CELL * (def.cells() / 2);
+		int x = cx - size / 2 + 2 + layout.cell() * (def.cells() / 2);
 		int z = def.setting() == Setting.UNDERGROUND ? gateZ + 1 : gateZ + 3;
 		return new BlockPos(x, floor + 1, z);
 	}
@@ -170,7 +192,7 @@ public class LairPiece extends StructurePiece {
 		}
 		Maze m = this.maze();
 		Placer p = new Placer(level, chunkBB);
-		int size = def.size();
+		int size = this.layout.size(def);
 		int x0 = this.cx - size / 2;
 		int z0 = this.cz - size / 2;
 		if (def.setting() == Setting.UNDERGROUND) {
@@ -185,7 +207,7 @@ public class LairPiece extends StructurePiece {
 		this.gate(p, def, m, x0, z0, size);
 		this.goal(p, level, def, m, x0, z0);
 		for (int[] cache : m.caches()) {
-			BlockPos at = new BlockPos(x0 + 2 + CELL * cache[0], this.floor + 1, z0 + 2 + CELL * cache[1]);
+			BlockPos at = new BlockPos(x0 + 2 + this.layout.cell() * cache[0], this.floor + 1, z0 + 2 + this.layout.cell() * cache[1]);
 			if (chunkBB.isInside(at)) {
 				p.set(at.getX(), at.getY(), at.getZ(), ModBlocks.LAIR_CACHE.defaultBlockState());
 				if (level.getBlockEntity(at) instanceof LairChestBlockEntity cacheChest) {
@@ -234,27 +256,28 @@ public class LairPiece extends StructurePiece {
 					continue;
 				}
 				p.set(x, this.floor - 1, z, pal.foundation());
-				p.set(x, this.floor + ROOF + 1, z, pal.wall());
+				p.set(x, this.floor + this.layout.roof() + 1, z, pal.wall());
 				if (x == x0 - 1 || z == z0 - 1 || x == x0 + size || z == z0 + size) {
-					for (int y = this.floor; y <= this.floor + ROOF; y++) {
+					for (int y = this.floor; y <= this.floor + this.layout.roof(); y++) {
 						p.set(x, y, z, pal.wall());
 					}
 				}
 			}
 		}
 		int sx = this.cx;
-		int sz = shaftZ(def, this.cz);
+		int sz = shaftZ(def, this.layout, this.cz);
 		// corridor from the maze gate to the shaft
-		for (int x = sx - 2; x <= sx + 2; x++) {
+		int side = this.layout.wide() ? 3 : 2;
+		for (int x = sx - side; x <= sx + side; x++) {
 			for (int z = z0 + size; z <= sz - 2; z++) {
 				if (!p.column(x, z)) {
 					continue;
 				}
-				boolean side = Math.abs(x - sx) == 2;
+				boolean edge = Math.abs(x - sx) == side;
 				p.set(x, this.floor, z, pal.floor());
-				p.set(x, this.floor + ROOF, z, pal.roof());
-				for (int y = this.floor + 1; y < this.floor + ROOF; y++) {
-					p.set(x, y, z, side ? pal.wall().defaultBlockState() : Blocks.CAVE_AIR.defaultBlockState());
+				p.set(x, this.floor + this.layout.roof(), z, pal.roof());
+				for (int y = this.floor + 1; y < this.floor + this.layout.roof(); y++) {
+					p.set(x, y, z, edge ? pal.wall().defaultBlockState() : Blocks.CAVE_AIR.defaultBlockState());
 				}
 			}
 		}
@@ -271,11 +294,13 @@ public class LairPiece extends StructurePiece {
 				p.set(x, this.floor, z, pal.floor());
 				for (int y = this.floor + 1; y <= this.surface; y++) {
 					if (wall) {
-						boolean door = dz == -2 && Math.abs(dx) <= 1 && y < this.floor + ROOF;
+						boolean door = dz == -2 && Math.abs(dx) <= 1 && y < this.floor + this.layout.roof();
 						boolean lamp = (y - this.floor) % 7 == 0 && Math.abs(dx) == 2 && Math.abs(dz) == 2;
 						p.set(x, y, z, door ? Blocks.CAVE_AIR.defaultBlockState() : (lamp ? pal.light() : pal.wall()).defaultBlockState());
 					} else if (dx == 0 && dz == 0) {
 						p.set(x, y, z, pal.accent());
+					} else if (this.layout.gentle()) {
+						p.set(x, y, z, this.gentleStep(pal, dx, dz, y));
 					} else {
 						int step = y - this.floor - 1;
 						int[] at = ring[Math.floorMod(step, ring.length)];
@@ -293,6 +318,39 @@ public class LairPiece extends StructurePiece {
 		}
 		this.tower(p, def, sx, sz);
 	}
+
+	/**
+	 * The shaft's easy spiral ({@link LairLayout#gentle}): walking round from the north-west corner by the door, every side's middle is a stair
+	 * one up, facing the way on, and every corner a flat landing level with the stair before it, so each stair is walked onto from its low
+	 * front (the old spiral turned on stairs and had to be climbed over their sides). It rises four blocks a round, three blocks of headroom.
+	 */
+	private BlockState gentleStep(final Palette pal, final int dx, final int dz, final int y) {
+		int r = -1;
+		for (int i = 0; i < GENTLE_RING.length; i++) {
+			if (GENTLE_RING[i][0] == dx && GENTLE_RING[i][1] == dz) {
+				r = i;
+			}
+		}
+		if (r < 0) {
+			return Blocks.CAVE_AIR.defaultBlockState();
+		}
+		boolean side = r % 2 == 1;
+		// the height of this column's first step above the floor (a side: a stair, a corner: a landing; the first corner is the floor)
+		int first = side ? 1 + (r - 1) / 2 : r / 2;
+		int above = y - this.floor - first;
+		if (above < 0 || above % 4 != 0 || !side && r == 0 && above == 0) {
+			return Blocks.CAVE_AIR.defaultBlockState();
+		}
+		if (!side) {
+			return pal.floor().defaultBlockState();
+		}
+		int[] next = GENTLE_RING[(r + 1) % GENTLE_RING.length];
+		Direction facing = horizontal(next[0] - dx, next[1] - dz);
+		return facing == null ? pal.floor().defaultBlockState() : pal.stairs().defaultBlockState().setValue(StairBlock.FACING, facing);
+	}
+
+	/** The easy spiral's ring round the pillar, from the corner by the door; corners at even places, side middles at odd ones. */
+	private static final int[][] GENTLE_RING = {{-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}};
 
 	/** The landmark of an underground lair: a tall tower over the shaft with a beacon on top. */
 	private void tower(final Placer p, final LairDef def, final int sx, final int sz) {
@@ -326,7 +384,8 @@ public class LairPiece extends StructurePiece {
 					p.set(x, s, z, pal.floor());
 				}
 				if (wall) {
-					boolean door = dz == 4 && Math.abs(dx) <= 1;
+					// a door on the far side, and (new lairs) one on the side facing the lair
+					boolean door = (dz == 4 || this.layout.wide() && dz == -4) && Math.abs(dx) <= 1;
 					for (int y = s + 1; y <= s + 18; y++) {
 						if (door && y <= s + 3) {
 							continue;
@@ -364,18 +423,18 @@ public class LairPiece extends StructurePiece {
 				}
 				int lx = x - x0;
 				int lz = z - z0;
-				boolean wall = m.wall(lx, lz);
-				boolean pillar = lx % CELL == 0 && lz % CELL == 0;
+				boolean wall = m.wall(lx, lz, this.layout.cell());
+				boolean pillar = lx % this.layout.cell() == 0 && lz % this.layout.cell() == 0;
 				p.set(x, this.floor, z, pal.floor());
-				for (int y = this.floor + 1; y < this.floor + ROOF; y++) {
+				for (int y = this.floor + 1; y < this.floor + this.layout.roof(); y++) {
 					p.set(x, y, z, wall ? (pillar ? pal.accent() : pal.wall()).defaultBlockState() : Blocks.CAVE_AIR.defaultBlockState());
 				}
-				p.set(x, this.floor + ROOF, z, pal.roof());
+				p.set(x, this.floor + this.layout.roof(), z, pal.roof());
 				if (wall) {
 					continue;
 				}
-				int cellX = lx / CELL;
-				int cellZ = lz / CELL;
+				int cellX = lx / this.layout.cell();
+				int cellZ = lz / this.layout.cell();
 				boolean special = (cellX == gx && cellZ == gz) || (cellX == m.entranceX() && cellZ == m.cells() - 1) || isCache(m, cellX, cellZ);
 				if (special) {
 					continue;
@@ -387,7 +446,7 @@ public class LairPiece extends StructurePiece {
 						int y = switch (d.place()) {
 							case FLOOR -> this.floor;
 							case GROUND -> this.floor + 1;
-							case CEILING -> this.floor + ROOF - 1;
+							case CEILING -> this.floor + this.layout.roof() - 1;
 						};
 						p.set(x, y, z, d.block());
 						break;
@@ -409,13 +468,13 @@ public class LairPiece extends StructurePiece {
 	/** The gate in the south wall: a framed opening with two lights and a short paved approach. */
 	private void gate(final Placer p, final LairDef def, final Maze m, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int left = x0 + 1 + CELL * m.entranceX();
-		int right = left + 2;
+		int left = x0 + 1 + this.layout.cell() * m.entranceX();
+		int right = left + this.layout.cell() - 2;
 		int zWall = z0 + size - 1;
 		for (int x = left - 1; x <= right + 1; x++) {
 			boolean frame = x == left - 1 || x == right + 1;
-			for (int y = this.floor + 1; y <= this.floor + ROOF + 1; y++) {
-				if (frame || y >= this.floor + ROOF) {
+			for (int y = this.floor + 1; y <= this.floor + this.layout.roof() + 1; y++) {
+				if (frame || y >= this.floor + this.layout.roof()) {
 					p.set(x, y, zWall + 1, y == this.floor + 3 && frame ? pal.light() : pal.accent());
 				} else {
 					p.set(x, y, zWall + 1, Blocks.AIR);
@@ -424,7 +483,7 @@ public class LairPiece extends StructurePiece {
 			if (def.setting() != Setting.UNDERGROUND && !frame) {
 				for (int z = zWall + 1; z <= zWall + APRON; z++) {
 					p.set(x, this.floor, z, pal.accent());
-					for (int y = this.floor + 1; y <= this.floor + 4; y++) {
+					for (int y = this.floor + 1; y < this.floor + this.layout.roof(); y++) {
 						p.clear(x, y, z);
 					}
 				}
@@ -435,14 +494,14 @@ public class LairPiece extends StructurePiece {
 	/** The goal: a lit room with the treasure chest; its lord wakes when someone comes near (once per cycle). */
 	private void goal(final Placer p, final WorldGenLevel level, final LairDef def, final Maze m, final int x0, final int z0) {
 		Palette pal = def.palette();
-		int gx = x0 + 2 + CELL * m.goalX();
-		int gz = z0 + 2 + CELL * m.goalZ();
+		int gx = x0 + 2 + this.layout.cell() * m.goalX();
+		int gz = z0 + 2 + this.layout.cell() * m.goalZ();
 		for (int x = gx - 1; x <= gx + 1; x++) {
 			for (int z = gz - 1; z <= gz + 1; z++) {
 				p.set(x, this.floor, z, x == gx && z == gz ? pal.light() : pal.accent());
 			}
 		}
-		p.set(gx, this.floor + ROOF, gz, pal.light());
+		p.set(gx, this.floor + this.layout.roof(), gz, pal.light());
 		BlockPos chest = new BlockPos(gx, this.floor + 1, gz);
 		if (!p.box().isInside(chest)) {
 			return;
@@ -471,7 +530,7 @@ public class LairPiece extends StructurePiece {
 
 	private void pyramid(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		int half = size / 2;
 		for (int x = x0; x < x0 + size; x++) {
 			for (int z = z0; z < z0 + size; z++) {
@@ -492,7 +551,7 @@ public class LairPiece extends StructurePiece {
 
 	private void ziggurat(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		int half = size / 2;
 		int tier = 6;
 		int tiers = Math.max(1, (half - 6) / tier);
@@ -506,8 +565,9 @@ public class LairPiece extends StructurePiece {
 				int lx = x - x0;
 				int lz = z - z0;
 				int k = inset(lx, lz, size);
-				boolean stair = Math.abs(x - this.cx) <= 1 && lz > half && k < topInset;
-				boolean rail = Math.abs(x - this.cx) == 2 && lz > half && k < topInset;
+				int stairs = this.layout.wide() ? 2 : 1;
+				boolean stair = Math.abs(x - this.cx) <= stairs && lz > half && k < topInset;
+				boolean rail = Math.abs(x - this.cx) == stairs + 1 && lz > half && k < topInset;
 				if (k < topInset) {
 					int t = k / tier;
 					int terrace = roof + tier * (t + 1);
@@ -555,7 +615,7 @@ public class LairPiece extends StructurePiece {
 
 	private void fortress(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		int x1 = x0 + size - 1;
 		int z1 = z0 + size - 1;
 		// curtain wall over the maze's outer wall, with battlements
@@ -591,7 +651,7 @@ public class LairPiece extends StructurePiece {
 	 */
 	private void towerBlock(final Placer p, final Palette pal, final int tx, final int tz, final int r, final int bottom, final int top, final int roof) {
 		LairDef def = this.def();
-		int size = def.size();
+		int size = this.layout.size(def);
 		int x0 = this.cx - size / 2;
 		int z0 = this.cz - size / 2;
 		for (int x = tx - r; x <= tx + r; x++) {
@@ -625,7 +685,7 @@ public class LairPiece extends StructurePiece {
 
 	private void dome(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		double r = size / 2.0 - 1.0;
 		for (int x = x0; x < x0 + size; x++) {
 			for (int z = z0; z < z0 + size; z++) {
@@ -653,7 +713,7 @@ public class LairPiece extends StructurePiece {
 	}
 
 	private void spire(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		int quarter = size / 4;
 		double base = Math.max(6.0, size / 6.0);
 		this.spireAt(p, def, this.cx, this.cz, base, size + 4, roof);
@@ -692,7 +752,7 @@ public class LairPiece extends StructurePiece {
 
 	private void tree(final Placer p, final LairDef def, final int x0, final int z0, final int size) {
 		Palette pal = def.palette();
-		int roof = this.floor + ROOF;
+		int roof = this.floor + this.layout.roof();
 		int half = size / 2;
 		double trunk = 5.0;
 		int crown = roof + 36;

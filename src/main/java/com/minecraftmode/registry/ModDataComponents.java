@@ -3,6 +3,7 @@ package com.minecraftmode.registry;
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.dungeon.Keystone;
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.enhance.Imbue;
 import com.minecraftmode.job.engrave.Engravings;
 import com.minecraftmode.job.gear.GearRolls;
 import com.mojang.serialization.Codec;
@@ -71,6 +72,20 @@ public final class ModDataComponents {
 		BuiltInRegistries.DATA_COMPONENT_TYPE,
 		MinecraftMode.id("bound"),
 		DataComponentType.<Unit>builder().persistent(Unit.CODEC).networkSynchronized(Unit.STREAM_CODEC).build()
+	);
+
+	/** The tier (1..20) of a lair map read by a Lv 100 character (0.5.49, {@code LairTier}); untiered maps have none. */
+	public static final DataComponentType<Integer> LAIR_TIER = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("lair_tier"),
+		DataComponentType.<Integer>builder().persistent(Codec.INT).networkSynchronized(ByteBufCodecs.VAR_INT).build()
+	);
+
+	/** The line an imbue scroll put on a class armor piece or a raid accessory (0.5.49, {@link Imbue}). */
+	public static final DataComponentType<Imbue> IMBUE = Registry.register(
+		BuiltInRegistries.DATA_COMPONENT_TYPE,
+		MinecraftMode.id("imbue"),
+		DataComponentType.<Imbue>builder().persistent(Imbue.CODEC).networkSynchronized(Imbue.STREAM_CODEC).build()
 	);
 
 	public static void init() {

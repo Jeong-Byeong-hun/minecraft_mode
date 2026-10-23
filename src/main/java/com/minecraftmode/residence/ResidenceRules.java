@@ -1,6 +1,9 @@
 package com.minecraftmode.residence;
 
+import com.minecraftmode.bag.Bags;
 import com.minecraftmode.block.ShopBlock;
+import com.minecraftmode.bounty.BountyData;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.network.LandBordersPayload;
@@ -33,6 +36,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /**
@@ -80,7 +84,11 @@ public final class ResidenceRules {
 				ResidenceDimension.keepShops(residence);
 			}
 		});
-		ServerPlayerEvents.JOIN.register(player -> LandClaims.get(player.level().getServer()).rename(player.getUUID(), player.getPlainTextName()));
+		ServerPlayerEvents.JOIN.register(player -> {
+			LandClaims claims = LandClaims.get(player.level().getServer());
+			claims.rename(player.getUUID(), player.getPlainTextName());
+			refund(player, claims);
+		});
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			LAST_PLACE.clear();
 			LAST_REFUSAL.clear();
@@ -202,6 +210,21 @@ public final class ResidenceRules {
 		return claims.allowed(viewer, claim)
 			? Component.translatable("message.minecraft_mode.land.hud.trusted", owner).withStyle(ChatFormatting.YELLOW)
 			: Component.translatable("message.minecraft_mode.land.hud.other", owner).withStyle(ChatFormatting.RED);
+	}
+
+	/**
+	 * Hands back the deeds of claims folded into one column when land became whole columns (0.5.46), and takes them off the account's
+	 * deed count so the next deed costs that much less.
+	 */
+	private static void refund(final ServerPlayer player, final LandClaims claims) {
+		int owed = claims.takeRefunds(player.getUUID());
+		if (owed <= 0) {
+			return;
+		}
+		Bags.give(player, new ItemStack(ModItems.LAND_DEED, owed));
+		BountyData data = Bounties.get(player);
+		Bounties.set(player, data.withDeeds(Math.max(0, data.deeds() - owed)));
+		LandOffice.tell(player, "refunded", ChatFormatting.GOLD, owed);
 	}
 
 	private ResidenceRules() {

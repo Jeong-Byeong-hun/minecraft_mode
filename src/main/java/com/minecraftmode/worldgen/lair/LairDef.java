@@ -74,9 +74,9 @@ public record LairDef(
 		return 13 + 2 * Math.min(3, Math.max(0, (this.named().lo() - 10) / 20));
 	}
 
-	/** Side length of the maze in blocks (cells of a 3-wide corridor plus a wall). */
+	/** Side length of the maze in blocks for a new lair ({@link LairLayout#CURRENT}: cells of a 4-wide corridor plus a wall). */
 	public int size() {
-		return this.cells() * LairPiece.CELL + 1;
+		return LairLayout.CURRENT.size(this);
 	}
 
 	public String structureId() {

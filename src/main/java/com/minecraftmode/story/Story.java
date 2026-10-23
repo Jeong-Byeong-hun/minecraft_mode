@@ -1,6 +1,7 @@
 package com.minecraftmode.story;
 
 import com.minecraftmode.bag.Bags;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.companion.Companions;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.dungeon.Dungeons;
@@ -230,6 +231,22 @@ public final class Story {
 		return GearShop.bracketPrice(10 + index * 9) * 2;
 	}
 
+	/** EXP a finished chapter pays, as a share of a level at the player's level (0.5.47: chapters are one-time quests). */
+	public static final float CHAPTER_EXP = 0.5F;
+	/** Where Act II (the Void, past level 100) starts. */
+	private static final String ACT_TWO = "whispers_of_the_void";
+
+	/** Where Act II starts in the chapter list (-1 if it is gone). */
+	public static int actTwo() {
+		return CHAPTERS.stream().map(Chapter::id).toList().indexOf(ACT_TWO);
+	}
+
+	/** Merit chapter {@code index} pays: 20 in Act I, 40 in Act II. */
+	public static int merit(final int index) {
+		int act = actTwo();
+		return act >= 0 && index >= act ? 40 : 20;
+	}
+
 	/** Tells the player once when the current chapter's goal is reached. */
 	public static void check(final ServerPlayer player) {
 		StoryData data = data(player);
@@ -252,6 +269,9 @@ public final class Story {
 			player.setAttached(ModAttachments.STORY, data.next());
 			int coins = coins(data.chapter());
 			Coins.give(player, coins);
+			int exp = JobProgression.levelExp(player, JobProgression.get(player).level(), CHAPTER_EXP);
+			JobProgression.addExp(player, exp);
+			Bounties.addMerit(player, merit(data.chapter()));
 			for (ItemStack stack : done.rewards().apply(player)) {
 				if (!stack.isEmpty()) {
 					Bags.give(player, stack);
@@ -259,7 +279,8 @@ public final class Story {
 			}
 			player.sendSystemMessage(Component.translatable("message.minecraft_mode.story.chapter_done", Component.translatable(done.key())).withStyle(ChatFormatting.GOLD,
 				ChatFormatting.BOLD));
-			player.sendSystemMessage(Component.translatable("message.minecraft_mode.story.reward", Coins.component(coins), Component.translatable(done.key() + ".reward"))
+			player.sendSystemMessage(Component.translatable("message.minecraft_mode.story.reward", Coins.component(coins), Component.translatable(done.key() + ".reward"),
+					exp, merit(data.chapter()))
 				.withStyle(ChatFormatting.YELLOW));
 			player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.8F, 1.0F);
 			Progress.check(player);

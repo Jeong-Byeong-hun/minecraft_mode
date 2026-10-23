@@ -72,6 +72,7 @@ public final class NamedLairs {
 	public static void init() {
 		define();
 		LairTravel.init();
+		TierLairs.init();
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % 40 == 0) {
 				for (ServerPlayer player : server.getPlayerList().getPlayers()) {
@@ -88,6 +89,11 @@ public final class NamedLairs {
 
 	public static @Nullable LairDef def(final String id) {
 		return DEFS.get(id);
+	}
+
+	/** The lowest level any lair's named monster starts at. */
+	public static int lowestLevel() {
+		return DEFS.values().stream().mapToInt(d -> d.named().lo()).min().orElse(1);
 	}
 
 	/** The lair whose grounds contain {@code pos}, if any. */

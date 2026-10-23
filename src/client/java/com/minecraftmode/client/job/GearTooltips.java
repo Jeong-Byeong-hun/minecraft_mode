@@ -1,6 +1,7 @@
 package com.minecraftmode.client.job;
 
 import com.minecraftmode.enhance.Enhancement;
+import com.minecraftmode.enhance.Imbue;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
@@ -81,6 +82,12 @@ public final class GearTooltips {
 			for (StatLine line : pending.lines()) {
 				lines.add(statLine(line, ChatFormatting.DARK_AQUA, def.job()));
 			}
+		}
+		Imbue imbue = Imbue.of(stack);
+		if (imbue != null) {
+			lines.add(Component.translatable(imbue.grade() >= Imbue.GREATER ? "tooltip.minecraft_mode.gear.imbued_greater" : "tooltip.minecraft_mode.gear.imbued")
+				.withStyle(ChatFormatting.LIGHT_PURPLE));
+			lines.add(statLine(imbue.line(), ChatFormatting.LIGHT_PURPLE, def.job()));
 		}
 
 		Engravings engravings = stack.getOrDefault(ModDataComponents.ENGRAVINGS, Engravings.EMPTY);

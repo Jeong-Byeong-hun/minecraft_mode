@@ -64,7 +64,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The lair map loop, a little like map runs: reading a lair map finds a lair for the reader's level ({@link #find}: the nearest one whose
- * named monster's range holds the reader's class level, else the nearest at all, never one they cleared this cycle) and asks on the client
+ * named monster's range comes within {@link #LEVEL_REACH} of the reader's class level, never one they cleared this cycle; none at all when
+ * nothing of that level is in reach) and asks on the client
  * whether to go ({@link LairOfferPayload}); on yes the map is used up and the player stands at the lair's gate. Clearing a lair (the first
  * goal chest of the cycle) gives the next map and offers the way back to the gate ({@link LairClearPayload}).
  * <p>

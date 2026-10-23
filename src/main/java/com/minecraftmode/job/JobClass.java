@@ -17,7 +17,7 @@ public enum JobClass implements StringRepresentable {
 	NONE("none", 0xB8B8B8, "Adventurer", "모험가", new Tier[0]),
 	WARRIOR("warrior", 0xE0533D, "Warrior", "전사", new Tier[] {
 		new Tier("Warrior", "전사", "Battle Instinct", "전투 본능", "Max health +4 and melee basic damage +3%.", "최대 체력 +4, 근접 기본 공격 피해 +3%."),
-		new Tier("Gladiator", "검투사", "Arena Instinct", "투기장 본능", "Melee damage +8% and critical chance +2%.", "근접 피해 +8%, 치명타 확률 +2%."),
+		new Tier("Gladiator", "검투사", "Arena Instinct", "투기장 본능", "Melee basic damage +8% and critical chance +2%.", "근접 기본 공격 피해 +8%, 치명타 확률 +2%."),
 		new Tier("Berserker", "버서커", "Rampage", "광폭화",
 			"Every hit you land: damage +1% for 6 s, stacking up to 10 times (+10%).", "적중할 때마다 6초간 피해 +1%, 최대 10번 겹침(+10%)."),
 		new Tier("King of Knights", "기사왕", "Sword of Selection", "선정의 검",

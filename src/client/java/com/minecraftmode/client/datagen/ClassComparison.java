@@ -44,8 +44,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * The "직업 비교" section of CLASSES.md: what each class deals and survives at the last level of every tier, with its own passives,
  * level rewards and melee vitality, the highest armor set it can wear (four pieces: base options, set bonuses, defense) and talents
- * spent for single-target damage. Engravings, random armor options, enhancement, consumables and the support side of skills (buffs,
- * debuffs, heals, shields) are left out: the player picks them, or every class has them alike. Estimates to compare classes with.
+ * spent for single-target damage. Engravings, random armor options, enhancement, consumables and the support side of skills (boosts,
+ * marks, empower, vulnerability) are left out: the player picks them, or every class has them alike. Estimates to compare classes with.
  *
  * <p>{@link #build} is the same estimate for any {@link Loadout} (enhancement, awakening, raid accessories) and {@link Scenario} (what
  * the hits land on): {@code DamageClientGameTest} compares it with what a full-gear character really deals on a training dummy.
@@ -530,7 +530,7 @@ public final class ClassComparison {
 		md.append("- 각 차수의 마지막 레벨(").append(java.util.Arrays.stream(LEVELS).mapToObj(Integer::toString).collect(Collectors.joining("·")))
 			.append(")에서 그 차수 무기를 하나씩 들었을 때의 초당 피해 추정치입니다. 피해 열은 그 차수 무기 전부의 평균, \"최고 무기\"는 1마리 합계가 가장 높은 무기입니다.\n");
 		md.append("- 넣은 것: 직업 패시브, 레벨 보너스, 근접 체질, 입을 수 있는 가장 높은 방어구 세트 4부위(기본 옵션·세트 효과·방어 성능), 1마리 피해가 가장 높아지게 찍은 특성(계열마다 첫 특성부터).\n");
-		md.append("- 뺀 것: 각인, 방어구 추가 옵션, 강화·각성, 소모품, 스킬의 지원 효과(버프·디버프·회복·보호막·표식), 상태 이상 피해, 뒤치기와 체력 조건 보너스.\n");
+		md.append("- 뺀 것: 각인, 방어구 추가 옵션, 강화·각성, 소모품, 스킬의 지원 효과(버프·디버프·표식·강화 타격), 상태 이상 피해, 뒤치기 보너스. 광폭화(전사 3차)는 전투 중 평균 ").append(CombatHooks.RAMPAGE_AVERAGE).append("중첩, 선정의 검(전사 4차)은 궁극기 대기 시간에 대한 지속 비율로 셉니다.\n");
 		md.append("- 평타: 근접은 공격 속도마다 꽉 찬 공격 1번, 사격은 장전·시위마다 1발(거리 ").append(ClassDocProvider.num(SHOT_DISTANCE))
 			.append("블록), 사격 무기는 근접과 사격 중 높은 쪽입니다.\n");
 		md.append("- 스킬: 대기 시간마다 씁니다. MP는 ").append(ClassDocProvider.num(FIGHT_SECONDS))

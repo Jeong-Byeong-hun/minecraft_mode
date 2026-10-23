@@ -58,7 +58,7 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Wires classes into the game: job experience and essence from kills and ores, MP regeneration,
- * stat refresh, death penalty, Avalon, and cleanup of summons.
+ * stat refresh, death penalty, the talent migration on join, and cleanup of summons.
  */
 public final class JobEvents {
 	/** A named monster's kill is worth this share of a level to each of its killers (titans, warlords and dungeon champions: {@link #LORD_SHARE}; lair lords: {@code LairExp.LORD}). */

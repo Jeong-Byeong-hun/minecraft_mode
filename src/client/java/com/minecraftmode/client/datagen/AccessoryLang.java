@@ -36,8 +36,8 @@ final class AccessoryLang {
 		b.add(t + "enhanced", ko ? "고정·추가 옵션 수치 +%s%%" : "Fixed line and options +%s%%");
 		b.add(ModItems.ACCESSORY_ORB, ko ? "장신구 강화 구슬" : "Accessory Orb");
 		b.add(ModItems.ACCESSORY_ORB.getDescriptionId() + ".tooltip", ko
-			? "장인 브록의 강화대에서 레이드 장신구를 강화합니다 (최대 +" + AccessoryEnhance.MAX + "). 영웅·악몽 레이드 클리어 보상."
-			: "Enhances raid accessories at Artisan Brokk's bench (up to +" + AccessoryEnhance.MAX + "). From Heroic and Nightmare raid clears.");
+			? "강화 장인 브로크의 강화대에서 레이드 장신구를 강화합니다 (최대 +" + AccessoryEnhance.MAX + "). 영웅·악몽 레이드 클리어 보상(스쿠나는 일반부터, 1개 더)."
+			: "Enhances raid accessories at Artisan Brokk's bench (up to +" + AccessoryEnhance.MAX + "). From Heroic and Nightmare raid clears (Sukuna from Normal on, one more).");
 		b.add(t + "inherit", ko ? "%s: 대장장이에서 %s티어 장신구로 계승 (강화·옵션 유지)" : "%s: inherit into a tier %s accessory at the blacksmith (enhancement and options kept)");
 		for (int tier = 1; tier < Accessories.PEAK_TIER; tier++) {
 			Item ticket = Accessories.inheritTicket(tier);

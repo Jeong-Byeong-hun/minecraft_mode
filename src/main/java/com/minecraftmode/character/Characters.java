@@ -270,7 +270,7 @@ public final class Characters {
 
 	/**
 	 * Removes the wallet from saved character data and returns its copper. Characters stored before the wallet became shared
-	 * (0.5.21) still carry their own coins; the first load pours them into the account's wallet, and later saves leave it out.
+	 * (before 0.5.24) still carry their own coins; the first load pours them into the account's wallet, and later saves leave it out.
 	 */
 	private static int takeStoredWallet(final CompoundTag tag) {
 		return tag.getCompound(AttachmentTarget.NBT_ATTACHMENT_KEY).map(attachments -> {

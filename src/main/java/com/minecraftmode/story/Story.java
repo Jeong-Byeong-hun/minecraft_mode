@@ -236,9 +236,14 @@ public final class Story {
 	/** Where Act II (the Void, past level 100) starts. */
 	private static final String ACT_TWO = "whispers_of_the_void";
 
+	/** Where Act II starts in the chapter list (-1 if it is gone). */
+	public static int actTwo() {
+		return CHAPTERS.stream().map(Chapter::id).toList().indexOf(ACT_TWO);
+	}
+
 	/** Merit chapter {@code index} pays: 20 in Act I, 40 in Act II. */
 	public static int merit(final int index) {
-		int act = CHAPTERS.stream().map(Chapter::id).toList().indexOf(ACT_TWO);
+		int act = actTwo();
 		return act >= 0 && index >= act ? 40 : 20;
 	}
 

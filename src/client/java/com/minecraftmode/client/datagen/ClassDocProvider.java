@@ -8,6 +8,7 @@ import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.JobStats;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.engrave.Engraving;
+import com.minecraftmode.job.gear.GearSlot;
 import com.minecraftmode.job.quest.QuestDef;
 import com.minecraftmode.job.quest.Quests;
 import com.minecraftmode.job.skill.Engage;
@@ -128,7 +129,7 @@ public class ClassDocProvider implements DataProvider {
 			.append("%, 섬세한 손길 제외). 보스(네임드·시련 보스)는 응축된 정수를 반드시 떨어뜨립니다(1개 + 기본 체력 150마다 1개, 워든은 ")
 			.append(JobEvents.WARDEN_CONDENSED).append("개).\n");
 		md.append("- 응축된 정수 = 정수 9개 (조합대에서 서로 변환).\n");
-		md.append("- 정수 각인대에서 직업 무기에 각인을 최대 3줄, 직업 방어구에 최대 4줄 붙입니다. 같은 각인을 여러 줄 붙이면 수치가 더해집니다(예: 평타 반경 1.5블록 × 3 = 4.5블록).\n");
+		md.append("- 정수 각인대에서 직업 무기에 각인을 최대 3줄, 직업 방어구에 최대 4줄 붙입니다. 같은 각인을 여러 줄 붙이면 수치가 더해집니다(예: 평타 반경 1.5블록 × 3 = 4.5블록). 각인마다 붙는 무기나 방어구 부위가 정해져 있습니다(직업별 각인 표의 \"장착 가능\").\n");
 		md.append("- 비용: 차수 × 4(방어구는 3) × (현재 줄 수 + 1) 정수와 장비 구간 길드 가격 × (현재 줄 수 + 1) ÷ 4 동전. 후보 새로 고침: 차수 × 2 정수와 구간 가격 ÷ 6, 줄 제거: 차수 × 2 정수와 구간 가격 ÷ 4.\n\n");
 
 		md.append("## 특성\n\n");
@@ -147,14 +148,21 @@ public class ClassDocProvider implements DataProvider {
 				md.append("\n근접 체질: 차수마다 최대 체력 +").append(job.vitalityHealth()).append(", 방어 +").append(num(job.vitalityArmor()))
 					.append(" (4차에 체력 +").append(job.vitalityHealth() * 4).append(", 방어 +").append(num(job.vitalityArmor() * 4)).append(").\n");
 			}
-			md.append("\n### 각인\n\n| 각인 | 효과 (1줄) | 장착 가능 무기 |\n|---|---|---|\n");
+			md.append("\n### 각인\n\n| 각인 | 효과 (1줄) | 장착 가능 |\n|---|---|---|\n");
 			for (Engraving e : Engraving.values()) {
 				if (e.job() != job) {
 					continue;
 				}
-				String only = Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).count() == Archetype.values().length
-					? "전체"
-					: Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).map(Archetype::ko).collect(Collectors.joining(", "));
+				String only;
+				if (e.isArmor()) {
+					only = e.slots().size() == GearSlot.ARMOR.size()
+						? "방어구 전체"
+						: e.slots().stream().map(GearDocProvider::slotName).collect(Collectors.joining(", "));
+				} else {
+					only = Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).count() == Archetype.values().length
+						? "무기 전체"
+						: Arrays.stream(Archetype.values()).filter(a -> e.fits(job, a)).map(Archetype::ko).collect(Collectors.joining(", "));
+				}
 				md.append("| ").append(e.ko()).append(" | ").append(statText(e.stat(), e.value(), job)).append(" | ").append(only).append(" |\n");
 			}
 			md.append("\n### 특성\n\n| 단계 |");

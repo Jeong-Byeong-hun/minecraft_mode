@@ -1,5 +1,6 @@
 package com.minecraftmode.job.quest;
 
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.economy.Essence;
 import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
@@ -146,7 +147,11 @@ public final class QuestService {
 		}
 		QuestDef quest = offered(player, trainer);
 		if (quest.instant()) {
-			return JobProgression.advance(player, quest.job()) == JobProgression.AdvanceResult.OK;
+			if (JobProgression.advance(player, quest.job()) != JobProgression.AdvanceResult.OK) {
+				return false;
+			}
+			pay(player, quest);
+			return true;
 		}
 		set(player, get(player).start(quest));
 		player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -168,7 +173,25 @@ public final class QuestService {
 		}
 		set(player, get(player).cleared());
 		JobProgression.advance(player, quest.job());
+		pay(player, quest);
 		return true;
+	}
+
+	/** EXP a finished trial pays, as a share of a level at the player's level, by tier (1-4). */
+	public static final float[] TRIAL_EXP = {0.0F, 0.25F, 0.5F, 0.75F, 1.0F};
+	/** Merit a finished trial pays, by tier (1-4). */
+	public static final int[] TRIAL_MERIT = {0, 10, 30, 60, 100};
+
+	/**
+	 * A trial can be done once per character, so finishing one pays EXP and merit like other one-time quests (0.5.47; it used to pay
+	 * only the advancement and its kit).
+	 */
+	private static void pay(final ServerPlayer player, final QuestDef quest) {
+		int tier = Math.clamp(quest.tier(), 1, TRIAL_MERIT.length - 1);
+		int exp = JobProgression.levelExp(player, JobProgression.get(player).level(), TRIAL_EXP[tier]);
+		JobProgression.addExp(player, exp);
+		Bounties.addMerit(player, TRIAL_MERIT[tier]);
+		player.sendSystemMessage(Component.translatable("message.minecraft_mode.quest.reward", exp, TRIAL_MERIT[tier]).withStyle(ChatFormatting.GREEN));
 	}
 
 	public static void abandon(final ServerPlayer player) {

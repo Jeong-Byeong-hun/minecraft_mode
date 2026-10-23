@@ -20,6 +20,7 @@ import com.minecraftmode.raid.RaidDimension;
 import com.minecraftmode.raid.Raids;
 import com.minecraftmode.raid.loot.LootSessions;
 import com.minecraftmode.registry.ModAttachments;
+import com.minecraftmode.talent.Talents;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -331,6 +332,7 @@ public final class Characters {
 		// last, so a load that throws (and is rolled back) never pays the stored coins (or merit) out twice
 		Wallet.add(player, storedCoins);
 		merit.run();
+		Talents.migrate(player);
 	}
 
 	/** A fresh character: nothing carried, no class, at the world spawn (the plaza, with the handbook, in the capital's worlds). */

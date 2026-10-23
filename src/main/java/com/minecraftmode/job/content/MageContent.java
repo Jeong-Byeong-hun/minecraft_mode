@@ -44,7 +44,7 @@ public final class MageContent extends ClassContent {
 			art(0x8FA3B8, 0x4A6A8A, 0x9FE3FF), fx(Fx.Kind.SHARD, 0xB8ECFF),
 			skill("ice_shard", "Ice Shard", "아이스 샤드", ATTACK, 6, 10, shoot(ProjectileStyle.ICICLE, 1.12).count(3).spread(18), inflict(SLOWNESS, 3, 0)),
 			skill("frost_nova", "Frost Nova", "프로스트 노바", UTILITY, 12, 12, nova(4, 1.0), inflict(SLOWNESS, 3, 2)),
-			skill("ice_armor", "Ice Armor", "아이스 아머", DEFENSE, 18, 12, shield(8, 10), boost(DAMAGE, 6, 10)));
+			skill("ice_armor", "Ice Armor", "아이스 아머", UTILITY, 18, 12, boost(CRIT_CHANCE, 8, 10), boost(DAMAGE, 6, 10)));
 
 		// ---------------------------------------------------------------- tier 2: Caster
 		weapon("fire_poison_wand", 2, 25, WAND, "Fire-Poison Wand", "불독의 완드",
@@ -69,7 +69,7 @@ public final class MageContent extends ClassContent {
 			art(0xE8C060, 0x6FB7E8, 0xFF8FB8), fx(Fx.Kind.PETAL, 0xFF8FB8),
 			skill("vorpal_sword", "Vorpal Sword", "보팔 소드", ATTACK, 8, 14, repeat(4, 3, beam(9, 0.65))),
 			skill("jabberwock", "Jabberwock", "재버워크", UTILITY, 28, 20, summon(Summon.IRON_GOLEM, 1, 20), debuff(6, WEAKNESS, 4, 0)),
-			skill("mad_tea_party", "Mad Tea Party", "이상한 다과회", DEFENSE, 22, 16, sanctuary(5, 6, 4), debuff(6, SLOWNESS, 4, 1)));
+			skill("mad_tea_party", "Mad Tea Party", "이상한 다과회", UTILITY, 22, 16, allyBoost(5, DAMAGE, 6, 15), debuff(6, SLOWNESS, 4, 1)));
 
 		weapon("celestial_keys", 2, 39, SCEPTER, "Celestial Spirit Keys", "성령의 열쇠",
 			art(0xF2C94C, 0x7A5A2A, 0x5FC8FF), fx(Fx.Kind.SPARK, 0xFFE27A),
@@ -82,7 +82,7 @@ public final class MageContent extends ClassContent {
 			art(0x7A5A34, 0x4A3A22, 0x7FE36B), fx(Fx.Kind.PETAL, 0x8CE36B),
 			skill("entangling_roots", "Entangling Roots", "휘감는 뿌리", UTILITY, 14, 16, zone(4, 4, 0.6).at(14).pull(0.8).effect(SLOWNESS, 3)),
 			skill("thorn_volley", "Thorn Volley", "가시 난사", ATTACK, 8, 14, shoot(ProjectileStyle.ORB, 1.0).count(5).spread(35), inflict(POISON, 4, 0)),
-			skill("photosynthesis", "Photosynthesis", "광합성", DEFENSE, 20, 16, heal(10), buff(REGENERATION, 8, 1), buff(MANA_FLOW, 8, 0)));
+			skill("photosynthesis", "Photosynthesis", "광합성", UTILITY, 20, 16, boost(DAMAGE, 8, 15), buff(MANA_FLOW, 8, 0)));
 
 		// 0.5.24: the spellblade
 		weapon("runeblade", 2, 37, SPELLBLADE, "Runeblade", "룬 블레이드",
@@ -120,11 +120,11 @@ public final class MageContent extends ClassContent {
 			art(0x4A2A22, 0x3A2018, 0xFF6A1A), fx(Fx.Kind.ORB, 0xFF5A1A),
 			skill("muspel_fire_rain", "Fire Rain of Muspelheim", "무스펠헤임의 불비", ATTACK, 14, 24, rain(ProjectileStyle.FIREBALL, 18, 5, 12, 0.38, 1.5F), burn(3)),
 			skill("twig_of_ruin", "Twig of Ruin", "파멸의 가지", ATTACK, 9, 22, beam(16, 2.6), burn(5)),
-			skill("surtr_mantle", "Surtr's Mantle", "수르트의 외투", DEFENSE, 22, 20, buff(FIRE_RESISTANCE, 12, 0), boost(CRIT_DAMAGE, 6, 50)));
+			skill("surtr_mantle", "Surtr's Mantle", "수르트의 외투", UTILITY, 22, 20, buff(FIRE_RESISTANCE, 12, 0), boost(CRIT_DAMAGE, 6, 50)));
 
 		weapon("bishop_scepter", 3, 66, SCEPTER, "Bishop's Holy Scepter", "비숍의 성홀",
 			art(0xEDE8DA, 0xC9A64A, 0xFFD84A), fx(Fx.Kind.RING, 0xFFF6D6),
-			skill("angel_ray", "Angel Ray", "엔젤레이", ATTACK, 7, 18, shoot(ProjectileStyle.ORB, 1.8).pierce(3), allyHeal(6, 6)),
+			skill("angel_ray", "Angel Ray", "엔젤레이", ATTACK, 7, 18, shoot(ProjectileStyle.ORB, 1.8).pierce(3)),
 			skill("holy_symbol", "Holy Symbol", "홀리 심볼", UTILITY, 28, 22, allyBoost(12, CRIT_CHANCE, 15, 10), allyBoost(12, DAMAGE, 15, 10)),
 			skill("genesis", "Genesis", "제네시스", ATTACK, 22, 28, repeat(3, 10, lightning(20, 5, 1.3))));
 
@@ -146,12 +146,12 @@ public final class MageContent extends ClassContent {
 				inflict(VULNERABLE, 8, 2)),
 			skill("high_speed_divine_words", "High-Speed Divine Words", "고속신언", UTILITY, 30, 16, look(SkillLook.DIVINE_WORDS, refresh(50)),
 				buff(MANA_FLOW, 10, 0)),
-			skill("argon_coin", "Argon Coin", "황금양모", DEFENSE, 26, 22, look(SkillLook.GOLDEN_FLEECE, heal(25)), shield(8, 10)).withFx(Fx.Kind.SPARK));
+			skill("argon_coin", "Argon Coin", "황금양모", UTILITY, 26, 22, look(SkillLook.GOLDEN_FLEECE, boost(DAMAGE, 8, 20)), boost(CRIT_DAMAGE, 8, 30)).withFx(Fx.Kind.SPARK));
 
 		weapon("yata_no_kagami", 4, 74, ORB, "Yata no Kagami", "야타노카가미",
 			art(0xC0303A, 0x8A1A22, 0xF2DFA8), fx(Fx.Kind.ORB, 0x6FCBFF),
 			skill("eightfold_blessings", "Eightfold Blessings of Amaterasu", "수천일광천조팔야진석", ULTIMATE, 50, 36,
-				look(SkillLook.AMATERASU, allyHeal(12, 35)).size(12).unscaled(), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)).withFx(Fx.Kind.SPARK),
+				look(SkillLook.AMATERASU, allyBoost(12, DAMAGE, 15, 25)).size(12).unscaled(), allyBuff(12, MANA_FLOW, 15, 0), restoreMana(30), refresh(60)).withFx(Fx.Kind.SPARK),
 			skill("enten", "Enten: Blazing Heaven", "염천", ATTACK, 9, 20, look(SkillLook.ENTEN, strike(18, 3.5, 3, 1.01)).at(18).size(3.5), burn(4))
 				.withFx(Fx.Kind.SPARK, 0xFF8A3A),
 			skill("hyoten", "Hyoten: Frozen Heaven", "빙천", ATTACK, 11, 22,
@@ -177,8 +177,8 @@ public final class MageContent extends ClassContent {
 				burn(5)).withFx(Fx.Kind.SPARK),
 			skill("discerning_eye", "Discerning Eye", "감식안", UTILITY, 16, 18, look(SkillLook.DISCERNING_EYE, mark(24, 10, 40)).onTarget(24),
 				look(SkillLook.ALLY_RING, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled()).withFx(Fx.Kind.SPARK),
-			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", DEFENSE, 26, 24, look(SkillLook.WAR_BANNER, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled(),
-				allyHeal(10, 15)).withFx(Fx.Kind.SPARK));
+			skill("tacticians_advice", "Tactician's Advice", "군사의 충언", UTILITY, 26, 24, look(SkillLook.WAR_BANNER, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled(),
+				allyBoost(10, CRIT_CHANCE, 10, 10)).withFx(Fx.Kind.SPARK));
 
 		weapon("lumen_histoire", 4, 86, ORB, "Lumen Histoire", "루멘 이스트왈",
 			art(0xE8D8A8, 0x7A6A9A, 0xBFF6FF), fx(Fx.Kind.SPARK, 0xFFF0B8),
@@ -193,8 +193,8 @@ public final class MageContent extends ClassContent {
 
 		weapon("merlin_staff", 4, 90, STAFF, "Merlin's Staff", "멀린의 지팡이",
 			art(0xE8E8F8, 0x9A8AC8, 0xFF9AD5), fx(Fx.Kind.PETAL, 0xF5C8FF),
-			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, look(SkillLook.AVALON, sanctuary(10, 10, 5)).size(10).lasting(10),
-				allyBoost(10, DAMAGE, 10, 20)),
+			skill("garden_of_avalon", "Garden of Avalon", "영원히 닫힌 이상향", ULTIMATE, 55, 40, look(SkillLook.AVALON, allyBoost(10, CRIT_DAMAGE, 10, 40)).size(10).unscaled().lasting(10),
+				allyBoost(10, DAMAGE, 10, 25)),
 			skill("hero_creation", "Hero Creation", "영웅 작성", UTILITY, 24, 24, look(SkillLook.HERO_CREATION, allyBoost(10, DAMAGE, 12, 20)).size(10).unscaled(),
 				allyBoost(10, CRIT_DAMAGE, 12, 40)),
 			skill("flower_storm", "Flower Storm", "꽃보라", ATTACK, 9, 22, shoot(ProjectileStyle.ORB, 1.85).count(7).spread(70).homing().look(SkillLook.PETAL_ORB),
@@ -206,9 +206,9 @@ public final class MageContent extends ClassContent {
 			skill("zoltraak_barrage", "Zoltraak Barrage", "졸트라크 일제 사격", ULTIMATE, 50, 40,
 				barrage(ProjectileStyle.ORB, 30, 0.31, SkillLook.ZOLTRAAK_CIRCLE, SkillLook.ZOLTRAAK)),
 			skill("judradjim", "Judradjim", "쥬드라질룸", ATTACK, 10, 26, look(SkillLook.JUDRADJIM, lightning(22, 4.5, 2.91)).at(22).size(4.5), stun(0.8)),
-			skill("defensive_magic", "Defensive Magic", "방어 마법", DEFENSE, 18, 20, look(SkillLook.HEX_BARRIER, boost(DAMAGE, 6, 30)).lasting(3), shield(12, 6)),
+			skill("defensive_magic", "Defensive Magic", "방어 마법", UTILITY, 18, 20, look(SkillLook.HEX_BARRIER, boost(DAMAGE, 6, 30)).lasting(3), boost(CRIT_CHANCE, 6, 15)),
 			skill("flower_field", "Spell to Make a Field of Flowers", "꽃밭을 만드는 마법", UTILITY, 30, 24,
-				look(SkillLook.FLOWER_FIELD, sanctuary(7, 8, 4)).size(7).lasting(8), cleanse()));
+				look(SkillLook.FLOWER_FIELD, allyBoost(7, DAMAGE, 8, 20)).size(7).unscaled().lasting(8), allyBoost(7, CRIT_CHANCE, 8, 10), cleanse()));
 
 		weapon("lemegeton", 4, 100, GRIMOIRE, "Lemegeton", "레메게톤",
 			art(0xD4AF37, 0x24203A, 0xFF4A3A), fx(Fx.Kind.RUNE, 0xFFC94A),
@@ -218,8 +218,8 @@ public final class MageContent extends ClassContent {
 				look(SkillLook.DEMON_PILLARS, nova(6, 3.81)).size(6)).withFx(Fx.Kind.SPARK),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 20, look(SkillLook.CLAIRVOYANCE, mark(24, 12, 50)).onTarget(24),
 				debuff(14, GLOWING, 10, 0)).withFx(Fx.Kind.SPARK),
-			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", DEFENSE, 28, 26, look(SkillLook.TEN_RINGS, boost(CRIT_DAMAGE, 6, 50)).lasting(4),
-				shield(12, 10)).withFx(Fx.Kind.SPARK));
+			skill("rings_of_solomon", "Rings of Solomon", "솔로몬의 반지", UTILITY, 28, 26, look(SkillLook.TEN_RINGS, boost(CRIT_DAMAGE, 6, 50)).lasting(4),
+				boost(DAMAGE, 6, 20)).withFx(Fx.Kind.SPARK));
 
 		weapon("rule_breaker", 4, 92, SPELLBLADE, "Rule Breaker", "룰 브레이커",
 			art(0xB89BE0, 0x3A1F5C, 0xF0E6FF), fx(Fx.Kind.RUNE, 0xD6B8FF),

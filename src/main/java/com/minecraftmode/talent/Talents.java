@@ -1,6 +1,7 @@
 package com.minecraftmode.talent;
 
 import com.minecraftmode.economy.Wallet;
+import com.minecraftmode.job.JobClass;
 import com.minecraftmode.job.JobData;
 import com.minecraftmode.job.JobProgression;
 import com.minecraftmode.job.gear.GearStats;
@@ -30,17 +31,46 @@ import net.minecraft.world.entity.player.Player;
  * over; a reset costs the level bracket's guild price in coins.
  */
 public final class Talents {
-	/** The ranks a player put into nodes, for {@code job} (another class means none). Kept on death, synced. */
-	public record TalentData(String job, Map<String, Integer> ranks) {
-		public static final TalentData DEFAULT = new TalentData("", Map.of());
+	/**
+	 * The ranks a player put into nodes, for {@code job} (another class means none), and the talent layout they were spent under
+	 * ({@link #VERSION}; saves without it are 0). Kept on death, synced.
+	 */
+	public record TalentData(String job, Map<String, Integer> ranks, int version) {
+		public static final TalentData DEFAULT = new TalentData("", Map.of(), 0);
 		public static final Codec<TalentData> CODEC = RecordCodecBuilder.create(i -> i.group(
 			Codec.STRING.optionalFieldOf("job", "").forGetter(TalentData::job),
-			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("ranks", Map.of()).forGetter(TalentData::ranks)
+			Codec.unboundedMap(Codec.STRING, Codec.INT).optionalFieldOf("ranks", Map.of()).forGetter(TalentData::ranks),
+			Codec.INT.optionalFieldOf("version", 0).forGetter(TalentData::version)
 		).apply(i, TalentData::new));
 		public static final StreamCodec<ByteBuf, TalentData> STREAM_CODEC = ByteBufCodecs.fromCodec(CODEC);
 
 		public TalentData {
 			ranks = Map.copyOf(ranks);
+		}
+
+		/** Ranks spent now, under the current layout. */
+		public TalentData(final String job, final Map<String, Integer> ranks) {
+			this(job, ranks, VERSION);
+		}
+	}
+
+	/**
+	 * The talent layout: 1 (0.5.47) turned the warrior's Guardian branch (damage reduction, health, thorns) into attack talents under the
+	 * same node ids, so warriors whose ranks were spent before get all their points back once, for free ({@link #migrate}).
+	 */
+	public static final int VERSION = 1;
+
+	/** Brings {@code player}'s talents to {@link #VERSION} (on join and after a character loads): older warrior ranks are refunded. */
+	public static void migrate(final ServerPlayer player) {
+		TalentData data = player.getAttachedOrElse(ModAttachments.TALENTS, TalentData.DEFAULT);
+		if (data.version() >= VERSION) {
+			return;
+		}
+		boolean refund = data.job().equals(JobClass.WARRIOR.id()) && !data.ranks().isEmpty();
+		player.setAttached(ModAttachments.TALENTS, new TalentData(data.job(), refund ? Map.of() : data.ranks(), VERSION));
+		if (refund) {
+			GearStats.invalidate(player);
+			player.sendSystemMessage(Component.translatable("message.minecraft_mode.talent.refunded").withStyle(ChatFormatting.GOLD));
 		}
 	}
 

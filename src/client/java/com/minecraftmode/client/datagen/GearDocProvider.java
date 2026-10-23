@@ -961,7 +961,16 @@ public class GearDocProvider implements DataProvider {
 			.append(WorldEvents.invaderCount(WorldEvents.WAVES, WorldEvents.INVASION_PARTY_CAP)).append("마리.\n");
 
 		md.append("\n## 메인 스토리\n\n");
-		md.append("- 광장의 **왕실 전령 엘릭**에게서 장을 받고, 목표를 이루면 돌아가 보상을 받습니다. 도감(J)의 스토리 탭과 `/story`.\n\n");
+		md.append("- 광장의 **왕실 전령 엘릭**에게서 장을 받고, 목표를 이루면 돌아가 보상을 받습니다. 도감(J)의 스토리 탭과 `/story`.\n");
+		md.append("- 한 번만 깰 수 있는 퀘스트라 장마다 표의 보상에 더해 **직업 경험치(그때 레벨의 ").append(Math.round(Story.CHAPTER_EXP * 100))
+			.append("%)와 공적**(1막 ").append(Story.merit(0)).append(", 2막 ").append(Story.merit(Story.chapters().size() - 1)).append(")을 줍니다. ")
+			.append("전직 시련도 마찬가지로 1~4차에 레벨의 ");
+		for (int tier = 1; tier <= 4; tier++) {
+			md.append(Math.round(com.minecraftmode.job.quest.QuestService.TRIAL_EXP[tier] * 100)).append(tier < 4 ? "/" : "% 경험치와 공적 ");
+		}
+		for (int tier = 1; tier <= 4; tier++) {
+			md.append(com.minecraftmode.job.quest.QuestService.TRIAL_MERIT[tier]).append(tier < 4 ? "/" : "을 줍니다.\n\n");
+		}
 		md.append("| 장 | 제목 | 목표 | 보상 |\n|---|---|---|---|\n");
 		List<Story.Chapter> chapters = Story.chapters();
 		for (int i = 0; i < chapters.size(); i++) {

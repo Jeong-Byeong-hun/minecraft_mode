@@ -118,7 +118,7 @@ public final class RogueContent extends ClassContent {
 			art(0xB0B6BE, 0x2A1A2E, 0xC2185B), fx(Fx.Kind.SMOKE, 0x5A4A5E),
 			skill("maria_the_ripper", "Maria the Ripper", "해체성모", ATTACK, 16, 26, shadowstep(14, 1.6), repeat(4, 2, slash(3, 360, 0.6)), inflict(BLEEDING, 6, 1)),
 			skill("the_mist", "The Mist", "암흑무도", UTILITY, 22, 20, zone(5, 6, 0.4).effect(WEAKNESS, 0), stealth(4, 50)),
-			skill("surgical_procedure", "Surgical Procedure", "외과수술", DEFENSE, 24, 18, heal(25), cleanse()));
+			skill("surgical_procedure", "Surgical Procedure", "외과수술", UTILITY, 24, 18, empower(4, 60, 8), cleanse()));
 
 		weapon("murasame", 3, 61, NINJATO, "One-Cut Killer: Murasame", "일참필살 무라사메",
 			art(0x2A2A2E, 0x7B0F1A, 0xD10A2A), fx(Fx.Kind.SLASH, 0xB0001E),
@@ -159,7 +159,7 @@ public final class RogueContent extends ClassContent {
 				inflict(BLEEDING, 6, 1)).withFx(Fx.Kind.SPARK, 0xB070FF),
 			skill("killing_intent", "Killing Intent", "살기", UTILITY, 20, 20, look(SkillLook.KILLING_INTENT, debuff(8, WEAKNESS, 6, 1)).size(8).quiet(),
 				look(SkillLook.NONE, debuff(8, SLOWNESS, 6, 1)).quiet()).withFx(Fx.Kind.SPARK, 0xFF4040),
-			skill("riposte", "Riposte", "되받아치기", DEFENSE, 18, 20, look(SkillLook.RIPOSTE, boost(CRIT_DAMAGE, 5, 50)).quiet(), look(SkillLook.NONE, shield(8, 5)).quiet())
+			skill("riposte", "Riposte", "되받아치기", UTILITY, 18, 20, look(SkillLook.RIPOSTE, boost(CRIT_DAMAGE, 5, 50)).quiet(), look(SkillLook.NONE, boost(DAMAGE, 5, 15)).quiet())
 				.withFx(Fx.Kind.SPARK, 0xB070FF));
 
 		weapon("beru_talons", 4, 78, CLAW, "Beru's Talons", "베르의 발톱",
@@ -168,8 +168,8 @@ public final class RogueContent extends ClassContent {
 				delay(0.4, repeat(4, 4, look(SkillLook.ANT_FRENZY, nova(5, 1.32)).size(5).quiet()))).withFx(Fx.Kind.SPARK, 0xB14EFF),
 			skill("devour", "Devour", "포식", ATTACK, 12, 22, look(SkillLook.DEVOUR, execute(5, 2.2, 30, 2.2)).onTarget(5).quiet(), lifesteal(40))
 				.withFx(Fx.Kind.SPARK, 0xB14EFF),
-			skill("stolen_healing", "Stolen Healing Arts", "빼앗은 치유술", DEFENSE, 30, 24, look(SkillLook.STOLEN_HEALING, allyHeal(10, 25)).size(10).unscaled().quiet(),
-				buff(REGENERATION, 6, 1)).withFx(Fx.Kind.SPARK, 0x7DFF9A),
+			skill("stolen_healing", "Stolen Arts", "빼앗은 비술", UTILITY, 30, 24, look(SkillLook.STOLEN_HEALING, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled().quiet(),
+				allyBoost(10, CRIT_CHANCE, 10, 10)).withFx(Fx.Kind.SPARK, 0x7DFF9A),
 			skill("wing_burst", "Wing Burst", "날개 돌격", MOVEMENT, 10, 18, look(SkillLook.WING_BURST, leap(6, 4, 1.8)).size(4).lasting(2.2))
 				.withFx(Fx.Kind.SPARK, 0xB14EFF));
 
@@ -188,7 +188,7 @@ public final class RogueContent extends ClassContent {
 
 		weapon("totsuka_blade", 4, 86, NINJATO, "Totsuka Blade", "토츠카의 검",
 			art(0xFFD9C7, 0x6B1A1A, 0xFF4D2E), fx(Fx.Kind.RUNE, 0xFF5A3C),
-			skill("susanoo", "Susanoo", "스사노오", ULTIMATE, 50, 40, look(SkillLook.SUSANOO_ITACHI, shield(20, 10)).lasting(3.0).quiet(),
+			skill("susanoo", "Susanoo", "스사노오", ULTIMATE, 50, 40, look(SkillLook.SUSANOO_ITACHI, boost(DAMAGE, 10, 25)).lasting(3.0).quiet(),
 				look(SkillLook.TOTSUKA, beam(16, 6.08)).beam(16).quiet(), stun(1.5)).withFx(Fx.Kind.SPARK),
 			skill("amaterasu", "Amaterasu", "아마테라스", ATTACK, 14, 26, look(SkillLook.BLACK_FLAMES, zone(3.5, 6, 0.68).at(16)).at(16).size(3.5).lasting(6).quiet(),
 				burn(6)).withFx(Fx.Kind.SPARK, 0x9A1428),
@@ -205,7 +205,7 @@ public final class RogueContent extends ClassContent {
 				delay(0.5, look(SkillLook.NONE, nova(7, 2.2)).quiet()), stun(1.0)).withFx(Fx.Kind.SPARK, 0x9A5CFF),
 			skill("reapers_chain", "Reaper's Chain", "사신의 사슬", ATTACK, 8, 24, look(SkillLook.REAPER_CHAIN, slash(7, 240, 2.2)).cone(7, 240).quiet(),
 				inflict(BLEEDING, 6, 2)).withFx(Fx.Kind.SPARK, 0x9A5CFF),
-			skill("abyssal_guard", "Abyssal Guard", "심연의 수호", DEFENSE, 24, 24, look(SkillLook.ABYSSAL_GUARD, shield(16, 8)).lasting(3.0).quiet(),
+			skill("abyssal_guard", "Abyssal Arms", "심연의 무장", UTILITY, 24, 24, look(SkillLook.ABYSSAL_GUARD, boost(CRIT_DAMAGE, 8, 40)).lasting(3.0).quiet(),
 				boost(DAMAGE, 6, 20)).withFx(Fx.Kind.SPARK, 0x9A5CFF));
 
 		weapon("kamui_shuriken", 4, 95, SHURIKEN, "Kamui Shuriken", "카무이 수리검",
@@ -231,7 +231,7 @@ public final class RogueContent extends ClassContent {
 
 		weapon("madara_gunbai", 4, 88, WAR_FAN, "Madara's Gunbai", "마다라의 군배",
 			art(0xB33A2E, 0x2A1A14, 0xF2F2F2), fx(Fx.Kind.ORB, 0xFF4A2A),
-			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, look(SkillLook.UCHIHA_RETURN, shield(12, 4)).size(7).lasting(1.7).quiet(),
+			skill("uchiha_return", "Uchiha Return", "우치하 되돌리기", ULTIMATE, 50, 40, look(SkillLook.UCHIHA_RETURN, boost(CRIT_CHANCE, 4, 20)).size(7).lasting(1.7).quiet(),
 				delay(1.0, look(SkillLook.NONE, nova(7, 6.0)).quiet())).withFx(Fx.Kind.SPARK),
 			skill("great_fire_annihilation", "Great Fire Annihilation", "호화멸각", ATTACK, 12, 24, burn(6),
 				look(SkillLook.DESTROYER_FLAME, strike(12, 5, 1, 2.8)).at(12).size(5).lasting(1.6).quiet()).withFx(Fx.Kind.SPARK),

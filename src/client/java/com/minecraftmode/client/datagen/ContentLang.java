@@ -322,7 +322,7 @@ final class ContentLang {
 		b.add(m + "goal", ko ? "목표: %s (%s/%s)" : "Goal: %s (%s/%s)");
 		b.add(m + "goal_done", ko ? "[메인 스토리] '%s' 목표 달성! 광장의 왕실 전령에게 돌아가세요." : "[Main story] '%s' done! Return to the royal herald on the plaza.");
 		b.add(m + "chapter_done", ko ? "%s 완료!" : "%s complete!");
-		b.add(m + "reward", ko ? "보상: %s, %s" : "Reward: %s, %s");
+		b.add(m + "reward", ko ? "보상: %s, %s, 직업 경험치 %s, 공적 %s" : "Reward: %s, %s, %s class EXP, %s merit");
 		b.add(m + "finished", ko ? "그대의 이름은 스톰홀드의 영웅으로 영원히 기억될 것이오." : "Your name will be remembered forever as the Hero of Stormhold.");
 		b.add("screen.minecraft_mode.codex.tab.story", ko ? "스토리" : "Story");
 		b.add("screen.minecraft_mode.codex.chapter", ko ? "%s장" : "Chapter %s");

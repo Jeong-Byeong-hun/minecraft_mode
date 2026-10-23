@@ -70,13 +70,13 @@ public final class HunterContent extends ClassContent {
 			art(0xE8E8F0, 0x6A5A3A, 0xE8C040), fx(Fx.Kind.SPARK, 0xF0D080),
 			skill("dowsing_chain", "Dowsing Chain", "다우징 체인", UTILITY, 12, 12, mark(16, 8, 25)),
 			skill("chain_jail", "Chain Jail", "체인 제일", ATTACK, 14, 20, beam(10, 2.8), stun(2.0)),
-			skill("holy_chain", "Holy Chain", "홀리 체인", DEFENSE, 18, 16, heal(20), cleanse()));
+			skill("holy_chain", "Holy Chain", "홀리 체인", UTILITY, 18, 16, boost(DAMAGE, 6, 20), cleanse()));
 
 		weapon("franklin_fingers", 2, 40, PISTOL, "Franklin's Double Machine Gun", "프랭클린의 더블 머신건",
 			art(0x8A8A90, 0x5A4A3A, 0xF5862B), fx(Fx.Kind.BOLT, 0xF5B060),
 			skill("ten_fingers", "Ten Fingers", "열 손가락", ATTACK, 10, 18, shoot(ProjectileStyle.BULLET, 1.5).count(10).spread(40).interval(2)),
 			skill("nen_bullet", "Nen Bullet", "넨탄", ATTACK, 8, 14, shoot(ProjectileStyle.BULLET, 2.0).pierce(3)),
-			skill("hold_the_line", "Hold the Line", "진지 사수", DEFENSE, 18, 14, boost(DAMAGE, 5, 20), shield(8, 6)));
+			skill("hold_the_line", "Hold the Line", "진지 사수", UTILITY, 18, 14, boost(DAMAGE, 5, 20), boost(CRIT_CHANCE, 5, 15)));
 
 		weapon("nobunaga_katana", 2, 43, KATANA, "Nobunaga's Katana", "노부나가의 일본도",
 			art(0xE0E4EA, 0x1A1A24, 0x8A2A2A), fx(Fx.Kind.SLASH, 0xF0E0E0),
@@ -95,19 +95,19 @@ public final class HunterContent extends ClassContent {
 		weapon("feitan_umbrella", 3, 45, RAPIER, "Feitan's Umbrella", "페이탄의 우산",
 			art(0x2A2A30, 0x1A1A1A, 0xC82020), fx(Fx.Kind.SPARK, 0xFF4A2A),
 			skill("hidden_blade", "Hidden Blade", "우산 속 칼날", ATTACK, 7, 18, repeat(4, 3, beam(6, 0.6))),
-			skill("pain_packer", "Pain Packer", "용서받지 못한 자", DEFENSE, 20, 20, boost(CRIT_DAMAGE, 4, 80), shield(10, 4)),
+			skill("pain_packer", "Pain Packer", "용서받지 못한 자", UTILITY, 20, 20, boost(CRIT_DAMAGE, 4, 80), boost(DAMAGE, 4, 15)),
 			skill("rising_sun", "Rising Sun", "태양에 불태워져", ATTACK, 18, 28, nova(7, 2.6), burn(8)));
 
 		weapon("machi_threads", 3, 50, KUNAI, "Machi's Nen Threads", "마치의 넨사",
 			art(0xD8D8E0, 0xC8A0C8, 0xFF8AC8), fx(Fx.Kind.SPARK, 0xFFB0E0),
 			skill("needle_volley", "Needle Volley", "바늘 연사", ATTACK, 7, 16, shoot(ProjectileStyle.KUNAI, 1.68).count(5).spread(20)),
 			skill("thread_snare", "Thread Snare", "넨사 올가미", UTILITY, 12, 16, debuff(7, SLOWNESS, 4, 3), pull(7, 0.8)),
-			skill("nen_suture", "Nen Suture", "넨사 봉합", DEFENSE, 20, 18, heal(25), allyHeal(8, 15)));
+			skill("nen_suture", "Nen Suture", "넨사 봉합", UTILITY, 20, 18, boost(DAMAGE, 6, 20), allyBoost(8, CRIT_CHANCE, 6, 10)));
 
 		weapon("uvogin_fists", 3, 54, KNUCKLE, "Uvogin's Fists", "우보긴의 주먹",
 			art(0xC8A070, 0x5A3A1A, 0xFF5A2A), fx(Fx.Kind.RING, 0xFF8A4A),
 			skill("big_bang_impact", "Big Bang Impact", "빅뱅 임팩트", ATTACK, 14, 26, slash(4, 90, 4.68), launch(4, 1.0)),
-			skill("roar", "Roar", "포효", UTILITY, 16, 14, taunt(10), debuff(8, WEAKNESS, 5, 1)),
+			skill("roar", "Roar", "포효", UTILITY, 16, 14, debuff(10, VULNERABLE, 5, 0), debuff(8, WEAKNESS, 5, 1)),
 			skill("ken", "Ken", "켄", UTILITY, 18, 16, boost(DAMAGE, 6, 20), boost(CRIT_CHANCE, 6, 20)));
 
 		weapon("crazy_slots", 3, 58, SCYTHE, "Crazy Slots", "크레이지 슬롯",
@@ -120,7 +120,7 @@ public final class HunterContent extends ClassContent {
 			art(0xF0F0F0, 0xE8E0F0, 0x8A2AC8), fx(Fx.Kind.SLASH, 0xC8A0FF),
 			skill("pounce", "Pounce", "도약 습격", MOVEMENT, 9, 18, leap(5, 3.5, 2.86)),
 			skill("terpsichora", "Terpsichora", "흑자무상", UTILITY, 22, 20, boost(DAMAGE, 8, 30), buff(SPEED, 8, 1)),
-			skill("doctor_blythe", "Doctor Blythe", "완구수리자", DEFENSE, 24, 24, heal(35), cleanse(), allyHeal(10, 20)));
+			skill("doctor_blythe", "Doctor Blythe", "완구수리자", UTILITY, 24, 24, empower(4, 60, 8), cleanse(), allyBoost(10, DAMAGE, 10, 15)));
 
 		weapon("morel_pipe", 3, 66, STAFF, "Morel's Pipe", "모라우의 담뱃대",
 			art(0x6A4A2A, 0x3A2A1A, 0xB0B0C0), fx(Fx.Kind.SMOKE, 0xC8C8D0),
@@ -173,7 +173,7 @@ public final class HunterContent extends ClassContent {
 				delay(1.5, look(SkillLook.SEAL_CHAIN, chain(14, 4, 2.2)).size(14).unscaled())).withFx(Fx.Kind.SPARK),
 			skill("indoor_fish", "Indoor Fish", "밀실유어", ATTACK, 14, 24,
 				shoot(ProjectileStyle.ORB, 1.6).count(3).spread(30).homing().look(SkillLook.INDOOR_FISH), inflict(BLEEDING, 6, 1)).withFx(Fx.Kind.SPARK),
-			skill("fun_fun_cloth", "Fun Fun Cloth", "불가사의하고 편리한 보자기", DEFENSE, 20, 22, look(SkillLook.FUN_CLOTH, shield(16, 8)).quiet(),
+			skill("fun_fun_cloth", "Fun Fun Cloth", "불가사의하고 편리한 보자기", UTILITY, 20, 22, look(SkillLook.FUN_CLOTH, boost(CRIT_DAMAGE, 6, 40)).quiet(),
 				look(SkillLook.NONE, stealth(2, 30)).quiet()).withFx(Fx.Kind.SPARK),
 			skill("bandits_secret", "Bandit's Secret", "도적의 비법", ULTIMATE, 55, 50,
 				look(SkillLook.BANDIT_BOOK, barrage(ProjectileStyle.ORB, 14, 0.6, SkillLook.PAGE_GATE, SkillLook.STOLEN_SKILL)).lasting(1.6), restoreMana(30))
@@ -197,7 +197,7 @@ public final class HunterContent extends ClassContent {
 			skill("orb_volley", "Orb Volley", "넨구 연사", ATTACK, 14, 26, shoot(ProjectileStyle.ORB, 1.19).count(6).spread(40).explode(1.5F).look(SkillLook.SILVA_ORB)
 				.onImpact(lookWhereItBursts(SkillLook.ORB_BURST, 1.5))),
 			skill("head_of_the_family", "Head of the Family", "가주의 위엄", UTILITY, 20, 18, look(SkillLook.SILVA_PRESENCE, debuff(10, SLOWNESS, 5, 2)).size(10).quiet(),
-				look(SkillLook.NONE, taunt(10)).quiet(), boost(DAMAGE, 5, 20)).withFx(Fx.Kind.SPARK),
+				look(SkillLook.NONE, debuff(10, VULNERABLE, 5, 0)).quiet(), boost(DAMAGE, 5, 20)).withFx(Fx.Kind.SPARK),
 			skill("assassins_judgment", "Assassin's Judgment", "암살가의 심판", ULTIMATE, 55, 45, look(SkillLook.ASSASSIN_HAND, execute(8, 4.0, 40, 3.0)).onTarget(8).quiet(),
 				shoot(ProjectileStyle.ORB, 3.0).count(3).spread(25).explode(3.0F).look(SkillLook.SILVA_ORB).onImpact(lookWhereItBursts(SkillLook.ORB_BURST, 3.0))));
 
@@ -207,12 +207,12 @@ public final class HunterContent extends ClassContent {
 			skill("photon", "Photon", "광자", ATTACK, 14, 28, look(SkillLook.PHOTON, nova(6, 2.6)).size(6).quiet(), inflict(VULNERABLE, 6, 1)).withFx(Fx.Kind.SPARK),
 			skill("kings_aura", "King's Aura", "왕의 아우라", UTILITY, 24, 22, look(SkillLook.KINGS_AURA, debuff(12, WEAKNESS, 6, 2)).size(12).quiet(),
 				look(SkillLook.NONE, debuff(12, SLOWNESS, 6, 1)).quiet(), lifestealFor(6, 15)).withFx(Fx.Kind.SPARK),
-			skill("king_of_ants", "King of the Chimera Ants", "키메라 앤트의 왕", ULTIMATE, 70, 55, boost(DAMAGE, 15, 40), boost(CRIT_CHANCE, 15, 30), heal(50),
+			skill("king_of_ants", "King of the Chimera Ants", "키메라 앤트의 왕", ULTIMATE, 70, 55, boost(DAMAGE, 15, 40), boost(CRIT_CHANCE, 15, 30), boost(CRIT_DAMAGE, 15, 40),
 				look(SkillLook.KING_ROSE, nova(7, 5.4)).size(7).quiet()).withFx(Fx.Kind.SPARK));
 
 		weapon("hundred_type_guanyin", 4, 100, KNUCKLE, "Hundred-Type Guanyin Bodhisattva", "백식관음",
 			art(0xF0D890, 0xE8E0D0, 0xFFE070), fx(Fx.Kind.RING, 0xFFE070),
-			skill("prayer", "Prayer", "기도", DEFENSE, 14, 20, look(SkillLook.NETERO_PRAYER, boost(DAMAGE, 3, 30)).lasting(2.5).quiet(), restoreMana(15), heal(10))
+			skill("prayer", "Prayer", "기도", UTILITY, 14, 20, look(SkillLook.NETERO_PRAYER, boost(DAMAGE, 3, 30)).lasting(2.5).quiet(), restoreMana(15), boost(CRIT_CHANCE, 3, 15))
 				.withFx(Fx.Kind.SPARK),
 			skill("third_hand", "Third Hand", "삼내장", ATTACK, 10, 26, look(SkillLook.GUANYIN_SWEEP, slash(8, 200, 3.0)).cone(8, 200).quiet(),
 				look(SkillLook.NONE, launch(6, 1.0)).quiet()).withFx(Fx.Kind.SPARK),

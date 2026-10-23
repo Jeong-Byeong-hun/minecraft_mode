@@ -671,7 +671,34 @@ public final class ConsumableArtist {
 			"...oCoCoCo..",
 			"..oCooCooCo.",
 			"..oo.oCo.oo.",
-			".....oo....."}
+			".....oo....."},
+		// warrior passives: Rampage (a blood-red flame), Sword of Selection (a sword standing in its stone)
+		"rampage", new String[] {
+			".....o......",
+			"....oCo.....",
+			"....oCCo..o.",
+			"...oCCCo.oCo",
+			"..oCCACCooCo",
+			".oCCAAACCCo.",
+			".oCAAWAACCo.",
+			"oCCAWWWACCo.",
+			"oCCAWWWAACCo",
+			"oCCAAWAACCCo",
+			".oCCAAACCCo.",
+			"..oooooooo.."},
+		"selection", new String[] {
+			".....oo.....",
+			".....oWo....",
+			".....oWo....",
+			".....oWo....",
+			".....oWo....",
+			"...ooAAoo...",
+			"...oAAAAo...",
+			".....oCo....",
+			"....oooooo..",
+			"..oCCCCCCCo.",
+			".oCCcCCcCCCo",
+			"oooooooooooo"}
 	);
 
 	public static BufferedImage effectIcon(final String id, final int color) {

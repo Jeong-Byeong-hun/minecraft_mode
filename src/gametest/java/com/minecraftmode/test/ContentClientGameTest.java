@@ -1,6 +1,7 @@
 package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.city.DailyBread;
 import com.minecraftmode.city.StarterKit;
@@ -722,9 +723,6 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			if (room == 2) {
 				// falling wakes the player at the entrance and costs time
 				int elapsed = instance.elapsed();
-				// the first lethal blow is turned aside by the warrior's Avalon; the second (after the hurt cooldown) is a real fall
-				server.runCommand("kill @p");
-				context.waitTicks(25);
 				server.runCommand("kill @p");
 				context.waitTicks(5);
 				String where = server.computeOnServer(s -> {
@@ -872,9 +870,12 @@ public class ContentClientGameTest implements FabricClientGameTest {
 				expected++;
 			}
 			int wallet = Wallet.balance(player);
+			int merit = Bounties.get(player).merit();
 			int coins = 0;
+			int chapterMerit = 0;
 			for (int i = 0; i < expected; i++) {
 				coins += Story.coins(i);
+				chapterMerit += Story.merit(i);
 			}
 			for (int i = 0; i < chapters.size() + 1; i++) {
 				Story.talk(player, herald);
@@ -882,6 +883,7 @@ public class ContentClientGameTest implements FabricClientGameTest {
 			require(Story.data(player).chapter() == expected, "the herald hands out every finished chapter in order: expected " + expected + ", got "
 				+ Story.data(player).chapter());
 			require(Wallet.balance(player) - wallet == coins, "each chapter pays its coins");
+			require(Bounties.get(player).merit() - merit >= chapterMerit, "each chapter pays its merit");
 			require(expected >= 2 && expected < chapters.size(), "a level 100 warrior without lair clears stops before the lair chapter, got " + expected);
 			herald.discard();
 			return "chapter " + expected + " of " + chapters.size() + " (" + chapters.get(expected).id() + ")";

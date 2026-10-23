@@ -313,6 +313,7 @@ final class EndgameLang {
 		b.add("key.minecraft_mode.talent_screen", ko ? "특성" : "Talents");
 		b.add("message.minecraft_mode.talent.no_coins", ko ? "특성 초기화에는 %s이(가) 필요합니다." : "You need %s to reset your talents.");
 		b.add("message.minecraft_mode.talent.reset", ko ? "특성을 초기화했습니다." : "Your talents were reset.");
+		b.add("message.minecraft_mode.talent.refunded", ko ? "전사 특성이 공격형으로 바뀌어(수호 → 투신) 특성 포인트를 모두 돌려드렸습니다. 특성 창(N)에서 다시 찍으세요." : "Warrior talents changed (Guardian is now War God): all your talent points are back. Spend them again in the talent window (N).");
 		b.add("screen.minecraft_mode.talent.title", ko ? "특성" : "Talents");
 		b.add("screen.minecraft_mode.talent.no_class", ko ? "먼저 스톰홀드의 직업 교관에게서 직업을 고르세요. 특성 포인트는 레벨에서 나옵니다 (10레벨 이후 3레벨마다 2점)."
 			: "Choose a class at a trainer in Stormhold first. Talent points come from levels (two for every three levels after 10).");

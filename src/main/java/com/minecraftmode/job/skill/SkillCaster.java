@@ -13,6 +13,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.component.SwingAnimation;
 import net.minecraft.world.item.ItemStack;
 
@@ -96,6 +97,10 @@ public final class SkillCaster {
 		SkillContext ctx = new SkillContext(player, def, skill, stack, mods, powerBonus);
 		player.swing(InteractionHand.MAIN_HAND, SwingAnimation.DEFAULT, true);
 		skill.cast(ctx);
+		// Sword of Selection (warrior tier 4): an ultimate sharpens the critical hits that follow
+		if (skill.kind() == SkillKind.ULTIMATE && CombatHooks.has(data, JobClass.WARRIOR, 4)) {
+			player.addEffect(new MobEffectInstance(ModEffects.SELECTION, CombatHooks.SELECTION_TICKS, 0, false, false, true));
+		}
 		float heal = mods.get(EngraveStat.HEAL_ON_SKILL);
 		if (heal > 0.0F) {
 			player.heal(heal);

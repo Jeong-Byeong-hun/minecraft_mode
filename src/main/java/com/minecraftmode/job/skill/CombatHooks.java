@@ -80,6 +80,19 @@ public final class CombatHooks {
 	/** What a vindicator's melee hit deals to a player on every difficulty, before armor (2.5 hearts). */
 	public static final float VINDICATOR_DAMAGE = 5.0F;
 
+	// warrior passives that are rules (0.5.47; ClassComparison copies them, the plain stats are in ClassPassives)
+	/** Arena Instinct (tier 2): melee basic hits. */
+	public static final float WARRIOR_MELEE = 0.08F;
+	/** Rampage (tier 3): damage dealt per stack, stacks, and how long they last after the last hit. */
+	public static final float RAMPAGE_STEP = 1.0F;
+	public static final int RAMPAGE_MAX = 10;
+	public static final int RAMPAGE_TICKS = 120;
+	/** Stacks of Rampage the estimate counts in a fight (they build in a few hits and hold while hitting). */
+	public static final int RAMPAGE_AVERAGE = 9;
+	/** Sword of Selection (tier 4): critical damage for {@link #SELECTION_TICKS} after an ultimate. */
+	public static final float SELECTION_CRIT_DAMAGE = 30.0F;
+	public static final int SELECTION_TICKS = 200;
+
 	private static @Nullable DamageKind current;
 	/** The hit being dealt right now was a critical one (set by {@link #outgoing}, read once by {@link #afterDamage}). */
 	private static boolean critHit;
@@ -360,7 +373,7 @@ public final class CombatHooks {
 			if (melee) {
 				bonus += mods.fraction(EngraveStat.BASIC_DAMAGE);
 				if (has(data, JobClass.WARRIOR, 2)) {
-					bonus += 0.10F;
+					bonus += WARRIOR_MELEE;
 				}
 			}
 			if (isBehind(attacker, victim)) {
@@ -386,10 +399,7 @@ public final class CombatHooks {
 				}
 			}
 		}
-		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
-			bonus += 0.25F;
-		}
-		// skill boosts (Boost.DAMAGE): every hit, basic or not
+		// skill boosts (Boost.DAMAGE) and Rampage: every hit, basic or not
 		bonus += mods.fraction(EngraveStat.DAMAGE);
 		if (victim instanceof EliteMob) {
 			bonus += mods.fraction(EngraveStat.BOSS_DAMAGE);
@@ -554,6 +564,17 @@ public final class CombatHooks {
 		level.playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 0.9F, 1.15F);
 	}
 
+	/**
+	 * Rampage (warrior tier 3, 0.5.47, in place of Berserk Blood's "below 40% health", which late fights never reached): every landed hit
+	 * adds a stack of {@code ModEffects.RAMPAGE} (+{@link #RAMPAGE_STEP}% damage dealt each through {@code BuffEffects}, at most
+	 * {@link #RAMPAGE_MAX}), all gone {@link #RAMPAGE_TICKS} after the last hit.
+	 */
+	private static void rampage(final ServerPlayer attacker) {
+		MobEffectInstance now = attacker.getEffect(ModEffects.RAMPAGE);
+		int stacks = now == null ? 1 : Math.min(RAMPAGE_MAX, now.getAmplifier() + 2);
+		attacker.addEffect(new MobEffectInstance(ModEffects.RAMPAGE, RAMPAGE_TICKS, stacks - 1, false, false, true));
+	}
+
 	/** The player whose skill summoned {@code entity} (online, in this world), or null. */
 	public static @Nullable ServerPlayer summonOwner(final ServerLevel level, final @Nullable Entity entity) {
 		java.util.UUID id = Actions.summoner(entity);
@@ -618,8 +639,8 @@ public final class CombatHooks {
 				chainLightning(attacker, victim, Math.max(2.0F, dealt * 0.5F));
 			}
 		}
-		if (has(data, JobClass.WARRIOR, 3) && attacker.getHealth() < attacker.getMaxHealth() * 0.4F) {
-			lifesteal += 0.05F;
+		if (has(data, JobClass.WARRIOR, 3) && kind != DamageKind.SPLASH && kind != DamageKind.REFLECT) {
+			rampage(attacker);
 		}
 		if (lifesteal > 0.0F) {
 			attacker.heal(dealt * lifesteal);

@@ -24,6 +24,7 @@ import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.job.skill.Skill;
 import com.minecraftmode.job.skill.SkillAction;
 import com.minecraftmode.job.skill.SkillCaster;
+import com.minecraftmode.job.skill.SkillKind;
 import com.minecraftmode.job.skill.SkillSupport;
 import com.minecraftmode.job.weapon.Archetype;
 import com.minecraftmode.job.weapon.BasicAttacks;
@@ -224,6 +225,10 @@ public final class ClassComparison {
 		List<StatLine> base = new ArrayList<>();
 		base.addAll(LevelRewards.of(data));
 		base.addAll(ClassPassives.of(data));
+		// Rampage (warrior tier 3) as the stacks it holds in a fight
+		if (CombatHooks.has(data, JobClass.WARRIOR, 3)) {
+			base.add(StatLine.of(DAMAGE, CombatHooks.RAMPAGE_STEP * CombatHooks.RAMPAGE_AVERAGE));
+		}
 		if (set != null) {
 			for (ArmorPieceDef piece : ClassArmor.piecesOf(set)) {
 				base.add(piece.baseOption());
@@ -410,7 +415,7 @@ public final class ClassComparison {
 	static Offense offense(final JobData data, final WeaponDef w, final EngraveTotals mods, final Scenario scenario, final Uplift uplift) {
 		Archetype type = w.archetype();
 		double critChance = Math.min(1.0, mods.fraction(CRIT_CHANCE) + (CombatHooks.has(data, JobClass.ROGUE, 2) ? 0.15 : 0.0));
-		double crit = 1.0 + critChance * (0.5 + mods.fraction(CRIT_DAMAGE));
+		double crit = 1.0 + critChance * (0.5 + mods.fraction(CRIT_DAMAGE) + selection(data, w, mods));
 		double first = mods.fraction(FIRST_STRIKE) * scenario.firstStrikeShare();
 		double execute = mods.fraction(EXECUTE) * scenario.executeShare();
 		// every hit (CombatHooks.outgoing): damage dealt, boss damage and first strike join the hit's own bonuses, final damage multiplies last
@@ -419,7 +424,7 @@ public final class ClassComparison {
 		double last = (1.0 + mods.fraction(FINAL_DAMAGE)) * (1.0 + uplift.vulnerable());
 		// melee: fully charged swings, which land through the hurt cooldown (CombatHooks)
 		double swings = type.attackSpeed() * (1.0 + mods.fraction(ATTACK_SPEED));
-		double meleeLanded = w.attackDamage() * (1.0 + mods.fraction(BASIC_DAMAGE) + (CombatHooks.has(data, JobClass.WARRIOR, 2) ? 0.10 : 0.0) + execute + every)
+		double meleeLanded = w.attackDamage() * (1.0 + mods.fraction(BASIC_DAMAGE) + (CombatHooks.has(data, JobClass.WARRIOR, 2) ? CombatHooks.WARRIOR_MELEE : 0.0) + execute + every)
 			* crit * last;
 		double meleeHit = meleeLanded * (1.0 + mods.fraction(DOUBLE_STRIKE));
 		double melee = meleeHit * swings;
@@ -488,6 +493,20 @@ public final class ClassComparison {
 			wanted += need;
 		}
 		return new Offense(basic, basic5, skill1, skill5, wanted / available, chain, shoots, basicHits, rates);
+	}
+
+	/** Sword of Selection (warrior tier 4): its critical damage after an ultimate, averaged over the weapon's ultimate cooldown. */
+	private static double selection(final JobData data, final WeaponDef w, final EngraveTotals mods) {
+		if (!CombatHooks.has(data, JobClass.WARRIOR, 4)) {
+			return 0.0;
+		}
+		for (Skill skill : w.skills()) {
+			if (skill.kind() == SkillKind.ULTIMATE) {
+				double seconds = Math.max(1.0, SkillCaster.cooldown(data, skill, mods) / 20.0);
+				return CombatHooks.SELECTION_CRIT_DAMAGE / 100.0 * Math.min(1.0, CombatHooks.SELECTION_TICKS / 20.0 / seconds);
+			}
+		}
+		return 0.0;
 	}
 
 	/** Deadeye and the range bonus at the scenario's shot distance. */

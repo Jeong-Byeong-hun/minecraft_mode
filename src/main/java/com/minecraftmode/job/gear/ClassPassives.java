@@ -9,12 +9,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Tier passives that are plain stats (all of Soul Reaper's and Hunter's, the damage parts of Mage's and Pirate's). Every reached tier
+ * Tier passives that are plain stats (all of Soul Reaper's and Hunter's, the damage parts of Mage's, Pirate's and Warrior's). Every reached tier
  * adds its lines, and they count like gear in {@link GearStats}. The other passives stay combat rules in {@code CombatHooks} and
  * {@code JobStats}.
  */
 public final class ClassPassives {
 	private static final Map<JobClass, List<List<StatLine>>> TIERS = Map.of(
+		// warrior (0.5.47): Battle Instinct, Arena Instinct's critical chance, Sword of Selection's skill damage; the rest are rules
+		JobClass.WARRIOR, List.of(
+			List.of(StatLine.of(BASIC_DAMAGE, 3)),
+			List.of(StatLine.of(CRIT_CHANCE, 2)),
+			List.of(),
+			List.of(StatLine.of(SKILL_DAMAGE, 10))),
 		JobClass.MAGE, List.of(
 			List.of(StatLine.of(SKILL_DAMAGE, 25)),
 			List.of(StatLine.of(SKILL_DAMAGE, 15)),

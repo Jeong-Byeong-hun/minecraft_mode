@@ -3,6 +3,7 @@ package com.minecraftmode.consumable;
 import com.minecraftmode.job.engrave.EngraveStat;
 import com.minecraftmode.job.gear.StatLine;
 import com.minecraftmode.job.skill.Boost;
+import com.minecraftmode.job.skill.CombatHooks;
 import com.minecraftmode.registry.ModEffects;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,6 +35,8 @@ public final class BuffEffects {
 		for (Boost boost : Boost.values()) {
 			PER_LEVEL.put(boost.effect(), List.of(StatLine.of(boost.stat(), boost.step())));
 		}
+		PER_LEVEL.put(ModEffects.RAMPAGE, List.of(StatLine.of(EngraveStat.DAMAGE, CombatHooks.RAMPAGE_STEP)));
+		PER_LEVEL.put(ModEffects.SELECTION, List.of(StatLine.of(EngraveStat.CRIT_DAMAGE, CombatHooks.SELECTION_CRIT_DAMAGE)));
 	}
 
 	/** Stat lines of {@code effect} at {@code amplifier} (empty for other effects). */

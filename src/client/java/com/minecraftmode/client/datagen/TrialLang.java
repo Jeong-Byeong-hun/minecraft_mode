@@ -69,6 +69,7 @@ final class TrialLang {
 			}
 		}
 
+		b.add("message.minecraft_mode.quest.reward", ko ? "시련 보상: 직업 경험치 %s, 공적 %s" : "Trial reward: %s class EXP, %s merit");
 		b.add("message.minecraft_mode.quest.accepted", ko ? "전직 시련 수락: %s. K 키로 목표를 확인하세요. 광장의 사냥터지기 개릭이 시련에 필요한 몬스터만 나오는 사냥터를 열어 줍니다."
 			: "Trial accepted: %s. Press K to see your goals. Huntmaster Garrick on the plaza opens an arena with just the monsters your trial needs.");
 		b.add("message.minecraft_mode.quest.abandoned", ko ? "시련 포기: %s" : "Trial abandoned: %s");

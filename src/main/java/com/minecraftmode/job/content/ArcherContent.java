@@ -110,7 +110,7 @@ public final class ArcherContent extends ClassContent {
 			art(0xB8864B, 0x4A2C14, 0x6EC6FF), fx(Fx.Kind.BOLT, 0xBDE9FF),
 			skill("stella", "Stella", "유성일조", ATTACK, 30, 28, strike(24, 5.5, 1, 8.4), stun(1.0)),
 			skill("clairvoyance", "Clairvoyance", "천리안", UTILITY, 18, 18, debuff(18, GLOWING, 10, 0), mark(24, 10, 35)),
-			skill("toughness", "Toughness", "강건", DEFENSE, 22, 18, boost(DAMAGE, 8, 20), heal(20), cleanse()));
+			skill("toughness", "Toughness", "강건", UTILITY, 22, 18, boost(DAMAGE, 8, 20), boost(CRIT_CHANCE, 8, 15), cleanse()));
 
 		weapon("tauropolos", 3, 57, SHORTBOW, "Tauropolos", "타우로폴로스",
 			art(0x556B2F, 0x2F1E0E, 0xFFD54A), fx(Fx.Kind.FEATHER, 0xFFE27A),
@@ -130,7 +130,7 @@ public final class ArcherContent extends ClassContent {
 			art(0xD4AF37, 0x7A1F2B, 0xFFB6C1), fx(Fx.Kind.SPARK, 0xFF8FB1),
 			skill("lamenting_phantom_song", "Lamenting Phantom Song", "통곡의 환주", ATTACK, 16, 26, chain(18, 6, 1.6), inflict(SLOWNESS, 3, 1)),
 			skill("sonic_string", "Sonic String", "음속의 현", ATTACK, 7, 18, repeat(3, 4, beam(20, 0.8))),
-			skill("harp_of_healing", "Harp of Healing", "치유의 하프", UTILITY, 24, 22, allyHeal(8, 20), allyBuff(8, REGENERATION, 6, 0), cleanse()));
+			skill("harp_of_healing", "Harp of Courage", "용기의 하프", UTILITY, 24, 22, allyBoost(8, DAMAGE, 8, 15), allyBoost(8, CRIT_CHANCE, 8, 10), cleanse()));
 
 		weapon("sudarshana", 3, 59, CHAKRAM, "Sudarshana", "수다르샤나",
 			art(0xFFD24A, 0x8B5A2B, 0xFF6A00), fx(Fx.Kind.ORB, 0xFFB347),
@@ -157,7 +157,7 @@ public final class ArcherContent extends ClassContent {
 				delay(0.8, look(SkillLook.ULW_FIELD, rain(ProjectileStyle.BLADE, 14, 5, 16, 0.45)).at(14).size(5).lasting(3))),
 			skill("gun_kata", "Gun Kata", "건 카타", ATTACK, 8, 22, look(SkillLook.GUN_KATA, slash(4, 360, 1.19)).size(4),
 				shoot(ProjectileStyle.BULLET, 1.02).count(5).spread(60).look(SkillLook.TRACER)),
-			skill("counter_guardian", "Counter Guardian", "카운터 가디언", DEFENSE, 22, 22, look(SkillLook.COUNTER_GUARDIAN, boost(CRIT_DAMAGE, 6, 50)), shield(12, 8)),
+			skill("counter_guardian", "Counter Guardian", "카운터 가디언", UTILITY, 22, 22, look(SkillLook.COUNTER_GUARDIAN, boost(CRIT_DAMAGE, 6, 50)), boost(DAMAGE, 6, 15)),
 			skill("afterimage_shot", "Afterimage Shot", "잔상 사격", MOVEMENT, 10, 16, look(SkillLook.FLASH_TRAIL, blink(10)),
 				delay(0.2, shoot(ProjectileStyle.BULLET, 1.5).count(3).spread(20).look(SkillLook.TRACER))));
 
@@ -165,7 +165,7 @@ public final class ArcherContent extends ClassContent {
 			art(0xFFD24A, 0xFFF3D6, 0xFF7A00), fx(Fx.Kind.SPARK, 0xFFC93C),
 			skill("hekatebolos", "Hekatebolos", "헤카테볼로스", ULTIMATE, 45, 38, look(SkillLook.SUN_BEAM, beam(26, 7.6)).beam(26), burn(6), inflict(BLINDNESS, 3, 0)),
 			skill("achilles_heel", "Achilles' Heel", "아킬레스건", ATTACK, 14, 24, look(SkillLook.HEEL_STRIKE, execute(24, 2.6, 40, 2.0)).onTarget(24)),
-			skill("paean", "Paean", "파이안", UTILITY, 26, 24, look(SkillLook.PAEAN, allyHeal(10, 25)).size(10).unscaled(), allyBuff(10, REGENERATION, 8, 1), cleanse()),
+			skill("paean", "Paean", "파이안", UTILITY, 26, 24, look(SkillLook.PAEAN, allyBoost(10, DAMAGE, 10, 20)).size(10).unscaled(), allyBoost(10, CRIT_DAMAGE, 10, 20), cleanse()),
 			skill("sunlit_step", "Sunlit Step", "햇살 걸음", MOVEMENT, 9, 16, look(SkillLook.SUN_STEP, blink(12)), buff(SPEED, 6, 1)));
 
 		weapon("artemis_bow", 4, 79, SHORTBOW, "Bow of Artemis", "아르테미스의 활",
@@ -206,8 +206,8 @@ public final class ArcherContent extends ClassContent {
 			skill("treasure_volley", "Treasure Volley", "보구 사출", ATTACK, 8, 22, barrage(ProjectileStyle.BLADE, 8, 0.3, SkillLook.BABYLON_GATE, SkillLook.TREASURE)),
 			skill("enkidu", "Enkidu: Chains of Heaven", "하늘의 사슬", UTILITY, 18, 26, look(SkillLook.ENKIDU, pull(10, 1.8)).size(10), debuff(10, STUN, 1.5, 0),
 				debuff(10, VULNERABLE, 6, 1)),
-			skill("treasury_shields", "Shields of the Treasury", "보물고의 방패", DEFENSE, 26, 24, look(SkillLook.TREASURY_SHIELDS, shield(20, 10)).lasting(4),
-				boost(DAMAGE, 5, 25)));
+			skill("treasury_shields", "Arms of the Treasury", "보물고의 무구", UTILITY, 26, 24, look(SkillLook.TREASURY_SHIELDS, boost(CRIT_CHANCE, 8, 20)).lasting(4),
+				boost(DAMAGE, 8, 25)));
 
 		weapon("ea_and_merodach", 4, 100, TWIN_BLADES, "Ea & Merodach", "에아 & 메로닥",
 			art(0x8B1010, 0xFFD700, 0xFF3030), fx(Fx.Kind.BOLT, 0xFF3030),
@@ -217,14 +217,13 @@ public final class ArcherContent extends ClassContent {
 				shoot(ProjectileStyle.WAVE, 1.3).pierce(6).look(SkillLook.SIN_WAVE)).withFx(Fx.Kind.SPARK),
 			skill("sha_naqba_imuru", "Sha Naqba Imuru", "모든 것을 본 자", UTILITY, 24, 24, look(SkillLook.SHA_NAQBA, debuff(16, GLOWING, 12, 0)).size(16),
 				mark(24, 12, 45), restoreMana(25)),
-			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", DEFENSE, 28, 26, look(SkillLook.GOLDEN_RULE, boost(DAMAGE, 8, 20)), buff(REGENERATION, 8, 1),
-				heal(20)));
+			skill("golden_rule_body", "Golden Rule (Body)", "황금률(몸)", UTILITY, 28, 26, look(SkillLook.GOLDEN_RULE, boost(DAMAGE, 8, 20)), boost(CRIT_DAMAGE, 8, 30)));
 
 		weapon("pashupata", 4, 97, CHAKRAM, "Pashupata", "파슈파타",
 			art(0xE8F0FF, 0x1F2A5C, 0x4AD7FF), fx(Fx.Kind.BOLT, 0x9FE8FF),
 			skill("pashupata", "Pashupata", "파슈파타", ULTIMATE, 50, 40, mark(20, 8, 30), look(SkillLook.PASHUPATA_DISC, strike(20, 5, 1, 6.5)).at(20).size(5)),
 			skill("divine_discus", "Divine Discus", "신성한 원반", ATTACK, 7, 18, shoot(ProjectileStyle.BLADE, 1.7).count(3).spread(30).pierce(3).look(SkillLook.DISCUS)),
 			skill("mana_burst_flame", "Mana Burst (Flame)", "마력방출(불꽃)", ATTACK, 10, 20, burn(5), look(SkillLook.FLAME_BURST, nova(5, 2.2)).size(5)),
-			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, look(SkillLook.ENDOWED, heal(15)), boost(DAMAGE, 8, 15)));
+			skill("hero_of_the_endowed", "Hero of the Endowed", "축복받는 영웅", UTILITY, 26, 20, look(SkillLook.ENDOWED, boost(CRIT_CHANCE, 8, 15)), boost(DAMAGE, 8, 15)));
 	}
 }

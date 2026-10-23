@@ -1383,6 +1383,7 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 		context.waitTicks(10);
 		context.takeScreenshot("raid_board");
 		requireFits(context, "raid board");
+		requireApart(context, "raid board");
 		context.runOnClient(minecraft -> minecraft.gui.setScreen(new com.minecraftmode.client.job.JobScreen()));
 		context.waitForScreen(com.minecraftmode.client.job.JobScreen.class);
 		requireFits(context, "class screen");
@@ -1404,6 +1405,33 @@ public class GearRaidClientGameTest implements FabricClientGameTest {
 			for (var child : screen.children()) {
 				if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && (w.getX() < lo || w.getRight() > hi)) {
 					return what + ": " + w.getMessage().getString() + " at " + w.getX() + ".." + w.getRight() + " is outside " + lo + ".." + hi;
+				}
+			}
+			return "";
+		});
+		require(report.isEmpty(), report);
+	}
+
+	/** No two shown widgets of the open screen cover each other (until 0.5.50 Sukuna's button on the raid board lay under the records button). */
+	private static void requireApart(final ClientGameTestContext context, final String what) {
+		String report = context.computeOnClient(minecraft -> {
+			net.minecraft.client.gui.screens.Screen screen = minecraft.gui.screen();
+			if (screen == null) {
+				return what + " is not open";
+			}
+			List<net.minecraft.client.gui.components.AbstractWidget> widgets = new ArrayList<>();
+			for (var child : screen.children()) {
+				if (child instanceof net.minecraft.client.gui.components.AbstractWidget w && w.visible) {
+					widgets.add(w);
+				}
+			}
+			for (int i = 0; i < widgets.size(); i++) {
+				for (int j = i + 1; j < widgets.size(); j++) {
+					var a = widgets.get(i);
+					var b = widgets.get(j);
+					if (a.getX() < b.getRight() && b.getX() < a.getRight() && a.getY() < b.getY() + b.getHeight() && b.getY() < a.getY() + a.getHeight()) {
+						return what + ": " + a.getMessage().getString() + " overlaps " + b.getMessage().getString();
+					}
 				}
 			}
 			return "";

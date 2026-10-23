@@ -58,6 +58,7 @@ import com.minecraftmode.story.Story;
 import com.minecraftmode.townquest.TownQuestService;
 import com.minecraftmode.worldgen.ModOreGeneration;
 import com.minecraftmode.worldgen.lair.NamedLairs;
+import com.minecraftmode.entity.SpaceCheck;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -90,6 +91,7 @@ public class MinecraftMode implements ModInitializer {
 		ModCreativeTabs.init();
 		ModOreGeneration.init();
 		NamedLairs.init();
+		SpaceCheck.init();
 		Progress.init();
 		AuctionService.init();
 		Herbs.init();

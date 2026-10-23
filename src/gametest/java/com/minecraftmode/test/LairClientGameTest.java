@@ -5,6 +5,8 @@ import com.minecraftmode.client.lair.LairClearScreen;
 import com.minecraftmode.consumable.ConsumableItem;
 import com.minecraftmode.entity.MobPower;
 import com.minecraftmode.entity.named.NamedDef;
+import com.minecraftmode.entity.SpaceCheck;
+import com.minecraftmode.entity.combat.Attacks;
 import com.minecraftmode.entity.named.NamedMob;
 import com.minecraftmode.entity.named.NamedMobs;
 import com.minecraftmode.job.JobClass;
@@ -50,7 +52,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureSet;
 import net.minecraft.world.level.levelgen.structure.StructureSpawnOverride;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Named monster lairs: the 22 definitions and their spawn lists, the goal loot rules, mazes that
@@ -288,7 +293,53 @@ public class LairClientGameTest implements FabricClientGameTest {
 		if (id.equals("wendigo")) {
 			checkLoop(context, server, dimension, def, new BlockPos(result[0], result[1], result[2]));
 		}
+		if (id.equals("ancient_treant")) {
+			checkRoom(context, server, dimension, new BlockPos(result[0], result[1], result[2]));
+		}
 		server.runCommand(in + "forceload remove all");
+	}
+
+	/**
+	 * Big monsters in the four-high corridors (the tallest named monster, the treant, 3.6 high): its lord grows only as far as the room
+	 * allows, walks without choking, comes back home into free space after being dragged off, and minions summoned by it land where they fit.
+	 * Until 0.5.46 the 1.2x lord stood in the roof and suffocated, and minions were dropped into walls.
+	 */
+	private static void checkRoom(final ClientGameTestContext context, final TestServerContext server, final ResourceKey<Level> dimension, final BlockPos chest) {
+		int lordId = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = level.getEntitiesOfClass(NamedMob.class, new AABB(chest).inflate(8), NamedMob::isLord).stream().findFirst().orElse(null);
+			require(lord != null, "the treant lord should still be up");
+			lord.setNoAi(false);
+			lord.setHealth(lord.getMaxHealth());
+			return lord.getId();
+		});
+		context.waitTicks(100);
+		String walked = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = (NamedMob)level.getEntity(lordId);
+			require(lord != null && lord.isAlive(), "the treant lord should still be alive");
+			require(lord.getHealth() == lord.getMaxHealth(), "the treant lord lost health on its own: " + lord.getHealth() + " / " + lord.getMaxHealth());
+			require(SpaceCheck.fits(level, lord, lord.position()), "the treant lord should stand free of the walls at scale " + lord.getScale());
+			float scale = lord.getScale();
+			// dragged off down a corridor, it comes home to a free spot
+			lord.teleportTo(lord.getX(), lord.getY(), lord.getZ() - NamedMob.LORD_LEASH - 6);
+			return String.format("scale %.2f", scale);
+		});
+		context.waitTicks(40);
+		String home = server.computeOnServer(s -> {
+			ServerLevel level = s.getLevel(dimension);
+			NamedMob lord = (NamedMob)level.getEntity(lordId);
+			require(lord.distanceToSqr(Vec3.atBottomCenterOf(chest)) < NamedMob.LORD_LEASH * NamedMob.LORD_LEASH, "the lord should be back home, at " + lord.position());
+			require(SpaceCheck.fits(level, lord, lord.position()), "the lord came home into a wall at " + lord.position());
+			List<? extends Mob> minions = Attacks.summon(level, (EntityType<? extends Mob>)lord.getType(), lord.position(), 6, null, 200);
+			for (Mob minion : minions) {
+				require(SpaceCheck.fits(level, minion, minion.position()), "a minion landed in a wall at " + minion.position());
+				minion.discard();
+			}
+			return minions.size() + " minions";
+		});
+		context.waitTicks(20);
+		MinecraftMode.LOGGER.info("[lair] treant lord in the corridors: {}, home, {} placed free", walked, home);
 	}
 
 	/**

@@ -90,6 +90,11 @@ public final class NamedLairs {
 		return DEFS.get(id);
 	}
 
+	/** The lowest level any lair's named monster starts at. */
+	public static int lowestLevel() {
+		return DEFS.values().stream().mapToInt(d -> d.named().lo()).min().orElse(1);
+	}
+
 	/** The lair whose grounds contain {@code pos}, if any. */
 	public static @Nullable LairDef at(final ServerLevel level, final BlockPos pos) {
 		if (!level.isLoaded(pos)) {

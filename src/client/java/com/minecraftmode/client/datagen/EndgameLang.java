@@ -51,7 +51,7 @@ final class EndgameLang {
 		b.add("message.minecraft_mode.lair.first_clear", ko ? "%s 첫 공략! 직업 경험치 +%s" : "First clear of %s! +%s class experience");
 		b.add("message.minecraft_mode.lair.chest_exp", ko ? "%s의 보물: 직업 경험치 +%s" : "Treasure of %s: +%s class experience");
 		b.add("message.minecraft_mode.lair.lord_awakens", ko ? "%2$s의 군주 %1$s이(가) 깨어났다!" : "%s, lord of %s, awakens!");
-		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는 소굴이 근처에 없습니다." : "There is no lair within reach of this map.");
+		b.add("message.minecraft_mode.lair.no_map", ko ? "이 지도로 찾을 수 있는, 내 레벨(±5)에 맞는 소굴이 근처에 없습니다." : "There is no lair of your level (±5) within reach of this map.");
 		b.add("message.minecraft_mode.lair.map_here", ko ? "이곳에서는 소굴 지도를 쓸 수 없습니다." : "Lair maps do not work here.");
 		b.add("message.minecraft_mode.lair.travel_no_map", ko ? "소굴 지도가 없어 이동할 수 없습니다." : "You no longer hold a lair map.");
 		b.add("message.minecraft_mode.lair.travel_cleared", ko ? "이번 주기에 이미 정복한 소굴입니다." : "You already cleared that lair this cycle.");

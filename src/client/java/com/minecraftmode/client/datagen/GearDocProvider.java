@@ -692,11 +692,11 @@ public class GearDocProvider implements DataProvider {
 		md.append("\n보상은 등급마다 정해져 있고, 경험치는 플레이어 자신의 레벨에서 다음 레벨까지 필요한 경험치의 비율, 동전은 그 레벨 구간의 길드 무기 가격(")
 			.append("`GearShop.bracketPrice`)의 배율입니다. 길드 일일 현상금 하나는 구간 가격의 1.2배와 강화석 3개를 주니, 주민 의뢰는 하나하나는 적고 가짓수가 많습니다. 강화석은 직업 Lv ")
 			.append(com.minecraftmode.townquest.TownQuestService.STONE_LEVEL).append("부터 줍니다(귀속이 아니라 새 캐릭터로 모아 넘기지 못하게). ")
-			.append("납품 물건은 상점에서 팔지 않는 채집품입니다.\n\n");
-		md.append("| 등급 | 경험치 | 동전 | 강화석 | Lv 10 | Lv 50 | Lv 90 |\n|---|---|---|---|---|---|---|\n");
+			.append("공적은 계정에 쌓여 토지 소유권 증서 같은 공적 상점 물건에 씁니다. 납품 물건은 상점에서 팔지 않는 채집품입니다.\n\n");
+		md.append("| 등급 | 경험치 | 동전 | 강화석 | 공적 | Lv 10 | Lv 50 | Lv 90 |\n|---|---|---|---|---|---|---|---|\n");
 		for (TownQuests.Tier tier : TownQuests.Tier.values()) {
 			md.append("| ").append(tier.name().toLowerCase(java.util.Locale.ROOT)).append(" | 레벨의 ").append(Math.round(tier.exp * 100)).append("% | 구간 가격 x")
-				.append(tier.coins).append(" | ").append(tier.stones).append("개");
+				.append(tier.coins).append(" | ").append(tier.stones).append("개 | ").append(tier.merit);
 			for (int level : new int[] {10, 50, 90}) {
 				md.append(" | 경험치 ").append(JobProgression.levelExp(level, tier.exp)).append(", ")
 					.append(Coins.format(Math.max(3, Math.round(GearShop.bracketPrice(level) * tier.coins))));
@@ -706,6 +706,7 @@ public class GearDocProvider implements DataProvider {
 		float exp = 0.0F;
 		float coins = 0.0F;
 		int stones = 0;
+		int merit = 0;
 		int daily = 0;
 		for (TownQuests.Quest quest : TownQuests.all()) {
 			if (quest.daily()) {
@@ -713,10 +714,11 @@ public class GearDocProvider implements DataProvider {
 				exp += quest.tier().exp;
 				coins += quest.tier().coins;
 				stones += quest.tier().stones;
+				merit += quest.tier().merit;
 			}
 		}
 		md.append("\n일일 의뢰 ").append(daily).append("개를 모두 하면 하루에 레벨의 약 ").append(Math.round(exp * 100)).append("%, 구간 가격의 ")
-			.append(Math.round(coins * 10) / 10.0F).append("배, 강화석 ").append(stones).append("개입니다.\n\n");
+			.append(Math.round(coins * 10) / 10.0F).append("배, 강화석 ").append(stones).append("개, 공적 ").append(merit).append("입니다.\n\n");
 		md.append("| 주민 | 의뢰 | 목표 | 레벨 | 반복 | 등급 | 추가 보상 |\n|---|---|---|---|---|---|---|\n");
 		for (TownQuests.Quest quest : TownQuests.all()) {
 			String target = switch (quest.goal()) {
@@ -794,8 +796,10 @@ public class GearDocProvider implements DataProvider {
 		md.append("- **이동술사 오린**: 광장 분수 서쪽(x ").append(waymaster.getX()).append(", z ").append(waymaster.getZ())
 			.append("). 우클릭하면 갈 수 있는 곳 목록이 뜨고, 고르면 바로 이동합니다. 지금은 거주구역(거주구역 광장의 오린에게서는 수도 광장).\n");
 		md.append("- **거주구역**: 이동술사 오린을 통해 가는 평평한 초원 차원(적대 몹·구조물 없음). 길드 의뢰 접수원의 공적 상점에서 파는 **토지 소유권 증서**(공적 ").append(Bounties.DEED_MERIT)
-			.append("부터, 살 때마다 +").append(Bounties.DEED_RAISE).append(")를 거주구역에서 쓰면 서 있는 청크의 발밑부터 위로 ").append(LandClaims.SIZE).append("칸(16×16×16)이 내 땅이 됩니다. 한 사람당 최대 ")
-			.append(LandClaims.MAX_CLAIMS).append("개, 같은 청크 기둥에는 한 사람만 가질 수 있고 위아래로 증서를 더 써서 넓힙니다. 도착 광장 근처(청크 ")
+			.append(", 처음 ").append(Bounties.FIXED_DEEDS).append("장은 같은 값, 그 뒤로 살 때마다 +").append(Bounties.DEED_RAISE)
+			.append("; 공적과 산 장수는 계정의 모든 캐릭터가 함께 씀)를 거주구역에서 쓰면 서 있는 청크 기둥 전체(").append(LandClaims.SIZE).append("×")
+			.append(LandClaims.SIZE).append(", 세계 바닥부터 건축 한계까지)가 내 땅이 됩니다. 땅도 계정 단위라 어느 캐릭터로든 짓고 부술 수 있습니다. 한 사람당 최대 ")
+			.append(LandClaims.MAX_CLAIMS).append("개, 같은 청크 기둥에는 한 사람만 가질 수 있습니다. 도착 광장 근처(청크 ")
 			.append(ResidenceDimension.SPAWN_CHUNKS).append("칸 이내)는 점유할 수 없습니다. 내 땅에서는 나와 내가 허용한 플레이어(최대 ").append(LandClaims.MAX_TRUSTED)
 			.append("명, 모든 땅에 공통)만 블록을 부수고 놓고, 상자·문·버튼 등을 쓰고, 동물·갑옷 거치대·아이템 액자를 건드릴 수 있습니다(몬스터와 플레이어는 예외). ")
 			.append("주인 없는 땅에는 아무도 짓지 못하고, 폭발은 거주구역의 블록을 부수지 않습니다. 물·용암·불, 피스톤, 디스펜서·공급기·제작기, 호퍼는 주인이 다른 땅으로 넘어가지 않고, 다른 사람이 쏜 화살이나 불붙인 TNT도 내 땅의 동물·액자·탈것을 다치게 하지 못합니다. 땅에 들어서면 액션 바에 주인이 표시되고, 주변 ").append(LandBorders.RANGE).append("블록 안의 땅 테두리가 실선으로 보입니다(내 땅 초록, 허용받은 땅 노랑, 남의 땅 빨강). 증서를 웅크린 채 쓰거나 /land로 관리 화면(땅 목록·포기·허용 목록)을 엽니다. 땅을 포기하면 그 범위가 처음 초원으로 돌아가고(지은 블록·액자·갑옷 거치대·탈것은 사라짐), 보관함·액자·갑옷 거치대에 있던 물건과 증서를 돌려받습니다.\n");

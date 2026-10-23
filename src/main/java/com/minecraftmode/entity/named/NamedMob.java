@@ -3,6 +3,7 @@ package com.minecraftmode.entity.named;
 import com.minecraftmode.bag.Bags;
 import com.minecraftmode.consumable.Consumables;
 import com.minecraftmode.entity.MobPower;
+import com.minecraftmode.entity.SpaceCheck;
 import com.minecraftmode.entity.CreatureAnim;
 import com.minecraftmode.entity.CreatureMob;
 import com.minecraftmode.entity.combat.Attacks;
@@ -464,15 +465,26 @@ public class NamedMob extends CreatureMob {
 			this.discard();
 			return;
 		}
+		// a lord only grows as far as the corridor allows (a treant lord at 1.2x stood in the four-high roof)
+		if (this.tickCount % 20 == 10 && !SpaceCheck.fits(level, this, this.position())) {
+			SpaceCheck.growTo(level, this, LORD_SCALE);
+		}
 		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > LORD_LEASH * LORD_LEASH) {
 			this.setTarget(null);
 			this.getNavigation().stop();
-			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 1.5);
+			this.goHome(level, new Vec3(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 1.5));
 		}
 		if (this.tickCount % WRATH_INTERVAL != WRATH_INTERVAL / 2 || this.getTarget() == null) {
 			return;
 		}
 		this.wrath(level);
+	}
+
+	/** Back home after being lured too far: to the nearest spot by {@code home} it fits in. */
+	private void goHome(final ServerLevel level, final Vec3 home) {
+		Vec3 at = SpaceCheck.nearestFree(level, this, home, SpaceCheck.SEARCH);
+		Vec3 to = at == null ? home : at;
+		this.teleportTo(to.x, to.y, to.z);
 	}
 
 	private void tickChampion(final ServerLevel level) {
@@ -482,7 +494,7 @@ public class NamedMob extends CreatureMob {
 		if (this.tickCount % 20 == 0 && this.lordHome != null && this.distanceToSqr(Vec3.atBottomCenterOf(this.lordHome)) > this.championLeash * this.championLeash) {
 			this.setTarget(null);
 			this.getNavigation().stop();
-			this.teleportTo(this.lordHome.getX() + 0.5, this.lordHome.getY(), this.lordHome.getZ() + 0.5);
+			this.goHome(level, Vec3.atBottomCenterOf(this.lordHome));
 		}
 		if (this.tickCount % WRATH_INTERVAL == WRATH_INTERVAL / 2 && this.getTarget() != null) {
 			this.wrath(level);

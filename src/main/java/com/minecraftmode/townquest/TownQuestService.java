@@ -1,6 +1,7 @@
 package com.minecraftmode.townquest;
 
 import com.minecraftmode.bag.Bags;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.craft.Profession;
 import com.minecraftmode.entity.CityNpc;
 import com.minecraftmode.entity.named.NamedMob;
@@ -52,7 +53,7 @@ public final class TownQuestService {
 	}
 
 	/** What a quest pays {@code player} now. */
-	public record Reward(int exp, int coins, int stones, @Nullable Item bonus, int bonusCount) {
+	public record Reward(int exp, int coins, int stones, int merit, @Nullable Item bonus, int bonusCount) {
 	}
 
 	public static void init() {
@@ -108,7 +109,7 @@ public final class TownQuestService {
 	public static Reward reward(final Player player, final Quest quest) {
 		int level = level(player);
 		return new Reward(JobProgression.levelExp(player, level, quest.tier().exp), coins(quest, level), level >= STONE_LEVEL ? quest.tier().stones : 0,
-			quest.bonus(), quest.bonusCount());
+			quest.tier().merit, quest.bonus(), quest.bonusCount());
 	}
 
 	/** Coins {@code quest} pays at class level {@code level}. */
@@ -150,7 +151,9 @@ public final class TownQuestService {
 		if (reward.bonus() != null && reward.bonusCount() > 0) {
 			Bags.give(player, new ItemStack(reward.bonus(), reward.bonusCount()));
 		}
-		MutableComponent paid = Component.translatable("message.minecraft_mode.townquest.reward", reward.exp(), Coins.component(reward.coins()), reward.stones());
+		Bounties.addMerit(player, reward.merit());
+		MutableComponent paid = Component.translatable("message.minecraft_mode.townquest.reward", reward.exp(), Coins.component(reward.coins()), reward.stones(),
+			reward.merit());
 		if (reward.bonus() != null) {
 			paid.append(", ").append(new ItemStack(reward.bonus(), reward.bonusCount()).getHoverName()).append(" x" + reward.bonusCount());
 		}

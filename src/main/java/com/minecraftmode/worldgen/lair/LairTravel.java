@@ -73,10 +73,16 @@ import org.jspecify.annotations.Nullable;
  * trips live in server memory only; what was cleared is saved per character ({@link ModAttachments#LAIR_CLEARED}).
  */
 public final class LairTravel {
-	/** Placement rings (one ring = {@link NamedLairs#SPACING} chunks further out) the map searches. */
-	public static final int RINGS = 5;
-	/** After the first ring with any lair, this many more rings are searched for one that suits the reader's level. */
-	public static final int FIT_RINGS = 2;
+	/** Placement rings (one ring = {@link NamedLairs#SPACING} chunks further out) the map searches at most. */
+	public static final int RINGS = 8;
+	/** After the first ring with a lair of the reader's level, this many more rings are searched for a nearer one. */
+	public static final int NEARER_RINGS = 1;
+	/**
+	 * How far a lair's named range may be from the reader's class level: a map leads only to lairs whose range comes within this many
+	 * levels (0.5.46; it used to fall back to the nearest lair of any level, sending a Lv 15 player to a Lv 90 lair). Readers below the
+	 * lowest lair count as its level.
+	 */
+	public static final int LEVEL_REACH = 5;
 	/** Ticks a trip waits for the gate's chunks before giving up (the map is kept). */
 	public static final int WAIT_TICKS = 400;
 	/** How far (blocks) from the spot the gate's ground may be searched for a safe place to stand. */
@@ -105,8 +111,10 @@ public final class LairTravel {
 	 * @param center   the lair's middle (the waypoint)
 	 */
 	public record Target(ResourceKey<Level> dimension, LairDef lair, BlockPos goal, BlockPos entrance, BlockPos center) {
+		/** Whether a reader of class {@code level} may be sent here ({@link #LEVEL_REACH}). */
 		public boolean fits(final int level) {
-			return level >= this.lair.named().lo() && level <= this.lair.named().hi();
+			int reader = Math.max(level, NamedLairs.lowestLevel());
+			return reader >= this.lair.named().lo() - LEVEL_REACH && reader <= this.lair.named().hi() + LEVEL_REACH;
 		}
 
 		public String key() {
@@ -203,9 +211,9 @@ public final class LairTravel {
 
 	/**
 	 * The lair a map read at {@code from} leads to for a player of class level {@code playerLevel}: the nearest one whose named monster's range
-	 * holds that level, else the nearest; lairs in {@code skip} (keys) are passed over. Rings of the lair placement grid are searched outwards
-	 * ({@link #RINGS}), and {@link #FIT_RINGS} more rings after the first lair turns up, looking for a fitting one. Chunks that may hold a lair
-	 * are loaded to their structure starts, like vanilla's locate does. Null when there is none.
+	 * comes within {@link #LEVEL_REACH} levels of it ({@link Target#fits}); lairs in {@code skip} (keys) are passed over. Rings of the lair
+	 * placement grid are searched outwards (at most {@link #RINGS}), and {@link #NEARER_RINGS} more after the first fitting lair turns up.
+	 * Chunks that may hold a lair are loaded to their structure starts, like vanilla's locate does. Null when no lair of that level is in reach.
 	 */
 	public static @Nullable Target find(final ServerLevel level, final BlockPos from, final int playerLevel, final Set<String> skip) {
 		if (!level.structureManager().shouldGenerateStructures()) {
@@ -231,7 +239,7 @@ public final class LairTravel {
 		int oz = from.getZ() >> 4;
 		int spacing = placement.spacing();
 		List<Target> found = new ArrayList<>();
-		int firstRing = -1;
+		int fitRing = -1;
 		for (int ring = 0; ring <= RINGS; ring++) {
 			for (int x = -ring; x <= ring; x++) {
 				for (int z = -ring; z <= ring; z++) {
@@ -240,22 +248,19 @@ public final class LairTravel {
 					}
 					ChunkPos chunk = placement.getPotentialStructureChunk(state.getLevelSeed(), ox + spacing * x, oz + spacing * z);
 					Target target = lairAt(level, chunk, placement, lairs);
-					if (target != null && !skip.contains(target.key()) && level.getWorldBorder().isWithinBounds(target.entrance())) {
+					if (target != null && target.fits(playerLevel) && !skip.contains(target.key()) && level.getWorldBorder().isWithinBounds(target.entrance())) {
 						found.add(target);
 					}
 				}
 			}
-			if (!found.isEmpty()) {
-				if (firstRing < 0) {
-					firstRing = ring;
-				}
-				if (found.stream().anyMatch(t -> t.fits(playerLevel)) || ring >= firstRing + FIT_RINGS) {
-					break;
-				}
+			if (!found.isEmpty() && fitRing < 0) {
+				fitRing = ring;
+			}
+			if (fitRing >= 0 && ring >= fitRing + NEARER_RINGS) {
+				break;
 			}
 		}
-		Comparator<Target> nearest = Comparator.comparingDouble(t -> horizontal(from, t.entrance()));
-		return found.stream().filter(t -> t.fits(playerLevel)).min(nearest).orElseGet(() -> found.stream().min(nearest).orElse(null));
+		return found.stream().min(Comparator.comparingDouble(t -> horizontal(from, t.entrance()))).orElse(null);
 	}
 
 	/** The lair starting in {@code chunk}, if any (one lair set, so at most one). */

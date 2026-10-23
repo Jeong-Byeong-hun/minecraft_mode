@@ -65,8 +65,8 @@ public final class Bounties {
 	}
 
 	/**
-	 * One merit shop offer: the merit price and what it gives. {@code raise} is added to the price for every land deed the player
-	 * has bought ({@link BountyData#deeds}); only the deed has one.
+	 * One merit shop offer: the merit price and what it gives. {@code raise} is added to the price for every land deed the account
+	 * has bought ({@link BountyData#deeds}) past the first {@link #FIXED_DEEDS}; only the deed has one.
 	 */
 	public record Offer(String id, int cost, int raise, Gift item) {
 		public Offer(final String id, final int cost, final Gift item) {
@@ -74,7 +74,7 @@ public final class Bounties {
 		}
 
 		public int price(final BountyData data) {
-			return this.cost + this.raise * data.deeds();
+			return this.cost + this.raise * Math.max(0, data.deeds() - FIXED_DEEDS + 1);
 		}
 
 		public String nameKey() {
@@ -82,9 +82,10 @@ public final class Bounties {
 		}
 	}
 
-	/** The first land deed in merit, and how much dearer each further one gets. */
+	/** The first land deeds in merit, and how much dearer each one past the first {@link #FIXED_DEEDS} gets (0.5.46: 500, 500, 750, 1000...). */
 	public static final int DEED_MERIT = 500;
 	public static final int DEED_RAISE = 250;
+	public static final int FIXED_DEEDS = 2;
 
 	public static final List<Offer> SHOP = List.of(
 		new Offer("enhancement_stone", 12, (p, level, r) -> new ItemStack(ModItems.ENHANCEMENT_STONE)),
@@ -100,7 +101,7 @@ public final class Bounties {
 		new Offer("pet_charm", 50, (p, level, r) -> Companions.randomPet(Rarity.UNCOMMON, r, Companions.data(p))),
 		new Offer("mount_whistle", 40, (p, level, r) -> Companions.data(p).hasMount("swift_stallion") ? ItemStack.EMPTY
 			: new ItemStack(Companions.mountItem("swift_stallion"))),
-		// residence land: 500 merit, then 250 more for every deed bought before
+		// residence land: 500 merit for the first two, then 250 more for every deed bought past them
 		new Offer("land_deed", DEED_MERIT, DEED_RAISE, (p, level, r) -> new ItemStack(ModItems.LAND_DEED)));
 
 	private static ItemStack random(final int tier, final int count, final RandomSource random) {

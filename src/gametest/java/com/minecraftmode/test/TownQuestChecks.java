@@ -2,6 +2,7 @@ package com.minecraftmode.test;
 
 import com.minecraftmode.MinecraftMode;
 import com.minecraftmode.bag.Bags;
+import com.minecraftmode.bounty.Bounties;
 import com.minecraftmode.city.CityServices;
 import com.minecraftmode.client.townquest.TownQuestScreen;
 import com.minecraftmode.economy.Wallet;
@@ -159,11 +160,13 @@ final class TownQuestChecks {
 			int wallet = Wallet.balance(player);
 			int exp = JobProgression.get(player).exp();
 			int stones = Bags.count(player, ModItems.ENHANCEMENT_STONE);
+			int merit = Bounties.get(player).merit();
 			TownQuestService.Reward reward = TownQuestService.reward(player, night);
 			require(TownQuestService.turnIn(player, night) && !TownQuestService.turnIn(player, night), "turning in once");
 			require(Wallet.balance(player) - wallet == reward.coins() && reward.coins() > 0, "the coins arrive");
 			require(JobProgression.get(player).exp() - exp == reward.exp() && reward.exp() > 0, "the EXP arrives");
 			require(Bags.count(player, ModItems.ENHANCEMENT_STONE) - stones == reward.stones(), "the stones arrive");
+			require(Bounties.get(player).merit() - merit == night.tier().merit && reward.merit() > 0, "the merit arrives");
 			require(TownQuestService.status(player, night, day) == Status.DONE, "done for today");
 
 			// a delivery: 20 wheat in the inventory and 12 in a bag make 32

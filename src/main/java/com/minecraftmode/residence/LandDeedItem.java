@@ -42,8 +42,7 @@ public class LandDeedItem extends Item {
 		}
 		LandClaims.Claim claim = claims.at(feet.below());
 		player.getItemInHand(hand).consume(1, player);
-		LandOffice.tell(sp, "claimed", ChatFormatting.GREEN, claim.chunkX() << 4, claim.minY(), claim.chunkZ() << 4,
-			(claim.chunkX() << 4) + 15, claim.maxY(), (claim.chunkZ() << 4) + 15);
+		LandOffice.tell(sp, "claimed", ChatFormatting.GREEN, claim.chunkX() << 4, (claim.chunkX() << 4) + 15, claim.chunkZ() << 4, (claim.chunkZ() << 4) + 15);
 		LandOffice.outline(server, claim);
 		return InteractionResult.SUCCESS;
 	}

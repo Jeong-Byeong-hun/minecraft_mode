@@ -340,7 +340,7 @@ public class TownQuestScreen extends Screen {
 		g.text(this.font, Component.translatable("screen.minecraft_mode.townquest.reward").withStyle(ChatFormatting.YELLOW), tx, ry + 2, 0xFFFFFFFF, false);
 		Component exp = Component.translatable("screen.minecraft_mode.townquest.reward_exp", reward.exp()).withStyle(ChatFormatting.GREEN);
 		g.text(this.font, exp, tx, ry + 14, 0xFFFFFFFF, false);
-		Component coins = Component.literal("◎ ").append(Coins.component(reward.coins()));
+		Component coins = Component.literal("◎ ").append(Coins.component(reward.coins())).append(Component.literal("   ★ " + reward.merit()).withStyle(ChatFormatting.YELLOW));
 		g.text(this.font, coins, tx, ry + 25, 0xFFFFD27F, false);
 		// the items, right-aligned beside the lines
 		int ix = tx + tw - 18;

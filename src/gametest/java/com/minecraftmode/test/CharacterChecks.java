@@ -37,6 +37,7 @@ import net.minecraft.world.item.trading.ItemCost;
 final class CharacterChecks {
 	private static final int WAIT = 100;
 	private static final int COINS = 777;
+	private static final int MERIT = 321;
 
 	static void run(final ClientGameTestContext context, final TestServerContext server, final TestServerConnection connection) {
 		checkBound();
@@ -171,7 +172,11 @@ final class CharacterChecks {
 			player.getInventory().add(new ItemStack(Items.DIAMOND, 3));
 			player.getEnderChestInventory().setItem(0, new ItemStack(Items.EMERALD, 5));
 			player.setAttached(ModAttachments.MONSTER_KILLS, Map.of("minecraft:zombie", 4));
+			Bounties.set(player, Bounties.get(player).withMerit(MERIT).withDeeds(3));
 			require(Characters.switchTo(player, 1), "switches to the empty slot");
+			require(Bounties.get(player).merit() == MERIT && Bounties.get(player).deeds() == 3, "merit and the deed count stay with the account, got "
+				+ Bounties.get(player).merit() + " merit and " + Bounties.get(player).deeds() + " deeds");
+			Bounties.addMerit(player, MERIT);
 			require(!player.getInventory().contains(new ItemStack(Items.DIAMOND)), "a new character carries nothing");
 			require(Wallet.balance(player) == coins[0], "but shares the account's wallet, got " + Wallet.balance(player));
 			Wallet.add(player, COINS);
@@ -189,6 +194,9 @@ final class CharacterChecks {
 			require(Wallet.balance(player) == coins[0] + COINS, "the other character's coins are in the shared wallet, got " + Wallet.balance(player));
 			require(player.getInventory().countItem(Items.DIAMOND) == 3, "the diamonds came back");
 			require(player.getEnderChestInventory().getItem(1).is(Items.GOLD_INGOT), "what the other character stored is in the ender chest");
+			require(Bounties.get(player).merit() == MERIT * 2 && Bounties.get(player).deeds() == 3, "merit earned on the other character is here too, got "
+				+ Bounties.get(player).merit());
+			Bounties.set(player, Bounties.get(player).withMerit(0).withDeeds(0));
 			require(Math.abs(player.getX() - x) < 0.01 && Math.abs(player.getZ() - z) < 0.01, "the character is back where it left, got " + player.position());
 			player.getEnderChestInventory().clearContent();
 			player.getInventory().clearContent();

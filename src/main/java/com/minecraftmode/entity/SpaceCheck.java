@@ -51,7 +51,20 @@ public final class SpaceCheck {
 
 	/** Whether {@code entity} at its current size would stand free of blocks with its feet at {@code feet}. */
 	public static boolean fits(final ServerLevel level, final Entity entity, final Vec3 feet) {
-		return level.noCollision(entity, entity.getDimensions(entity.getPose()).makeBoundingBox(feet));
+		return free(level, entity.getDimensions(entity.getPose()).makeBoundingBox(feet));
+	}
+
+	/**
+	 * No block that chokes (full, motion-blocking ones like walls and roofs) cuts into {@code box}. Chests, stairs, slabs and decor do not
+	 * count: a lord brushing the treasure chest it guards used to count as stuck and shrank for nothing.
+	 */
+	private static boolean free(final ServerLevel level, final AABB box) {
+		for (BlockPos at : BlockPos.betweenClosed(BlockPos.containing(box.minX, box.minY, box.minZ), BlockPos.containing(box.maxX - 1.0E-7, box.maxY - 1.0E-7, box.maxZ - 1.0E-7))) {
+			if (level.getBlockState(at).isSuffocating(level, at)) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -96,7 +109,7 @@ public final class SpaceCheck {
 		float scale = wanted;
 		while (scale > 1.0F) {
 			AABB box = base.scale(scale).makeBoundingBox(mob.position());
-			if (level.noCollision(mob, box)) {
+			if (free(level, box)) {
 				break;
 			}
 			scale = Math.max(1.0F, scale - 0.05F);

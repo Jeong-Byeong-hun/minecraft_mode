@@ -92,6 +92,7 @@ import com.minecraftmode.townquest.TownQuests;
 import com.minecraftmode.worldgen.lair.LairChestBlockEntity;
 import com.minecraftmode.worldgen.lair.LairDef;
 import com.minecraftmode.worldgen.lair.LairExp;
+import com.minecraftmode.worldgen.lair.LairLayout;
 import com.minecraftmode.worldgen.lair.LairLoot;
 import com.minecraftmode.worldgen.lair.LairPiece;
 import com.minecraftmode.worldgen.lair.LairStructure;
@@ -395,7 +396,7 @@ public class GearDocProvider implements DataProvider {
 		md.append("\n## 네임드 소굴 (").append(NamedLairs.all().size()).append("곳)\n\n");
 		md.append("- 네임드마다 그 몬스터를 닮은 거대한 인공 구조물이 서식지 바이옴에 생깁니다(사막의 피라미드처럼). 한 칸(약 ")
 			.append(NamedLairs.SPACING * 16).append("블록)마다 많아야 하나, 마을과 수도 근처에는 생기지 않습니다. 찾기: `/locate structure minecraft_mode:lair_<네임드 id>`\n");
-		md.append("- 안은 3칸 폭 통로의 **미로**이고 남쪽 벽 가운데에 입구가 있습니다. **보물 상자 위치는 소굴마다 다릅니다**: 입구 바로 옆(20%), 가장 깊은 곳(35%), 먼 막다른 길(45%). 상자 옆에는 그 네임드가 지키고 있고, 다른 막다른 길에 작은 보급 통이 최대 3개 있습니다.\n");
+		md.append("- 안은 " + (LairLayout.CURRENT.cell() - 1) + "칸 폭·" + (LairLayout.CURRENT.roof() - 1) + "칸 높이 통로의 **미로**이고(0.5.48 전에 생긴 소굴은 " + (LairLayout.V1.cell() - 1) + "칸 폭·" + (LairLayout.V1.roof() - 1) + "칸 높이, 지하 소굴의 탑 계단은 새 소굴부터 모서리마다 층계참) 남쪽 벽 가운데에 입구가 있습니다. **보물 상자 위치는 소굴마다 다릅니다**: 입구 바로 옆(20%), 가장 깊은 곳(35%), 먼 막다른 길(45%). 상자 옆에는 그 네임드가 지키고 있고, 다른 막다른 길에 작은 보급 통이 최대 3개 있습니다.\n");
 		md.append("- 보물 상자: 동전(소굴 최고 레벨 구간 무기값의 50–100%) **항상** + 보상 1개 **항상**(60% 확률로 1개 더, 그중 25%로 또 1개). 보상은 소모품 ")
 			.append(Math.round((1 - LairLoot.GEAR_SHARE) * 100)).append("% / 그 네임드 레벨 범위의 장비 ").append(Math.round(LairLoot.GEAR_SHARE * 100))
 			.append("%. 진화의 에테르와 정수도 들어 있습니다.\n");

@@ -38,6 +38,11 @@ public class RaidScreen extends Screen {
 	/** 320 wide: the narrowest GUI Minecraft lays out (4:3 screens at auto GUI scale). */
 	private static final int W = 320;
 	private static final int H = 236;
+	/** Where the boss list starts and where the records button below it sits. */
+	private static final int LIST_Y = 24;
+	private static final int RECORDS_Y = 162;
+	/** Row pitch of the boss list while the bosses fit above the records button at it. */
+	private static final int ROW = 15;
 	private static int selected;
 	private static int difficulty;
 	private static boolean records;
@@ -83,14 +88,16 @@ public class RaidScreen extends Screen {
 		this.top = (this.height - H) / 2;
 		this.shownParty = RaidClient.party();
 		List<BossDef> all = RaidBosses.all();
-		// nine bosses: rows of 15 px fit the left column above the records button
+		// rows of 15 px fit nine bosses above the records button; more bosses get tighter rows (Sukuna, the tenth, lay under that button
+		// until 0.5.50)
+		int row = Math.min(ROW, (RECORDS_Y - 1 - LIST_Y) / all.size());
 		for (int i = 0; i < all.size(); i++) {
 			BossDef def = all.get(i);
 			final int index = i;
 			Button b = Button.builder(Component.translatable(def.nameKey()), button -> {
 				selected = index;
 				this.rebuildWidgets();
-			}).bounds(this.left + 8, this.top + 24 + i * 15, 100, 14).build();
+			}).bounds(this.left + 8, this.top + LIST_Y + i * row, 100, row - 1).build();
 			b.active = i != Math.floorMod(selected, all.size());
 			this.addRenderableWidget(b);
 		}
@@ -108,7 +115,7 @@ public class RaidScreen extends Screen {
 		this.addRenderableWidget(Button.builder(Component.translatable(records ? "screen.minecraft_mode.raid.show_info" : "screen.minecraft_mode.raid.show_records"), b -> {
 			records = !records;
 			this.rebuildWidgets();
-		}).bounds(this.left + 8, this.top + 162, 100, 20).build());
+		}).bounds(this.left + 8, this.top + RECORDS_Y, 100, 20).build());
 		Button enter = Button.builder(Component.translatable("screen.minecraft_mode.raid.enter").withStyle(ChatFormatting.BOLD), b -> this.enter())
 			.bounds(this.left + 8, this.top + H - 52, 100, 20).build();
 		enter.active = this.canEnter();

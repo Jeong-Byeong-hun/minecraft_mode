@@ -59,7 +59,7 @@ final class MapTexture {
 		this.pixels().fillRect(0, 0, this.size, this.size, 0);
 		for (int cz = this.originZ >> 4; cz < this.originZ + this.size >> 4; cz++) {
 			for (int cx = this.originX >> 4; cx < this.originX + this.size >> 4; cx++) {
-				int[] colors = data.chunk(cx, cz);
+				byte[] colors = data.chunk(cx, cz);
 				if (colors != null) {
 					this.paint(cx, cz, colors);
 				}
@@ -69,7 +69,7 @@ final class MapTexture {
 		this.moved = true;
 	}
 
-	void paint(final int cx, final int cz, final int[] colors) {
+	void paint(final int cx, final int cz, final byte[] colors) {
 		int px = (cx << 4) - this.originX;
 		int pz = (cz << 4) - this.originZ;
 		if (this.originX == Integer.MIN_VALUE || px < 0 || pz < 0 || px + 16 > this.size || pz + 16 > this.size) {
@@ -77,7 +77,7 @@ final class MapTexture {
 		}
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
-				this.pixels().setPixel(px + x, pz + z, colors[z << 4 | x]);
+				this.pixels().setPixel(px + x, pz + z, MapData.argb(colors[z << 4 | x]));
 			}
 		}
 		this.dirty = true;

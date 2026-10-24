@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.ARGB;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
@@ -65,7 +64,7 @@ final class TerrainScanner {
 	}
 
 	private void scan(final ClientLevel level, final MapData data, final int cx, final int cz, final int eyeY, final long now, final MapTexture[] textures) {
-		int[] colors = scan(level, cx, cz, eyeY);
+		byte[] colors = scan(level, cx, cz, eyeY);
 		data.put(cx, cz, colors, now);
 		for (MapTexture texture : textures) {
 			texture.paint(cx, cz, colors);
@@ -85,8 +84,8 @@ final class TerrainScanner {
 		return out;
 	}
 
-	static int[] scan(final ClientLevel level, final int cx, final int cz, final int eyeY) {
-		int[] out = new int[256];
+	static byte[] scan(final ClientLevel level, final int cx, final int cz, final int eyeY) {
+		byte[] out = new byte[256];
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean ceiling = level.dimensionType().hasCeiling();
 		for (int z = 0; z < 16; z++) {
@@ -122,7 +121,7 @@ final class TerrainScanner {
 					}
 					brightness = north < top ? MapColor.Brightness.HIGH : north > top ? MapColor.Brightness.LOW : MapColor.Brightness.NORMAL;
 				}
-				out[z << 4 | x] = ARGB.opaque(color.calculateARGBColor(brightness));
+				out[z << 4 | x] = color.getPackedId(brightness);
 			}
 		}
 		return out;

@@ -160,6 +160,15 @@ public class MapScreen extends Screen {
 		return false;
 	}
 
+	/**
+	 * The world or dimension changed: the next map opens on the player again. Until 0.5.51 it kept the spot last looked at, so after
+	 * a raid, a dungeon or another world it opened on unexplored dark.
+	 */
+	static void forget() {
+		centered = false;
+		selected = null;
+	}
+
 	/** Opens the next map on the waypoint list centred on {@code x, z} (a lair just found), zoomed out to at most 2 px a block. */
 	public static void focus(final int x, final int z) {
 		npcTab = false;

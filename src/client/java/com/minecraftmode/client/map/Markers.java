@@ -101,7 +101,7 @@ final class Markers {
 			}
 		}
 		// named monsters, mini-bosses and bosses (off the minimap: pinned to the edge, like waypoints)
-		for (FieldBosses.Mark boss : FieldBosses.all(player.level())) {
+		for (FieldBosses.Mark boss : FieldBosses.all(player.level(), partialTick)) {
 			int sx = cx + (int)Math.round((boss.x() - centerX) * zoom);
 			int sy = cy + (int)Math.round((boss.z() - centerZ) * zoom);
 			if (!inside(sx, sy, x, y, w, h)) {

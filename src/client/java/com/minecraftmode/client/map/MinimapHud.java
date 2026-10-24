@@ -7,6 +7,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
@@ -44,9 +45,13 @@ public final class MinimapHud {
 		Font font = minecraft.font;
 		g.fill(x - 2, y - 2, x + size + 2, y + size + 2, 0xC0101010);
 		g.fill(x, y, x + size, y + size, 0xFF1A1A1A);
+		// centred where the player is drawn this frame, not at the last tick, or the map moves in 20 steps a second
+		float partialTick = delta.getGameTimeDeltaPartialTick(false);
+		double centerX = Mth.lerp(partialTick, player.xo, player.getX());
+		double centerZ = Mth.lerp(partialTick, player.zo, player.getZ());
 		g.enableScissor(x, y, x + size, y + size);
-		MapClient.NEAR.draw(g, x, y, size, size, player.getX(), player.getZ(), zoom);
-		Markers.draw(g, font, player, x, y, size, size, player.getX(), player.getZ(), zoom, false, null);
+		MapClient.NEAR.draw(g, x, y, size, size, centerX, centerZ, zoom);
+		Markers.draw(g, font, player, x, y, size, size, centerX, centerZ, zoom, false, null, partialTick);
 		g.disableScissor();
 		g.outline(x - 2, y - 2, size + 4, size + 4, 0xFF6A6A6A);
 		g.centeredText(font, "N", x + size / 2, y - 1, 0xFFFFFFFF);

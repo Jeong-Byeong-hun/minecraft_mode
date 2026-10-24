@@ -22,9 +22,10 @@ final class Markers {
 	/**
 	 * @param labels draw names next to markers (the big map); the minimap shows dots only
 	 * @param selected the NPC picked in the big map's list (ringed and always named), or null
+	 * @param partialTick players are drawn between their last two ticks, or they step 20 times a second
 	 */
 	static void draw(final GuiGraphicsExtractor g, final Font font, final LocalPlayer player, final int x, final int y, final int w, final int h,
-		final double centerX, final double centerZ, final float zoom, final boolean labels, final CityPlaces.Place selected) {
+		final double centerX, final double centerZ, final float zoom, final boolean labels, final CityPlaces.Place selected, final float partialTick) {
 		int cx = x + w / 2;
 		int cy = y + h / 2;
 		// the capital
@@ -120,8 +121,8 @@ final class Markers {
 			if (other == player || other.isInvisible()) {
 				continue;
 			}
-			int sx = cx + (int)Math.round((other.getX() - centerX) * zoom);
-			int sy = cy + (int)Math.round((other.getZ() - centerZ) * zoom);
+			int sx = cx + (int)Math.round((Mth.lerp(partialTick, other.xo, other.getX()) - centerX) * zoom);
+			int sy = cy + (int)Math.round((Mth.lerp(partialTick, other.zo, other.getZ()) - centerZ) * zoom);
 			if (inside(sx, sy, x, y, w, h)) {
 				g.fill(sx - 2, sy - 2, sx + 3, sy + 3, 0xFF000000);
 				g.fill(sx - 1, sy - 1, sx + 2, sy + 2, 0xFFFFFFFF);
@@ -131,10 +132,10 @@ final class Markers {
 			}
 		}
 		// the player: a dot with a short line in the facing direction
-		int px = cx + (int)Math.round((player.getX() - centerX) * zoom);
-		int py = cy + (int)Math.round((player.getZ() - centerZ) * zoom);
+		int px = cx + (int)Math.round((Mth.lerp(partialTick, player.xo, player.getX()) - centerX) * zoom);
+		int py = cy + (int)Math.round((Mth.lerp(partialTick, player.zo, player.getZ()) - centerZ) * zoom);
 		if (inside(px, py, x, y, w, h)) {
-			double yaw = Math.toRadians(player.getYRot());
+			double yaw = Math.toRadians(player.getYRot(partialTick));
 			double dx = -Math.sin(yaw);
 			double dz = Math.cos(yaw);
 			for (int i = 1; i <= 5; i++) {

@@ -191,7 +191,7 @@ public class MapScreen extends Screen {
 		if (player != null) {
 			g.enableScissor(0, 0, w, h);
 			MapClient.VIEW.draw(g, 0, 0, w, h, centerX, centerZ, zoom);
-			Markers.draw(g, this.font, player, 0, 0, w, h, centerX, centerZ, zoom, zoom >= 1.0F, selected);
+			Markers.draw(g, this.font, player, 0, 0, w, h, centerX, centerZ, zoom, zoom >= 1.0F, selected, a);
 			g.disableScissor();
 			CityPlaces.Place hovered = mouseX < w && mouseY >= 22 && mouseY < h
 				? Markers.placeAt(player, mouseX, mouseY, 0, 0, w, h, centerX, centerZ, zoom) : null;

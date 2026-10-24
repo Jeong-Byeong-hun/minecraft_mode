@@ -25,6 +25,11 @@ final class MapTexture {
 	private int originX;
 	private int originZ;
 	private boolean dirty;
+	/**
+	 * The window slid or was cleared since the last upload: {@link #draw} already uses the new origin, so the GPU copy must follow
+	 * at once or the old picture shows shifted (the minimap jumped and doubled for up to half a second, the big map for two).
+	 */
+	private boolean moved;
 	private long lastUpload = -100L;
 	private boolean registered;
 
@@ -61,6 +66,7 @@ final class MapTexture {
 			}
 		}
 		this.dirty = true;
+		this.moved = true;
 	}
 
 	void paint(final int cx, final int cz, final int[] colors) {
@@ -91,11 +97,13 @@ final class MapTexture {
 			Minecraft.getInstance().getTextureManager().register(this.id, this.texture);
 			this.registered = true;
 			this.dirty = false;
+			this.moved = false;
 			this.lastUpload = now;
 		}
-		if (this.dirty && now - this.lastUpload >= this.interval) {
+		if (this.dirty && (this.moved || now - this.lastUpload >= this.interval)) {
 			this.texture.upload();
 			this.dirty = false;
+			this.moved = false;
 			this.lastUpload = now;
 		}
 	}
@@ -130,5 +138,6 @@ final class MapTexture {
 		this.originX = Integer.MIN_VALUE;
 		this.pixels().fillRect(0, 0, this.size, this.size, 0);
 		this.dirty = true;
+		this.moved = true;
 	}
 }

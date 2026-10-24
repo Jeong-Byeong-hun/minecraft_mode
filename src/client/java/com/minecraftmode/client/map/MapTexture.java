@@ -50,8 +50,20 @@ final class MapTexture {
 
 	/** Slides the window so {@code x, z} is near its centre, repainting everything from {@code data} when it moved. */
 	void center(final MapData data, final int x, final int z) {
+		this.center(data, x, z, this.size / 4, this.size / 4);
+	}
+
+	/**
+	 * Slides the window to {@code x, z} once the view, {@code viewHalfX} and {@code viewHalfZ} blocks either side of it, would
+	 * reach past the window's edge, repainting everything from {@code data}. Until 0.5.51 it slid only after a quarter of the window,
+	 * so the big map zoomed out to 0.5 (about 830 blocks either side) showed explored land at its edges as dark. The window still
+	 * waits for at least a sixteenth of itself, so a view nearly as wide as the window does not repaint it every tick.
+	 */
+	void center(final MapData data, final int x, final int z, final double viewHalfX, final double viewHalfZ) {
 		int half = this.size / 2;
-		if (this.originX != Integer.MIN_VALUE && Math.abs(x - (this.originX + half)) < half / 2 && Math.abs(z - (this.originZ + half)) < half / 2) {
+		double slackX = Math.max(half - viewHalfX, half / 8.0);
+		double slackZ = Math.max(half - viewHalfZ, half / 8.0);
+		if (this.originX != Integer.MIN_VALUE && Math.abs(x - (this.originX + half)) <= slackX && Math.abs(z - (this.originZ + half)) <= slackZ) {
 			return;
 		}
 		this.originX = (x - half) & ~15;

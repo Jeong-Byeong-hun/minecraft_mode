@@ -52,6 +52,15 @@ public class MapScreen extends Screen {
 		return centerZ;
 	}
 
+	/** Blocks shown either side of the centre, across and down. */
+	public double viewHalfX() {
+		return this.mapW() / (2.0 * zoom);
+	}
+
+	public double viewHalfZ() {
+		return this.mapH() / (2.0 * zoom);
+	}
+
 	private int mapW() {
 		return this.width - PANEL_W;
 	}

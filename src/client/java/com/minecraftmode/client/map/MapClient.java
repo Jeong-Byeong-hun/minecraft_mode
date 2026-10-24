@@ -145,7 +145,7 @@ public final class MapClient {
 		NEAR.center(data, player.getBlockX(), player.getBlockZ());
 		NEAR.upload(now);
 		if (minecraft.gui.screen() instanceof MapScreen screen) {
-			VIEW.center(data, (int)screen.centerX(), (int)screen.centerZ());
+			VIEW.center(data, (int)screen.centerX(), (int)screen.centerZ(), screen.viewHalfX(), screen.viewHalfZ());
 			VIEW.upload(now);
 		}
 		boolean dead = player.isDeadOrDying() || player.getHealth() <= 0.0F;

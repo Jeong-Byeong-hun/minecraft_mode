@@ -14,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -65,6 +66,11 @@ public final class MapClient {
 			FieldBosses.clear();
 			leave();
 		}));
+		// map saves run in the background: let the last ones finish before the game exits
+		ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+			save();
+			MapData.awaitSaves();
+		});
 		ClientPlayNetworking.registerGlobalReceiver(CityInfoPayload.TYPE, (payload, context) -> context.client().execute(() -> CityPlaces.cityWorld = payload.city()));
 		ClientPlayNetworking.registerGlobalReceiver(MapMarkPayload.TYPE, (payload, context) -> context.client().execute(() -> mark(payload)));
 		ClientPlayNetworking.registerGlobalReceiver(FieldBossPayload.TYPE,
@@ -139,7 +145,7 @@ public final class MapClient {
 		NEAR.center(data, player.getBlockX(), player.getBlockZ());
 		NEAR.upload(now);
 		if (minecraft.gui.screen() instanceof MapScreen screen) {
-			VIEW.center(data, (int)screen.centerX(), (int)screen.centerZ());
+			VIEW.center(data, (int)screen.centerX(), (int)screen.centerZ(), screen.viewHalfX(), screen.viewHalfZ());
 			VIEW.upload(now);
 		}
 		boolean dead = player.isDeadOrDying() || player.getHealth() <= 0.0F;
@@ -161,6 +167,7 @@ public final class MapClient {
 		waypoints = Waypoints.load(waypointFile(key));
 		NEAR.clear();
 		VIEW.clear();
+		MapScreen.forget();
 	}
 
 	private static void leave() {
@@ -171,6 +178,7 @@ public final class MapClient {
 		waypoints = new Waypoints();
 		NEAR.clear();
 		VIEW.clear();
+		MapScreen.forget();
 	}
 
 	static void save() {

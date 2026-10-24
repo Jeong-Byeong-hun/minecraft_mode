@@ -52,6 +52,15 @@ public class MapScreen extends Screen {
 		return centerZ;
 	}
 
+	/** Blocks shown either side of the centre, across and down. */
+	public double viewHalfX() {
+		return this.mapW() / (2.0 * zoom);
+	}
+
+	public double viewHalfZ() {
+		return this.mapH() / (2.0 * zoom);
+	}
+
 	private int mapW() {
 		return this.width - PANEL_W;
 	}
@@ -160,6 +169,15 @@ public class MapScreen extends Screen {
 		return false;
 	}
 
+	/**
+	 * The world or dimension changed: the next map opens on the player again. Until 0.5.51 it kept the spot last looked at, so after
+	 * a raid, a dungeon or another world it opened on unexplored dark.
+	 */
+	static void forget() {
+		centered = false;
+		selected = null;
+	}
+
 	/** Opens the next map on the waypoint list centred on {@code x, z} (a lair just found), zoomed out to at most 2 px a block. */
 	public static void focus(final int x, final int z) {
 		npcTab = false;
@@ -191,7 +209,7 @@ public class MapScreen extends Screen {
 		if (player != null) {
 			g.enableScissor(0, 0, w, h);
 			MapClient.VIEW.draw(g, 0, 0, w, h, centerX, centerZ, zoom);
-			Markers.draw(g, this.font, player, 0, 0, w, h, centerX, centerZ, zoom, zoom >= 1.0F, selected);
+			Markers.draw(g, this.font, player, 0, 0, w, h, centerX, centerZ, zoom, zoom >= 1.0F, selected, a);
 			g.disableScissor();
 			CityPlaces.Place hovered = mouseX < w && mouseY >= 22 && mouseY < h
 				? Markers.placeAt(player, mouseX, mouseY, 0, 0, w, h, centerX, centerZ, zoom) : null;

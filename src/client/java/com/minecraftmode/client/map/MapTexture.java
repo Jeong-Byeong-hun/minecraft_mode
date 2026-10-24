@@ -25,6 +25,11 @@ final class MapTexture {
 	private int originX;
 	private int originZ;
 	private boolean dirty;
+	/**
+	 * The window slid or was cleared since the last upload: {@link #draw} already uses the new origin, so the GPU copy must follow
+	 * at once or the old picture shows shifted (the minimap jumped and doubled for up to half a second, the big map for two).
+	 */
+	private boolean moved;
 	private long lastUpload = -100L;
 	private boolean registered;
 
@@ -45,8 +50,20 @@ final class MapTexture {
 
 	/** Slides the window so {@code x, z} is near its centre, repainting everything from {@code data} when it moved. */
 	void center(final MapData data, final int x, final int z) {
+		this.center(data, x, z, this.size / 4, this.size / 4);
+	}
+
+	/**
+	 * Slides the window to {@code x, z} once the view, {@code viewHalfX} and {@code viewHalfZ} blocks either side of it, would
+	 * reach past the window's edge, repainting everything from {@code data}. Until 0.5.51 it slid only after a quarter of the window,
+	 * so the big map zoomed out to 0.5 (about 830 blocks either side) showed explored land at its edges as dark. The window still
+	 * waits for at least a sixteenth of itself, so a view nearly as wide as the window does not repaint it every tick.
+	 */
+	void center(final MapData data, final int x, final int z, final double viewHalfX, final double viewHalfZ) {
 		int half = this.size / 2;
-		if (this.originX != Integer.MIN_VALUE && Math.abs(x - (this.originX + half)) < half / 2 && Math.abs(z - (this.originZ + half)) < half / 2) {
+		double slackX = Math.max(half - viewHalfX, half / 8.0);
+		double slackZ = Math.max(half - viewHalfZ, half / 8.0);
+		if (this.originX != Integer.MIN_VALUE && Math.abs(x - (this.originX + half)) <= slackX && Math.abs(z - (this.originZ + half)) <= slackZ) {
 			return;
 		}
 		this.originX = (x - half) & ~15;
@@ -54,16 +71,17 @@ final class MapTexture {
 		this.pixels().fillRect(0, 0, this.size, this.size, 0);
 		for (int cz = this.originZ >> 4; cz < this.originZ + this.size >> 4; cz++) {
 			for (int cx = this.originX >> 4; cx < this.originX + this.size >> 4; cx++) {
-				int[] colors = data.chunk(cx, cz);
+				byte[] colors = data.chunk(cx, cz);
 				if (colors != null) {
 					this.paint(cx, cz, colors);
 				}
 			}
 		}
 		this.dirty = true;
+		this.moved = true;
 	}
 
-	void paint(final int cx, final int cz, final int[] colors) {
+	void paint(final int cx, final int cz, final byte[] colors) {
 		int px = (cx << 4) - this.originX;
 		int pz = (cz << 4) - this.originZ;
 		if (this.originX == Integer.MIN_VALUE || px < 0 || pz < 0 || px + 16 > this.size || pz + 16 > this.size) {
@@ -71,7 +89,7 @@ final class MapTexture {
 		}
 		for (int z = 0; z < 16; z++) {
 			for (int x = 0; x < 16; x++) {
-				this.pixels().setPixel(px + x, pz + z, colors[z << 4 | x]);
+				this.pixels().setPixel(px + x, pz + z, MapData.argb(colors[z << 4 | x]));
 			}
 		}
 		this.dirty = true;
@@ -91,11 +109,13 @@ final class MapTexture {
 			Minecraft.getInstance().getTextureManager().register(this.id, this.texture);
 			this.registered = true;
 			this.dirty = false;
+			this.moved = false;
 			this.lastUpload = now;
 		}
-		if (this.dirty && now - this.lastUpload >= this.interval) {
+		if (this.dirty && (this.moved || now - this.lastUpload >= this.interval)) {
 			this.texture.upload();
 			this.dirty = false;
+			this.moved = false;
 			this.lastUpload = now;
 		}
 	}
@@ -130,5 +150,6 @@ final class MapTexture {
 		this.originX = Integer.MIN_VALUE;
 		this.pixels().fillRect(0, 0, this.size, this.size, 0);
 		this.dirty = true;
+		this.moved = true;
 	}
 }

@@ -13,6 +13,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -51,6 +52,11 @@ public final class FieldBosses {
 	}
 
 	public static List<Mark> all(final Level level) {
+		return all(level, 1.0F);
+	}
+
+	/** The marks, monsters the client sees placed between their last two ticks so they glide like the player's own dot. */
+	public static List<Mark> all(final Level level, final float partialTick) {
 		List<Mark> out = new ArrayList<>();
 		if (!(level instanceof ClientLevel client)) {
 			return out;
@@ -58,7 +64,8 @@ public final class FieldBosses {
 		Set<Integer> seen = new HashSet<>();
 		for (Entity entity : client.entitiesForRendering()) {
 			if (entity instanceof LivingEntity living && living.isAlive() && isBoss(living)) {
-				out.add(new Mark(living.getX(), living.getZ(), living.getDisplayName(), big(living)));
+				out.add(new Mark(Mth.lerp(partialTick, living.xo, living.getX()), Mth.lerp(partialTick, living.zo, living.getZ()), living.getDisplayName(),
+					big(living)));
 				seen.add(living.getId());
 			}
 		}
